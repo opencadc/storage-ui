@@ -134,13 +134,21 @@ public abstract class AbstractNodeProducer<T extends NodeWriter>
                                            : null;
     }
 
+    void writePage(final List<Node> page) throws Exception
+    {
+        if (page != null)
+        {
+            for (final Node n : page)
+            {
+                this.nodeWriter.write(n);
+                this.current = n.getUri();
+            }
+        }
+    }
+
     public void writePage() throws Exception
     {
-        for (final Node n : nextPage())
-        {
-            this.nodeWriter.write(n);
-            this.current = n.getUri();
-        }
+        writePage(nextPage());
     }
 
     protected void loopPages() throws Exception
@@ -149,12 +157,7 @@ public abstract class AbstractNodeProducer<T extends NodeWriter>
 
         while ((page = nextPage()) != null)
         {
-            for (final Node n : page)
-            {
-                this.nodeWriter.write(n);
-                this.current = n.getUri();
-            }
-
+            writePage(page);
             pageCount++;
         }
     }
