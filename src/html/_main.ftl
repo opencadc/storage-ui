@@ -28,11 +28,11 @@
     </div>
 
     <div id="fileinfo" class="table-responsive">
-      <div id="brite_filter" class="dataTables_filter mrgn-lft-md mrgn-tp-md hidden">
+      <div id="beacon_filter" class="dataTables_filter mrgn-lft-md mrgn-tp-md hidden">
         <label>Search:<input type="search" class="" placeholder=""
-                             aria-controls="brite"/></label>
+                             aria-controls="beacon"/></label>
       </div>
-      <table id="brite" class="table table-striped table-condensed table-hover">
+      <table id="beacon" class="table table-striped table-condensed table-hover">
         <thead>
           <tr>
             <th></th>
@@ -49,7 +49,7 @@
           <#assign writeGroupNames = childItem.writeGroupNames>
           <tr>
             <td class="select-checkbox"></td>
-            <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/brite${childItem.linkURI}"> ${childItem.name}</a> </td>
+            <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a> </td>
             <td>${childItem.sizeHumanReadable}</td>
             <td>${writeGroupNames}</td>
             <td>${childItem.readGroupNames}</td>

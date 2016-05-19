@@ -117,7 +117,7 @@
 <script type="text/javascript">
 
   var startURI = "${startURI}";
-  var url = "/brite/page${folder.path}";
+  var url = "/beacon/page${folder.path}";
   var defaultPageSize = 400;
 
   var requestData = {};
@@ -134,9 +134,9 @@
                       // Override CSS for search filter field.
                       $.fn.DataTable.ext.oStdClasses.sFilter =
                           "dataTables_filter mrgn-lft-md mrgn-tp-md";
-                      var $briteTable = $("#brite");
+                      var $beaconTable = $("#beacon");
 
-                      $briteTable.on("processing.dt", function(e, settings,
+                      $beaconTable.on("processing.dt", function(e, settings,
                                                                procFlag)
                       {
                         console.log("I am "
@@ -144,7 +144,7 @@
                                     + "processing.");
                       });
 
-                      var $dt = $briteTable.DataTable({
+                      var $dt = $beaconTable.DataTable({
                                      loading: true,
                                      processing: true,
                                      deferRender: true,
@@ -172,7 +172,7 @@
                                                      'glyphicon-folder-open' :
                                                      'glyphicon-cloud-download')
                                                     +
-                                                    '"></span> <a href="/brite/list' +
+                                                    '"></span> <a href="/beacon/list' +
                                                     path
                                                     +
                                                     '" title=""> ' +

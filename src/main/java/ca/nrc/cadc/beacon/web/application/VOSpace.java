@@ -149,7 +149,7 @@ public class VOSpace
 
         final Component component = new Component();
 
-        component.getDefaultHost().attach("/brite", vospaceApplication);
+        component.getDefaultHost().attach("/beacon", vospaceApplication);
         component.getDefaultHost().attach(themeApplication);
         component.getClients().add(Protocol.FILE);
         component.getServers().add(Protocol.HTTP, 8080);
