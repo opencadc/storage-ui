@@ -96,6 +96,11 @@ public class FolderItem extends StorageItem
         return new Random().nextInt(10000);
     }
 
+    public boolean isNotRoot()
+    {
+        return !uri.isRoot();
+    }
+
     @Override
     public String getItemIconCSS()
     {

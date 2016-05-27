@@ -69,18 +69,19 @@
 package ca.nrc.cadc.beacon.web.application;
 
 import ca.nrc.cadc.vos.VOSURI;
-import org.restlet.resource.ServerResource;
 
 import java.net.URI;
 
-public abstract class NodeServerResource extends ServerResource
+public abstract class NodeServerResource extends SecureServerResource
 {
     static final int DEFAULT_PAGE_SIZE = 300;
 
 
     VOSURI getCurrentItemURI()
     {
-        final String path = getRequestAttributes().get("path").toString();
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace/" + path));
+        final Object pathInRequest = getRequestAttributes().get("path");
+        final String path = "/" + ((pathInRequest == null)
+                                   ? "" : pathInRequest.toString());
+        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
     }
 }

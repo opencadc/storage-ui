@@ -66,125 +66,115 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web;
 
+import ca.nrc.cadc.ac.AC;
+import ca.nrc.cadc.ac.client.UserClient;
 import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.SSLUtil;
-import ca.nrc.cadc.net.NetUtil;
+import ca.nrc.cadc.auth.SSOCookieManager;
+import ca.nrc.cadc.net.HttpPost;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import javax.security.auth.Subject;
-import java.io.File;
+import java.io.ByteArrayOutputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
-import java.util.List;
+import java.net.URL;
+import java.security.PrivilegedAction;
+import java.util.HashMap;
+import java.util.Map;
 
 
-public abstract class AbstractNodeProducer<T extends NodeWriter>
-        implements NodeProducer
+public class AccessControlClient extends UserClient
 {
-    int pageCount = 0;
-    VOSURI current;
-    final int pageSize;
-    final VOSURI folderURI;
+    private final static String FRAGMENT_DELIMITER = "#";
+    private final static String LOGIN_FRAGMENT = FRAGMENT_DELIMITER + "login";
 
-    final T nodeWriter;
+    final SSOCookieManager cookieManager;
+    final RegistryClient registryClient;
+    final URI loginURI;
 
-
-    public AbstractNodeProducer(int pageSize, VOSURI folderURI,
-                                final VOSURI startURI,
-                                final T nodeWriter)
+    public AccessControlClient() throws IllegalArgumentException
     {
-        this.pageSize = pageSize;
-        this.folderURI = folderURI;
-        this.current = startURI;
-        this.nodeWriter = nodeWriter;
+        this(URI.create(AC.UMS_SERVICE_URI), new RegistryClient(),
+             new SSOCookieManager());
+    }
+
+    /**
+     * Complete constructor.
+     *
+     * @param serviceURI            The Service URI.
+     * @param registryClient        The Registry client for lookups.
+     * @param cookieManager         The Cookie Manager to verify login.
+     */
+    public AccessControlClient(final URI serviceURI,
+                               final RegistryClient registryClient,
+                               final SSOCookieManager cookieManager)
+    {
+        super(serviceURI);
+        this.registryClient = registryClient;
+        this.cookieManager = cookieManager;
+        this.loginURI = URI.create(serviceURI.toASCIIString() + LOGIN_FRAGMENT);
     }
 
 
-    String getQuery()
+    private URL lookupLoginURL()
     {
-        return "limit=" + ((pageSize > 0) ? pageSize : 300)
-               + ((current == null)
-                  ? "" : "&uri=" + NetUtil.encode(current.toString()));
-    }
-
-    List<Node> nextPage() throws Exception
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient =
-                new VOSpaceClient(registryClient.getServiceURL(
-                        URI.create("ivo://cadc.nrc.ca/vospace"),
-                        "http").toExternalForm(), false);
-
-        final Subject subject = AuthenticationUtil.getCurrentSubject();
-//        final Subject subject = SSLUtil.createSubject(
-//                new File("./src/html/cadcproxy.pem"));
-
-        final List<Node> nodes =
-                Subject.doAs(subject, new PrivilegedExceptionAction<List<Node>>()
-                {
-                    /**
-                     * Performs the computation.  This method will be called by
-                     * {@code AccessController.doPrivileged} after enabling privileges.
-                     *
-                     * @return a class-dependent value that may represent the results of the
-                     * computation.  Each class that implements
-                     * {@code PrivilegedExceptionAction} should document what
-                     * (if anything) this value represents.
-                     * @throws Exception an exceptional condition has occurred.  Each class
-                     *                   that implements {@code PrivilegedExceptionAction} should
-                     *                   document the exceptions that its run method can throw.
-                     * @see AccessController#doPrivileged(PrivilegedExceptionAction)
-                     * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
-                     */
-                    @Override
-                    public List<Node> run() throws Exception
-                    {
-                        return ((ContainerNode) voSpaceClient.getNode(
-                                folderURI.getPath(), getQuery())).getNodes();
-                    }
-                });
-
-        return (current == null) ? nodes : (nodes.size() > 1)
-                                           ? nodes.subList(1, nodes.size())
-                                           : null;
-    }
-
-    boolean writePage(final List<Node> page) throws Exception
-    {
-        if (page == null)
+        try
         {
-            return false;
+            return registryClient.getServiceURL(loginURI, "http");
+        }
+        catch (MalformedURLException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Perform a username/password verification and return the cookie value.
+     *
+     * @param username      The username.
+     * @param password      The password char array.
+     * @return              String cookie value.
+     */
+    public String login(final String username, final char[] password)
+    {
+        final URL loginURL = lookupLoginURL();
+
+        if (loginURL == null)
+        {
+            throw new IllegalArgumentException("No service endpoint for uri "
+                                               + this.loginURI);
         }
         else
         {
-            for (final Node n : page)
-            {
-                this.nodeWriter.write(n);
-                this.current = n.getUri();
-            }
-
-            return true;
+            return doLogin(loginURL, username, password);
         }
     }
 
-    public boolean writePage() throws Exception
+    String doLogin(final URL loginURL, final String username,
+                   final char[] password)
     {
-        return writePage(nextPage());
-    }
+        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final Map<String, Object> payload = new HashMap<>();
 
-    protected void writePages() throws Exception
-    {
-        while (writePage())
+        payload.put("username", username);
+        payload.put("password", new String(password));
+        final HttpPost post = new HttpPost(loginURL, payload, out);
+
+        post.run();
+
+        final int responseCode = post.getResponseCode();
+
+        if (responseCode == 200)
         {
-            pageCount++;
+            return out.toString();
+        }
+        else
+        {
+            throw new IllegalArgumentException(
+                    String.format("Unable to login '%s' due to Error %d.",
+                                  username, responseCode));
         }
     }
 }

@@ -68,7 +68,7 @@
 
 package ca.nrc.cadc.beacon.web.application;
 
-import ca.nrc.cadc.auth.SSLUtil;
+import ca.nrc.cadc.auth.HttpPrincipal;
 import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.beacon.web.URIExtractor;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
@@ -76,21 +76,20 @@ import ca.nrc.cadc.beacon.web.view.FullStorageItemIterator;
 import ca.nrc.cadc.beacon.web.view.StorageItem;
 import ca.nrc.cadc.beacon.web.view.StorageItemIterator;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import freemarker.template.Configuration;
 import org.restlet.data.MediaType;
+import org.restlet.data.Status;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
 import javax.security.auth.Subject;
 import java.io.*;
+import java.net.MalformedURLException;
 import java.net.URI;
-import java.security.PrivilegedExceptionAction;
+import java.security.PrivilegedAction;
 import java.util.*;
 
 
@@ -141,26 +140,69 @@ public class MainPageServerResource extends NodeServerResource
             dataModel.put("startURI", startNextPageURI);
         }
 
+        final Set<HttpPrincipal> httpPrincipals =
+                getCurrent().getPrincipals(HttpPrincipal.class);
+
+        if (!httpPrincipals.isEmpty())
+        {
+            dataModel.put("username", httpPrincipals.toArray(
+                    new HttpPrincipal[httpPrincipals.size()])[0].getName());
+        }
+
         return new TemplateRepresentation(isRaw ? "raw.ftl" : "index.ftl",
-                                          configuration,
-                                          dataModel, MediaType.TEXT_HTML);
+                                          configuration, dataModel,
+                                          MediaType.TEXT_HTML);
     }
 
     ContainerNode getContainerNode(final VOSURI folderURI,
                                    final int pageSize) throws Exception
     {
+        final Subject subject = getCurrent();
+        final String query = "limit=" + pageSize;
         final RegistryClient registryClient = new RegistryClient();
+        if (subject.getPrincipals().isEmpty())
+        {
+            return getContainerNode(registryClient, folderURI, query, "http");
+        }
+        else
+        {
+            return Subject.doAs(subject, new PrivilegedAction<ContainerNode>()
+            {
+                @Override
+                public ContainerNode run()
+                {
+                    try
+                    {
+                        return getContainerNode(registryClient, folderURI,
+                                                query, "http");
+                    }
+                    catch (NodeNotFoundException e)
+                    {
+                        getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+                        return null;
+                    }
+                    catch (MalformedURLException e)
+                    {
+                        getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+                        return null;
+                    }
+                }
+            });
+        }
+    }
+
+    final ContainerNode getContainerNode(final RegistryClient registryClient,
+                                         final VOSURI folderURI,
+                                         final String query,
+                                         final String protocol)
+            throws NodeNotFoundException, MalformedURLException
+    {
         final VOSpaceClient voSpaceClient =
                 new VOSpaceClient(registryClient.getServiceURL(
-                        URI.create("ivo://cadc.nrc.ca/vospace"),
-                        "https").toExternalForm(), false);
-        final Subject subject = SSLUtil.createSubject(
-                new File("./src/html/cadcproxy.pem"));
-        final String query = "limit=" + pageSize;
-        return (Subject
-                .doAs(subject, (PrivilegedExceptionAction<ContainerNode>) () ->
-                        (ContainerNode) voSpaceClient.getNode(
-                                folderURI.getPath(), query)));
+                        URI.create("ivo://cadc.nrc.ca/vospace"), protocol).
+                        toExternalForm(), false);
+        return (ContainerNode) voSpaceClient.getNode(
+                folderURI.getPath(), query);
     }
 
     static long randomSize()

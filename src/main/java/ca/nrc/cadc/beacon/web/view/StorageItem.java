@@ -150,6 +150,11 @@ public abstract class StorageItem
         return lockedFlag;
     }
 
+    public String getParentPath()
+    {
+        return uri.isRoot() ? "/" : uri.getParent();
+    }
+
     public String getWriteGroupNames()
     {
         return getURINames(this.writeGroupURIs);

@@ -66,125 +66,39 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web.application;
 
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.SSLUtil;
+import ca.nrc.cadc.beacon.web.AccessControlClient;
 import ca.nrc.cadc.net.NetUtil;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-
-import javax.security.auth.Subject;
-import java.io.File;
-import java.net.URI;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
-import java.util.List;
+import org.restlet.data.CookieSetting;
+import org.restlet.data.Form;
+import org.restlet.representation.Representation;
+import org.restlet.resource.Post;
 
 
-public abstract class AbstractNodeProducer<T extends NodeWriter>
-        implements NodeProducer
+public class AccessControlServerResource extends SecureServerResource
 {
-    int pageCount = 0;
-    VOSURI current;
-    final int pageSize;
-    final VOSURI folderURI;
-
-    final T nodeWriter;
-
-
-    public AbstractNodeProducer(int pageSize, VOSURI folderURI,
-                                final VOSURI startURI,
-                                final T nodeWriter)
+    @Post
+    public void login(final Representation payload) throws Exception
     {
-        this.pageSize = pageSize;
-        this.folderURI = folderURI;
-        this.current = startURI;
-        this.nodeWriter = nodeWriter;
-    }
+        final Form form = new Form(payload);
+        final AccessControlClient accessControlClient =
+                new AccessControlClient();
 
+        final String cookieValue =
+                accessControlClient.login(form.getFirstValue("username"),
+                                          form.getFirstValue("password")
+                                                  .toCharArray());
 
-    String getQuery()
-    {
-        return "limit=" + ((pageSize > 0) ? pageSize : 300)
-               + ((current == null)
-                  ? "" : "&uri=" + NetUtil.encode(current.toString()));
-    }
+        final CookieSetting cookieSetting =
+                new CookieSetting(0, "CADC_SSO", cookieValue, "/",
+                                  NetUtil.getDomainName(
+                                          getRequest().getResourceRef()
+                                                  .toUrl()),
+                                  null, 60 * 60 * 24 * 2, false, false);
 
-    List<Node> nextPage() throws Exception
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient =
-                new VOSpaceClient(registryClient.getServiceURL(
-                        URI.create("ivo://cadc.nrc.ca/vospace"),
-                        "http").toExternalForm(), false);
-
-        final Subject subject = AuthenticationUtil.getCurrentSubject();
-//        final Subject subject = SSLUtil.createSubject(
-//                new File("./src/html/cadcproxy.pem"));
-
-        final List<Node> nodes =
-                Subject.doAs(subject, new PrivilegedExceptionAction<List<Node>>()
-                {
-                    /**
-                     * Performs the computation.  This method will be called by
-                     * {@code AccessController.doPrivileged} after enabling privileges.
-                     *
-                     * @return a class-dependent value that may represent the results of the
-                     * computation.  Each class that implements
-                     * {@code PrivilegedExceptionAction} should document what
-                     * (if anything) this value represents.
-                     * @throws Exception an exceptional condition has occurred.  Each class
-                     *                   that implements {@code PrivilegedExceptionAction} should
-                     *                   document the exceptions that its run method can throw.
-                     * @see AccessController#doPrivileged(PrivilegedExceptionAction)
-                     * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
-                     */
-                    @Override
-                    public List<Node> run() throws Exception
-                    {
-                        return ((ContainerNode) voSpaceClient.getNode(
-                                folderURI.getPath(), getQuery())).getNodes();
-                    }
-                });
-
-        return (current == null) ? nodes : (nodes.size() > 1)
-                                           ? nodes.subList(1, nodes.size())
-                                           : null;
-    }
-
-    boolean writePage(final List<Node> page) throws Exception
-    {
-        if (page == null)
-        {
-            return false;
-        }
-        else
-        {
-            for (final Node n : page)
-            {
-                this.nodeWriter.write(n);
-                this.current = n.getUri();
-            }
-
-            return true;
-        }
-    }
-
-    public boolean writePage() throws Exception
-    {
-        return writePage(nextPage());
-    }
-
-    protected void writePages() throws Exception
-    {
-        while (writePage())
-        {
-            pageCount++;
-        }
+        getResponse().getCookieSettings().add(cookieSetting);
+        getResponse().redirectSeeOther("/beacon/list"
+                                       + form.getFirstValue("redirectPath"));
     }
 }

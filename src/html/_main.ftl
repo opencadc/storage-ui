@@ -2,6 +2,7 @@
   <h1 id="wb-cont" property="name">VOSpace</h1>
 
 <#assign startTime = .now?time>
+<#assign notRoot = folder.notRoot>
 <#flush>
   <!-- Main content -->
   <section>
@@ -11,19 +12,23 @@
       <form id="uploader" method="post" class="mrgn-rght-md mrgn-lft-sm">
         <h1 title="${folder.path}">${folder.path}</h1>
         <div id="uploadresponse"></div>
-        <button id="level-up" name="level-up" type="button" value="LevelUp"><span class="glyphicon glyphicon-arrow-up"></span>&nbsp;</button>
-        <button id="home" name="home" type="button" value="Home"><span class="glyphicon glyphicon-home"></span>&nbsp;</button>
+        <#if notRoot>
+          <a id="level-up" name="level-up" class="btn btn-default" title="Up one level" href="/beacon/list${folder.parentPath}" role="button"><span class="glyphicon glyphicon-arrow-up"></span></a>
+        </#if>
+        <#--<button id="home" name="home" type="button" value="Home"><span class="glyphicon glyphicon-home"></span>&nbsp;</button>-->
         <input id="mode" name="mode" type="hidden" value="add" />
         <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
-        <div id="file-input-container">
-          <div id="alt-fileinput">
-            <input id="filepath" name="filepath" type="text" />
-            <button id="browse" name="browse" type="button" value="Browse"></button>
-          </div>
+        <div id="file-input-container" class="wb-inv">
+          <#--<div id="alt-fileinput">-->
+            <#--<input id="filepath" name="filepath" type="text" />-->
+            <#--<button id="browse" name="browse" type="button" class="btn" value="Browse"></button>-->
+          <#--</div>-->
           <input id="newfile" name="newfile" type="file" />
         </div>
-        <button id="upload" name="upload" type="submit" value="Upload" class="em"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>
-        <button id="newfolder" name="newfolder" type="button" value="New Folder" class="em"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;New folder</button>
+        <#--<button id="upload" name="upload" type="submit" value="Upload" class="em"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>-->
+        <#if notRoot>
+          <button id="newfolder" name="newfolder" type="button" value="New Folder" class="btn btn-default"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;New folder</button>
+        </#if>
       </form>
     </div>
 
@@ -39,7 +44,7 @@
             <th><a href="/sort${folder.path}?dir=asc&col=Name" title="Sort Name ascending">Name</a></th>
             <th><a href="/sort${folder.path}?dir=asc&col=Size" title="Sort Size ascending">Size</a></th>
             <th>Read/Write</th>
-            <th>Read Only</th>
+            <th>Read</th>
             <th><a href="/sort${folder.path}?dir=asc&col=Last Modified" title="Sort Last Modified ascending">Last Modified (UTC)</a></th>
           </tr>
         </thead>
@@ -52,7 +57,7 @@
             <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a> </td>
             <td>${childItem.sizeHumanReadable}</td>
             <td>${writeGroupNames}</td>
-            <td>${childItem.readGroupNames}</td>
+            <td><#if childItem.public><a href="/beacon/ac${childItem.path}/public" class="public_link" title="Change group read access.">Public</a><#else>${childItem.readGroupNames}</#if></td>
             <td>${childItem.lastModifiedHumanReadable}</td>
           </tr>
         </#list>

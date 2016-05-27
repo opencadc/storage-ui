@@ -68,13 +68,18 @@
 
 package ca.nrc.cadc.beacon.web.application;
 
+import ca.nrc.cadc.auth.AuthenticationUtil;
+import ca.nrc.cadc.beacon.web.PrincipalExtractorImpl;
 import org.restlet.*;
 import org.restlet.data.Protocol;
 import org.restlet.resource.Directory;
+import org.restlet.routing.Route;
 import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
 
+import javax.security.auth.Subject;
+import java.security.PrivilegedAction;
 import java.util.*;
 
 
@@ -82,12 +87,45 @@ public class VOSpace
 {
     public static void main(final String[] args) throws Exception
     {
-        final Router router = new Router();
+        final Router router = new Router()
+        {
+            /**
+             * Effectively handles the call using the selected next {@link Restlet},
+             * typically the selected {@link Route}. By default, it just invokes the
+             * next Restlet.
+             *
+             * @param next     The next Restlet to invoke.
+             * @param request  The request.
+             * @param response The response.
+             */
+            @Override
+            protected void doHandle(final Restlet next, final Request request,
+                                    final Response response)
+            {
+                final Subject subject = AuthenticationUtil.getSubject(
+                        new PrincipalExtractorImpl(request));
+
+                Subject.doAs(subject, new PrivilegedAction<Void>()
+                {
+                    @Override
+                    public Void run()
+                    {
+                        next.handle(request, response);
+                        return null;
+                    }
+                });
+            }
+        };
+
+        router.attach("/ac/login", AccessControlServerResource.class);
 
         final TemplateRoute pageRoute =
                 router.attach("/page/{path}", PageServerResource.class);
         final TemplateRoute allRoute =
                 router.attach("/all/{path}", StorageItemServerResource.class);
+
+        // Allow for an empty path to be the root.
+        router.attach("/list", MainPageServerResource.class);
         final TemplateRoute listRoute =
                 router.attach("/list/{path}", MainPageServerResource.class);
         final TemplateRoute rawRoute =

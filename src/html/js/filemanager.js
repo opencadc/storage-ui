@@ -645,61 +645,63 @@
 
                                      var getFolderName = function (v, m)
                                      {
-                                       if (v != 1)
+                                       if (v === 1)
                                        {
-                                         return false;
-                                       }
-                                       var fname = m.children('#fname').val();
+                                         var fname = m.children('#fname').val();
 
-                                       if (fname != '')
-                                       {
-                                         foldername = cleanString(fname);
-                                         var d = new Date(); // to prevent IE
-                                                             // cache issues
-                                         $.getJSON(fileConnector +
-                                                   '?mode=addfolder&path=' +
-                                                   $('#currentpath').val() +
-                                                   '&config=' + userconfig +
-                                                   '&name=' +
-                                                   encodeURIComponent(foldername) +
-                                                   '&time=' +
-                                                   d.getMilliseconds(), function (result)
-                                                   {
-                                                     if (result['Code'] == 0)
+                                         if (fname != '')
+                                         {
+                                           foldername = cleanString(fname);
+                                           var d = new Date(); // to prevent IE
+                                                               // cache issues
+                                           $.getJSON(fileConnector +
+                                                     '?mode=addfolder&path=' +
+                                                     $('#currentpath').val() +
+                                                     '&config=' + userconfig +
+                                                     '&name=' +
+                                                     encodeURIComponent(foldername) +
+                                                     '&time=' +
+                                                     d.getMilliseconds(), function (result)
                                                      {
-                                                       addFolder(result['Parent'], result['Name']);
-                                                       getFolderInfo(result['Parent']);
+                                                       if (result['Code'] == 0)
+                                                       {
+                                                         addFolder(result['Parent'], result['Name']);
+                                                         getFolderInfo(result['Parent']);
 
-                                                       // seems to be necessary
-                                                       // when dealing w/ files
-                                                       // located on s3 (need
-                                                       // to look into a
-                                                       // cleaner solution
-                                                       // going forward)
-                                                       $('#filetree').find('a[data-path="' +
-                                                                           result['Parent'] +
-                                                                           '/"]').click().click();
-                                                     }
-                                                     else
-                                                     {
-                                                       $.prompt(result['Error']);
-                                                     }
-                                                   });
+                                                         // seems to be necessary
+                                                         // when dealing w/ files
+                                                         // located on s3 (need
+                                                         // to look into a
+                                                         // cleaner solution
+                                                         // going forward)
+                                                         $('#filetree').find('a[data-path="' +
+                                                                             result['Parent'] +
+                                                                             '/"]').click().click();
+                                                       }
+                                                       else
+                                                       {
+                                                         $.prompt(result['Error']);
+                                                       }
+                                                     });
+                                         }
+                                         else
+                                         {
+                                           $.prompt(lg.no_foldername);
+                                         }
+
+                                         var btns = {};
+                                         btns[lg.create_folder] = true;
+                                         btns[lg.cancel] = false;
+                                         $.prompt(msg, {
+                                           callback: getFolderName,
+                                           buttons: btns
+                                         });
                                        }
                                        else
                                        {
-                                         $.prompt(lg.no_foldername);
+                                         return false;
                                        }
-                                     };
-                                     var btns = {};
-                                     btns[lg.create_folder] = true;
-                                     btns[lg.cancel] = false;
-                                     $.prompt(msg, {
-                                       callback: getFolderName,
-                                       buttons: btns
-                                     });
-
-
+                                     }
                                    });
   };
 
@@ -820,7 +822,7 @@
   };
 
 //Create FileTree and bind elements
-//called during initialization and also when adding a file 
+//called during initialization and also when adding a file
 //directly in root folder (via addNode)
   var createFileTree = function ()
   {
@@ -2484,42 +2486,6 @@
                          getFolderInfo(fileRoot);
                        });
 
-      $('#level-up').click(function (e)
-                           {
-                             var cpath = $("#currentpath").val();
-
-                             if (cpath != fileRoot)
-                             {
-                               window.location.replace("/brite/list" +
-                                                       cpath.substring(0, cpath.slice(0, -1)
-                                                         .lastIndexOf("/")));
-                             }
-                             //
-                             ////var cpath = $('#uploader h1').attr('data-path'); // get
-                             //                                                 // path
-                             //// console.log(' cpath : ' + cpath + ' - fileRoot
-                             //// : ' + fileRoot ); // @todo remove
-                             //if (cpath != fileRoot)
-                             //{
-                             //  // we get the parent folder - cpath.slice(0, -
-                             //  // 1) removes last slash
-                             //  parent =
-                             //    cpath.substring(0, cpath.slice(0, -1).lastIndexOf("/")) +
-                             //    '/';
-                             //  //// console.log(' parent : ' + parent); // @todo
-                             //  //// remove
-                             //  //var currentViewMode = $('#fileinfo').data('view');
-                             //  //$('#fileinfo').data('view', currentViewMode);
-                             //  //$('#filetree').find('a[data-path="' + cpath +
-                             //  //                    '"]').click(); // we close
-                             //  //                                   // the
-                             //  //                                   // previous
-                             //  //                                   // folder
-                             //  getFolderInfo(parent);
-                             //}
-                             return false;
-                           });
-
       // Set buttons to switch between grid and list views.
       $('#grid').click(function ()
                        {
@@ -2559,8 +2525,11 @@
         // safer for IE (see
         // http://stackoverflow.com/questions/1544317/change-type-of-input-field-with-jquery
         $('#upload').remove();
-        $("#newfolder").before('<button value="Upload" type="button" name="upload" id="upload" class="em"><span>' +
-                               lg.upload + '</span></button> ');
+
+        /* TODO - add back in once upload works. */
+        /* jenkinsd */
+        //$("#newfolder").before('<button value="Upload" type="button" name="upload" id="upload" class="em"><span>' +
+        //                       lg.upload + '</span></button> ');
 
         $('#upload').unbind().click(function ()
                                     {

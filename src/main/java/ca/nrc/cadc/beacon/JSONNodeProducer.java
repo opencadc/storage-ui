@@ -99,7 +99,7 @@ public class JSONNodeProducer extends AbstractNodeProducer<NodeJSONWriter>
         try
         {
             nodeWriter.beginArray();
-            loopPages();
+            writePages();
             nodeWriter.endArray();
         }
         catch (Exception e)

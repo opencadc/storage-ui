@@ -98,7 +98,7 @@ public class CSVNodeProducer extends AbstractNodeProducer<NodeCSVWriter>
     {
         try
         {
-            loopPages();
+            writePages();
             nodeWriter.flush();
         }
         catch (Exception e)

@@ -43,6 +43,10 @@
       background: #d9e6f4 !important;
     }
 
+    .public_link {
+      font-style: italic;
+    }
+
     #uploader {
       display: block;
       text-align: right;
@@ -87,6 +91,10 @@
   </li>
 </ul>
 
+<div class="mrgn-tp-md mrgn-lft-md mrgn-bttm-0">
+<#include "_login.ftl">
+</div>
+
 <#include "_main.ftl">
 
 <!--[if gte IE 9 | !IE ]><!-->
@@ -116,7 +124,12 @@
 
 <script type="text/javascript">
 
-  var startURI = "${startURI}";
+  var lockedIcon =
+      "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/beacon/unlock\" title=\"Unlock to modify.\">Unlock</a>";
+  var publicLink =
+      "<a href=\"/beacon/ac{0}/public\" class=\"public_link\" title=\"Change group read access.\">Public</a>";
+  var stringUtil = new cadc.web.util.StringUtil(publicLink);
+  var startURI = "<#if startURI??>${startURI}</#if>";
   var url = "/beacon/page${folder.path}";
   var defaultPageSize = 400;
 
@@ -136,14 +149,6 @@
                           "dataTables_filter mrgn-lft-md mrgn-tp-md";
                       var $beaconTable = $("#beacon");
 
-                      $beaconTable.on("processing.dt", function(e, settings,
-                                                               procFlag)
-                      {
-                        console.log("I am "
-                                    + ((procFlag === true) ? "" : "not ")
-                                    + "processing.");
-                      });
-
                       var $dt = $beaconTable.DataTable({
                                      loading: true,
                                      processing: true,
@@ -156,7 +161,27 @@
                                        {
                                          "targets": 0,
                                          "orderable": false,
-                                         "className": 'select-checkbox'
+                                         "className": 'select-checkbox',
+                                         "searchable": false,
+                                         "render": function (data, type, full, meta)
+                                         {
+                                           var renderedValue;
+
+                                           if (full.length > 6)
+                                           {
+                                             var lockedFlag =
+                                                 (full[7] === "true");
+
+                                             renderedValue =
+                                                 lockedFlag ? lockedIcon : data;
+                                           }
+                                           else
+                                           {
+                                             renderedValue = data;
+                                           }
+
+                                           return renderedValue;
+                                         }
                                        },
                                        {
                                          "targets": 1,
@@ -166,23 +191,53 @@
                                            {
                                              var path = full[9];
                                              return '<span class="glyphicon '
-                                                    +
-                                                    ((full[8] ==
-                                                      'ContainerNode') ?
-                                                     'glyphicon-folder-open' :
-                                                     'glyphicon-cloud-download')
-                                                    +
-                                                    '"></span> <a href="/beacon/list' +
-                                                    path
-                                                    +
-                                                    '" title=""> ' +
-                                                    data + '</a>';
+                                                    + ((full[8] == 'ContainerNode')
+                                                     ? 'glyphicon-folder-open'
+                                                     : 'glyphicon-cloud-download')
+                                                    + '"></span> <a href="/beacon/list'
+                                                    + path + '" title=""> '
+                                                    + data + '</a>';
                                            }
                                            else
                                            {
                                              return data;
                                            }
                                          }
+                                       },
+                                       {
+                                         "targets": 4,
+                                         "searchable": false,
+                                         "render": function (data, type, full, meta)
+                                         {
+                                           var renderedValue;
+
+                                           if (full.length > 9)
+                                           {
+                                             var publicFlag =
+                                                 (full[6] === "true");
+                                             var path = full[9];
+
+                                             if (publicFlag === true)
+                                             {
+                                               renderedValue =
+                                                   stringUtil.format(path);
+                                             }
+                                             else
+                                             {
+                                               renderedValue = data;
+                                             }
+                                           }
+                                           else
+                                           {
+                                             renderedValue = data;
+                                           }
+
+                                           return renderedValue;
+                                         }
+                                       },
+                                       {
+                                         "targets": [2, 3, 5],
+                                         "searchable": false
                                        }
                                      ],
                                      select:
@@ -210,7 +265,6 @@
                           $dt.draw();
 
                           requestData.startURI = startURI;
-                          console.log("Next page.");
                           getPage(requestData, successCallback);
                         }
                       };
@@ -220,7 +274,6 @@
 
   function load(_callback)
   {
-    console.log("First page.");
     getPage(requestData, _callback);
   }
 
