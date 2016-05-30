@@ -66,97 +66,22 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.application;
+package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.PipedCSVWriter;
-import ca.nrc.cadc.beacon.PipedJSONWriter;
-import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.VOSURI;
-import org.restlet.data.MediaType;
-import org.restlet.data.Preference;
-import org.restlet.representation.Representation;
-import org.restlet.representation.WriterRepresentation;
-import org.restlet.resource.Get;
 
-import java.io.IOException;
-import java.io.Writer;
 import java.net.URI;
-import java.util.List;
 
-
-public class StorageItemServerResource extends NodeServerResource
+public abstract class NodeServerResource extends SecureServerResource
 {
-    @Get
-    public Representation representPageData() throws Exception
+    static final int DEFAULT_PAGE_SIZE = 300;
+
+
+    VOSURI getCurrentItemURI()
     {
-        return wantsJSON() ? json() : csv();
-    }
-
-    boolean wantsJSON()
-    {
-        final List<Preference<MediaType>> preferredMediaTypes =
-                getRequest().getClientInfo().getAcceptedMediaTypes();
-
-        for (final Preference<MediaType> preference : preferredMediaTypes)
-        {
-            if (preference.getMetadata().equals(MediaType.APPLICATION_JSON))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    Representation json() throws Exception
-    {
-        final String startURIParameterValue = getQueryValue("startURI");
-        final VOSURI startURI;
-
-        if (StringUtil.hasLength(startURIParameterValue))
-        {
-            startURI = new VOSURI(URI.create(startURIParameterValue));
-        }
-        else
-        {
-            startURI = null;
-        }
-
-        return new WriterRepresentation(MediaType.APPLICATION_JSON)
-        {
-            @Override
-            public void write(final Writer writer) throws IOException
-            {
-                final PipedJSONWriter pipedJSONWriter = new PipedJSONWriter();
-                pipedJSONWriter.start(DEFAULT_PAGE_SIZE, getCurrentItemURI(),
-                                      startURI, writer);
-
-                writer.flush();
-            }
-        };
-    }
-
-    Representation csv() throws Exception
-    {
-        final String startURIParameterValue = getQueryValue("startURI");
-        final String pageSizeParameterValue = getQueryValue("pageSize");
-        final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
-                                ? new VOSURI(URI.create(startURIParameterValue))
-                                : null;
-        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
-                             ? Integer.parseInt(pageSizeParameterValue) : -1;
-
-        return new WriterRepresentation(MediaType.TEXT_CSV)
-        {
-            @Override
-            public void write(final Writer writer) throws IOException
-            {
-                final PipedCSVWriter pipedCSVWriter = new PipedCSVWriter();
-                pipedCSVWriter.start(pageSize, getCurrentItemURI(),
-                                     startURI, writer);
-
-                writer.flush();
-            }
-        };
+        final Object pathInRequest = getRequestAttributes().get("path");
+        final String path = "/" + ((pathInRequest == null)
+                                   ? "" : pathInRequest.toString());
+        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
     }
 }

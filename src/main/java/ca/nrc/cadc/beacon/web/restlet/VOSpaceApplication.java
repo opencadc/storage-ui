@@ -66,17 +66,98 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.application;
+package ca.nrc.cadc.beacon.web.restlet;
 
 import ca.nrc.cadc.auth.AuthenticationUtil;
-import org.restlet.resource.ServerResource;
+import ca.nrc.cadc.beacon.web.PrincipalExtractorImpl;
+import ca.nrc.cadc.beacon.web.resources.AccessControlServerResource;
+import ca.nrc.cadc.beacon.web.resources.MainPageServerResource;
+import ca.nrc.cadc.beacon.web.resources.PageServerResource;
+import ca.nrc.cadc.beacon.web.resources.StorageItemServerResource;
+import org.restlet.*;
+import org.restlet.routing.Route;
+import org.restlet.routing.Router;
+import org.restlet.routing.TemplateRoute;
+import org.restlet.routing.Variable;
 
 import javax.security.auth.Subject;
+import java.security.PrivilegedAction;
+import java.util.Map;
 
-public class SecureServerResource extends ServerResource
+public class VOSpaceApplication extends Application
 {
-    Subject getCurrent()
+    /**
+     * Creates a inbound root Restlet that will receive all incoming calls. In
+     * general, instances of Router, Filter or Finder classes will be used as
+     * initial application Restlet. The default implementation returns null by
+     * default. This method is intended to be overridden by subclasses.
+     *
+     * @return The inbound root Restlet.
+     */
+    @Override
+    public Restlet createInboundRoot()
     {
-        return AuthenticationUtil.getCurrentSubject();
+        final Router router = new Router()
+        {
+            /**
+             * Effectively handles the call using the selected next {@link Restlet},
+             * typically the selected {@link Route}. By default, it just invokes the
+             * next Restlet.
+             *
+             * @param next     The next Restlet to invoke.
+             * @param request  The request.
+             * @param response The response.
+             */
+            @Override
+            protected void doHandle(final Restlet next, final Request request,
+                                    final Response response)
+            {
+                final Subject subject = AuthenticationUtil.getSubject(
+                        new PrincipalExtractorImpl(request));
+
+                Subject.doAs(subject, new PrivilegedAction<Void>()
+                {
+                    @Override
+                    public Void run()
+                    {
+                        next.handle(request, response);
+                        return null;
+                    }
+                });
+            }
+        };
+
+        router.attach("/ac/login", AccessControlServerResource.class);
+
+        final TemplateRoute pageRoute =
+                router.attach("/page/{path}", PageServerResource.class);
+        final TemplateRoute allRoute =
+                router.attach("/all/{path}", StorageItemServerResource.class);
+
+        // Allow for an empty path to be the root.
+        router.attach("/list", MainPageServerResource.class);
+        final TemplateRoute listRoute =
+                router.attach("/list/{path}", MainPageServerResource.class);
+        final TemplateRoute rawRoute =
+                router.attach("/raw/{path}", MainPageServerResource.class);
+
+        final Map<String, Variable> pageRouteVariables =
+                pageRoute.getTemplate().getVariables();
+        pageRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
+
+        final Map<String, Variable> allRouteVariables =
+                allRoute.getTemplate().getVariables();
+        allRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
+
+        final Map<String, Variable> listRouteVariables =
+                listRoute.getTemplate().getVariables();
+        listRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
+
+        final Map<String, Variable> rawRouteVariables =
+                rawRoute.getTemplate().getVariables();
+        rawRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
+
+        router.setContext(getContext());
+        return router;
     }
 }

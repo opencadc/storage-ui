@@ -66,7 +66,7 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.application;
+package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.auth.HttpPrincipal;
 import ca.nrc.cadc.beacon.web.StorageItemFactory;

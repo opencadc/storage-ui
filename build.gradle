@@ -1,12 +1,13 @@
 plugins {
     id "java"
+    id "war"
     id "maven-publish"
     id "com.jfrog.artifactory" version "4.3.0"
 }
 
-apply from: '/usr/local/cadc/build/_canfar.build.gradle'
+apply from: System.getenv("A") + '/compilers/_canfar.build.gradle'
 
-version = '1.2'
+version = '1.3'
 
 dependencies {
     compile group: 'log4j', name: 'log4j', version: '1.2.17'
@@ -23,16 +24,19 @@ dependencies {
     compile group: 'canfar.net', name: 'cadcVOSI', version: '3.+'
     compile group: 'canfar.net', name: 'cadcVOS', version: '2.3.+'
     compile group: 'canfar.net', name: 'cadcVOS-Server', version: '2.+'
+
+    providedCompile "javax.servlet:servlet-api:2.5"
 }
 
-jar {
-    doFirst {
-        manifest {
-            attributes ('Main-Class': 'ca.nrc.cadc.beacon.web.application.VOSpace')
+war {
+    webXml = file('src/xml/web.xml')
+}
 
-            if (!configurations.runtime.isEmpty()) {
-                attributes('Class-Path': configurations.runtime.collect{it.toURI().toString()}.join(' '))
-            }
+clean {
+    doFirst {
+        exec {
+            executable 'rm'
+            args ('-rf', './docker')
         }
     }
 }
@@ -44,3 +48,37 @@ publishing {
         }
     }
 }
+
+task dockerize(type: Exec, dependsOn: [build]) {
+    copy {
+        from 'build/libs/'
+        into './docker/'
+    }
+
+    commandLine 'docker', 'build', '-t', 'mach378.cadc.dao.nrc.ca:5000/beacon', '-f', './docker/Dockerfile', './docker/'
+}
+
+//task initGradle(type: Copy) {
+//  from System.getenv("HOME") + '/.gradle/gradle.properties'
+//  into 'docker/'
+//}
+//
+//task initDockerSrc(type: Copy) {
+//    from 'src'
+//    into 'docker/src/'
+//}
+//
+//task initDockerCompiler(type: Copy) {
+//    from System.getenv("A") + '/compilers/_canfar.build.gradle'
+//    into 'docker/compilers/'
+//}
+//
+//task initDockerize(type: Copy, dependsOn: [initDockerSrc, initDockerCompiler, initGradle]) {
+//    from 'Dockerfile'
+//    from 'build.gradle'
+//    into 'docker/'
+//}
+//
+//task dockerize(type: Exec, dependsOn: [build, initDockerize]) {
+//    commandLine 'docker', 'build', '-t', 'mach378.cadc.dao.nrc.ca:5000/beacon', '-f', './docker/Dockerfile', './docker/'
+//}

@@ -66,54 +66,17 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.application;
+package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.CSVNodeProducer;
-import ca.nrc.cadc.beacon.NodeCSVWriter;
-import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.VOSURI;
-import org.restlet.data.MediaType;
-import org.restlet.representation.Representation;
-import org.restlet.representation.WriterRepresentation;
-import org.restlet.resource.Get;
+import ca.nrc.cadc.auth.AuthenticationUtil;
+import org.restlet.resource.ServerResource;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.net.URI;
+import javax.security.auth.Subject;
 
-
-public class PageServerResource extends NodeServerResource
+public class SecureServerResource extends ServerResource
 {
-    @Get
-    public Representation represent() throws Exception
+    Subject getCurrent()
     {
-        final String startURIParameterValue = getQueryValue("startURI");
-        final String pageSizeParameterValue = getQueryValue("pageSize");
-        final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
-                                ? new VOSURI(URI.create(startURIParameterValue))
-                                : null;
-        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
-                             ? Integer.parseInt(pageSizeParameterValue) : 1000;
-
-        return new WriterRepresentation(MediaType.TEXT_CSV)
-        {
-            @Override
-            public void write(final Writer writer) throws IOException
-            {
-                final CSVNodeProducer csvNodeProducer =
-                        new CSVNodeProducer(pageSize, getCurrentItemURI(),
-                                            startURI,
-                                            new NodeCSVWriter(writer));
-
-                try
-                {
-                    csvNodeProducer.writePage();
-                }
-                catch (Exception e)
-                {
-                    throw new IOException(e);
-                }
-            }
-        };
+        return AuthenticationUtil.getCurrentSubject();
     }
 }

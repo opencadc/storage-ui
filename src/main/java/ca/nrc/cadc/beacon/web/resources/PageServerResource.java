@@ -66,22 +66,54 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.application;
+package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.beacon.CSVNodeProducer;
+import ca.nrc.cadc.beacon.NodeCSVWriter;
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.VOSURI;
+import org.restlet.data.MediaType;
+import org.restlet.representation.Representation;
+import org.restlet.representation.WriterRepresentation;
+import org.restlet.resource.Get;
 
+import java.io.IOException;
+import java.io.Writer;
 import java.net.URI;
 
-public abstract class NodeServerResource extends SecureServerResource
+
+public class PageServerResource extends NodeServerResource
 {
-    static final int DEFAULT_PAGE_SIZE = 300;
-
-
-    VOSURI getCurrentItemURI()
+    @Get
+    public Representation represent() throws Exception
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        final String path = "/" + ((pathInRequest == null)
-                                   ? "" : pathInRequest.toString());
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
+        final String startURIParameterValue = getQueryValue("startURI");
+        final String pageSizeParameterValue = getQueryValue("pageSize");
+        final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
+                                ? new VOSURI(URI.create(startURIParameterValue))
+                                : null;
+        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
+                             ? Integer.parseInt(pageSizeParameterValue) : 1000;
+
+        return new WriterRepresentation(MediaType.TEXT_CSV)
+        {
+            @Override
+            public void write(final Writer writer) throws IOException
+            {
+                final CSVNodeProducer csvNodeProducer =
+                        new CSVNodeProducer(pageSize, getCurrentItemURI(),
+                                            startURI,
+                                            new NodeCSVWriter(writer));
+
+                try
+                {
+                    csvNodeProducer.writePage();
+                }
+                catch (Exception e)
+                {
+                    throw new IOException(e);
+                }
+            }
+        };
     }
 }
