@@ -63,5 +63,5 @@ task copyWAR(type: Copy, dependsOn: war) {
 }
 
 task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
-    commandLine 'docker', 'build', '-t', 'mach378.cadc.dao.nrc.ca:5000/beacon', '-f', './docker/Dockerfile', './docker/'
+    commandLine 'docker', 'build', '-t', 'canfar/beacon', '-f', './docker/Dockerfile', './docker/'
 }
