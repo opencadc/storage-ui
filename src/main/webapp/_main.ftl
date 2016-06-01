@@ -108,3 +108,5 @@
     </ul>
   </form>
 </nav>
+
+<hr class="full-width" />
