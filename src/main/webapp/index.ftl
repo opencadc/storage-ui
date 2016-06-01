@@ -6,7 +6,7 @@
 <head>
   <meta charset="utf-8">
   <!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW)
-  wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
+  wet-boew.github.io/beacon/wet-boew/License-en.html / wet-boew.github.io/beacon/wet-boew/Licence-fr.html -->
   <title>CANFAR - VOSpace</title>
   <meta content="width=device-width,initial-scale=1" name="viewport">
   <!-- Meta data -->
@@ -25,18 +25,18 @@
   <meta name="dcterms.language" title="ISO639-2" content="eng">
   <!-- Meta data-->
   <!--[if gte IE 9 | !IE ]><!-->
-  <link href="/theme-gcwu-fegc/assets/favicon.ico" rel="icon"
+  <link href="/beacon/theme-gcwu-fegc/assets/favicon.ico" rel="icon"
         type="image/x-icon">
-  <link rel="stylesheet" href="/theme-gcwu-fegc/css/theme.min.css">
+  <link rel="stylesheet" href="/beacon/theme-gcwu-fegc/css/theme.min.css">
   <!--<![endif]-->
   <!--[if lt IE 9]>
-  <link href="/theme-gcwu-fegc/assets/favicon.ico" rel="shortcut icon"/>
-  <link rel="stylesheet" href="/theme-gcwu-fegc/css/ie8-theme.min.css"/>
+  <link href="/beacon/theme-gcwu-fegc/assets/favicon.ico" rel="shortcut icon"/>
+  <link rel="stylesheet" href="/beacon/theme-gcwu-fegc/css/ie8-theme.min.css"/>
   <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
-  <script src="/wet-boew/js/ie8-wet-boew.min.js"></script>
+  <script src="/beacon/wet-boew/js/ie8-wet-boew.min.js"></script>
   <![endif]-->
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/css/datatables.css"/>
+  <link rel="stylesheet" href="/beacon/css/datatables.css"/>
 
   <style type="text/css">
     body {
@@ -63,7 +63,7 @@
       top: 0;
       left: 0;
       display: block;
-      background: white url('/themes/gcwu-fegc/images/ajax-loader.gif') no-repeat center center;
+      background: white url('/beacon/themes/gcwu-fegc/images/ajax-loader.gif') no-repeat center center;
       z-index: 999;
       opacity: 0.7;
     }
@@ -78,7 +78,7 @@
   </style>
 
   <noscript>
-    <link rel="stylesheet" href="/wet-boew/css/noscript.min.css"/>
+    <link rel="stylesheet" href="/beacon/wet-boew/css/noscript.min.css"/>
   </noscript>
 </head>
 <body vocab="http://schema.org/" typeof="WebPage">
@@ -98,36 +98,36 @@
 <#include "_main.ftl">
 
 <!--[if gte IE 9 | !IE ]><!-->
-<script src="/wet-boew/js/jquery/2.1.4/jquery.min.js"></script>
-<script src="/wet-boew/js/wet-boew.min.js"></script>
+<script src="/beacon/wet-boew/js/jquery/2.1.4/jquery.min.js"></script>
+<script src="/beacon/wet-boew/js/wet-boew.min.js"></script>
 <!--<![endif]-->
 <!--[if lt IE 9]>
-<script src="/wet-boew/js/ie8-wet-boew2.min.js"></script>
+<script src="/beacon/wet-boew/js/ie8-wet-boew2.min.js"></script>
 
 <![endif]-->
-<script src="/theme-gcwu-fegc/js/theme.min.js"></script>
+<script src="/beacon/theme-gcwu-fegc/js/theme.min.js"></script>
 
-<script type="text/javascript" src="/js/cadc.util.js"></script>
-<script type="text/javascript" src="/js/cadc.uri.js"></script>
-<script type="text/javascript" src="/js/datatables.js"></script>
-<script type="text/javascript" src="/js/jquery.csv-0.71.min.js"></script>
-<script type="text/javascript" src="/js/jquery-browser.js"></script>
-<script type="text/javascript" src="/js/jquery.form-3.24.js"></script>
+<script type="text/javascript" src="/beacon/js/cadc.util.js"></script>
+<script type="text/javascript" src="/beacon/js/cadc.uri.js"></script>
+<script type="text/javascript" src="/beacon/js/datatables.js"></script>
+<script type="text/javascript" src="/beacon/js/jquery.csv-0.71.min.js"></script>
+<script type="text/javascript" src="/beacon/js/jquery-browser.js"></script>
+<script type="text/javascript" src="/beacon/js/jquery.form-3.24.js"></script>
 <!--<script type="text/javascript" src="./js/jquery.splitter/jquery.splitter-1.5.1.js"></script>-->
 <!--<script type="text/javascript" src="./js/jquery.filetree/jqueryFileTree.js"></script>-->
 <script type="text/javascript"
-        src="/js/jquery.contextmenu/jquery.contextMenu-1.01.js"></script>
+        src="/beacon/js/jquery.contextmenu/jquery.contextMenu-1.01.js"></script>
 <script type="text/javascript"
-        src="/js/jquery.tablesorter-2.7.2.min.js"></script>
-<script type="text/javascript" src="/js/jquery.impromptu-3.2.min.js"></script>
-<script type="text/javascript" src="/js/filemanager.js"></script>
+        src="/beacon/js/jquery.tablesorter-2.7.2.min.js"></script>
+<script type="text/javascript" src="/beacon/js/jquery.impromptu-3.2.min.js"></script>
+<script type="text/javascript" src="/beacon/js/filemanager.js"></script>
 
 <script type="text/javascript">
 
   var lockedIcon =
       "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/beacon/unlock\" title=\"Unlock to modify.\">Unlock</a>";
   var publicLink =
-      "<a href=\"/beacon/ac{0}/public\" class=\"public_link\" title=\"Change group read access.\">Public</a>";
+      "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">Public</a>";
   var stringUtil = new cadc.web.util.StringUtil(publicLink);
   var startURI = "<#if startURI??>${startURI}</#if>";
   var url = "/beacon/page${folder.path}";

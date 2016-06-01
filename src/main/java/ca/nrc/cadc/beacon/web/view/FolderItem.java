@@ -96,9 +96,9 @@ public class FolderItem extends StorageItem
         return new Random().nextInt(10000);
     }
 
-    public boolean isNotRoot()
+    public boolean isRoot()
     {
-        return !uri.isRoot();
+        return uri.isRoot();
     }
 
     @Override

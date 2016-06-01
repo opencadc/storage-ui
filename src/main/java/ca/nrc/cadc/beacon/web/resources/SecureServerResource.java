@@ -72,11 +72,24 @@ import ca.nrc.cadc.auth.AuthenticationUtil;
 import org.restlet.resource.ServerResource;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
+import java.util.Map;
 
 public class SecureServerResource extends ServerResource
 {
+    final String SERVLET_CONTEXT_ATTRIBUTE_KEY =
+            "org.restlet.ext.servlet.ServletContext";
+
     Subject getCurrent()
     {
         return AuthenticationUtil.getCurrentSubject();
+    }
+
+    ServletContext getServletContext()
+    {
+        final Map<String, Object> attributes =
+                getApplication().getContext().getAttributes();
+
+        return (ServletContext) attributes.get(SERVLET_CONTEXT_ATTRIBUTE_KEY);
     }
 }

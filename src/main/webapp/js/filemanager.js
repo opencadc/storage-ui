@@ -43,18 +43,18 @@
     {
       if ($.urlParam('config') != 0)
       {
-        url = '/scripts/' + $.urlParam('config');
+        url = '/beacon/scripts/' + $.urlParam('config');
         userconfig = $.urlParam('config');
       }
       else
       {
-        url = '/scripts/filemanager.config.json';
+        url = '/beacon/scripts/filemanager.config.json';
         userconfig = 'filemanager.config.json';
       }
     }
     else
     {
-      url = '/scripts/filemanager.config.default.json';
+      url = '/beacon/scripts/filemanager.config.default.json';
     }
 
     $.ajax({
@@ -172,14 +172,14 @@
 // through culture var or from URL
   if ($.urlParam('langCode') != 0)
   {
-    if (file_exists('/scripts/languages/' + $.urlParam('langCode') + '.js'))
+    if (file_exists('/beacon/scripts/languages/' + $.urlParam('langCode') + '.js'))
     {
       config.options.culture = $.urlParam('langCode');
     }
     else
     {
       var urlLang = $.urlParam('langCode').substring(0, 2);
-      if (file_exists('/scripts/languages/' + urlLang + '.js'))
+      if (file_exists('/beacon/scripts/languages/' + urlLang + '.js'))
       {
         config.options.culture = urlLang;
       }
@@ -188,7 +188,7 @@
 
   var lg = [];
   $.ajax({
-           url: '/scripts/languages/' + config.options.culture + '.js',
+           url: '/beacon/scripts/languages/' + config.options.culture + '.js',
            async: false,
            dataType: 'json',
            success: function (json)
@@ -633,8 +633,8 @@
   {
     path = $('#currentpath').val();
     //$('#currentpath').val(path);
-    $('#uploader h1').text(lg.current_folder +
-                           displayPath(path)).attr('title', displayPath(path, false)).attr('data-path', path);
+    //$('#uploader h1').text(lg.current_folder +
+    //                       displayPath(path)).attr('title', displayPath(path, false)).attr('data-path', path);
 
     $('#newfolder').unbind().click(function ()
                                    {
@@ -688,20 +688,20 @@
                                          {
                                            $.prompt(lg.no_foldername);
                                          }
-
-                                         var btns = {};
-                                         btns[lg.create_folder] = true;
-                                         btns[lg.cancel] = false;
-                                         $.prompt(msg, {
-                                           callback: getFolderName,
-                                           buttons: btns
-                                         });
                                        }
                                        else
                                        {
                                          return false;
                                        }
                                      }
+
+                                     var btns = {};
+                                     btns[lg.create_folder] = true;
+                                     btns[lg.cancel] = false;
+                                     $.prompt(msg, {
+                                       callback: getFolderName,
+                                       buttons: btns
+                                     });
                                    });
   };
 
@@ -1893,7 +1893,7 @@
                                                             '</span></a>');
                     // loading zeroClipboard code
 
-                    loadJS('/scripts/zeroclipboard/copy.js?d' +
+                    loadJS('/beacon/scripts/zeroclipboard/copy.js?d' +
                            d.getMilliseconds());
                     $('#copy-button').click(function ()
                                             {
@@ -2343,9 +2343,9 @@
       $('div.version').html(config.version);
 
       // Loading theme
-      loadCSS('/themes/' + config.options.theme + '/styles/filemanager.css');
+      loadCSS('/beacon/themes/' + config.options.theme + '/styles/filemanager.css');
       $.ajax({
-               url: '/themes/' + config.options.theme + '/styles/ie.css',
+               url: '/beacon/themes/' + config.options.theme + '/styles/ie.css',
                async: false,
                success: function (data)
                {
@@ -2354,18 +2354,18 @@
              });
 
       // loading zeroClipboard
-      loadJS('/scripts/zeroclipboard/dist/ZeroClipboard.js');
+      loadJS('/beacon/scripts/zeroclipboard/dist/ZeroClipboard.js');
 
       // Loading CodeMirror if enabled for online edition
       if (config.edit.enabled)
       {
-        loadCSS('/scripts/CodeMirror/lib/codemirror.css');
-        loadCSS('/scripts/CodeMirror/theme/' + config.edit.theme + '.css');
-        loadJS('/scripts/CodeMirror/lib/codemirror.js');
-        loadJS('/scripts/CodeMirror/addon/selection/active-line.js');
-        loadCSS('/scripts/CodeMirror/addon/display/fullscreen.css');
-        loadJS('/scripts/CodeMirror/addon/display/fullscreen.js');
-        loadJS('/scripts/CodeMirror/dynamic-mode.js');
+        loadCSS('/beacon/scripts/CodeMirror/lib/codemirror.css');
+        loadCSS('/beacon/scripts/CodeMirror/theme/' + config.edit.theme + '.css');
+        loadJS('/beacon/scripts/CodeMirror/lib/codemirror.js');
+        loadJS('/beacon/scripts/CodeMirror/addon/selection/active-line.js');
+        loadCSS('/beacon/scripts/CodeMirror/addon/display/fullscreen.css');
+        loadJS('/beacon/scripts/CodeMirror/addon/display/fullscreen.js');
+        loadJS('/beacon/scripts/CodeMirror/dynamic-mode.js');
       }
 
       if (!config.options.fileRoot)
@@ -2464,7 +2464,7 @@
       /** load searchbox */
       if (config.options.searchBox === true)
       {
-        loadJS("/scripts/filemanager.liveSearch.min.js");
+        loadJS("/beacon/scripts/filemanager.liveSearch.js");
       }
       else
       {
@@ -2511,8 +2511,8 @@
       {
 
         // we load dropzone library
-        loadCSS('/scripts/dropzone/downloads/css/dropzone.css');
-        loadJS('/scripts/dropzone/downloads/dropzone.js');
+        loadCSS('/beacon/scripts/dropzone/downloads/css/dropzone.css');
+        loadJS('/beacon/scripts/dropzone/downloads/dropzone.js');
         Dropzone.autoDiscover = false;
 
         // we remove simple file upload element
@@ -2824,8 +2824,8 @@
       // to prevent bug
       if (config.customScrollbar.enabled)
       {
-        loadCSS('/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.min.css');
-        loadJS('/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js');
+        loadCSS('/beacon/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.min.css');
+        loadJS('/beacon/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js');
 
         var csTheme = config.customScrollbar.theme != undefined ?
                       config.customScrollbar.theme : 'inset-2-dark';

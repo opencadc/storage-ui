@@ -78,6 +78,7 @@ import ca.nrc.cadc.beacon.web.view.StorageItemIterator;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
@@ -105,7 +106,9 @@ public class MainPageServerResource extends NodeServerResource
         final StorageItemFactory storageItemFactory =
                 new StorageItemFactory(URI_EXTRACTOR);
 
-        configuration.setDirectoryForTemplateLoading(new File("src/html"));
+        configuration.setLocalizedLookup(false);
+        configuration.setTemplateLoader(
+                new WebappTemplateLoader(getServletContext()));
 
         final boolean isRaw =
                 getRequest().getResourceRef().getPath().contains("raw");

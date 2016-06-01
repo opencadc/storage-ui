@@ -13,13 +13,14 @@ dependencies {
     compile group: 'log4j', name: 'log4j', version: '1.2.17'
     compile 'org.freemarker:freemarker:2.3.24-incubating'
     compile 'com.opencsv:opencsv:3.+'
-    compile files('/usr/local/cadc/lib/wsUtil.jar', '/usr/local/cadc/lib/wsUtil-augment.jar')
+    compile files('/usr/local/cadc/lib/wsUtil.jar')
     compile group: 'org.restlet.jee', name: 'org.restlet', version: '2.3.+'
     compile group: 'org.restlet.jee', name: 'org.restlet.ext.servlet', version: '2.3.+'
     compile group: 'org.restlet.jee', name: 'org.restlet.ext.freemarker', version: '2.3.+'
     compile group: 'org.restlet.jee', name: 'org.restlet.ext.json', version: '2.3.+'
 
     compile group: 'canfar.net', name: 'cadcUtil', version: '3.+'
+    compile group: 'canfar.net', name: 'cadcAccessControl-Identity', version: '1.+'
     compile group: 'canfar.net', name: 'cadcLog', version: '3.+'
     compile group: 'canfar.net', name: 'cadcVOSI', version: '3.+'
     compile group: 'canfar.net', name: 'cadcVOS', version: '2.3.+'
@@ -29,6 +30,7 @@ dependencies {
 }
 
 war {
+    archiveName baseName + '.' + extension
     webXml = file('src/xml/web.xml')
 }
 
@@ -49,36 +51,18 @@ publishing {
     }
 }
 
-task dockerize(type: Exec, dependsOn: [build]) {
-    copy {
-        from 'build/libs/'
-        into './docker/'
-    }
-
-    commandLine 'docker', 'build', '-t', 'mach378.cadc.dao.nrc.ca:5000/beacon', '-f', './docker/Dockerfile', './docker/'
+task initDockerize(type: Copy, dependsOn: build) {
+    from 'Dockerfile'
+    from 'cadcproxy.pem'
+    into 'docker/'
 }
 
-//task initGradle(type: Copy) {
-//  from System.getenv("HOME") + '/.gradle/gradle.properties'
-//  into 'docker/'
-//}
-//
-//task initDockerSrc(type: Copy) {
-//    from 'src'
-//    into 'docker/src/'
-//}
-//
-//task initDockerCompiler(type: Copy) {
-//    from System.getenv("A") + '/compilers/_canfar.build.gradle'
-//    into 'docker/compilers/'
-//}
-//
-//task initDockerize(type: Copy, dependsOn: [initDockerSrc, initDockerCompiler, initGradle]) {
-//    from 'Dockerfile'
-//    from 'build.gradle'
-//    into 'docker/'
-//}
-//
-//task dockerize(type: Exec, dependsOn: [build, initDockerize]) {
-//    commandLine 'docker', 'build', '-t', 'mach378.cadc.dao.nrc.ca:5000/beacon', '-f', './docker/Dockerfile', './docker/'
-//}
+task copyWAR(type: Copy, dependsOn: war) {
+    from 'build/libs/'
+    into 'docker/'
+    include '*.war'
+}
+
+task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
+    commandLine 'docker', 'build', '-t', 'mach378.cadc.dao.nrc.ca:5000/beacon', '-f', './docker/Dockerfile', './docker/'
+}

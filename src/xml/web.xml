@@ -24,14 +24,41 @@
 
   </servlet>
 
+  <!-- Application logic. -->
   <servlet-mapping>
     <servlet-name>Restlet</servlet-name>
-    <url-pattern>/beacon/*</url-pattern>
+    <url-pattern>/*</url-pattern>
   </servlet-mapping>
 
-  <!--<servlet-mapping>-->
-    <!--<servlet-name>default</servlet-name>-->
-    <!--<url-pattern>/*</url-pattern>-->
-  <!--</servlet-mapping>-->
+  <!-- Static files. -->
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/js/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/css/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/scripts/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/themes/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/theme-gcwu-fegc/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/wet-boew/*</url-pattern>
+  </servlet-mapping>
 
 </web-app>
