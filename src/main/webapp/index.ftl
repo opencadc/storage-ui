@@ -91,9 +91,7 @@
   </li>
 </ul>
 
-<div class="mrgn-tp-md mrgn-lft-md mrgn-bttm-0">
 <#include "_login.ftl">
-</div>
 
 <#include "_main.ftl">
 

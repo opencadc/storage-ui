@@ -101,7 +101,8 @@
       <li>
         <h3 class="wb-navcurr">Manage</h3>
         <ul class="list-group menu list-unstyled">
-          <li><a class="btn btn-default btn-block text-right" href="/canfar/gmui">Groups</a></li>
+          <li><a class="btn btn-default btn-block text-right" href="/canfar/gmui">
+            <span class="glyphicon glyphicon-user"></span>&nbsp;Groups</a></li>
         </ul>
       </li>
     </ul>
