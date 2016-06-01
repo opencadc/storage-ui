@@ -69,7 +69,9 @@
 package ca.nrc.cadc.beacon.web.restlet;
 
 import ca.nrc.cadc.auth.AuthenticationUtil;
+import ca.nrc.cadc.auth.PrincipalExtractor;
 import ca.nrc.cadc.beacon.web.PrincipalExtractorImpl;
+import ca.nrc.cadc.beacon.web.SubjectGenerator;
 import ca.nrc.cadc.beacon.web.resources.AccessControlServerResource;
 import ca.nrc.cadc.beacon.web.resources.MainPageServerResource;
 import ca.nrc.cadc.beacon.web.resources.PageServerResource;
@@ -81,11 +83,18 @@ import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
 import java.security.PrivilegedAction;
 import java.util.Map;
 
 public class VOSpaceApplication extends Application
 {
+    private static final String SUBJECT_GENERATOR_CLASSNAME =
+            "ca.nrc.cadc.beacon.web.subjectGenerator";
+    private static final String DEFAULT_SUBJECT_GENERATOR_CLASSNAME =
+            "ca.nrc.cadc.beacon.web.SubjectGenerator";
+
+
     /**
      * Creates a inbound root Restlet that will receive all incoming calls. In
      * general, instances of Router, Filter or Finder classes will be used as
@@ -99,6 +108,9 @@ public class VOSpaceApplication extends Application
     {
         final Router router = new Router()
         {
+            private final SubjectGenerator subjectGenerator =
+                    createSubjectGenerator();
+
             /**
              * Effectively handles the call using the selected next {@link Restlet},
              * typically the selected {@link Route}. By default, it just invokes the
@@ -112,8 +124,10 @@ public class VOSpaceApplication extends Application
             protected void doHandle(final Restlet next, final Request request,
                                     final Response response)
             {
-                final Subject subject = AuthenticationUtil.getSubject(
-                        new PrincipalExtractorImpl(request));
+                final PrincipalExtractor principalExtractor =
+                        new PrincipalExtractorImpl(request);
+                final Subject subject =
+                        subjectGenerator.generate(principalExtractor);
 
                 Subject.doAs(subject, new PrivilegedAction<Void>()
                 {
@@ -159,5 +173,14 @@ public class VOSpaceApplication extends Application
 
         router.setContext(getContext());
         return router;
+    }
+
+    /**
+     * Override at will.
+     * @return      SubjectGenerator implementation.
+     */
+    SubjectGenerator createSubjectGenerator()
+    {
+        return new SubjectGenerator();
     }
 }

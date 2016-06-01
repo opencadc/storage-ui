@@ -68,112 +68,24 @@
 
 package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.auth.*;
-import ca.nrc.cadc.net.NetUtil;
-import ca.nrc.cadc.util.StringUtil;
-import org.restlet.Request;
-import org.restlet.data.Cookie;
+import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.auth.PrincipalExtractor;
 
-import java.io.IOException;
-import java.security.Principal;
+
+import javax.security.auth.Subject;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
-
-public class PrincipalExtractorImpl implements PrincipalExtractor
+public class SubjectGenerator
 {
-    private final Request request;
-
-    private SSOCookieCredential cookieCredential;
-    private Principal cookiePrincipal;
-
-
-    public PrincipalExtractorImpl(final Request request)
+    public final Subject generate(final PrincipalExtractor principalExtractor)
     {
-        this.request = request;
-        init();
-    }
+        final Set<Object> publicCred = new HashSet<>();
 
+        publicCred.add(principalExtractor.getSSOCookieCredential());
+        publicCred.add(AuthMethod.COOKIE);
 
-    void init()
-    {
-        for (final Cookie ssoCookie : request.getCookies())
-        {
-            if ("CADC_SSO".equals(ssoCookie.getName()) && StringUtil
-                    .hasText(ssoCookie.getValue()))
-            {
-                SSOCookieManager ssoCookieManager = new SSOCookieManager();
-
-                try
-                {
-                    cookiePrincipal = ssoCookieManager
-                            .parse(ssoCookie.getValue());
-                    cookieCredential =
-                            new SSOCookieCredential(
-                                    ssoCookie.getValue(),
-                                    NetUtil.getDomainName(request.
-                                            getResourceRef().toUrl()));
-                }
-                catch (IOException | InvalidDelegationTokenException e)
-                {
-                    System.out.println("Cannot use SSO Cookie. Reason: "
-                                       + e.getMessage());
-                }
-            }
-        }
-    }
-
-
-    @Override
-    public Set<Principal> getPrincipals()
-    {
-        final Set<Principal> principals = new HashSet<>();
-
-        addHTTPPrincipal(principals);
-
-        return principals;
-    }
-
-    @Override
-    public X509CertificateChain getCertificateChain()
-    {
-        return null;
-    }
-
-    @Override
-    public DelegationToken getDelegationToken()
-    {
-        return null;
-    }
-
-    @Override
-    public SSOCookieCredential getSSOCookieCredential()
-    {
-        return cookieCredential;
-    }
-
-    private void addHTTPPrincipal(Set<Principal> principals)
-    {
-        final String httpUser = getAuthenticatedUsername();
-
-        if (StringUtil.hasText(httpUser))
-        {
-            principals.add(new HttpPrincipal(httpUser));
-        }
-        else if (cookiePrincipal != null)
-        {
-            principals.add(cookiePrincipal);
-        }
-
-    }
-
-    protected String getAuthenticatedUsername()
-    {
-        final List<Principal> clientPrincipals =
-                request.getClientInfo().getPrincipals();
-
-        return clientPrincipals.isEmpty() ? null
-                                          : clientPrincipals.get(0).getName();
+        return new Subject(false, principalExtractor.getPrincipals(),
+                            publicCred, new HashSet<>());
     }
 }

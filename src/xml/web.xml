@@ -18,6 +18,11 @@
     </init-param>
 
     <init-param>
+      <param-name>ca.nrc.cadc.beacon.web.subjectGenerator</param-name>
+      <param-value>ca.nrc.cadc.beacon.web.SubjectGenerator</param-value>
+    </init-param>
+
+    <init-param>
       <param-name>org.restlet.clients</param-name>
       <param-value>HTTP FILE</param-value>
     </init-param>

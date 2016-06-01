@@ -87,7 +87,6 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 
 import javax.security.auth.Subject;
-import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.security.PrivilegedAction;
@@ -114,8 +113,9 @@ public class MainPageServerResource extends NodeServerResource
                 getRequest().getResourceRef().getPath().contains("raw");
 
         final VOSURI folderURI = getCurrentItemURI();
+        final Subject currentUser = getCurrent();
         final ContainerNode containerNode =
-                getContainerNode(folderURI, isRaw ? 1 : 19);
+                getContainerNode(folderURI, isRaw ? 1 : 19, currentUser);
         final List<Node> childNodes = containerNode.getNodes();
         final VOSURI startNextPageURI =
                 childNodes.isEmpty() ? null :
@@ -144,7 +144,7 @@ public class MainPageServerResource extends NodeServerResource
         }
 
         final Set<HttpPrincipal> httpPrincipals =
-                getCurrent().getPrincipals(HttpPrincipal.class);
+                currentUser.getPrincipals(HttpPrincipal.class);
 
         if (!httpPrincipals.isEmpty())
         {
@@ -158,18 +158,18 @@ public class MainPageServerResource extends NodeServerResource
     }
 
     ContainerNode getContainerNode(final VOSURI folderURI,
-                                   final int pageSize) throws Exception
+                                   final int pageSize,
+                                   final Subject currentUser) throws Exception
     {
-        final Subject subject = getCurrent();
         final String query = "limit=" + pageSize;
         final RegistryClient registryClient = new RegistryClient();
-        if (subject.getPrincipals().isEmpty())
+        if (currentUser.getPrincipals().isEmpty())
         {
             return getContainerNode(registryClient, folderURI, query, "http");
         }
         else
         {
-            return Subject.doAs(subject, new PrivilegedAction<ContainerNode>()
+            return Subject.doAs(currentUser, new PrivilegedAction<ContainerNode>()
             {
                 @Override
                 public ContainerNode run()
