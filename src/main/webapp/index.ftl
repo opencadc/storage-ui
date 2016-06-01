@@ -189,12 +189,15 @@
                                          {
                                            if (full.length > 9)
                                            {
-                                             var path = full[9];
+                                             var isDirectory =
+                                                 (full[8] == 'ContainerNode');
+                                             var path = (isDirectory ? "list" : "download")
+                                                        + full[9];
                                              return '<span class="glyphicon '
-                                                    + ((full[8] == 'ContainerNode')
+                                                    + (isDirectory
                                                      ? 'glyphicon-folder-open'
                                                      : 'glyphicon-cloud-download')
-                                                    + '"></span> <a href="/beacon/list'
+                                                    + '"></span> <a href="/beacon/'
                                                     + path + '" title=""> '
                                                     + data + '</a>';
                                            }
