@@ -19,7 +19,7 @@
 
     <init-param>
       <param-name>org.restlet.clients</param-name>
-      <param-value>HTTP HTTPS FILE</param-value>
+      <param-value>HTTP FILE</param-value>
     </init-param>
 
   </servlet>
