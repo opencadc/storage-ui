@@ -92,9 +92,7 @@ public class AccessControlServerResource extends SecureServerResource
 
         final CookieSetting cookieSetting =
                 new CookieSetting(0, "CADC_SSO", cookieValue, "/",
-                                  NetUtil.getDomainName(
-                                          getRequest().getResourceRef()
-                                                  .toUrl()),
+                                  "?",
                                   null, 60 * 60 * 24 * 2, false, false);
 
         getResponse().getCookieSettings().add(cookieSetting);
