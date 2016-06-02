@@ -68,7 +68,6 @@
 
 package ca.nrc.cadc.beacon.web.restlet;
 
-import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.PrincipalExtractor;
 import ca.nrc.cadc.beacon.web.PrincipalExtractorImpl;
 import ca.nrc.cadc.beacon.web.SubjectGenerator;
@@ -83,18 +82,12 @@ import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
 
 import javax.security.auth.Subject;
-import javax.servlet.ServletContext;
 import java.security.PrivilegedAction;
 import java.util.Map;
 
+
 public class VOSpaceApplication extends Application
 {
-    private static final String SUBJECT_GENERATOR_CLASSNAME =
-            "ca.nrc.cadc.beacon.web.subjectGenerator";
-    private static final String DEFAULT_SUBJECT_GENERATOR_CLASSNAME =
-            "ca.nrc.cadc.beacon.web.SubjectGenerator";
-
-
     /**
      * Creates a inbound root Restlet that will receive all incoming calls. In
      * general, instances of Router, Filter or Finder classes will be used as
