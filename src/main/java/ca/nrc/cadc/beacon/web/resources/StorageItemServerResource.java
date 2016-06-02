@@ -78,6 +78,7 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.Get;
 
+import javax.security.auth.Subject;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -111,16 +112,14 @@ public class StorageItemServerResource extends NodeServerResource
     Representation json() throws Exception
     {
         final String startURIParameterValue = getQueryValue("startURI");
-        final VOSURI startURI;
-
-        if (StringUtil.hasLength(startURIParameterValue))
-        {
-            startURI = new VOSURI(URI.create(startURIParameterValue));
-        }
-        else
-        {
-            startURI = null;
-        }
+        final String pageSizeParameterValue = getQueryValue("pageSize");
+        final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
+                                ? new VOSURI(URI.create(startURIParameterValue))
+                                : null;
+        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
+                             ? Integer.parseInt(pageSizeParameterValue)
+                             : DEFAULT_PAGE_SIZE;
+        final Subject currentSubject = getCurrent();
 
         return new WriterRepresentation(MediaType.APPLICATION_JSON)
         {
@@ -128,8 +127,8 @@ public class StorageItemServerResource extends NodeServerResource
             public void write(final Writer writer) throws IOException
             {
                 final PipedJSONWriter pipedJSONWriter = new PipedJSONWriter();
-                pipedJSONWriter.start(DEFAULT_PAGE_SIZE, getCurrentItemURI(),
-                                      startURI, writer);
+                pipedJSONWriter.start(pageSize, getCurrentItemURI(),
+                                      startURI, writer, currentSubject);
 
                 writer.flush();
             }
@@ -145,6 +144,7 @@ public class StorageItemServerResource extends NodeServerResource
                                 : null;
         final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
                              ? Integer.parseInt(pageSizeParameterValue) : -1;
+        final Subject currentSubject = getCurrent();
 
         return new WriterRepresentation(MediaType.TEXT_CSV)
         {
@@ -153,7 +153,7 @@ public class StorageItemServerResource extends NodeServerResource
             {
                 final PipedCSVWriter pipedCSVWriter = new PipedCSVWriter();
                 pipedCSVWriter.start(pageSize, getCurrentItemURI(),
-                                     startURI, writer);
+                                     startURI, writer, currentSubject);
 
                 writer.flush();
             }

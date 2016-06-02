@@ -70,15 +70,16 @@ package ca.nrc.cadc.beacon;
 
 import ca.nrc.cadc.vos.VOSURI;
 
+import javax.security.auth.Subject;
 import java.io.IOException;
 
 
 public class CSVNodeProducer extends AbstractNodeProducer<NodeCSVWriter>
 {
     public CSVNodeProducer(int pageSize, VOSURI folderURI, VOSURI startURI,
-                           final NodeCSVWriter nodeWriter)
+                           final NodeCSVWriter nodeWriter, final Subject user)
     {
-        super(pageSize, folderURI, startURI, nodeWriter);
+        super(pageSize, folderURI, startURI, nodeWriter, user);
     }
 
 

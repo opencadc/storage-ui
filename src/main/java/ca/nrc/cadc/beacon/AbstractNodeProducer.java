@@ -68,8 +68,6 @@
 
 package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.SSLUtil;
 import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.ContainerNode;
@@ -78,7 +76,6 @@ import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import javax.security.auth.Subject;
-import java.io.File;
 import java.net.URI;
 import java.security.AccessControlContext;
 import java.security.AccessController;
@@ -93,18 +90,19 @@ public abstract class AbstractNodeProducer<T extends NodeWriter>
     VOSURI current;
     final int pageSize;
     final VOSURI folderURI;
-
+    final Subject user;
     final T nodeWriter;
 
 
     public AbstractNodeProducer(int pageSize, VOSURI folderURI,
                                 final VOSURI startURI,
-                                final T nodeWriter)
+                                final T nodeWriter, final Subject user)
     {
         this.pageSize = pageSize;
         this.folderURI = folderURI;
         this.current = startURI;
         this.nodeWriter = nodeWriter;
+        this.user = user;
     }
 
 
@@ -123,12 +121,8 @@ public abstract class AbstractNodeProducer<T extends NodeWriter>
                         URI.create("ivo://cadc.nrc.ca/vospace"),
                         "http").toExternalForm(), false);
 
-        final Subject subject = AuthenticationUtil.getCurrentSubject();
-//        final Subject subject = SSLUtil.createSubject(
-//                new File("./src/html/cadcproxy.pem"));
-
         final List<Node> nodes =
-                Subject.doAs(subject, new PrivilegedExceptionAction<List<Node>>()
+                Subject.doAs(user, new PrivilegedExceptionAction<List<Node>>()
                 {
                     /**
                      * Performs the computation.  This method will be called by

@@ -70,6 +70,7 @@ package ca.nrc.cadc.beacon;
 
 import ca.nrc.cadc.vos.VOSURI;
 
+import javax.security.auth.Subject;
 import java.io.Writer;
 
 
@@ -77,9 +78,10 @@ public class PipedJSONWriter extends AbstractPipedWriter
 {
     @Override
     NodeProducer getNodeProducer(int pageSize, VOSURI folderURI,
-                                 VOSURI startURI, Writer writer)
+                                 VOSURI startURI, Writer writer,
+                                 final Subject user)
     {
         return new JSONNodeProducer(pageSize, folderURI, startURI,
-                                    new NodeJSONWriter(writer));
+                                    new NodeJSONWriter(writer), user);
     }
 }

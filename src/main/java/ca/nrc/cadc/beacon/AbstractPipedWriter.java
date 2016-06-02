@@ -71,6 +71,7 @@ package ca.nrc.cadc.beacon;
 
 import ca.nrc.cadc.vos.VOSURI;
 
+import javax.security.auth.Subject;
 import java.io.*;
 import java.io.PipedWriter;
 import java.util.concurrent.*;
@@ -79,7 +80,8 @@ import java.util.concurrent.*;
 public abstract class AbstractPipedWriter
 {
     public void start(final int pageSize, final VOSURI folderURI,
-                      final VOSURI startURI, final Writer output)
+                      final VOSURI startURI, final Writer output,
+                      final Subject user)
             throws IOException
     {
         final PipedReader pipedReader = new PipedReader();
@@ -88,7 +90,7 @@ public abstract class AbstractPipedWriter
         final ExecutorService executorService = Executors.newFixedThreadPool(2);
         final NodeProducer nodeProducer = getNodeProducer(pageSize, folderURI,
                                                           startURI,
-                                                          pipedWriter);
+                                                          pipedWriter, user);
 
         executorService.execute(nodeProducer);
         executorService.execute(new NodeConsumer(output, pipedReader));
@@ -107,5 +109,6 @@ public abstract class AbstractPipedWriter
     abstract NodeProducer getNodeProducer(final int pageSize,
                                           final VOSURI folderURI,
                                           final VOSURI startURI,
-                                          final Writer writer);
+                                          final Writer writer,
+                                          final Subject user);
 }

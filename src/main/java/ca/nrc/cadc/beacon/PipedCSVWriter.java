@@ -70,6 +70,7 @@ package ca.nrc.cadc.beacon;
 
 import ca.nrc.cadc.vos.VOSURI;
 
+import javax.security.auth.Subject;
 import java.io.Writer;
 
 
@@ -77,9 +78,10 @@ public class PipedCSVWriter extends AbstractPipedWriter
 {
     @Override
     NodeProducer getNodeProducer(int pageSize, VOSURI folderURI,
-                                 VOSURI startURI, Writer writer)
+                                 VOSURI startURI, Writer writer,
+                                 final Subject user)
     {
         return new CSVNodeProducer(pageSize, folderURI, startURI,
-                                   new NodeCSVWriter(writer));
+                                   new NodeCSVWriter(writer), user);
     }
 }

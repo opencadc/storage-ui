@@ -77,6 +77,7 @@ import org.restlet.representation.Representation;
 import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.Get;
 
+import javax.security.auth.Subject;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
@@ -94,6 +95,7 @@ public class PageServerResource extends NodeServerResource
                                 : null;
         final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
                              ? Integer.parseInt(pageSizeParameterValue) : 1000;
+        final Subject currentSubject = getCurrent();
 
         return new WriterRepresentation(MediaType.TEXT_CSV)
         {
@@ -102,8 +104,8 @@ public class PageServerResource extends NodeServerResource
             {
                 final CSVNodeProducer csvNodeProducer =
                         new CSVNodeProducer(pageSize, getCurrentItemURI(),
-                                            startURI,
-                                            new NodeCSVWriter(writer));
+                                            startURI, new NodeCSVWriter(writer),
+                                            currentSubject);
 
                 try
                 {
