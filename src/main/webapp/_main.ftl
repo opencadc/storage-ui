@@ -10,15 +10,25 @@
       ${folder.path}
       &nbsp;
     </#if>
-      <a id="level-up" name="level-up" class="btn btn-default" href="/beacon/list${folder.parentPath}" role="button" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Up one level"</#if>>
-        <span class="glyphicon glyphicon-arrow-up"></span></a>
-      <button id="newfolder" name="newfolder" type="button" class="btn btn-default" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New folder"</#if>>
-        <span class="glyphicon glyphicon-plus"></span></button>
-    <#if username??>
-      <a id="home" name="home" type="button" class="btn btn-default" title="Navigate to Home directory for ${username}" href="/beacon/list/${username}">
-        <span class="glyphicon glyphicon-home"></span></a>
-    </#if>
     </h2>
+    <div class="mrgn-bttm-sm">
+      <div class="btn-group">
+        <a id="level-up" name="level-up" class="btn btn-default btn-sm" href="/beacon/list${folder.parentPath}" role="button" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Up one level"</#if>>
+          <span class="glyphicon glyphicon-arrow-up"></span></a>
+      <#if username??>
+        <a id="home" name="home" type="button" class="btn btn-default btn-sm" title="Navigate to Home directory for ${username}" href="/beacon/list/${username}">
+          <span class="glyphicon glyphicon-home"></span></a>
+      </#if>
+      </div>
+      <div class="btn-group">
+        <button id="newfolder" name="newfolder" type="button" class="btn btn-default btn-sm" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New folder"</#if>>
+          <span class="glyphicon glyphicon-plus"></span></button>
+        <button id="uploadfile" name="uploadfile" type="button" class="btn btn-default btn-sm" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Upload file"</#if>>
+          <span class="glyphicon glyphicon-cloud-upload"></span></button>
+        <button id="newlink" name="newlink" type="button" class="btn btn-default btn-sm" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New link"</#if>>
+          <span class="glyphicon glyphicon-link"></span></button>
+      </div>
+    </div>
   </section>
 
 <#flush>

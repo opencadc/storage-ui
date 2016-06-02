@@ -44,6 +44,10 @@
       overflow-x: hidden;
     }
 
+    #wb-sec h3 {
+      border: 1px solid #ccc;
+    }
+
     .public_link {
       font-style: italic;
     }

@@ -95,8 +95,6 @@ public class NodeCSVWriter extends NodeWriter
     public void write(final Node n) throws Exception
     {
         final List<String> row = new ArrayList<>();
-        final long sizeInBytes = Long.parseLong(n.getPropertyValue(
-                VOS.PROPERTY_URI_CONTENTLENGTH));
 
         // Checkbox column
         row.add("");
@@ -105,7 +103,10 @@ public class NodeCSVWriter extends NodeWriter
         row.add(n.getName());
 
         // File size in human readable format.
-        row.add(FILE_SIZE_REPRESENTATION.getSizeHumanReadable(sizeInBytes));
+        row.add(FILE_SIZE_REPRESENTATION
+                        .getSizeHumanReadable(Long.parseLong(
+                                n.getPropertyValue(
+                                        VOS.PROPERTY_URI_CONTENTLENGTH))));
 
         // Write Group URIs
         row.add(n.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE));
@@ -133,9 +134,6 @@ public class NodeCSVWriter extends NodeWriter
 
         // URI
         row.add(n.getUri().toString());
-
-        // Size in bytes
-        row.add(Long.toString(sizeInBytes));
 
         csvWriter.writeNext(row.toArray(new String[row.size()]));
     }
