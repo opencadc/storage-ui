@@ -80,6 +80,7 @@ import org.restlet.routing.Route;
 import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
+import sun.jvm.hotspot.debugger.Page;
 
 import javax.security.auth.Subject;
 import java.security.PrivilegedAction;
@@ -136,6 +137,7 @@ public class VOSpaceApplication extends Application
 
         router.attach("/ac/login", AccessControlServerResource.class);
 
+        router.attach("/page", PageServerResource.class);
         final TemplateRoute pageRoute =
                 router.attach("/page/{path}", PageServerResource.class);
         final TemplateRoute allRoute =
