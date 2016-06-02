@@ -41,6 +41,7 @@
   <style type="text/css">
     body {
       background: #d9e6f4 !important;
+      overflow-x: hidden;
     }
 
     .public_link {
