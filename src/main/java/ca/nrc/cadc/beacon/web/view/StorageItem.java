@@ -123,6 +123,11 @@ public abstract class StorageItem
         return FILE_SIZE_REPRESENTATION.getSizeHumanReadable(sizeInBytes);
     }
 
+    public final long getSizeInBytes()
+    {
+        return sizeInBytes;
+    }
+
     public final String getlastModifiedHumanReadable()
     {
         return DATE_FORMAT.format(lastModified);

@@ -109,6 +109,7 @@
 <script type="text/javascript" src="/beacon/js/cadc.util.js"></script>
 <script type="text/javascript" src="/beacon/js/cadc.uri.js"></script>
 <script type="text/javascript" src="/beacon/js/datatables.js"></script>
+<script type="text/javascript" src="/beacon/js/file-size.js"></script>
 <script type="text/javascript" src="/beacon/js/jquery.csv-0.71.min.js"></script>
 <script type="text/javascript" src="/beacon/js/jquery-browser.js"></script>
 <script type="text/javascript" src="/beacon/js/jquery.form-3.24.js"></script>
@@ -205,6 +206,9 @@
                                              return data;
                                            }
                                          }
+                                       },
+                                       {
+                                         "type": "file-size", "targets": 2
                                        },
                                        {
                                          "targets": 4,

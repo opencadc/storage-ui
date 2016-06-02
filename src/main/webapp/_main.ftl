@@ -9,8 +9,14 @@
     <#else>
       ${folder.path}
       &nbsp;
-      <a id="level-up" name="level-up" class="btn btn-default" title="Up one level" href="/beacon/list${folder.parentPath}" role="button">
+    </#if>
+      <a id="level-up" name="level-up" class="btn btn-default" href="/beacon/list${folder.parentPath}" role="button" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Up one level"</#if>>
         <span class="glyphicon glyphicon-arrow-up"></span></a>
+      <button id="newfolder" name="newfolder" type="button" class="btn btn-default" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New folder"</#if>>
+        <span class="glyphicon glyphicon-plus"></span></button>
+    <#if username??>
+      <a id="home" name="home" type="button" class="btn btn-default" title="Navigate to Home directory for ${username}" href="/beacon/list/${username}">
+        <span class="glyphicon glyphicon-home"></span></a>
     </#if>
     </h2>
   </section>
@@ -41,7 +47,7 @@
           <tr>
             <td class="select-checkbox"></td>
             <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a> </td>
-            <td>${childItem.sizeHumanReadable}</td>
+            <td data-val="${childItem.sizeInBytes}">${childItem.sizeHumanReadable}</td>
             <td>${writeGroupNames}</td>
             <td><#if childItem.public><a href="#" class="public_link" title="Change group read access.">Public</a><#else>${childItem.readGroupNames}</#if></td>
             <td>${childItem.lastModifiedHumanReadable}</td>
@@ -67,7 +73,6 @@
   <#--<form id="uploader" method="post" class="mrgn-rght-md mrgn-lft-sm">-->
     <#--<h1 title="${folder.path}">${folder.path}</h1>-->
     <#--<div id="uploadresponse"></div>-->
-  <#--&lt;#&ndash;<button id="home" name="home" type="button" value="Home"><span class="glyphicon glyphicon-home"></span>&nbsp;</button>&ndash;&gt;-->
     <#--<input id="mode" name="mode" type="hidden" value="add" />-->
     <#--<input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>-->
     <#--<div id="file-input-container" class="wb-inv">-->
@@ -86,22 +91,21 @@
   <h2>Section menu</h2>
   <form id="uploader" method="post">
     <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
-    <ul class="list-group menu list-unstyled">
-      <li>
-        <h3 class="wb-navcurr">VOSpace</h3>
-        <ul class="list-group menu list-unstyled">
-        <li>
-          <button id="newfolder" name="newfolder" type="button" class="btn btn-default btn-block text-right" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"</#if>>
-            <span class="glyphicon glyphicon-folder-open"></span>&nbsp;New folder</button>
-        </li>
-        </ul>
-      </li>
-    </ul>
+    <#--<ul class="list-group menu list-unstyled">-->
+      <#--<li>-->
+        <#--<h3 class="wb-navcurr">VOSpace</h3>-->
+        <#--<ul class="list-group menu list-unstyled">-->
+        <#--<li>-->
+
+        <#--</li>-->
+        <#--</ul>-->
+      <#--</li>-->
+    <#--</ul>-->
     <ul class="list-group menu list-unstyled">
       <li>
         <h3 class="wb-navcurr">Manage</h3>
         <ul class="list-group menu list-unstyled">
-          <li><a class="btn btn-default btn-block text-right" href="/canfar/gmui">
+          <li><a class="list-group-item text-right" href="/canfar/groups">
             <span class="glyphicon glyphicon-user"></span>&nbsp;Groups</a></li>
         </ul>
       </li>

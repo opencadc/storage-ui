@@ -71,7 +71,7 @@ package ca.nrc.cadc.beacon;
 public class FileSizeRepresentation
 {
     private static final String[] SIZE_FORMAT_TYPES = {
-            "Bytes", "KB", "MB", "GB", "TB", "PB"
+            "B", "KB", "MB", "GB", "TB", "PB"
     };
 
     private static final long THRESHOLD = 1024L;
