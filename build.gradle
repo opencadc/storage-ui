@@ -27,6 +27,8 @@ dependencies {
     compile 'canfar.net:cadcAccessControl-Identity:1.+'
 
     providedCompile "javax.servlet:servlet-api:2.5"
+
+    testCompile 'junit:junit:4.+'
 }
 
 war {
