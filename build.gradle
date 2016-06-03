@@ -1,30 +1,30 @@
 plugins {
     id "java"
     id "war"
-    id "maven-publish"
-    id "com.jfrog.artifactory" version "4.3.0"
 }
 
-apply from: System.getenv("A") + '/compilers/_canfar.build.gradle'
-
-version = '1.3'
+repositories {
+    jcenter()
+    maven {
+        url  "http://dl.bintray.com/canfar/canfar"
+    }
+}
 
 dependencies {
     compile group: 'log4j', name: 'log4j', version: '1.2.17'
     compile 'org.freemarker:freemarker:2.3.24-incubating'
     compile 'com.opencsv:opencsv:3.+'
-    compile files('/usr/local/cadc/lib/wsUtil.jar')
     compile group: 'org.restlet.jee', name: 'org.restlet', version: '2.3.+'
     compile group: 'org.restlet.jee', name: 'org.restlet.ext.servlet', version: '2.3.+'
     compile group: 'org.restlet.jee', name: 'org.restlet.ext.freemarker', version: '2.3.+'
     compile group: 'org.restlet.jee', name: 'org.restlet.ext.json', version: '2.3.+'
 
-    compile group: 'canfar.net', name: 'cadcUtil', version: '3.+'
-    compile group: 'canfar.net', name: 'cadcAccessControl-Identity', version: '1.+'
-    compile group: 'canfar.net', name: 'cadcLog', version: '3.+'
-    compile group: 'canfar.net', name: 'cadcVOSI', version: '3.+'
-    compile group: 'canfar.net', name: 'cadcVOS', version: '2.3.+'
-    compile group: 'canfar.net', name: 'cadcVOS-Server', version: '2.+'
+    compile 'canfar.net:cadcUtil:3.+'
+    compile 'canfar.net:cadcLog:3.+'
+    compile 'canfar.net:cadcRegistry:1.+'
+    compile 'canfar.net:cadcVOSI:3.+'
+    compile 'canfar.net:cadcVOS-Server:2.+'
+    compile 'canfar.net:cadcAccessControl-Identity:1.+'
 
     providedCompile "javax.servlet:servlet-api:2.5"
 }
@@ -39,14 +39,6 @@ clean {
         exec {
             executable 'rm'
             args ('-rf', './docker')
-        }
-    }
-}
-
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
         }
     }
 }
