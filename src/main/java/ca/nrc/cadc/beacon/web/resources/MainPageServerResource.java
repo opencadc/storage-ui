@@ -85,6 +85,7 @@ import org.restlet.data.Status;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
+import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
 import java.net.MalformedURLException;
@@ -96,26 +97,49 @@ import java.util.*;
 public class MainPageServerResource extends NodeServerResource
 {
     private static final URIExtractor URI_EXTRACTOR = new URIExtractor();
+    private final StorageItemFactory storageItemFactory =
+            new StorageItemFactory(URI_EXTRACTOR);
+    private final Configuration configuration =
+            new Configuration(Configuration.getVersion());
 
-    @Get
-    public Representation represent() throws Exception
+
+    /**
+     * Set-up method that can be overridden in order to initialize the state of
+     * the resource. By default it does nothing.
+     */
+    @Override
+    protected void doInit() throws ResourceException
     {
-        final Configuration configuration =
-                new Configuration(Configuration.getVersion());
-        final StorageItemFactory storageItemFactory =
-                new StorageItemFactory(URI_EXTRACTOR);
+        super.doInit();
 
         configuration.setLocalizedLookup(false);
         configuration.setTemplateLoader(
                 new WebappTemplateLoader(getServletContext()));
+    }
 
-        final boolean isRaw =
-                getRequest().getResourceRef().getPath().contains("raw");
-
+    @Get
+    public Representation represent() throws Exception
+    {
+        final boolean isRaw = wantsRaw();
         final VOSURI folderURI = getCurrentItemURI();
         final Subject currentUser = getCurrent();
         final ContainerNode containerNode =
                 getContainerNode(folderURI, isRaw ? 1 : 19, currentUser);
+
+        return representContainerNode(containerNode, currentUser);
+    }
+
+    boolean wantsRaw()
+    {
+        return getPath().contains("raw");
+    }
+
+    Representation representContainerNode(final ContainerNode containerNode,
+                                          final Subject currentUser)
+            throws Exception
+    {
+        final boolean isRaw = wantsRaw();
+        final VOSURI folderURI = containerNode.getUri();
         final List<Node> childNodes = containerNode.getNodes();
         final VOSURI startNextPageURI =
                 childNodes.isEmpty() ? null :
@@ -135,6 +159,13 @@ public class MainPageServerResource extends NodeServerResource
                                        VOS.PROPERTY_URI_GROUPREAD),
                                childIterator);
 
+        return representFolderItem(folderItem, currentUser, startNextPageURI);
+    }
+
+    Representation representFolderItem(final FolderItem folderItem,
+                                       final Subject currentUser,
+                                       final VOSURI startNextPageURI)
+    {
         final Map<String, Object> dataModel = new HashMap<>();
 
         dataModel.put("folder", folderItem);
@@ -152,7 +183,7 @@ public class MainPageServerResource extends NodeServerResource
                     new HttpPrincipal[httpPrincipals.size()])[0].getName());
         }
 
-        return new TemplateRepresentation(isRaw ? "raw.ftl" : "index.ftl",
+        return new TemplateRepresentation(wantsRaw() ? "raw.ftl" : "index.ftl",
                                           configuration, dataModel,
                                           MediaType.TEXT_HTML);
     }

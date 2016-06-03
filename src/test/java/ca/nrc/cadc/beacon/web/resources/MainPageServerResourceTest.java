@@ -66,9 +66,56 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web.resources;
 
-public abstract class AbstractUnitTest<T>
+import ca.nrc.cadc.beacon.AbstractUnitTest;
+
+import ca.nrc.cadc.beacon.web.view.FolderItem;
+import org.restlet.ext.freemarker.TemplateRepresentation;
+import org.restlet.representation.Representation;
+
+import javax.security.auth.Subject;
+
+import java.util.Map;
+
+import org.junit.Test;
+import static org.junit.Assert.*;
+import static org.easymock.EasyMock.*;
+
+
+public class MainPageServerResourceTest
+        extends AbstractUnitTest<MainPageServerResource>
 {
-    protected T testSubject;
+    @Test
+    @SuppressWarnings("unchecked")
+    public void representFolderItem() throws Exception
+    {
+        testSubject = new MainPageServerResource()
+        {
+            @Override
+            protected String getPath()
+            {
+                return "/get/vospace";
+            }
+        };
+
+        final FolderItem mockFolderItem = createMock(FolderItem.class);
+        final Subject subject = new Subject();
+
+        replay(mockFolderItem);
+
+        final Representation representation =
+                testSubject.representFolderItem(mockFolderItem, subject, null);
+
+        final TemplateRepresentation templateRepresentation =
+                (TemplateRepresentation) representation;
+
+        final Map<String, Object> dataModel =
+                (Map<String, Object>) templateRepresentation.getDataModel();
+
+        assertTrue("Should only have one item.", (dataModel.size() == 1));
+        assertTrue("Should be a folder.", dataModel.containsKey("folder"));
+
+        verify(mockFolderItem);
+    }
 }

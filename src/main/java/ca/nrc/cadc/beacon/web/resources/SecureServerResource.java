@@ -92,4 +92,9 @@ public class SecureServerResource extends ServerResource
 
         return (ServletContext) attributes.get(SERVLET_CONTEXT_ATTRIBUTE_KEY);
     }
+
+    protected String getPath()
+    {
+        return getRequest().getResourceRef().getPath();
+    }
 }
