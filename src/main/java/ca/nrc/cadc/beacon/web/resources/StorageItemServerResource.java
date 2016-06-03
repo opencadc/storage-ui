@@ -90,7 +90,18 @@ public class StorageItemServerResource extends NodeServerResource
     @Get
     public Representation representPageData() throws Exception
     {
-        return wantsJSON() ? json() : csv();
+        final String startURIParameterValue = getQueryValue("startURI");
+        final String pageSizeParameterValue = getQueryValue("pageSize");
+        final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
+                                ? new VOSURI(URI.create(startURIParameterValue))
+                                : null;
+        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
+                             ? Integer.parseInt(pageSizeParameterValue)
+                             : DEFAULT_PAGE_SIZE;
+        final Subject subject = getCurrent();
+
+        return wantsJSON() ? json(pageSize, startURI, subject)
+                           : csv(pageSize, startURI, subject);
     }
 
     boolean wantsJSON()
@@ -109,18 +120,10 @@ public class StorageItemServerResource extends NodeServerResource
         return false;
     }
 
-    Representation json() throws Exception
+    Representation json(final int pageSize, final VOSURI startURI,
+                        final Subject currentSubject)
+            throws Exception
     {
-        final String startURIParameterValue = getQueryValue("startURI");
-        final String pageSizeParameterValue = getQueryValue("pageSize");
-        final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
-                                ? new VOSURI(URI.create(startURIParameterValue))
-                                : null;
-        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
-                             ? Integer.parseInt(pageSizeParameterValue)
-                             : DEFAULT_PAGE_SIZE;
-        final Subject currentSubject = getCurrent();
-
         return new WriterRepresentation(MediaType.APPLICATION_JSON)
         {
             @Override
@@ -135,17 +138,9 @@ public class StorageItemServerResource extends NodeServerResource
         };
     }
 
-    Representation csv() throws Exception
+    Representation csv(final int pageSize, final VOSURI startURI,
+                       final Subject currentSubject) throws Exception
     {
-        final String startURIParameterValue = getQueryValue("startURI");
-        final String pageSizeParameterValue = getQueryValue("pageSize");
-        final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
-                                ? new VOSURI(URI.create(startURIParameterValue))
-                                : null;
-        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
-                             ? Integer.parseInt(pageSizeParameterValue) : -1;
-        final Subject currentSubject = getCurrent();
-
         return new WriterRepresentation(MediaType.TEXT_CSV)
         {
             @Override

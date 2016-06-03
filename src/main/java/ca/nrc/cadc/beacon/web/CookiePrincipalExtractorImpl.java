@@ -81,7 +81,7 @@ import java.util.List;
 import java.util.Set;
 
 
-public class PrincipalExtractorImpl implements PrincipalExtractor
+public class CookiePrincipalExtractorImpl implements PrincipalExtractor
 {
     private final Request request;
 
@@ -89,7 +89,7 @@ public class PrincipalExtractorImpl implements PrincipalExtractor
     private Principal cookiePrincipal;
 
 
-    public PrincipalExtractorImpl(final Request request)
+    public CookiePrincipalExtractorImpl(final Request request)
     {
         this.request = request;
         init();

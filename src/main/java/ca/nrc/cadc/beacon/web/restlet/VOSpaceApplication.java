@@ -69,7 +69,7 @@
 package ca.nrc.cadc.beacon.web.restlet;
 
 import ca.nrc.cadc.auth.PrincipalExtractor;
-import ca.nrc.cadc.beacon.web.PrincipalExtractorImpl;
+import ca.nrc.cadc.beacon.web.CookiePrincipalExtractorImpl;
 import ca.nrc.cadc.beacon.web.SubjectGenerator;
 import ca.nrc.cadc.beacon.web.resources.AccessControlServerResource;
 import ca.nrc.cadc.beacon.web.resources.MainPageServerResource;
@@ -118,7 +118,7 @@ public class VOSpaceApplication extends Application
                                     final Response response)
             {
                 final PrincipalExtractor principalExtractor =
-                        new PrincipalExtractorImpl(request);
+                        new CookiePrincipalExtractorImpl(request);
                 final Subject subject =
                         subjectGenerator.generate(principalExtractor);
 
