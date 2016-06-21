@@ -122,14 +122,9 @@ public class VOSpaceApplication extends Application
                 final Subject subject =
                         subjectGenerator.generate(principalExtractor);
 
-                Subject.doAs(subject, new PrivilegedAction<Void>()
-                {
-                    @Override
-                    public Void run()
-                    {
-                        next.handle(request, response);
-                        return null;
-                    }
+                Subject.doAs(subject, (PrivilegedAction<Void>) () -> {
+                    next.handle(request, response);
+                    return null;
                 });
             }
         };
@@ -144,6 +139,7 @@ public class VOSpaceApplication extends Application
 
         // Allow for an empty path to be the root.
         router.attach("/list", MainPageServerResource.class);
+        router.attach("/list/", MainPageServerResource.class);
         final TemplateRoute listRoute =
                 router.attach("/list/{path}", MainPageServerResource.class);
         final TemplateRoute rawRoute =

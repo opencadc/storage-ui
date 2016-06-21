@@ -1,83 +1,97 @@
 <#assign startTime = .now?time>
 <#assign isRoot = folder.root>
-<main role="main" property="mainContentOfPage" class="col-md-10 col-md-push-2">
-  <h1 id="wb-cont" class="wb-inv" property="name">${folder.path}</h1>
-  <section>
-    <h2 id="wb-cont" property="name">
-    <#if isRoot>
-      ROOT
+<div class="row">
+  <div role="navigation" class="col-sm-3 col-md-2 sidebar">
+    <#if homeURL??>
+      <h3><a href="${homeURL}">VOSpace</a></h3>
     <#else>
-      ${folder.path}
-      &nbsp;
+      <h3><a href="/beacon/list">VOSpace</a></h3>
     </#if>
-    </h2>
-    <ul class="btn-toolbar list-inline mrgn-bttm-sm" role="toolbar">
-      <li class="btn-group">
-        <a id="level-up" name="level-up" class="btn btn-default btn-sm" href="/beacon/list${folder.parentPath}" role="button" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Up one level"</#if>>
-          <span class="glyphicon glyphicon-arrow-up"></span></a>
-      <#if username??>
-        <a id="home" name="home" type="button" class="btn btn-default btn-sm" title="Navigate to Home directory for ${username}" href="/beacon/list/${username}">
-          <span class="glyphicon glyphicon-home"></span></a>
-      </#if>
-      </li>
-      <li class="btn-group">
-        <button id="newfolder" name="newfolder" type="button" class="btn btn-default btn-sm" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New folder"</#if>>
-          <span class="glyphicon glyphicon-plus"></span></button>
-        <button id="uploadfile" name="uploadfile" type="button" class="btn btn-default btn-sm" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Upload file"</#if>>
-          <span class="glyphicon glyphicon-cloud-upload"></span></button>
-        <button id="newlink" name="newlink" type="button" class="btn btn-default btn-sm" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New link"</#if>>
-          <span class="glyphicon glyphicon-link"></span></button>
-      </li>
-    </ul>
-  </section>
+    <form id="uploader" method="post">
+      <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
+      <ul class="list-group menu list-unstyled">
+        <li>
+          <h4 class="active">Manage</h4>
+          <ul class="list-group menu list-unstyled">
+            <li><a class="list-group-item text-right" href="/canfar/groups">
+              <span class="glyphicon glyphicon-user"></span>&nbsp;Groups</a></li>
+          </ul>
+        </li>
+      </ul>
+    </form>
+  </div>
 
-<#flush>
   <!-- Main content -->
-  <section>
-    <div id="fileinfo" class="table-responsive">
-      <div id="beacon_filter" class="dataTables_filter mrgn-lft-md mrgn-tp-md hidden row">
-        <label>Search:<input type="search" class="" placeholder=""
-                             aria-controls="beacon"/></label>
-      </div>
-      <table id="beacon" class="table table-striped table-condensed table-hover">
-        <thead>
-          <tr>
-            <th></th>
-            <th>Name</th>
-            <th>Size</th>
-            <th>Read/Write</th>
-            <th>Read</th>
-            <th>Last Modified (UTC)</th>
-          </tr>
-        </thead>
-        <tbody>
-        <#list folder.childIterator as childItem>
-          <#assign uri = childItem.URI>
-          <#assign writeGroupNames = childItem.writeGroupNames>
-          <tr>
-            <td class="select-checkbox"></td>
-            <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a> </td>
-            <td data-val="${childItem.sizeInBytes}">${childItem.sizeHumanReadable}</td>
-            <td>${writeGroupNames}</td>
-            <td><#if childItem.public><a href="#" class="public_link" title="Change group read access.">Public</a><#else>${childItem.readGroupNames}</#if></td>
-            <td>${childItem.lastModifiedHumanReadable}</td>
-          </tr>
-        </#list>
-        </tbody>
-      </table>
-    </div>
-  </section>
+  <div role="main" class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+    <h1 class="hidden" property="name">${folder.path}</h1>
+    <section>
+      <h2 property="name">
+      <#if isRoot>
+        ROOT
+      <#else>
+        ${folder.path}
+        &nbsp;
+      </#if>
+      </h2>
+      <ul class="btn-toolbar list-inline mrgn-bttm-sm" role="toolbar">
+        <li class="btn-group">
+          <a id="level-up" name="level-up" class="btn btn-default btn-md" href="/beacon/list${folder.parentPath}" role="button" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Up one level"</#if>>
+            <span class="glyphicon glyphicon-arrow-up"></span>&nbspUp</a>
+        <#if homeURL??>
+          <a id="home" name="home" type="button" class="btn btn-default btn-md" title="Navigate to Home directory for ${username}" href="${homeURL}">
+            <span class="glyphicon glyphicon-home"></span>&nbsp;Home</a>
+        </#if>
+        </li>
+        <li class="btn-group">
+          <button id="newdropdown" name="newdropdown" type="button" class="btn btn-default btn-md dropdown-toggle" aria-expanded="false" data-toggle="dropdown" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New folder"</#if>>
+            <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></button>
+            <ul class="dropdown-menu">
+              <li><a id="newfolder"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;Folder</a></li>
+              <li><a id="newupload"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;File</a></li>
+              <li><a id="newlink"><span class="glyphicon glyphicon-link"></span>&nbsp;Link</a></li>
+            </ul>
+          <#--<button id="uploadfile" name="uploadfile" type="button" class="btn btn-default btn-md" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Upload file"</#if>>-->
+            <#--<span class="glyphicon glyphicon-cloud-upload"></span></button>-->
+          <#--<button id="newlink" name="newlink" type="button" class="btn btn-default btn-md" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New link"</#if>>-->
+            <#--<span class="glyphicon glyphicon-link"></span></button>-->
+        </li>
+      </ul>
+    </section>
 
-  <dl id="wb-dtmd">
-    <dt>Date modified:&#32;</dt>
-    <dd>
-      <#assign endTime = .now?time>
-      <#flush>
-      <time property="loadTime">${endTime}</time>
-      <time property="dateModified">${.now?date}</time>
-    </dd>
-  </dl>
-</main>
+    <#flush>
+
+    <section>
+      <div id="fileinfo" class="table-responsive">
+        <table id="beacon" class="table table-striped table-condensed table-hover">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Name</th>
+              <th>Size</th>
+              <th>Read/Write</th>
+              <th>Read</th>
+              <th>Last Modified (UTC)</th>
+            </tr>
+          </thead>
+          <tbody>
+          <#list folder.childIterator as childItem>
+            <#assign uri = childItem.URI>
+            <#assign writeGroupNames = childItem.writeGroupNames>
+            <tr>
+              <td class="select-checkbox"></td>
+              <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a> </td>
+              <td data-val="${childItem.sizeInBytes}">${childItem.sizeHumanReadable}</td>
+              <td>${writeGroupNames}</td>
+              <td><#if childItem.public><a href="#" class="public_link" title="Change group read access.">Public</a><#else>${childItem.readGroupNames}</#if></td>
+              <td>${childItem.lastModifiedHumanReadable}</td>
+            </tr>
+          </#list>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</div>
 
 <#--<div class="row">-->
   <#--<form id="uploader" method="post" class="mrgn-rght-md mrgn-lft-sm">-->
@@ -97,30 +111,3 @@
   <#--</form>-->
 <#--</div>-->
 
-<nav role="navigation" id="wb-sec" typeof="SiteNavigationElement" class="col-md-2 col-md-pull-10 visible-md visible-lg">
-  <h2>Section menu</h2>
-  <form id="uploader" method="post">
-    <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
-    <#--<ul class="list-group menu list-unstyled">-->
-      <#--<li>-->
-        <#--<h3 class="wb-navcurr">VOSpace</h3>-->
-        <#--<ul class="list-group menu list-unstyled">-->
-        <#--<li>-->
-
-        <#--</li>-->
-        <#--</ul>-->
-      <#--</li>-->
-    <#--</ul>-->
-    <ul class="list-group menu list-unstyled">
-      <li>
-        <h3 class="wb-navcurr">Manage</h3>
-        <ul class="list-group menu list-unstyled">
-          <li><a class="list-group-item text-right" href="/canfar/groups">
-            <span class="glyphicon glyphicon-user"></span>&nbsp;Groups</a></li>
-        </ul>
-      </li>
-    </ul>
-  </form>
-</nav>
-
-<hr class="full-width" />

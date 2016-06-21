@@ -48,6 +48,11 @@
 
   <servlet-mapping>
     <servlet-name>default</servlet-name>
+    <url-pattern>/fonts/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
     <url-pattern>/scripts/*</url-pattern>
   </servlet-mapping>
 

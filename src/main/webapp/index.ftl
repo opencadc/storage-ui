@@ -1,51 +1,64 @@
-<!DOCTYPE html><!--[if lt IE 9]>
-<html class="no-js lt-ie9" lang="en"
-      dir="ltr"><![endif]--><!--[if gt IE 8]><!-->
-<html class="no-js" lang="en" dir="ltr" xmlns="http://www.w3.org/1999/html">
-<!--<![endif]-->
+<!DOCTYPE html>
+
+<html lang="en">
 <head>
   <meta charset="utf-8">
-  <!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW)
-  wet-boew.github.io/beacon/wet-boew/License-en.html / wet-boew.github.io/beacon/wet-boew/Licence-fr.html -->
-  <title>CANFAR - VOSpace</title>
-  <meta content="width=device-width,initial-scale=1" name="viewport">
-  <!-- Meta data -->
-  <meta name="description"
-        content="Web Experience Toolkit (WET) includes reusable components for building and maintaining innovative Web sites that are accessible, usable, and interoperable. These reusable components are open source software and free for use by departments and external Web communities">
-  <meta name="dcterms.title"
-        content="Government of Canada Web Usability theme - Web Experience Toolkit">
-  <meta name="dcterms.creator"
-        content="French name of the content author / Nom en français de l'auteur du contenu">
-  <meta name="dcterms.issued" title="W3CDTF"
-        content="Date published (YYYY-MM-DD) / Date de publication (AAAA-MM-JJ)">
-  <meta name="dcterms.modified" title="W3CDTF"
-        content="Date modified (YYYY-MM-DD) / Date de modification (AAAA-MM-JJ)">
-  <meta name="dcterms.subject" title="scheme"
-        content="French subject terms / Termes de sujet en français">
-  <meta name="dcterms.language" title="ISO639-2" content="eng">
-  <!-- Meta data-->
-  <!--[if gte IE 9 | !IE ]><!-->
-  <link href="/beacon/theme-gcwu-fegc/assets/favicon.ico" rel="icon"
-        type="image/x-icon">
-  <link rel="stylesheet" href="/beacon/theme-gcwu-fegc/css/theme.min.css">
-  <!--<![endif]-->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <link rel="icon" href="../../favicon.ico">
+
+  <title>Starter Template for Bootstrap</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="/beacon/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/beacon/css/bootstrap-theme.min.css" rel="stylesheet">
+
+  <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<#--<link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">-->
+
+  <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
   <!--[if lt IE 9]>
-  <link href="/beacon/theme-gcwu-fegc/assets/favicon.ico" rel="shortcut icon"/>
-  <link rel="stylesheet" href="/beacon/theme-gcwu-fegc/css/ie8-theme.min.css"/>
-  <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.12.1/jquery.min.js"></script>
-  <script src="/beacon/wet-boew/js/ie8-wet-boew.min.js"></script>
+  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
   <![endif]-->
+
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/beacon/css/datatables.css"/>
 
   <style type="text/css">
-    body {
-      background: #d9e6f4 !important;
-      overflow-x: hidden;
+
+    label {
+      font-weight: 700;
     }
 
-    #wb-sec h3 {
-      border: 1px solid #ccc;
+    .dropdown-menu > li > a {
+      cursor: pointer;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 51px;
+      bottom: 0;
+      left: 0;
+      z-index: 1000;
+      display: block;
+      padding: 20px;
+      overflow-x: hidden;
+      overflow-y: auto;
+      background-color: #f5f5f5;
+      border-right: 1px solid #eee;
+    }
+
+    .starter-template {
+      padding: 20px 15px;
+      text-align: center;
+    }
+
+    body {
+      padding-top: 40px;
     }
 
     .public_link {
@@ -81,34 +94,30 @@
       width: auto !important;
     }
   </style>
-
-  <noscript>
-    <link rel="stylesheet" href="/beacon/wet-boew/css/noscript.min.css"/>
-  </noscript>
 </head>
-<body vocab="http://schema.org/" typeof="WebPage">
-<ul id="wb-tphp">
-  <li class="wb-slc">
-    <a class="wb-sl" href="#wb-cont">Skip to main content</a>
-  </li>
-  <li class="wb-slc visible-sm visible-md visible-lg">
-    <a class="wb-sl" href="#wb-info">Skip to "About this site"</a>
-  </li>
-</ul>
 
-<#include "_login.ftl">
+<body>
+
+<#if username??>
+  <#assign homeURL = '/beacon/list/${username}'>
+</#if>
+
+<#include "_top_nav.ftl">
+
+<div class="container-fluid">
 
 <#include "_main.ftl">
 
-<!--[if gte IE 9 | !IE ]><!-->
-<script src="/beacon/wet-boew/js/jquery/2.1.4/jquery.min.js"></script>
-<script src="/beacon/wet-boew/js/wet-boew.min.js"></script>
-<!--<![endif]-->
-<!--[if lt IE 9]>
-<script src="/beacon/wet-boew/js/ie8-wet-boew2.min.js"></script>
+</div><!-- /.container -->
 
-<![endif]-->
-<script src="/beacon/theme-gcwu-fegc/js/theme.min.js"></script>
+
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="/beacon/js/jquery.min.js"></script>
+<script src="/beacon/js/bootstrap.min.js"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<#--<script src="/beacon/js/ie10-viewport-bug-workaround.js"></script>-->
 
 <script type="text/javascript" src="/beacon/js/cadc.util.js"></script>
 <script type="text/javascript" src="/beacon/js/cadc.uri.js"></script>
@@ -117,13 +126,12 @@
 <script type="text/javascript" src="/beacon/js/jquery.csv-0.71.min.js"></script>
 <script type="text/javascript" src="/beacon/js/jquery-browser.js"></script>
 <script type="text/javascript" src="/beacon/js/jquery.form-3.24.js"></script>
-<!--<script type="text/javascript" src="./js/jquery.splitter/jquery.splitter-1.5.1.js"></script>-->
-<!--<script type="text/javascript" src="./js/jquery.filetree/jqueryFileTree.js"></script>-->
 <script type="text/javascript"
         src="/beacon/js/jquery.contextmenu/jquery.contextMenu-1.01.js"></script>
 <script type="text/javascript"
         src="/beacon/js/jquery.tablesorter-2.7.2.min.js"></script>
-<script type="text/javascript" src="/beacon/js/jquery.impromptu-3.2.min.js"></script>
+<script type="text/javascript"
+        src="/beacon/js/jquery.impromptu-3.2.min.js"></script>
 <script type="text/javascript" src="/beacon/js/filemanager.js"></script>
 
 <script type="text/javascript">
@@ -154,109 +162,135 @@
                       var $beaconTable = $("#beacon");
 
                       var $dt = $beaconTable.DataTable({
-                                     loading: true,
-                                     processing: true,
-                                     deferRender: true,
-                                     scrollY: "615px",
-                                     lengthChange: false,
-                                     scrollCollapse: true,
-                                     scroller: true,
-                                     columnDefs: [
-                                       {
-                                         "targets": 0,
-                                         "orderable": false,
-                                         "className": 'select-checkbox',
-                                         "searchable": false,
-                                         "render": function (data, type, full, meta)
-                                         {
-                                           var renderedValue;
+                                                         language: {
+                                                           search: "_INPUT_",
+                                                           searchPlaceholder: "Search Name..."
+                                                         },
+                                                         loading: true,
+                                                         processing: true,
+                                                         deferRender: true,
+                                                         scrollY: "615px",
+                                                         lengthChange: false,
+                                                         scrollCollapse: true,
+                                                         scroller: true,
+                                                         columnDefs: [
+                                                           {
+                                                             "targets": 0,
+                                                             "orderable": false,
+                                                             "className": 'select-checkbox',
+                                                             "searchable": false,
+                                                             "render": function (data, type, full, meta)
+                                                             {
+                                                               var renderedValue;
 
-                                           if (full.length > 6)
-                                           {
-                                             var lockedFlag =
-                                                 (full[7] === "true");
+                                                               if (full.length >
+                                                                   6)
+                                                               {
+                                                                 var lockedFlag =
+                                                                     (full[7] ===
+                                                                      "true");
 
-                                             renderedValue =
-                                                 lockedFlag ? lockedIcon : data;
-                                           }
-                                           else
-                                           {
-                                             renderedValue = data;
-                                           }
+                                                                 renderedValue =
+                                                                     lockedFlag ?
+                                                                     lockedIcon :
+                                                                     data;
+                                                               }
+                                                               else
+                                                               {
+                                                                 renderedValue =
+                                                                     data;
+                                                               }
 
-                                           return renderedValue;
-                                         }
-                                       },
-                                       {
-                                         "targets": 1,
-                                         "render": function (data, type, full, meta)
-                                         {
-                                           if (full.length > 9)
-                                           {
-                                             var isDirectory =
-                                                 (full[8] == 'ContainerNode');
-                                             var path = (isDirectory ? "list" : "download")
-                                                        + full[9];
-                                             return '<span class="glyphicon '
-                                                    + (isDirectory
-                                                     ? 'glyphicon-folder-open'
-                                                     : 'glyphicon-cloud-download')
-                                                    + '"></span> <a href="/beacon/'
-                                                    + path + '" title=""> '
-                                                    + data + '</a>';
-                                           }
-                                           else
-                                           {
-                                             return data;
-                                           }
-                                         }
-                                       },
-                                       {
-                                         "type": "file-size", "targets": 2
-                                       },
-                                       {
-                                         "targets": 4,
-                                         "searchable": false,
-                                         "render": function (data, type, full, meta)
-                                         {
-                                           var renderedValue;
+                                                               return renderedValue;
+                                                             }
+                                                           },
+                                                           {
+                                                             "targets": 1,
+                                                             "render": function (data, type, full, meta)
+                                                             {
+                                                               if (full.length >
+                                                                   9)
+                                                               {
+                                                                 var isDirectory =
+                                                                     (full[8] ==
+                                                                      'ContainerNode');
+                                                                 var path = (isDirectory ?
+                                                                             "list" :
+                                                                             "download")
+                                                                            +
+                                                                            full[9];
+                                                                 return '<span class="glyphicon '
+                                                                        +
+                                                                        (isDirectory
+                                                                            ?
+                                                                         'glyphicon-folder-open'
+                                                                            :
+                                                                         'glyphicon-cloud-download')
+                                                                        +
+                                                                        '"></span> <a href="/beacon/'
+                                                                        + path +
+                                                                        '" title=""> '
+                                                                        + data +
+                                                                        '</a>';
+                                                               }
+                                                               else
+                                                               {
+                                                                 return data;
+                                                               }
+                                                             }
+                                                           },
+                                                           {
+                                                             "type": "file-size",
+                                                             "targets": 2
+                                                           },
+                                                           {
+                                                             "targets": 4,
+                                                             "searchable": false,
+                                                             "render": function (data, type, full, meta)
+                                                             {
+                                                               var renderedValue;
 
-                                           if (full.length > 9)
-                                           {
-                                             var publicFlag =
-                                                 (full[6] === "true");
-                                             var path = full[9];
+                                                               if (full.length >
+                                                                   9)
+                                                               {
+                                                                 var publicFlag =
+                                                                     (full[6] ===
+                                                                      "true");
+                                                                 var path = full[9];
 
-                                             if (publicFlag === true)
-                                             {
-                                               renderedValue =
-                                                   stringUtil.format(path);
-                                             }
-                                             else
-                                             {
-                                               renderedValue = data;
-                                             }
-                                           }
-                                           else
-                                           {
-                                             renderedValue = data;
-                                           }
+                                                                 if (publicFlag ===
+                                                                     true)
+                                                                 {
+                                                                   renderedValue =
+                                                                       stringUtil.format(path);
+                                                                 }
+                                                                 else
+                                                                 {
+                                                                   renderedValue =
+                                                                       data;
+                                                                 }
+                                                               }
+                                                               else
+                                                               {
+                                                                 renderedValue =
+                                                                     data;
+                                                               }
 
-                                           return renderedValue;
-                                         }
-                                       },
-                                       {
-                                         "targets": [2, 3, 5],
-                                         "searchable": false
-                                       }
-                                     ],
-                                     select:
-                                     {
-                                       style: 'os',
-                                       selector: 'td:first-child'
-                                     },
-                                     order: [[5, 'desc']]
-                                   });
+                                                               return renderedValue;
+                                                             }
+                                                           },
+                                                           {
+                                                             "targets": [2, 3,
+                                                                         5],
+                                                             "searchable": false
+                                                           }
+                                                         ],
+                                                         select: {
+                                                           style: 'os',
+                                                           selector: 'td:first-child'
+                                                         },
+                                                         order: [[5, 'desc']]
+                                                       });
 
                       var successCallback = function (csvData)
                       {
@@ -294,12 +328,12 @@
             dataType: "text",
             data: _data
           })
-        .done(function(csvData)
+        .done(function (csvData)
               {
                 _callback(csvData);
               });
   }
 </script>
-
 </body>
 </html>
+

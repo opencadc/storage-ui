@@ -200,26 +200,22 @@ public class MainPageServerResource extends NodeServerResource
         }
         else
         {
-            return Subject.doAs(currentUser, new PrivilegedAction<ContainerNode>()
-            {
-                @Override
-                public ContainerNode run()
+            return Subject.doAs(currentUser,
+                                (PrivilegedAction<ContainerNode>) () -> {
+                try
                 {
-                    try
-                    {
-                        return getContainerNode(registryClient, folderURI,
-                                                query, "http");
-                    }
-                    catch (NodeNotFoundException e)
-                    {
-                        getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-                        return null;
-                    }
-                    catch (MalformedURLException e)
-                    {
-                        getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-                        return null;
-                    }
+                    return getContainerNode(registryClient, folderURI,
+                                            query, "http");
+                }
+                catch (NodeNotFoundException e)
+                {
+                    getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+                    return null;
+                }
+                catch (MalformedURLException e)
+                {
+                    getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
+                    return null;
                 }
             });
         }
