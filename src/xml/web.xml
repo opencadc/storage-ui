@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app version="2.5" xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+
+  <context-param>
+    <param-name>debug</param-name>
+    <param-value>false</param-value>
+  </context-param>
+
+  <servlet>
+    <servlet-name>Restlet</servlet-name>
+    <servlet-class>org.restlet.ext.servlet.ServerServlet</servlet-class>
+
+    <init-param>
+      <param-name>org.restlet.application</param-name>
+      <param-value>ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication</param-value>
+    </init-param>
+
+    <init-param>
+      <param-name>ca.nrc.cadc.beacon.web.subjectGenerator</param-name>
+      <param-value>ca.nrc.cadc.beacon.web.SubjectGenerator</param-value>
+    </init-param>
+
+    <init-param>
+      <param-name>org.restlet.clients</param-name>
+      <param-value>HTTP FILE</param-value>
+    </init-param>
+
+  </servlet>
+
+  <!-- Application logic. -->
+  <servlet-mapping>
+    <servlet-name>Restlet</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+
+  <!-- Static files. -->
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/js/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/css/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/fonts/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/scripts/*</url-pattern>
+  </servlet-mapping>
+
+  <servlet-mapping>
+    <servlet-name>default</servlet-name>
+    <url-pattern>/themes/*</url-pattern>
+  </servlet-mapping>
+
+</web-app>

@@ -1,0 +1,62 @@
+plugins {
+    id "java"
+    id "war"
+}
+
+repositories {
+    jcenter()
+    maven {
+        url  "http://dl.bintray.com/canfar/canfar"
+    }
+}
+
+dependencies {
+    compile group: 'log4j', name: 'log4j', version: '1.2.17'
+    compile 'org.freemarker:freemarker:2.3.24-incubating'
+    compile 'com.opencsv:opencsv:3.+'
+    compile group: 'org.restlet.jee', name: 'org.restlet', version: '2.3.+'
+    compile group: 'org.restlet.jee', name: 'org.restlet.ext.servlet', version: '2.3.+'
+    compile group: 'org.restlet.jee', name: 'org.restlet.ext.freemarker', version: '2.3.+'
+    compile group: 'org.restlet.jee', name: 'org.restlet.ext.json', version: '2.3.+'
+
+    compile 'canfar.net:cadcUtil:3.+'
+    compile 'canfar.net:cadcLog:3.+'
+    compile 'canfar.net:cadcRegistry:1.+'
+    compile 'canfar.net:cadcVOSI:3.+'
+    compile 'canfar.net:cadcVOS-Server:2.+'
+    compile 'canfar.net:cadcAccessControl-Identity:1.+'
+
+    providedCompile "javax.servlet:servlet-api:2.5"
+
+    testCompile 'junit:junit:4.+'
+    testCompile 'org.easymock:easymock:3.+'
+}
+
+war {
+    archiveName baseName + '.' + extension
+    webXml = file('src/xml/web.xml')
+}
+
+clean {
+    doFirst {
+        exec {
+            executable 'rm'
+            args ('-rf', './docker')
+        }
+    }
+}
+
+task initDockerize(type: Copy, dependsOn: build) {
+    from 'Dockerfile'
+    into 'docker/'
+}
+
+task copyWAR(type: Copy, dependsOn: war) {
+    from 'build/libs/'
+    into 'docker/'
+    include '*.war'
+}
+
+task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
+    commandLine 'docker', 'build', '-t', 'canfar/beacon', '-f', './docker/Dockerfile', './docker/'
+}
