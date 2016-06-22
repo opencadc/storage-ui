@@ -124,7 +124,7 @@ public class MainPageServerResource extends NodeServerResource
         final VOSURI folderURI = getCurrentItemURI();
         final Subject currentUser = getCurrent();
         final ContainerNode containerNode =
-                getContainerNode(folderURI, isRaw ? 1 : 19, currentUser);
+                getContainerNode(folderURI, isRaw ? 1 : 20, currentUser);
 
         return representContainerNode(containerNode, currentUser);
     }

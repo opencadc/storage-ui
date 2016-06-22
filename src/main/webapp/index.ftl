@@ -10,7 +10,7 @@
   <meta name="author" content="">
   <link rel="icon" href="../../favicon.ico">
 
-  <title>Starter Template for Bootstrap</title>
+  <title>VOSpace browser</title>
 
   <!-- Bootstrap core CSS -->
   <link href="/beacon/css/bootstrap.min.css" rel="stylesheet">
@@ -27,73 +27,7 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="/beacon/css/datatables.css"/>
-
-  <style type="text/css">
-
-    label {
-      font-weight: 700;
-    }
-
-    .dropdown-menu > li > a {
-      cursor: pointer;
-    }
-
-    .sidebar {
-      position: fixed;
-      top: 51px;
-      bottom: 0;
-      left: 0;
-      z-index: 1000;
-      display: block;
-      padding: 20px;
-      overflow-x: hidden;
-      overflow-y: auto;
-      background-color: #f5f5f5;
-      border-right: 1px solid #eee;
-    }
-
-    .starter-template {
-      padding: 20px 15px;
-      text-align: center;
-    }
-
-    body {
-      padding-top: 40px;
-    }
-
-    .public_link {
-      font-style: italic;
-    }
-
-    #uploader {
-      display: block;
-      text-align: right;
-      height: auto;
-      min-height: 30px;
-      overflow: hidden;
-    }
-
-    #loading-wrap {
-      position: fixed;
-      height: 100%;
-      width: 100%;
-      overflow: hidden;
-      top: 0;
-      left: 0;
-      display: block;
-      background: white url('/beacon/themes/canfar/images/ajax-loader.gif') no-repeat center center;
-      z-index: 999;
-      opacity: 0.7;
-    }
-
-    main.container {
-      background: transparent !important;
-    }
-
-    .container {
-      width: auto !important;
-    }
-  </style>
+  <link rel="stylesheet" href="/beacon/css/beacon.css" />
 </head>
 
 <body>
@@ -116,6 +50,8 @@
 <!-- Placed at the end of the document so the pages load faster -->
 <script src="/beacon/js/jquery.min.js"></script>
 <script src="/beacon/js/bootstrap.min.js"></script>
+<script src="/beacon/js/tooltip.js"></script>
+<script src="/beacon/js/popover.js"></script>
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <#--<script src="/beacon/js/ie10-viewport-bug-workaround.js"></script>-->
 
@@ -166,10 +102,12 @@
                                                            search: "_INPUT_",
                                                            searchPlaceholder: "Search Name..."
                                                          },
+                                                         dom: "<'row'<'col-sm-12'i>>"
+                                                              + "<'row'<'col-sm-12'tr>>",
                                                          loading: true,
                                                          processing: true,
                                                          deferRender: true,
-                                                         scrollY: "615px",
+                                                         scrollY: "620px",
                                                          lengthChange: false,
                                                          scrollCollapse: true,
                                                          scroller: true,
@@ -291,6 +229,16 @@
                                                          },
                                                          order: [[5, 'desc']]
                                                        });
+
+                      /**
+                       * We're putting a custom search field in, so we need to
+                       * initialize the searching here.
+                       */
+                      $("input.dataTables_filter").on("keyup",
+                                                       function()
+                                                {
+                                                  $dt.search($(this).val()).draw();
+                                                });
 
                       var successCallback = function (csvData)
                       {

@@ -1,7 +1,7 @@
 <div id="navbar" class="navbar-collapse collapse">
   <form class="navbar-form navbar-right" id="loginForm" role="form" method="post"
         action="/beacon/ac/login">
-    <#if username??><em class="text-info">Logged in as ${username}</em>&nbsp;&nbsp;</#if>
+    <#if username??><em class="auth-info">Logged in as ${username}</em>&nbsp;&nbsp;</#if>
     <div class="form-group">
       <label for="username" class="hidden" id="usernameLabel">Username</label>
       <input type="text" id="username" name="username" class="form-control" tabindex="1" required="required" placeholder="Username" />

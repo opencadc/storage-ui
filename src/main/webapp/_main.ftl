@@ -2,22 +2,16 @@
 <#assign isRoot = folder.root>
 <div class="row">
   <div role="navigation" class="col-sm-3 col-md-2 sidebar">
-    <#if homeURL??>
-      <h3><a href="${homeURL}">VOSpace</a></h3>
-    <#else>
-      <h3><a href="/beacon/list">VOSpace</a></h3>
-    </#if>
+    <ul class="nav nav-sidebar">
+      <li><a href="http://www.canfar.phys.uvic.ca/canfar/groups">&nbsp;Manage Groups</a></li>
+      <li><a href="#" title="Space allocations.">&nbsp;Manage Allocations</a></li>
+    </ul>
+
+    <ul class="nav nav-sidebar">
+      <li><a href="http://www.canfar.net/docs/vospace/">&nbsp;Web Service Documentation</a></li>
+    </ul>
     <form id="uploader" method="post">
       <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
-      <ul class="list-group menu list-unstyled">
-        <li>
-          <h4 class="active">Manage</h4>
-          <ul class="list-group menu list-unstyled">
-            <li><a class="list-group-item text-right" href="/canfar/groups">
-              <span class="glyphicon glyphicon-user"></span>&nbsp;Groups</a></li>
-          </ul>
-        </li>
-      </ul>
     </form>
   </div>
 
@@ -30,38 +24,57 @@
         ROOT
       <#else>
         ${folder.path}
-        &nbsp;
+        <button id="more_details" name="more_details" class="btn btn-sm"
+                data-container="body" data-toggle="popover"
+                data-placement="bottom" title="Details" data-trigger="focus"
+                role="button"
+                data-content="Owned by you and last modified today.">More...</button>
       </#if>
       </h2>
-      <ul class="btn-toolbar list-inline mrgn-bttm-sm" role="toolbar">
-        <li class="btn-group">
-          <a id="level-up" name="level-up" class="btn btn-default btn-md" href="/beacon/list${folder.parentPath}" role="button" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Up one level"</#if>>
-            <span class="glyphicon glyphicon-arrow-up"></span>&nbspUp</a>
-        <#if homeURL??>
-          <a id="home" name="home" type="button" class="btn btn-default btn-md" title="Navigate to Home directory for ${username}" href="${homeURL}">
-            <span class="glyphicon glyphicon-home"></span>&nbsp;Home</a>
-        </#if>
-        </li>
-        <li class="btn-group">
-          <button id="newdropdown" name="newdropdown" type="button" class="btn btn-default btn-md dropdown-toggle" aria-expanded="false" data-toggle="dropdown" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New folder"</#if>>
-            <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></button>
-            <ul class="dropdown-menu">
-              <li><a id="newfolder"><span class="glyphicon glyphicon-folder-open"></span>&nbsp;Folder</a></li>
-              <li><a id="newupload"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;File</a></li>
-              <li><a id="newlink"><span class="glyphicon glyphicon-link"></span>&nbsp;Link</a></li>
-            </ul>
-          <#--<button id="uploadfile" name="uploadfile" type="button" class="btn btn-default btn-md" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="Upload file"</#if>>-->
-            <#--<span class="glyphicon glyphicon-cloud-upload"></span></button>-->
-          <#--<button id="newlink" name="newlink" type="button" class="btn btn-default btn-md" <#if isRoot>disabled="disabled" title="Not permitted at ROOT level"<#else>title="New link"</#if>>-->
-            <#--<span class="glyphicon glyphicon-link"></span></button>-->
-        </li>
-      </ul>
     </section>
 
     <#flush>
 
     <section>
       <div id="fileinfo" class="table-responsive">
+        <nav class="navbar navbar-default">
+          <div class="container-fluid">
+            <div class="collapse navbar-collapse" id="navbar-functions">
+              <ul class="nav navbar-nav">
+                <li>
+                  <a id="level-up" name="level-up" href="/beacon/list${folder.parentPath}" role="button" title="Up one level">
+                    <span class="glyphicon glyphicon-level-up"></span>&nbsp;Up</a></li>
+                <li>
+                  <a id="home" name="home" type="button" title="Navigate to main root." href="/beacon/list/">
+                    <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
+                <li class="dropdown">
+                  <a title="New" class="dropdown-toggle" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
+                    <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></a>
+                  <ul class="dropdown-menu">
+                    <li>
+                      <a id="newfolder">
+                        <span class="glyphicon glyphicon-folder-open"></span>&nbsp;Folder</a></li>
+                    <li>
+                      <a id="newupload">
+                        <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;File</a>
+                      <form id="uploader" method="post" class="hidden">
+                        <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
+                      </form>
+                    </li>
+                    <li>
+                      <a id="newlink"><span class="glyphicon glyphicon-link"></span>&nbsp;Link</a></li>
+                  </ul>
+                </li>
+              </ul>
+              <div class="dataTables_filter" id="beacon_filter">
+                <form class="navbar-form navbar-left" role="search">
+                  <input id="beacon_filter" class="form-control dataTables_filter"
+                         aria-controls="beacon" placeholder="Search Name..." type="search" />
+                </form>
+              </div>
+            </div>
+          </div>
+        </nav>
         <table id="beacon" class="table table-striped table-condensed table-hover">
           <thead>
             <tr>

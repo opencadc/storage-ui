@@ -656,7 +656,7 @@
                                                                // cache issues
                                            $.getJSON(fileConnector +
                                                      '?mode=addfolder&path=' +
-                                                     $('#currentpath').val() +
+                                                     path +
                                                      '&config=' + userconfig +
                                                      '&name=' +
                                                      encodeURIComponent(foldername) +
@@ -693,7 +693,7 @@
                                        {
                                          return false;
                                        }
-                                     }
+                                     };
 
                                      var btns = {};
                                      btns[lg.create_folder] = true;
