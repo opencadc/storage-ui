@@ -22,6 +22,10 @@ For an embedded Jetty container, you can just run:
 
 To produce a running embedded Jetty container running on port `8080`, with a debug port on `5555`.
 
+Although untested, one should be able to pass one's own Registry settings into the `JAVA_OPTS` environment variable:
+
+`gradle -Dca.nrc.cadc.reg.client.Registry.host=<YOUR HOST> run`
+
 Or deploy the `war` file in `build/libs` into a Java container such as Tomcat.
 
 #### Running with Docker
