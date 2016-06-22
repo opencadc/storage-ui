@@ -37,3 +37,12 @@ Or build your own with the provided Dockerfile (from the same directory as the D
 It uses the lightweight Tomcat java container that was built using Alpine Linux found here:
 
 <a href="https://hub.docker.com/r/canfar/tomcat/" rel="external">https://hub.docker.com/r/canfar/tomcat/</a>
+
+Then run it:
+
+`docker run --name beacon -d -p 8080:8080 -p 5555:5555 beacon`
+
+Or mount your own built `war`:
+
+`docker run --name beacon -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps beacon`
+
