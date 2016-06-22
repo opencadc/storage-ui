@@ -81,7 +81,7 @@
       top: 0;
       left: 0;
       display: block;
-      background: white url('/beacon/themes/gcwu-fegc/images/ajax-loader.gif') no-repeat center center;
+      background: white url('/beacon/themes/canfar/images/ajax-loader.gif') no-repeat center center;
       z-index: 999;
       opacity: 0.7;
     }

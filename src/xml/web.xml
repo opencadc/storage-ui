@@ -61,14 +61,4 @@
     <url-pattern>/themes/*</url-pattern>
   </servlet-mapping>
 
-  <servlet-mapping>
-    <servlet-name>default</servlet-name>
-    <url-pattern>/theme-gcwu-fegc/*</url-pattern>
-  </servlet-mapping>
-
-  <servlet-mapping>
-    <servlet-name>default</servlet-name>
-    <url-pattern>/wet-boew/*</url-pattern>
-  </servlet-mapping>
-
 </web-app>

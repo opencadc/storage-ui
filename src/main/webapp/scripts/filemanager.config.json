@@ -3,7 +3,7 @@
     "options": {
         "culture": "en",
         "lang": "php",
-        "theme": "gcwu-fegc",
+        "theme": "canfar",
         "defaultViewMode": "list",
         "autoload": true,
         "showFullPath": false,
