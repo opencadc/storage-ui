@@ -1,6 +1,4 @@
-<!-- Uncomment when Travis can have access to the OpenCADC organization.
-<a href="https://travis-ci.org/opencadc/vosui"><img src="https://travis-ci.org/opencadc/vosui.svg?branch=master" /></a> -->
-_Travis build pending_
+<a href="https://travis-ci.org/opencadc/vosui"><img src="https://travis-ci.org/opencadc/vosui.svg?branch=master" /></a>
 
 By default, this uses the CANFAR (CADC) VOSpace located at:
 
