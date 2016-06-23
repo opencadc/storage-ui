@@ -29,6 +29,8 @@ Although untested, one should be able to pass one's own Registry settings into t
 
 Or deploy the `war` file in `build/libs` into a Java container such as Tomcat.
 
+Then, in your browser, look at <a href="http://localhost:8080/beacon/list">http://localhost:8080/beacon/list</a>.
+
 #### Running with Docker
 
 See the Docker repo here:
