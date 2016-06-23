@@ -43,6 +43,8 @@ To run it as-is and use the CANFAR VOSpace Service, use:
 
 `docker run --name beacon -d -p 8080:8080 -p 5555:5555 beacon`
 
+##### Running with Docker for your environment
+
 To run in your environment, create your own Dockerfile:
 
 ```
