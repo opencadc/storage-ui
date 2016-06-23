@@ -35,19 +35,33 @@ See the Docker repo here:
 
 <a rel="external" href="https://hub.docker.com/r/canfar/beacon/">https://hub.docker.com/r/canfar/beacon/</a>
 
-Or build your own with the provided Dockerfile (from the same directory as the Dockerfile):
-
-`docker build -t beacon .`
-
 It uses the lightweight Tomcat java container that was built using Alpine Linux found here:
 
 <a href="https://hub.docker.com/r/canfar/tomcat/" rel="external">https://hub.docker.com/r/canfar/tomcat/</a>
 
-Then run it:
+To run it as-is and use the CANFAR VOSpace Service, use:
 
 `docker run --name beacon -d -p 8080:8080 -p 5555:5555 beacon`
 
+To run in your environment, create your own Dockerfile:
+
+```
+# This is the Docker hub location for the VOSpace Browser (Project Beacon)
+FROM canfar/beacon
+
+# The JAVA_OPTS variable to pass to Tomcat.  Note the -Dca.nrc.cadc.reg.client.RegistryClient.host property.
+ENV JAVA_OPTS "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.auth.BasicX509TrustManager.trust=true -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry lookup>"
+```
+
+Then run:
+
+`docker build -t mybeacon .`
+
+Then run it:
+
+`docker run --name mybeacon -d -p 8080:8080 -p 5555:5555 mybeacon`
+
 Or mount your own built `war`:
 
-`docker run --name beacon -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps beacon`
+`docker run --name mybeacon -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps mybeacon`
 
