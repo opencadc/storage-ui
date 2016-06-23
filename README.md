@@ -2,7 +2,7 @@ By default, this uses the CANFAR (CADC) VOSpace located at:
 
 <a rel="external" href="http://www.canfar.phys.uvic.ca/vospace">http://www.canfar.phys.uvic.ca/vospace</a>
 
-<a href="https://travis-ci.org/opencadc/vosui"><img src="https://travis-ci.org/opencadc/vosui.svg?branch=master" /></a>
+<a href="https://travis-ci.org/canfar/beacon"><img src="https://travis-ci.org/canfar/beacon.svg?branch=master" /></a>
 
 
 ### Building
