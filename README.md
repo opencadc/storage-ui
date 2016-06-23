@@ -1,3 +1,4 @@
+Build status:
 <a href="https://travis-ci.org/opencadc/vosui"><img src="https://travis-ci.org/opencadc/vosui.svg?branch=master" /></a>
 
 By default, this uses the CANFAR (CADC) VOSpace located at:
