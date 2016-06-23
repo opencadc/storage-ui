@@ -43,6 +43,8 @@ To run it as-is and use the CANFAR VOSpace Service, use:
 
 `docker run --name beacon -d -p 8080:8080 -p 5555:5555 beacon`
 
+Then, in your browser, look at <a href="http://localhost:8080/beacon/list">http://localhost:8080/beacon/list</a>.
+
 ##### Running with Docker for your environment
 
 To run in your environment, create your own Dockerfile:
@@ -67,3 +69,4 @@ Or mount your own built `war`:
 
 `docker run --name mybeacon -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps mybeacon`
 
+Then, in your browser, look at <a href="http://localhost:8080/beacon/list">http://localhost:8080/beacon/list</a>.
