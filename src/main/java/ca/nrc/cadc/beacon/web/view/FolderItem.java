@@ -83,13 +83,14 @@ public class FolderItem extends StorageItem
 
     public FolderItem(VOSURI uri, long sizeInBytes, Date lastModified,
                       boolean publicFlag, boolean lockedFlag,
-                      URI[] writeGroupURIs, URI[] readGroupURIs,
+                      URI[] writeGroupURIs, URI[] readGroupURIs, String owner,
                       Iterator<StorageItem> childIterator)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-              writeGroupURIs, readGroupURIs);
+              writeGroupURIs, readGroupURIs, owner);
         this.childIterator = childIterator;
     }
+
 
     public int getChildCount()
     {

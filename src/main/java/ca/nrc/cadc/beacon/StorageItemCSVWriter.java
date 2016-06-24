@@ -66,86 +66,73 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web;
+package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.beacon.web.view.FileItem;
-import ca.nrc.cadc.beacon.web.view.FolderItem;
+
 import ca.nrc.cadc.beacon.web.view.StorageItem;
-import ca.nrc.cadc.beacon.web.view.StorageItemIterator;
-import ca.nrc.cadc.date.DateUtil;
-import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.VOSURI;
 
-import java.net.URI;
-import java.util.Date;
+import com.opencsv.CSVWriter;
+
+import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 
-public class StorageItemFactory
+public class StorageItemCSVWriter extends StorageItemWriter
 {
-    private final URIExtractor uriExtractor;
+    private final CSVWriter csvWriter;
 
 
-    public StorageItemFactory(final URIExtractor uriExtractor)
+    public StorageItemCSVWriter(final Writer writer)
     {
-        this.uriExtractor = uriExtractor;
+        super(writer);
+        this.csvWriter = new CSVWriter(writer);
     }
 
 
-    public StorageItem translate(final Node node) throws Exception
+    @Override
+    public void write(final StorageItem storageItem) throws Exception
     {
-        final StorageItem nextItem;
-        final VOSURI nodeURI = node.getUri();
-        final boolean isRoot = nodeURI.isRoot();
-        final long sizeInBytes = isRoot ? -1L :
-                                 Long.parseLong(node.getPropertyValue(
-                                         VOS.PROPERTY_URI_CONTENTLENGTH));
-        final Date lastModifiedDate =
-                isRoot ? null : DateUtil
-                        .getDateFormat(DateUtil.IVOA_DATE_FORMAT, DateUtil.UTC)
-                        .parse(node.getPropertyValue(VOS.PROPERTY_URI_DATE));
-        final boolean publicFlag =
-                Boolean.parseBoolean(
-                        node.getPropertyValue(VOS.PROPERTY_URI_ISPUBLIC));
-        final String lockedFlagValue =
-                node.getPropertyValue(VOS.PROPERTY_URI_ISLOCKED);
-        final boolean lockedFlag = StringUtil.hasText(lockedFlagValue)
-                                   && Boolean.parseBoolean(lockedFlagValue);
-        final String writeGroupValues =
-                node.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE);
-        final URI[] writeGroupURIs = uriExtractor.extract(writeGroupValues);
-        final String readGroupValues =
-                node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
-        final URI[] readGroupURIs = uriExtractor.extract(readGroupValues);
-        final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
+        final List<String> row = new ArrayList<>();
 
-        if (node instanceof ContainerNode)
-        {
-            nextItem = new FolderItem(nodeURI, sizeInBytes,
-                                      lastModifiedDate, publicFlag,
-                                      lockedFlag, writeGroupURIs,
-                                      readGroupURIs, owner,
-                                      new StorageItemIterator(
-                                              ((ContainerNode) node).getNodes()
-                                                      .iterator(),
-                                              this));
-        }
-        else
-        {
-            nextItem = new FileItem(nodeURI, sizeInBytes,
-                                    lastModifiedDate, publicFlag,
-                                    lockedFlag, writeGroupURIs,
-                                    readGroupURIs, owner);
-        }
+        // Checkbox column [0]
+        row.add("");
 
-        return nextItem;
-    }
+        // Name [1]
+        row.add(storageItem.getName());
 
-    public FolderItem getFolderItemView(final ContainerNode containerNode)
-            throws Exception
-    {
-        return (FolderItem) translate(containerNode);
+        // File size in human readable format. [2]
+        row.add(storageItem.getSizeHumanReadable());
+
+        // Last Modified in human readable format. [3]
+        row.add(storageItem.getLastModifiedHumanReadable());
+
+        // Write Group Names [4]
+        row.add(storageItem.getWriteGroupNames());
+
+        // Read Group Names [5]
+        row.add(storageItem.getReadGroupNames());
+
+        // Hidden items.
+
+        // Is public flag. [6]
+        row.add(Boolean.toString(storageItem.isPublic()));
+
+        // Is Locked flag. [7]
+        row.add(Boolean.toString(storageItem.isLocked()));
+
+        // CSS for icon to display [8]
+        row.add(storageItem.getItemIconCSS());
+
+        // Path [9]
+        row.add(storageItem.getPath());
+
+        // URI [10]
+        row.add(storageItem.getURI().toString());
+
+        // Link for click action. [11]
+        row.add(storageItem.getLinkURI());
+
+        csvWriter.writeNext(row.toArray(new String[row.size()]));
     }
 }

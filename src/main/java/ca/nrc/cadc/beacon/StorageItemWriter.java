@@ -66,86 +66,77 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web;
+package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.beacon.web.view.FileItem;
-import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.beacon.web.view.StorageItem;
-import ca.nrc.cadc.beacon.web.view.StorageItemIterator;
-import ca.nrc.cadc.date.DateUtil;
-import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.VOSURI;
 
-import java.net.URI;
-import java.util.Date;
+import java.io.IOException;
+import java.io.Writer;
 
 
-public class StorageItemFactory
+public abstract class StorageItemWriter extends Writer
 {
-    private final URIExtractor uriExtractor;
+    private final Writer writer;
 
 
-    public StorageItemFactory(final URIExtractor uriExtractor)
+    /**
+     * Creates a new character-stream writer whose critical sections will
+     * synchronize on the writer itself.
+     */
+    public StorageItemWriter(final Writer writer)
     {
-        this.uriExtractor = uriExtractor;
+        this.writer = writer;
     }
 
 
-    public StorageItem translate(final Node node) throws Exception
+    abstract void write(final StorageItem storageItem) throws Exception;
+
+    /**
+     * Writes a portion of an array of characters.
+     *
+     * @param cbuf Array of characters
+     * @param off  Offset from which to start writing characters
+     * @param len  Number of characters to write
+     * @throws IOException If an I/O error occurs
+     */
+    @Override
+    public void write(char[] cbuf, int off, int len) throws IOException
     {
-        final StorageItem nextItem;
-        final VOSURI nodeURI = node.getUri();
-        final boolean isRoot = nodeURI.isRoot();
-        final long sizeInBytes = isRoot ? -1L :
-                                 Long.parseLong(node.getPropertyValue(
-                                         VOS.PROPERTY_URI_CONTENTLENGTH));
-        final Date lastModifiedDate =
-                isRoot ? null : DateUtil
-                        .getDateFormat(DateUtil.IVOA_DATE_FORMAT, DateUtil.UTC)
-                        .parse(node.getPropertyValue(VOS.PROPERTY_URI_DATE));
-        final boolean publicFlag =
-                Boolean.parseBoolean(
-                        node.getPropertyValue(VOS.PROPERTY_URI_ISPUBLIC));
-        final String lockedFlagValue =
-                node.getPropertyValue(VOS.PROPERTY_URI_ISLOCKED);
-        final boolean lockedFlag = StringUtil.hasText(lockedFlagValue)
-                                   && Boolean.parseBoolean(lockedFlagValue);
-        final String writeGroupValues =
-                node.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE);
-        final URI[] writeGroupURIs = uriExtractor.extract(writeGroupValues);
-        final String readGroupValues =
-                node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
-        final URI[] readGroupURIs = uriExtractor.extract(readGroupValues);
-        final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
-
-        if (node instanceof ContainerNode)
-        {
-            nextItem = new FolderItem(nodeURI, sizeInBytes,
-                                      lastModifiedDate, publicFlag,
-                                      lockedFlag, writeGroupURIs,
-                                      readGroupURIs, owner,
-                                      new StorageItemIterator(
-                                              ((ContainerNode) node).getNodes()
-                                                      .iterator(),
-                                              this));
-        }
-        else
-        {
-            nextItem = new FileItem(nodeURI, sizeInBytes,
-                                    lastModifiedDate, publicFlag,
-                                    lockedFlag, writeGroupURIs,
-                                    readGroupURIs, owner);
-        }
-
-        return nextItem;
+        writer.write(cbuf, off, len);
     }
 
-    public FolderItem getFolderItemView(final ContainerNode containerNode)
-            throws Exception
+    /**
+     * Flushes the stream.  If the stream has saved any characters from the
+     * various write() methods in a buffer, write them immediately to their
+     * intended destination.  Then, if that destination is another character or
+     * byte stream, flush it.  Thus one flush() invocation will flush all the
+     * buffers in a chain of Writers and OutputStreams.
+     * <p/>
+     * <p> If the intended destination of this stream is an abstraction provided
+     * by the underlying operating system, for example a file, then flushing the
+     * stream guarantees only that bytes previously written to the stream are
+     * passed to the operating system for writing; it does not guarantee that
+     * they are actually written to a physical device such as a disk drive.
+     *
+     * @throws IOException If an I/O error occurs
+     */
+    @Override
+    public void flush() throws IOException
     {
-        return (FolderItem) translate(containerNode);
+        writer.flush();
+    }
+
+    /**
+     * Closes the stream, flushing it first. Once the stream has been closed,
+     * further write() or flush() invocations will cause an IOException to be
+     * thrown. Closing a previously closed stream has no effect.
+     *
+     * @throws IOException If an I/O error occurs
+     */
+    @Override
+    public void close() throws IOException
+    {
+        flush();
+        writer.close();
     }
 }

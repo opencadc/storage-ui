@@ -66,86 +66,61 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web;
+package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.beacon.web.view.FileItem;
-import ca.nrc.cadc.beacon.web.view.FolderItem;
-import ca.nrc.cadc.beacon.web.view.StorageItem;
-import ca.nrc.cadc.beacon.web.view.StorageItemIterator;
-import ca.nrc.cadc.date.DateUtil;
-import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOS;
+import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.vos.VOSURI;
 
-import java.net.URI;
-import java.util.Date;
+import javax.security.auth.Subject;
+import java.io.IOException;
 
 
-public class StorageItemFactory
+public class CSVStorageItemProducer extends AbstractStorageItemProducer<StorageItemCSVWriter>
 {
-    private final URIExtractor uriExtractor;
-
-
-    public StorageItemFactory(final URIExtractor uriExtractor)
+    public CSVStorageItemProducer(int pageSize, VOSURI folderURI, VOSURI startURI,
+                                  final StorageItemCSVWriter nodeWriter,
+                                  final Subject user,
+                                  final StorageItemFactory storageItemFactory)
     {
-        this.uriExtractor = uriExtractor;
+        super(pageSize, folderURI, startURI, nodeWriter, user,
+              storageItemFactory);
     }
 
 
-    public StorageItem translate(final Node node) throws Exception
+    /**
+     * When an object implementing interface <code>Runnable</code> is used
+     * to create a thread, starting the thread causes the object's
+     * <code>run</code> method to be called in that separately executing
+     * thread.
+     * <p/>
+     * The general contract of the method <code>run</code> is that it may
+     * take any action whatsoever.
+     *
+     * @see Thread#run()
+     */
+    @Override
+    public void run()
     {
-        final StorageItem nextItem;
-        final VOSURI nodeURI = node.getUri();
-        final boolean isRoot = nodeURI.isRoot();
-        final long sizeInBytes = isRoot ? -1L :
-                                 Long.parseLong(node.getPropertyValue(
-                                         VOS.PROPERTY_URI_CONTENTLENGTH));
-        final Date lastModifiedDate =
-                isRoot ? null : DateUtil
-                        .getDateFormat(DateUtil.IVOA_DATE_FORMAT, DateUtil.UTC)
-                        .parse(node.getPropertyValue(VOS.PROPERTY_URI_DATE));
-        final boolean publicFlag =
-                Boolean.parseBoolean(
-                        node.getPropertyValue(VOS.PROPERTY_URI_ISPUBLIC));
-        final String lockedFlagValue =
-                node.getPropertyValue(VOS.PROPERTY_URI_ISLOCKED);
-        final boolean lockedFlag = StringUtil.hasText(lockedFlagValue)
-                                   && Boolean.parseBoolean(lockedFlagValue);
-        final String writeGroupValues =
-                node.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE);
-        final URI[] writeGroupURIs = uriExtractor.extract(writeGroupValues);
-        final String readGroupValues =
-                node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
-        final URI[] readGroupURIs = uriExtractor.extract(readGroupValues);
-        final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
-
-        if (node instanceof ContainerNode)
+        try
         {
-            nextItem = new FolderItem(nodeURI, sizeInBytes,
-                                      lastModifiedDate, publicFlag,
-                                      lockedFlag, writeGroupURIs,
-                                      readGroupURIs, owner,
-                                      new StorageItemIterator(
-                                              ((ContainerNode) node).getNodes()
-                                                      .iterator(),
-                                              this));
+            writePages();
+            storageItemWriter.flush();
         }
-        else
+        catch (Exception e)
         {
-            nextItem = new FileItem(nodeURI, sizeInBytes,
-                                    lastModifiedDate, publicFlag,
-                                    lockedFlag, writeGroupURIs,
-                                    readGroupURIs, owner);
+            throw new RuntimeException(e);
         }
-
-        return nextItem;
-    }
-
-    public FolderItem getFolderItemView(final ContainerNode containerNode)
-            throws Exception
-    {
-        return (FolderItem) translate(containerNode);
+        finally
+        {
+            try
+            {
+                storageItemWriter.close();
+            }
+            catch (IOException e)
+            {
+                e.printStackTrace();
+                // Do nothing.
+            }
+        }
     }
 }

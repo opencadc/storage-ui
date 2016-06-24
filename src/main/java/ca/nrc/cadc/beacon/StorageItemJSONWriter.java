@@ -68,55 +68,77 @@
 
 package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.beacon.web.view.StorageItem;
+import org.json.JSONWriter;
 
-import javax.security.auth.Subject;
-import java.io.IOException;
+import java.io.Writer;
 
 
-public class CSVNodeProducer extends AbstractNodeProducer<NodeCSVWriter>
+public class StorageItemJSONWriter extends StorageItemWriter
 {
-    public CSVNodeProducer(int pageSize, VOSURI folderURI, VOSURI startURI,
-                           final NodeCSVWriter nodeWriter, final Subject user)
+    private final JSONWriter jsonWriter;
+
+
+    public StorageItemJSONWriter(Writer writer)
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user);
+        super(writer);
+        this.jsonWriter = new JSONWriter(writer);
     }
 
 
-    /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
-     *
-     * @see Thread#run()
-     */
-    @Override
-    public void run()
+    void beginArray() throws Exception
     {
-        try
-        {
-            writePages();
-            nodeWriter.flush();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-        finally
-        {
-            try
-            {
-                nodeWriter.close();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-                // Do nothing.
-            }
-        }
+        jsonWriter.object();
+        jsonWriter.key("data").array();
+    }
+
+    void endArray() throws Exception
+    {
+        jsonWriter.endArray();
+        jsonWriter.endObject();
+    }
+
+    @Override
+    public void write(final StorageItem storageItem) throws Exception
+    {
+        jsonWriter.object();
+
+        jsonWriter.key("_checkbox_").value("");
+        jsonWriter.key("name").value(storageItem.getName());
+        jsonWriter.key("size").value(storageItem.getSizeHumanReadable());
+        jsonWriter.key("date").value(
+                storageItem.getLastModifiedHumanReadable());
+
+        // Write Group names.
+        jsonWriter.key("writeGroups").value(storageItem.getWriteGroupNames());
+
+        // Read Group names.
+        jsonWriter.key("readGroups").value(storageItem.getReadGroupNames());
+
+        // Hidden items.
+
+        // Is public flag.
+        jsonWriter.key("public_flag").value(
+                Boolean.toString(storageItem.isPublic()));
+
+        // Is Locked flag.
+        jsonWriter.key("locked_flag").value(
+                Boolean.toString(storageItem.isLocked()));
+
+        // Type
+        jsonWriter.key("iconCSS").value(storageItem.getItemIconCSS());
+
+        // Path
+        jsonWriter.key("path").value(storageItem.getPath());
+
+        // URI
+        jsonWriter.key("uri").value(storageItem.getURI().toString());
+
+        // Link URI
+        jsonWriter.key("linkURI").value(storageItem.getLinkURI());
+
+        jsonWriter.endObject();
+
+        flush();
     }
 }

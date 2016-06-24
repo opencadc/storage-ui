@@ -68,6 +68,7 @@
 
 package ca.nrc.cadc.beacon;
 
+import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.vos.VOSURI;
 
 import javax.security.auth.Subject;
@@ -77,11 +78,13 @@ import java.io.Writer;
 public class PipedCSVWriter extends AbstractPipedWriter
 {
     @Override
-    NodeProducer getNodeProducer(int pageSize, VOSURI folderURI,
-                                 VOSURI startURI, Writer writer,
-                                 final Subject user)
+    StorageItemProducer getStorageItemProducer(int pageSize, VOSURI folderURI,
+                                               VOSURI startURI, Writer writer,
+                                               final Subject user,
+                                               final StorageItemFactory storageItemFactory)
     {
-        return new CSVNodeProducer(pageSize, folderURI, startURI,
-                                   new NodeCSVWriter(writer), user);
+        return new CSVStorageItemProducer(pageSize, folderURI, startURI,
+                                          new StorageItemCSVWriter(writer),
+                                          user, storageItemFactory);
     }
 }

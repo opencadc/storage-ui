@@ -1,5 +1,3 @@
-<#assign startTime = .now?time>
-<#assign isRoot = folder.root>
 <div class="row">
   <div role="navigation" class="col-sm-3 col-md-2 sidebar">
     <ul class="nav nav-sidebar">
@@ -9,6 +7,10 @@
 
     <ul class="nav nav-sidebar">
       <li><a href="http://www.canfar.net/docs/vospace/">&nbsp;Web Service Documentation</a></li>
+    </ul>
+
+    <ul class="nav nav-sidebar">
+      <li><a href="http://www.github.com/opencadc/vosui">&nbsp;GitHub</a></li>
     </ul>
     <form id="uploader" method="post">
       <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
@@ -23,12 +25,10 @@
       <#if isRoot>
         ROOT
       <#else>
+        <button id="more_details" name="more_details" class="btn btn-info btn-xs"
+                data-placement="bottom" data-toggle="popover"
+                role="button"><span class="glyphicon glyphicon-option-horizontal"></span></button>
         ${folder.path}
-        <button id="more_details" name="more_details" class="btn btn-sm"
-                data-container="body" data-toggle="popover"
-                data-placement="bottom" title="Details" data-trigger="focus"
-                role="button"
-                data-content="Owned by you and last modified today.">More...</button>
       </#if>
       </h2>
     </section>
@@ -81,9 +81,9 @@
               <th></th>
               <th>Name</th>
               <th>Size</th>
+              <th>Last Modified (UTC)</th>
               <th>Read/Write</th>
               <th>Read</th>
-              <th>Last Modified (UTC)</th>
             </tr>
           </thead>
           <tbody>
@@ -92,11 +92,11 @@
             <#assign writeGroupNames = childItem.writeGroupNames>
             <tr>
               <td class="select-checkbox"></td>
-              <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a> </td>
+              <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a></td>
               <td data-val="${childItem.sizeInBytes}">${childItem.sizeHumanReadable}</td>
+              <td>${childItem.lastModifiedHumanReadable}</td>
               <td>${writeGroupNames}</td>
               <td><#if childItem.public><a href="#" class="public_link" title="Change group read access.">Public</a><#else>${childItem.readGroupNames}</#if></td>
-              <td>${childItem.lastModifiedHumanReadable}</td>
             </tr>
           </#list>
           </tbody>

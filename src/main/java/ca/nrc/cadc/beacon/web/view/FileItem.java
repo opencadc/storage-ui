@@ -77,12 +77,11 @@ public class FileItem extends StorageItem
 {
     public FileItem(VOSURI uri, long sizeInBytes, Date lastModified,
                     boolean publicFlag, boolean lockedFlag,
-                    URI[] writeGroupURIs, URI[] readGroupURIs)
+                    URI[] writeGroupURIs, URI[] readGroupURIs, String owner)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-              writeGroupURIs, readGroupURIs);
+              writeGroupURIs, readGroupURIs, owner);
     }
-
 
     @Override
     public String getItemIconCSS()

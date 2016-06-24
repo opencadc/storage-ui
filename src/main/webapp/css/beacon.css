@@ -46,6 +46,10 @@ body {
   background-color: #428bca;
 }
 
+.navbar-default .navbar-collapse, .navbar-default .navbar-form {
+  cursor: auto;
+}
+
 /*
  * End Sidebar
  */
@@ -107,4 +111,8 @@ div.dataTables_wrapper div.dataTables_info {
   padding: 10px 20px;
   white-space: nowrap;
   cursor: auto;
+}
+
+.popover {
+  max-width: 500px;
 }

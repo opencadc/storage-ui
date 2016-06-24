@@ -65,9 +65,47 @@
  *
  ************************************************************************
  */
+
 package ca.nrc.cadc.beacon;
 
-public interface NodeProducer extends Runnable
-{
+import ca.nrc.cadc.beacon.web.view.FileItem;
+import ca.nrc.cadc.vos.VOSURI;
+import org.junit.Test;
+import org.restlet.engine.header.StringWriter;
 
+import java.io.Writer;
+import java.net.URI;
+
+import static org.easymock.EasyMock.replay;
+import static org.easymock.EasyMock.verify;
+import static org.junit.Assert.assertEquals;
+
+
+public class StorageItemJSONWriterTest
+        extends AbstractStorageItemWriterTest<StorageItemJSONWriter>
+{
+    @Test
+    public void write() throws Exception
+    {
+        final Writer writer = new StringWriter();
+        testSubject = new StorageItemJSONWriter(writer);
+
+        final FileItem mockStorageItem =
+                mockStorageItem("NODEJ", "18.86MB", null, null,
+                                "2012-11-17 - 01:21", true, false,
+                                FileItem.class, "file_css",
+                                new VOSURI(URI.create(
+                                        "vos://ca.nrc.cadc!vospace/ME/NODE_DIR/NODEJ")),
+                                "/download/ME/NODE_DIR/NODEJ");
+
+        replay(mockStorageItem);
+
+        testSubject.write(mockStorageItem);
+
+        verify(mockStorageItem);
+
+        assertEquals("Wrong JSON Line.",
+                     "{\"_checkbox_\":\"\",\"name\":\"NODEJ\",\"size\":\"18.86MB\",\"date\":\"2012-11-17 - 01:21\",\"writeGroups\":null,\"readGroups\":null,\"public_flag\":\"true\",\"locked_flag\":\"false\",\"iconCSS\":\"file_css\",\"path\":\"/ME/NODE_DIR/NODEJ\",\"uri\":\"vos://ca.nrc.cadc!vospace/ME/NODE_DIR/NODEJ\",\"linkURI\":\"/download/ME/NODE_DIR/NODEJ\"}",
+                     writer.toString());
+    }
 }

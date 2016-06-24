@@ -65,79 +65,9 @@
  *
  ************************************************************************
  */
-
 package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOS;
-import org.json.JSONWriter;
-
-import java.io.Writer;
-
-public class NodeJSONWriter extends NodeWriter
+public interface StorageItemProducer extends Runnable
 {
-    private final JSONWriter jsonWriter;
 
-
-    public NodeJSONWriter(Writer writer)
-    {
-        super(writer);
-        this.jsonWriter = new JSONWriter(writer);
-    }
-
-
-    void beginArray() throws Exception
-    {
-        jsonWriter.object();
-        jsonWriter.key("data").array();
-    }
-
-    void endArray() throws Exception
-    {
-        jsonWriter.endArray();
-        jsonWriter.endObject();
-    }
-
-    @Override
-    public void write(final Node n) throws Exception
-    {
-        jsonWriter.object();
-
-        jsonWriter.key("_checkbox_").value("");
-        jsonWriter.key("name").value(n.getName());
-        jsonWriter.key("size").value(
-                FILE_SIZE_REPRESENTATION.getSizeHumanReadable(
-                        Long.parseLong(n.getPropertyValue(
-                                VOS.PROPERTY_URI_CONTENTLENGTH))));
-        // Write Group URIs
-        jsonWriter.key("writeGroups").value(
-                n.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE));
-
-        jsonWriter.key("readGroups").value(
-                n.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD));
-
-        jsonWriter.key("date").value(DISPLAY_DATE_FORMAT.format(
-                DATE_FORMAT.parse(n.getPropertyValue(VOS.PROPERTY_URI_DATE))));
-
-        // Hidden items.
-
-        // Is public flag.
-        jsonWriter.key("public_flag").value(Boolean.toString(n.isPublic()));
-
-        // Is Locked flag.
-        jsonWriter.key("locked_flag").value(Boolean.toString(n.isLocked()));
-
-        // Type
-        jsonWriter.key("type").value(n.getClass().getSimpleName());
-
-        // Path
-        jsonWriter.key("path").value(n.getUri().getPath());
-
-        // URI
-        jsonWriter.key("uri").value(n.getUri().toString());
-
-        jsonWriter.endObject();
-
-        flush();
-    }
 }

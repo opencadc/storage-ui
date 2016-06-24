@@ -68,6 +68,8 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.beacon.web.StorageItemFactory;
+import ca.nrc.cadc.beacon.web.URIExtractor;
 import ca.nrc.cadc.vos.VOSURI;
 
 import java.net.URI;
@@ -75,7 +77,9 @@ import java.net.URI;
 public abstract class NodeServerResource extends SecureServerResource
 {
     static final int DEFAULT_PAGE_SIZE = 300;
-
+    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
+    final StorageItemFactory storageItemFactory =
+            new StorageItemFactory(URI_EXTRACTOR);
 
     VOSURI getCurrentItemURI()
     {

@@ -76,7 +76,7 @@ import java.util.Iterator;
 public abstract class AbstractStorageItemIterator
         implements Iterator<StorageItem>
 {
-    private final StorageItemFactory storageItemFactory;
+    final StorageItemFactory storageItemFactory;
 
 
     public AbstractStorageItemIterator(
