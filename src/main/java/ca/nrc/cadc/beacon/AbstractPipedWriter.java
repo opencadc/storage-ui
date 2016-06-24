@@ -69,6 +69,7 @@
 package ca.nrc.cadc.beacon;
 
 
+import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.vos.VOSURI;
 
 import javax.security.auth.Subject;
@@ -81,18 +82,20 @@ public abstract class AbstractPipedWriter
 {
     public void start(final int pageSize, final VOSURI folderURI,
                       final VOSURI startURI, final Writer output,
-                      final Subject user)
+                      final Subject user,
+                      final StorageItemFactory storageItemFactory)
             throws IOException
     {
         final PipedReader pipedReader = new PipedReader();
         final PipedWriter pipedWriter = new PipedWriter(pipedReader);
 
         final ExecutorService executorService = Executors.newFixedThreadPool(2);
-        final NodeProducer nodeProducer = getNodeProducer(pageSize, folderURI,
-                                                          startURI,
-                                                          pipedWriter, user);
+        final StorageItemProducer storageItemProducer =
+                getStorageItemProducer(pageSize, folderURI, startURI,
+                                       pipedWriter, user,
+                                       storageItemFactory);
 
-        executorService.execute(nodeProducer);
+        executorService.execute(storageItemProducer);
         executorService.execute(new NodeConsumer(output, pipedReader));
         executorService.shutdown();
 
@@ -106,9 +109,10 @@ public abstract class AbstractPipedWriter
         }
     }
 
-    abstract NodeProducer getNodeProducer(final int pageSize,
-                                          final VOSURI folderURI,
-                                          final VOSURI startURI,
-                                          final Writer writer,
-                                          final Subject user);
+    abstract StorageItemProducer getStorageItemProducer(final int pageSize,
+                                                        final VOSURI folderURI,
+                                                        final VOSURI startURI,
+                                                        final Writer writer,
+                                                        final Subject user,
+                                                        final StorageItemFactory storageItemFactory);
 }

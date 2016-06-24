@@ -68,8 +68,8 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.CSVNodeProducer;
-import ca.nrc.cadc.beacon.NodeCSVWriter;
+import ca.nrc.cadc.beacon.CSVStorageItemProducer;
+import ca.nrc.cadc.beacon.StorageItemCSVWriter;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.VOSURI;
 import org.restlet.data.MediaType;
@@ -102,10 +102,11 @@ public class PageServerResource extends NodeServerResource
             @Override
             public void write(final Writer writer) throws IOException
             {
-                final CSVNodeProducer csvNodeProducer =
-                        new CSVNodeProducer(pageSize, getCurrentItemURI(),
-                                            startURI, new NodeCSVWriter(writer),
-                                            currentSubject);
+                final CSVStorageItemProducer csvNodeProducer =
+                        new CSVStorageItemProducer(pageSize, getCurrentItemURI(),
+                                                   startURI, new StorageItemCSVWriter(writer),
+                                                   currentSubject,
+                                                   storageItemFactory);
 
                 try
                 {

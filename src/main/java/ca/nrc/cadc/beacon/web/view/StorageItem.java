@@ -88,6 +88,7 @@ public abstract class StorageItem
     private final Date lastModified;
     private final URI[] writeGroupURIs;
     private final URI[] readGroupURIs;
+    private final String owner;
 
     final VOSURI uri;
     final boolean publicFlag;
@@ -96,17 +97,18 @@ public abstract class StorageItem
 
     public StorageItem(VOSURI uri, long sizeInBytes, Date lastModified,
                        boolean publicFlag, boolean lockedFlag,
-                       URI[] writeGroupURIs, URI[] readGroupURIs)
+                       URI[] writeGroupURIs, URI[] readGroupURIs,
+                       final String owner)
     {
         this(uri, uri.getName(), sizeInBytes, lastModified, publicFlag,
-             lockedFlag, writeGroupURIs, readGroupURIs);
+             lockedFlag, writeGroupURIs, readGroupURIs, owner);
     }
 
 
     public StorageItem(VOSURI uri, String name, long sizeInBytes,
                        Date lastModified, boolean publicFlag,
                        boolean lockedFlag, URI[] writeGroupURIs,
-                       URI[] readGroupURIs)
+                       URI[] readGroupURIs, final String owner)
     {
         this.uri = uri;
         this.name = name;
@@ -116,19 +118,20 @@ public abstract class StorageItem
         this.lockedFlag = lockedFlag;
         this.writeGroupURIs = writeGroupURIs;
         this.readGroupURIs = readGroupURIs;
+        this.owner = owner;
     }
 
-    public final String getSizeHumanReadable()
+    public String getSizeHumanReadable()
     {
         return FILE_SIZE_REPRESENTATION.getSizeHumanReadable(sizeInBytes);
     }
 
-    public final long getSizeInBytes()
+    public long getSizeInBytes()
     {
         return sizeInBytes;
     }
 
-    public final String getlastModifiedHumanReadable()
+    public String getLastModifiedHumanReadable()
     {
         return DATE_FORMAT.format(lastModified);
     }
@@ -168,6 +171,11 @@ public abstract class StorageItem
     public String getReadGroupNames()
     {
         return getURINames(this.readGroupURIs);
+    }
+
+    public String getOwner()
+    {
+        return owner;
     }
 
     public String getURINames(final URI[] uris)

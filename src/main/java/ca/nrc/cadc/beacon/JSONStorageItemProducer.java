@@ -68,85 +68,61 @@
 
 package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.date.DateUtil;
-import ca.nrc.cadc.vos.Node;
+import ca.nrc.cadc.beacon.web.StorageItemFactory;
+import ca.nrc.cadc.vos.VOSURI;
 
+import javax.security.auth.Subject;
 import java.io.IOException;
-import java.io.Writer;
-import java.text.DateFormat;
 
 
-public abstract class NodeWriter extends Writer
+public class JSONStorageItemProducer
+        extends AbstractStorageItemProducer<StorageItemJSONWriter>
 {
-    FileSizeRepresentation FILE_SIZE_REPRESENTATION =
-            new FileSizeRepresentation();
-    DateFormat DATE_FORMAT =
-            DateUtil.getDateFormat(DateUtil.IVOA_DATE_FORMAT, DateUtil.UTC);
-    DateFormat DISPLAY_DATE_FORMAT =
-            DateUtil.getDateFormat("yyyy-MM-dd ' - ' HH:mm:ss", DateUtil.UTC);
-
-    int tally = 0;
-    private final Writer writer;
-
-
-    /**
-     * Creates a new character-stream writer whose critical sections will
-     * synchronize on the writer itself.
-     */
-    public NodeWriter(final Writer writer)
+    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
+                                   final VOSURI startURI,
+                                   final StorageItemJSONWriter nodeWriter,
+                                   final Subject user,
+                                   final StorageItemFactory storageItemFactory)
     {
-        this.writer = writer;
+        super(pageSize, folderURI, startURI, nodeWriter, user,
+              storageItemFactory);
     }
 
 
-    abstract void write(final Node n) throws Exception;
-
     /**
-     * Writes a portion of an array of characters.
-     *
-     * @param cbuf Array of characters
-     * @param off  Offset from which to start writing characters
-     * @param len  Number of characters to write
-     * @throws IOException If an I/O error occurs
-     */
-    @Override
-    public void write(char[] cbuf, int off, int len) throws IOException
-    {
-        writer.write(cbuf, off, len);
-    }
-
-    /**
-     * Flushes the stream.  If the stream has saved any characters from the
-     * various write() methods in a buffer, write them immediately to their
-     * intended destination.  Then, if that destination is another character or
-     * byte stream, flush it.  Thus one flush() invocation will flush all the
-     * buffers in a chain of Writers and OutputStreams.
+     * When an object implementing interface <code>Runnable</code> is used
+     * to create a thread, starting the thread causes the object's
+     * <code>run</code> method to be called in that separately executing
+     * thread.
      * <p/>
-     * <p> If the intended destination of this stream is an abstraction provided
-     * by the underlying operating system, for example a file, then flushing the
-     * stream guarantees only that bytes previously written to the stream are
-     * passed to the operating system for writing; it does not guarantee that
-     * they are actually written to a physical device such as a disk drive.
+     * The general contract of the method <code>run</code> is that it may
+     * take any action whatsoever.
      *
-     * @throws IOException If an I/O error occurs
+     * @see Thread#run()
      */
     @Override
-    public void flush() throws IOException
+    public void run()
     {
-        writer.flush();
-    }
-
-    /**
-     * Closes the stream, flushing it first. Once the stream has been closed,
-     * further write() or flush() invocations will cause an IOException to be
-     * thrown. Closing a previously closed stream has no effect.
-     *
-     * @throws IOException If an I/O error occurs
-     */
-    @Override
-    public void close() throws IOException
-    {
-        flush();
-        writer.close();
+        try
+        {
+            storageItemWriter.beginArray();
+            writePages();
+            storageItemWriter.endArray();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+        finally
+        {
+            try
+            {
+                storageItemWriter.close();
+            }
+            catch (IOException e)
+            {
+                // Do nothing.
+            }
+        }
     }
 }

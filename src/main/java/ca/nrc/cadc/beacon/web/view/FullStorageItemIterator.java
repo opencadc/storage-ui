@@ -69,7 +69,6 @@
 package ca.nrc.cadc.beacon.web.view;
 
 import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.SSLUtil;
 import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.date.DateUtil;
 import ca.nrc.cadc.net.NetUtil;
@@ -82,12 +81,10 @@ import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import javax.security.auth.Subject;
-import java.io.File;
 import java.net.URI;
-import java.security.AccessControlContext;
-import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
+
 
 public class FullStorageItemIterator extends AbstractStorageItemIterator
 {
@@ -161,86 +158,66 @@ public class FullStorageItemIterator extends AbstractStorageItemIterator
                         "http").toExternalForm(), false);
 
         final Subject subject = AuthenticationUtil.getCurrentSubject();
-//        final Subject subject = SSLUtil.createSubject(
-//                new File("./src/html/cadcproxy.pem"));
         final String query = "limit=" + pageSize
                              + ((current == null)
                                  ? "" : "&uri="
                                         + NetUtil.encode(current.toString()));
 
         final List<StorageItem> items =
-                (Subject.doAs(subject, new PrivilegedExceptionAction<List<StorageItem>>()
-        {
-            /**
-             * Performs the computation.  This method will be called by
-             * {@code AccessController.doPrivileged} after enabling privileges.
-             *
-             * @return a class-dependent value that may represent the results of the
-             * computation.  Each class that implements
-             * {@code PrivilegedExceptionAction} should document what
-             * (if anything) this value represents.
-             * @throws Exception an exceptional condition has occurred.  Each class
-             *                   that implements {@code PrivilegedExceptionAction} should
-             *                   document the exceptions that its run method can throw.
-             * @see AccessController#doPrivileged(PrivilegedExceptionAction)
-             * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
-             */
-            @Override
-            public List<StorageItem> run() throws Exception
-            {
-                final ContainerNode containerNode =
-                        (ContainerNode) voSpaceClient.getNode(folderURI.getPath(),
-                                                              query);
-                final List<Node> children = containerNode.getNodes();
-                final List<StorageItem> childItems = new ArrayList<>();
+                (Subject.doAs(subject, (PrivilegedExceptionAction<List<StorageItem>>) () -> {
+                    final ContainerNode containerNode =
+                            (ContainerNode) voSpaceClient.getNode(folderURI.getPath(),
+                                                                  query);
+                    final List<Node> children = containerNode.getNodes();
+                    final List<StorageItem> childItems = new ArrayList<>();
 
-                for (final Node node : children)
-                {
-                    final StorageItem nextItem;
-                    final VOSURI nodeURI = node.getUri();
-                    final long sizeInBytes =
-                            Long.parseLong(node.getPropertyValue(
-                                    VOS.PROPERTY_URI_CONTENTLENGTH));
-                    final Date lastModifiedDate = DateUtil
-                            .getDateFormat(DateUtil.IVOA_DATE_FORMAT, DateUtil.UTC)
-                            .parse(node.getPropertyValue(VOS.PROPERTY_URI_DATE));
-                    final boolean publicFlag =
-                            Boolean.parseBoolean(
-                                    node.getPropertyValue(VOS.PROPERTY_URI_ISPUBLIC));
-                    final String lockedFlagValue =
-                            node.getPropertyValue(VOS.PROPERTY_URI_ISLOCKED);
-                    final boolean lockedFlag = StringUtil.hasText(lockedFlagValue)
-                                               && Boolean.parseBoolean(lockedFlagValue);
-
-                    final String writeGroupValue =
-                            node.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE);
-                    final URI[] writeGroupURIs = extractURIs(writeGroupValue);
-
-                    final String readGroupValue =
-                            node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
-                    final URI[] readGroupURIs = extractURIs(readGroupValue);
-
-                    if (node instanceof ContainerNode)
+                    for (final Node node : children)
                     {
-                        nextItem = new FolderItem(nodeURI, sizeInBytes,
-                                                  lastModifiedDate, publicFlag,
-                                                  lockedFlag, writeGroupURIs,
-                                                  readGroupURIs, null);
-                    }
-                    else
-                    {
-                        nextItem = new FileItem(nodeURI, sizeInBytes,
-                                                lastModifiedDate, publicFlag,
-                                                lockedFlag, writeGroupURIs,
-                                                readGroupURIs);
+                        final StorageItem nextItem;
+                        final VOSURI nodeURI = node.getUri();
+                        final long sizeInBytes =
+                                Long.parseLong(node.getPropertyValue(
+                                        VOS.PROPERTY_URI_CONTENTLENGTH));
+                        final Date lastModifiedDate = DateUtil
+                                .getDateFormat(DateUtil.IVOA_DATE_FORMAT, DateUtil.UTC)
+                                .parse(node.getPropertyValue(VOS.PROPERTY_URI_DATE));
+                        final boolean publicFlag =
+                                Boolean.parseBoolean(
+                                        node.getPropertyValue(VOS.PROPERTY_URI_ISPUBLIC));
+                        final String lockedFlagValue =
+                                node.getPropertyValue(VOS.PROPERTY_URI_ISLOCKED);
+                        final boolean lockedFlag = StringUtil.hasText(lockedFlagValue)
+                                                   && Boolean.parseBoolean(lockedFlagValue);
+
+                        final String writeGroupValue =
+                                node.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE);
+                        final URI[] writeGroupURIs = extractURIs(writeGroupValue);
+
+                        final String readGroupValue =
+                                node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
+                        final URI[] readGroupURIs = extractURIs(readGroupValue);
+                        final String owner =
+                                node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
+
+                        if (node instanceof ContainerNode)
+                        {
+                            nextItem = new FolderItem(nodeURI, sizeInBytes,
+                                                      lastModifiedDate, publicFlag,
+                                                      lockedFlag, writeGroupURIs,
+                                                      readGroupURIs, owner, null);
+                        }
+                        else
+                        {
+                            nextItem = new FileItem(nodeURI, sizeInBytes,
+                                                    lastModifiedDate, publicFlag,
+                                                    lockedFlag, writeGroupURIs,
+                                                    readGroupURIs, owner);
+                        }
+                        childItems.add(nextItem);
                     }
 
-                    childItems.add(nextItem);
-                }
-
-                return childItems;
-            }
-        }));
+                    return childItems;
+                }));
 
         final int size = items.size();
         tally += size;

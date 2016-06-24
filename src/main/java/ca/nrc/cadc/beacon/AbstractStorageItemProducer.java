@@ -68,73 +68,100 @@
 
 package ca.nrc.cadc.beacon;
 
-
+import ca.nrc.cadc.beacon.web.StorageItemFactory;
+import ca.nrc.cadc.net.NetUtil;
+import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.vos.ContainerNode;
 import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOS;
+import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
 
-import com.opencsv.CSVWriter;
-
-import java.io.Writer;
-import java.util.ArrayList;
+import javax.security.auth.Subject;
+import java.net.URI;
+import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
 
-public class NodeCSVWriter extends NodeWriter
+public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
+        implements StorageItemProducer
 {
-    private final CSVWriter csvWriter;
+    int pageCount = 0;
+    VOSURI current;
+    final int pageSize;
+    final VOSURI folderURI;
+    final Subject user;
+    final T storageItemWriter;
+    final StorageItemFactory storageItemFactory;
 
 
-    public NodeCSVWriter(final Writer writer)
+    public AbstractStorageItemProducer(int pageSize, VOSURI folderURI,
+                                       final VOSURI startURI,
+                                       final T storageItemWriter,
+                                       final Subject user,
+                                       final StorageItemFactory storageItemFactory)
     {
-        super(writer);
-        this.csvWriter = new CSVWriter(writer);
+        this.pageSize = pageSize;
+        this.folderURI = folderURI;
+        this.current = startURI;
+        this.storageItemWriter = storageItemWriter;
+        this.user = user;
+        this.storageItemFactory = storageItemFactory;
     }
 
 
-    @Override
-    public void write(final Node n) throws Exception
+    String getQuery()
     {
-        final List<String> row = new ArrayList<>();
+        return "limit=" + ((pageSize > 0) ? pageSize : 300)
+               + ((current == null)
+                  ? "" : "&uri=" + NetUtil.encode(current.toString()));
+    }
 
-        // Checkbox column
-        row.add("");
+    List<Node> nextPage() throws Exception
+    {
+        final RegistryClient registryClient = new RegistryClient();
+        final VOSpaceClient voSpaceClient =
+                new VOSpaceClient(registryClient.getServiceURL(
+                        URI.create("ivo://cadc.nrc.ca/vospace"),
+                        "http").toExternalForm(), false);
 
-        // Name
-        row.add(n.getName());
+        final List<Node> nodes =
+                Subject.doAs(user, (PrivilegedExceptionAction<List<Node>>) () ->
+                        ((ContainerNode) voSpaceClient.getNode(
+                                folderURI.getPath(), getQuery())).getNodes());
 
-        // File size in human readable format.
-        row.add(FILE_SIZE_REPRESENTATION
-                        .getSizeHumanReadable(Long.parseLong(
-                                n.getPropertyValue(
-                                        VOS.PROPERTY_URI_CONTENTLENGTH))));
+        return (current == null) ? nodes : (nodes.size() > 1)
+                                           ? nodes.subList(1, nodes.size())
+                                           : null;
+    }
 
-        // Write Group URIs
-        row.add(n.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE));
+    boolean writePage(final List<Node> page) throws Exception
+    {
+        if (page == null)
+        {
+            return false;
+        }
+        else
+        {
+            for (final Node n : page)
+            {
+                this.storageItemWriter.write(storageItemFactory.translate(n));
+                this.current = n.getUri();
+            }
 
-        // Read Group URIs
-        row.add(n.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD));
+            return true;
+        }
+    }
 
-        // Last Modified in human readable format.
-        row.add(DISPLAY_DATE_FORMAT.format(DATE_FORMAT.parse(
-                n.getPropertyValue(VOS.PROPERTY_URI_DATE))));
+    public boolean writePage() throws Exception
+    {
+        return writePage(nextPage());
+    }
 
-        // Hidden items.
-
-        // Is public flag.
-        row.add(Boolean.toString(n.isPublic()));
-
-        // Is Locked flag.
-        row.add(Boolean.toString(n.isLocked()));
-
-        // Type
-        row.add(n.getClass().getSimpleName());
-
-        // Path
-        row.add(n.getUri().getPath());
-
-        // URI
-        row.add(n.getUri().toString());
-
-        csvWriter.writeNext(row.toArray(new String[row.size()]));
+    protected void writePages() throws Exception
+    {
+        while (writePage())
+        {
+            pageCount++;
+        }
     }
 }

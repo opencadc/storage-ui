@@ -69,12 +69,7 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.auth.HttpPrincipal;
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
-import ca.nrc.cadc.beacon.web.view.FullStorageItemIterator;
-import ca.nrc.cadc.beacon.web.view.StorageItem;
-import ca.nrc.cadc.beacon.web.view.StorageItemIterator;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
@@ -96,9 +91,6 @@ import java.util.*;
 
 public class MainPageServerResource extends NodeServerResource
 {
-    private static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    private final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
     private final Configuration configuration =
             new Configuration(Configuration.getVersion());
 
@@ -120,44 +112,25 @@ public class MainPageServerResource extends NodeServerResource
     @Get
     public Representation represent() throws Exception
     {
-        final boolean isRaw = wantsRaw();
         final VOSURI folderURI = getCurrentItemURI();
         final Subject currentUser = getCurrent();
-        final ContainerNode containerNode =
-                getContainerNode(folderURI, isRaw ? 1 : 20, currentUser);
+        final ContainerNode containerNode = getContainerNode(folderURI, 20,
+                                                             currentUser);
 
         return representContainerNode(containerNode, currentUser);
-    }
-
-    boolean wantsRaw()
-    {
-        return getPath().contains("raw");
     }
 
     Representation representContainerNode(final ContainerNode containerNode,
                                           final Subject currentUser)
             throws Exception
     {
-        final boolean isRaw = wantsRaw();
-        final VOSURI folderURI = containerNode.getUri();
         final List<Node> childNodes = containerNode.getNodes();
         final VOSURI startNextPageURI =
                 childNodes.isEmpty() ? null :
                 childNodes.get(childNodes.size() - 1).getUri();
-        final Iterator<StorageItem> childIterator =
-                isRaw ? new FullStorageItemIterator(storageItemFactory,
-                                                    folderURI, 400)
-                      : new StorageItemIterator(childNodes.iterator(),
-                                                storageItemFactory);
 
         final FolderItem folderItem =
-                new FolderItem(folderURI, randomSize(), randomDate(), true,
-                               false,
-                               URI_EXTRACTOR.extract(
-                                       VOS.PROPERTY_URI_GROUPWRITE),
-                               URI_EXTRACTOR.extract(
-                                       VOS.PROPERTY_URI_GROUPREAD),
-                               childIterator);
+                storageItemFactory.getFolderItemView(containerNode);
 
         return representFolderItem(folderItem, currentUser, startNextPageURI);
     }
@@ -183,8 +156,7 @@ public class MainPageServerResource extends NodeServerResource
                     new HttpPrincipal[httpPrincipals.size()])[0].getName());
         }
 
-        return new TemplateRepresentation(wantsRaw() ? "raw.ftl" : "index.ftl",
-                                          configuration, dataModel,
+        return new TemplateRepresentation("index.ftl", configuration, dataModel,
                                           MediaType.TEXT_HTML);
     }
 
@@ -233,29 +205,5 @@ public class MainPageServerResource extends NodeServerResource
                         toExternalForm(), false);
         return (ContainerNode) voSpaceClient.getNode(
                 folderURI.getPath(), query);
-    }
-
-    static long randomSize()
-    {
-        final int min = 1024 * 3;
-
-        return (long) Math.abs(new Random().nextInt((Integer.MAX_VALUE - min)
-                                                    + 1) + min);
-    }
-
-    static Date randomDate()
-    {
-        final Calendar cal = Calendar.getInstance();
-        final Random random = new Random();
-        final int randomYear = Math.abs(random.nextInt((2016 - 1998) + 1)
-                                        + 1998);
-        final int randomMonth = Math.abs(random.nextInt(12));
-        final int randomDay = Math.abs(random.nextInt(29));
-
-        cal.set(Calendar.YEAR, randomYear);
-        cal.set(Calendar.MONTH, randomMonth);
-        cal.set(Calendar.DAY_OF_MONTH, randomDay);
-
-        return cal.getTime();
     }
 }

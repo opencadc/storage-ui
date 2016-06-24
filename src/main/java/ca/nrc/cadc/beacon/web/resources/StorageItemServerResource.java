@@ -131,7 +131,8 @@ public class StorageItemServerResource extends NodeServerResource
             {
                 final PipedJSONWriter pipedJSONWriter = new PipedJSONWriter();
                 pipedJSONWriter.start(pageSize, getCurrentItemURI(),
-                                      startURI, writer, currentSubject);
+                                      startURI, writer, currentSubject,
+                                      storageItemFactory);
 
                 writer.flush();
             }
@@ -148,7 +149,8 @@ public class StorageItemServerResource extends NodeServerResource
             {
                 final PipedCSVWriter pipedCSVWriter = new PipedCSVWriter();
                 pipedCSVWriter.start(pageSize, getCurrentItemURI(),
-                                     startURI, writer, currentSubject);
+                                     startURI, writer, currentSubject,
+                                     storageItemFactory);
 
                 writer.flush();
             }

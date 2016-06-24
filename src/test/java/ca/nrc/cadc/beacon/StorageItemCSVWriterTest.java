@@ -68,55 +68,44 @@
 
 package ca.nrc.cadc.beacon;
 
+import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.vos.VOSURI;
+import org.restlet.engine.header.StringWriter;
 
-import javax.security.auth.Subject;
-import java.io.IOException;
+import java.io.Writer;
+import java.net.URI;
+
+import org.junit.Test;
+
+import static org.junit.Assert.*;
+import static org.easymock.EasyMock.*;
 
 
-public class JSONNodeProducer extends AbstractNodeProducer<NodeJSONWriter>
+public class StorageItemCSVWriterTest
+        extends AbstractStorageItemWriterTest<StorageItemCSVWriter>
 {
-    public JSONNodeProducer(int pageSize, VOSURI folderURI, VOSURI startURI,
-                            NodeJSONWriter nodeWriter, final Subject user)
+    @Test
+    public void write() throws Exception
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user);
-    }
+        final Writer writer = new StringWriter();
+        testSubject = new StorageItemCSVWriter(writer);
 
+        final FolderItem mockFolderItem =
+                mockStorageItem("node1", "18.86MB", null, "read_group_1",
+                                "2007-09-18 - 01:13", false, false,
+                                FolderItem.class, "folder_css",
+                                new VOSURI(URI.create(
+                                        "vos://ca.nrc.cadc!vospace/ME/NODE_DIR")),
+                                "/list/ME/NODE_DIR");
 
-    /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
-     *
-     * @see Thread#run()
-     */
-    @Override
-    public void run()
-    {
-        try
-        {
-            nodeWriter.beginArray();
-            writePages();
-            nodeWriter.endArray();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-        finally
-        {
-            try
-            {
-                nodeWriter.close();
-            }
-            catch (IOException e)
-            {
-                // Do nothing.
-            }
-        }
+        replay(mockFolderItem);
+
+        testSubject.write(mockFolderItem);
+
+        verify(mockFolderItem);
+
+        assertEquals("Wrong CSV Line.",
+                     "\"\",\"node1\",\"18.86MB\",\"2007-09-18 - 01:13\",,\"read_group_1\",\"false\",\"false\",\"folder_css\",\"/ME/NODE_DIR\",\"vos://ca.nrc.cadc!vospace/ME/NODE_DIR\",\"/list/ME/NODE_DIR\"\n",
+                     writer.toString());
     }
 }

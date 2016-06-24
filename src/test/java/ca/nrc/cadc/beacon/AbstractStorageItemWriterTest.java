@@ -68,117 +68,48 @@
 
 package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.net.NetUtil;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
+import ca.nrc.cadc.beacon.web.view.StorageItem;
 import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
 
-import javax.security.auth.Subject;
-import java.net.URI;
-import java.security.AccessControlContext;
-import java.security.AccessController;
-import java.security.PrivilegedExceptionAction;
-import java.util.List;
+import static org.easymock.EasyMock.*;
 
 
-public abstract class AbstractNodeProducer<T extends NodeWriter>
-        implements NodeProducer
+public abstract class AbstractStorageItemWriterTest<T extends StorageItemWriter>
+        extends AbstractUnitTest<T>
 {
-    int pageCount = 0;
-    VOSURI current;
-    final int pageSize;
-    final VOSURI folderURI;
-    final Subject user;
-    final T nodeWriter;
-
-
-    public AbstractNodeProducer(int pageSize, VOSURI folderURI,
-                                final VOSURI startURI,
-                                final T nodeWriter, final Subject user)
+    <T2 extends StorageItem> T2 mockStorageItem(final String name,
+                                                final String sizeHumanReadable,
+                                                final String writeGroups,
+                                                final String readGroups,
+                                                final String dateHumanReadable,
+                                                final boolean isPublic,
+                                                final boolean isLocked,
+                                                final Class<T2> type,
+                                                final String itemCSS,
+                                                final VOSURI uri,
+                                                final String linkURI)
+            throws Exception
     {
-        this.pageSize = pageSize;
-        this.folderURI = folderURI;
-        this.current = startURI;
-        this.nodeWriter = nodeWriter;
-        this.user = user;
-    }
+        final T2 mockStorageItem = createMock(type);
 
+        expect(mockStorageItem.getName()).andReturn(name).once();
+        expect(mockStorageItem.getSizeHumanReadable()).andReturn(
+                sizeHumanReadable).once();
+        expect(mockStorageItem.getLastModifiedHumanReadable()).andReturn(
+                dateHumanReadable).once();
+        expect(mockStorageItem.getWriteGroupNames()).andReturn(writeGroups).
+                once();
+        expect(mockStorageItem.getReadGroupNames()).andReturn(readGroups).
+                once();
 
-    String getQuery()
-    {
-        return "limit=" + ((pageSize > 0) ? pageSize : 300)
-               + ((current == null)
-                  ? "" : "&uri=" + NetUtil.encode(current.toString()));
-    }
+        // Hidden on main UI.
+        expect(mockStorageItem.isPublic()).andReturn(isPublic).once();
+        expect(mockStorageItem.isLocked()).andReturn(isLocked).once();
+        expect(mockStorageItem.getItemIconCSS()).andReturn(itemCSS).once();
+        expect(mockStorageItem.getPath()).andReturn(uri.getPath()).once();
+        expect(mockStorageItem.getURI()).andReturn(uri).once();
+        expect(mockStorageItem.getLinkURI()).andReturn(linkURI).once();
 
-    List<Node> nextPage() throws Exception
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient =
-                new VOSpaceClient(registryClient.getServiceURL(
-                        URI.create("ivo://cadc.nrc.ca/vospace"),
-                        "http").toExternalForm(), false);
-
-        final List<Node> nodes =
-                Subject.doAs(user, new PrivilegedExceptionAction<List<Node>>()
-                {
-                    /**
-                     * Performs the computation.  This method will be called by
-                     * {@code AccessController.doPrivileged} after enabling privileges.
-                     *
-                     * @return a class-dependent value that may represent the results of the
-                     * computation.  Each class that implements
-                     * {@code PrivilegedExceptionAction} should document what
-                     * (if anything) this value represents.
-                     * @throws Exception an exceptional condition has occurred.  Each class
-                     *                   that implements {@code PrivilegedExceptionAction} should
-                     *                   document the exceptions that its run method can throw.
-                     * @see AccessController#doPrivileged(PrivilegedExceptionAction)
-                     * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
-                     */
-                    @Override
-                    public List<Node> run() throws Exception
-                    {
-                        return ((ContainerNode) voSpaceClient.getNode(
-                                folderURI.getPath(), getQuery())).getNodes();
-                    }
-                });
-
-        return (current == null) ? nodes : (nodes.size() > 1)
-                                           ? nodes.subList(1, nodes.size())
-                                           : null;
-    }
-
-    boolean writePage(final List<Node> page) throws Exception
-    {
-        if (page == null)
-        {
-            return false;
-        }
-        else
-        {
-            for (final Node n : page)
-            {
-                this.nodeWriter.write(n);
-                this.current = n.getUri();
-            }
-
-            return true;
-        }
-    }
-
-    public boolean writePage() throws Exception
-    {
-        return writePage(nextPage());
-    }
-
-    protected void writePages() throws Exception
-    {
-        while (writePage())
-        {
-            pageCount++;
-        }
+        return mockStorageItem;
     }
 }
