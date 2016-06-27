@@ -24,6 +24,7 @@ dependencies {
     compile 'canfar.net:cadcRegistry:1.+'
     compile 'canfar.net:cadcVOSI:3.+'
     compile 'canfar.net:cadcVOS-Server:2.+'
+    compile 'canfar.net:cadcAccessControl:1.+'
     compile 'canfar.net:cadcAccessControl-Identity:1.+'
 
     providedCompile "javax.servlet:servlet-api:2.5"

@@ -12,7 +12,19 @@
     <ul class="nav nav-sidebar">
       <li><a href="http://www.github.com/opencadc/vosui">&nbsp;GitHub</a></li>
     </ul>
-    <form id="uploader" method="post">
+    <form id="uploader" method="post" class="hidden">
+      <h1 title="${folder.path}" class="hidden">${folder.path}</h1>
+      <div id="uploadresponse"></div>
+      <input id="mode" name="mode" type="hidden" value="add" />
+      <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
+      <div id="file-input-container" class="wb-inv">
+        <div id="alt-fileinput">
+          <input id="filepath" name="filepath" type="text" />
+          <button id="browse" name="browse" type="button" class="btn" value="Browse"></button>
+        </div>
+        <input id="newfile" name="newfile" type="file" />
+      </div>
+      <button id="upload" name="upload" type="submit" value="Upload" class="em"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>
       <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
     </form>
   </div>
@@ -55,14 +67,16 @@
                       <a id="newfolder">
                         <span class="glyphicon glyphicon-folder-open"></span>&nbsp;Folder</a></li>
                     <li>
-                      <a id="newupload">
+                      <a id="upload">
                         <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;File</a>
                       <form id="uploader" method="post" class="hidden">
                         <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
                       </form>
                     </li>
                     <li>
-                      <a id="newlink"><span class="glyphicon glyphicon-link"></span>&nbsp;Link</a></li>
+                      <a id="new_vospace_link"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
+                    <li>
+                      <a id="new_external_link"><span class="glyphicon glyphicon-link"></span>&nbsp;External Link</a></li>
                   </ul>
                 </li>
               </ul>
@@ -106,21 +120,4 @@
   </div>
 </div>
 
-<#--<div class="row">-->
-  <#--<form id="uploader" method="post" class="mrgn-rght-md mrgn-lft-sm">-->
-    <#--<h1 title="${folder.path}">${folder.path}</h1>-->
-    <#--<div id="uploadresponse"></div>-->
-    <#--<input id="mode" name="mode" type="hidden" value="add" />-->
-    <#--<input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>-->
-    <#--<div id="file-input-container" class="wb-inv">-->
-    <#--&lt;#&ndash;<div id="alt-fileinput">&ndash;&gt;-->
-    <#--&lt;#&ndash;<input id="filepath" name="filepath" type="text" />&ndash;&gt;-->
-    <#--&lt;#&ndash;<button id="browse" name="browse" type="button" class="btn" value="Browse"></button>&ndash;&gt;-->
-    <#--&lt;#&ndash;</div>&ndash;&gt;-->
-      <#--<input id="newfile" name="newfile" type="file" />-->
-    <#--</div>-->
-  <#--&lt;#&ndash;<button id="upload" name="upload" type="submit" value="Upload" class="em"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>&ndash;&gt;-->
-
-  <#--</form>-->
-<#--</div>-->
 
