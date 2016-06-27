@@ -68,19 +68,16 @@
 
 package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.ac.AC;
+
 import ca.nrc.cadc.ac.client.UserClient;
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.SSOCookieManager;
 import ca.nrc.cadc.net.HttpPost;
+import ca.nrc.cadc.reg.client.LocalAuthority;
 import ca.nrc.cadc.reg.client.RegistryClient;
 
-import javax.security.auth.Subject;
 import java.io.ByteArrayOutputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,31 +87,27 @@ public class AccessControlClient extends UserClient
     private final static String FRAGMENT_DELIMITER = "#";
     private final static String LOGIN_FRAGMENT = FRAGMENT_DELIMITER + "login";
 
-    final SSOCookieManager cookieManager;
-    final RegistryClient registryClient;
-    final URI loginURI;
+    private final RegistryClient registryClient;
+    private final URI loginURI;
+
 
     public AccessControlClient() throws IllegalArgumentException
     {
-        this(URI.create(AC.UMS_SERVICE_URI), new RegistryClient(),
-             new SSOCookieManager());
+        this(new LocalAuthority().getServiceURI("ums"), new RegistryClient());
     }
 
     /**
      * Complete constructor.
      *
      * @param serviceURI            The Service URI.
-     * @param registryClient        The Registry client for lookups.
-     * @param cookieManager         The Cookie Manager to verify login.
-     */
-    public AccessControlClient(final URI serviceURI,
-                               final RegistryClient registryClient,
-                               final SSOCookieManager cookieManager)
+     * @param registryClient        The Registry client for lookups.*/
+    private AccessControlClient(final URI serviceURI,
+                                final RegistryClient registryClient)
     {
         super(serviceURI);
         this.registryClient = registryClient;
-        this.cookieManager = cookieManager;
-        this.loginURI = URI.create(serviceURI.toASCIIString() + LOGIN_FRAGMENT);
+        this.loginURI = URI.create(serviceURI.toASCIIString()
+                + LOGIN_FRAGMENT);
     }
 
 
@@ -152,8 +145,8 @@ public class AccessControlClient extends UserClient
         }
     }
 
-    String doLogin(final URL loginURL, final String username,
-                   final char[] password)
+    private String doLogin(final URL loginURL, final String username,
+                           final char[] password)
     {
         final ByteArrayOutputStream out = new ByteArrayOutputStream();
         final Map<String, Object> payload = new HashMap<>();

@@ -104,6 +104,10 @@ main.container {
   width: auto !important;
 }
 
+input[type=url] {
+  width: 100%;
+}
+
 /*
  *  DataTables
  */

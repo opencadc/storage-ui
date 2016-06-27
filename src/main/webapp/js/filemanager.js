@@ -636,6 +636,32 @@
     //$('#uploader h1').text(lg.current_folder +
     //                       displayPath(path)).attr('title', displayPath(path, false)).attr('data-path', path);
 
+    $("#new_external_link").unbind().click(function()
+    {
+      var msg = '<input id="link_url" name="link_url" type="url" placeholder="http://example.com/path" />';
+      var createLinkURI = function (v, m)
+      {
+        if (v === 1)
+        {
+          var linkURL = m.children('#link_url').val();
+
+          if (linkURL != '')
+          {
+            alert("Create " + linkURL);
+          }
+        }
+      };
+
+      var buttons = {};
+      buttons[lg.create_external_link] = true;
+      buttons[lg.cancel] = false;
+
+      $.prompt(msg, {
+       callback: createLinkURI,
+       buttons: buttons
+      });
+    });
+
     $('#newfolder').unbind().click(function ()
                                    {
                                      var foldername = lg.default_foldername;
