@@ -16,19 +16,33 @@
  *         { type: 'file-size', targets: 0 }
  *       ]
  *    } );
+ *
+ * @param   data      The input String.
+ * @return {Number}
  */
+jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function (data)
+{
+  var matches = data.match(/^(\d+(?:\.\d+)?)\s*([a-z]+)/i);
+  var multipliers = {
+    b: 1,
+    kb: 1000,
+    mb: 1000000,
+    gb: 1000000000,
+    tb: 1000000000000,
+    pb: 1000000000000000
+  };
 
-jQuery.fn.dataTable.ext.type.order['file-size-pre'] = function ( data ) {
-    var matches = data.match( /^(\d+(?:\.\d+)?)\s*([a-z]+)/i );
-    var multipliers = {
-        b:  1,
-        kb: 1000,
-        mb: 1000000,
-        gb: 1000000000,
-        tb: 1000000000000,
-        pb: 1000000000000000
-    };
+  var numReturn;
 
+  if (matches)
+  {
     var multiplier = multipliers[matches[2].toLowerCase()];
-    return parseFloat( matches[1] ) * multiplier;
+    numReturn = parseFloat(matches[1]) * multiplier;
+  }
+  else
+  {
+    numReturn = -1;
+  }
+
+  return numReturn;
 };

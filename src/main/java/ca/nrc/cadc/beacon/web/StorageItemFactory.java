@@ -68,16 +68,10 @@
 
 package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.view.FileItem;
-import ca.nrc.cadc.beacon.web.view.FolderItem;
-import ca.nrc.cadc.beacon.web.view.StorageItem;
-import ca.nrc.cadc.beacon.web.view.StorageItemIterator;
+import ca.nrc.cadc.beacon.web.view.*;
 import ca.nrc.cadc.date.DateUtil;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.*;
 
 import java.net.URI;
 import java.util.Date;
@@ -99,9 +93,6 @@ public class StorageItemFactory
         final StorageItem nextItem;
         final VOSURI nodeURI = node.getUri();
         final boolean isRoot = nodeURI.isRoot();
-        final long sizeInBytes = isRoot ? -1L :
-                                 Long.parseLong(node.getPropertyValue(
-                                         VOS.PROPERTY_URI_CONTENTLENGTH));
         final Date lastModifiedDate =
                 isRoot ? null : DateUtil
                         .getDateFormat(DateUtil.IVOA_DATE_FORMAT, DateUtil.UTC)
@@ -123,17 +114,26 @@ public class StorageItemFactory
 
         if (node instanceof ContainerNode)
         {
-            nextItem = new FolderItem(nodeURI, sizeInBytes,
-                                      lastModifiedDate, publicFlag,
-                                      lockedFlag, writeGroupURIs,
+            nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
+                                      publicFlag, lockedFlag, writeGroupURIs,
                                       readGroupURIs, owner,
                                       new StorageItemIterator(
                                               ((ContainerNode) node).getNodes()
                                                       .iterator(),
                                               this));
         }
+        else if (node instanceof LinkNode)
+        {
+            nextItem = new LinkItem(nodeURI, -1L, lastModifiedDate, publicFlag,
+                                    lockedFlag, writeGroupURIs, readGroupURIs,
+                                    owner);
+        }
         else
         {
+            final long sizeInBytes =
+                    Long.parseLong(node.getPropertyValue(
+                            VOS.PROPERTY_URI_CONTENTLENGTH));
+
             nextItem = new FileItem(nodeURI, sizeInBytes,
                                     lastModifiedDate, publicFlag,
                                     lockedFlag, writeGroupURIs,

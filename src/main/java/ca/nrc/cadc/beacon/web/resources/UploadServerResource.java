@@ -77,19 +77,17 @@ import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
-import org.apache.commons.fileupload.ProgressListener;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.restlet.data.MediaType;
+import org.restlet.ext.servlet.ServletUtils;
 import org.restlet.representation.Representation;
 import org.restlet.representation.StringRepresentation;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -100,8 +98,6 @@ import java.util.List;
 public class UploadServerResource extends NodeServerResource
 {
     protected static final int BUFFER_SIZE = 8192;
-    private static final UploadStateController UPLOAD_STATE =
-            new UploadStateController();
     private static final String UPLOAD_FILE_KEY = "upload";
 
     private final UploadVerifier uploadVerifier;
@@ -136,14 +132,12 @@ public class UploadServerResource extends NodeServerResource
             // FileUpload can parse that request, and get all uploaded files
             // as FileItem.
 
-            // Process only the uploaded item called "upload" and
-            // save it on disk
+            // Obtain the file upload Representation as an iterator.
             final ServletFileUpload upload = parseRepresentation();
-            upload.setProgressListener(new UploadProgressListener());
 
             final FileItemIterator fileItemIterator =
                     upload.getItemIterator(
-                            org.restlet.ext.servlet.ServletUtils.getRequest(getRequest()));
+                            ServletUtils.getRequest(getRequest()));
 
             if (!fileItemIterator.hasNext())
             {
@@ -155,7 +149,7 @@ public class UploadServerResource extends NodeServerResource
             }
             else
             {
-                writeOut(fileItemIterator, upload);
+                writeOut(fileItemIterator);
             }
         }
         else
@@ -165,13 +159,11 @@ public class UploadServerResource extends NodeServerResource
         }
     }
 
-    protected void writeOut(final FileItemIterator fileItemIterator,
-                            final ServletFileUpload upload)
+    protected void writeOut(final FileItemIterator fileItemIterator)
             throws IOException, IllegalArgumentException, NodeNotFoundException
     {
         boolean inheritParentPermissions = false;
         VOSURI newNodeURI = null;
-        String UID = null;
 
         try
         {
@@ -180,31 +172,11 @@ public class UploadServerResource extends NodeServerResource
                 final FileItemStream nextFileItemStream =
                         fileItemIterator.next();
 
-                if (nextFileItemStream.getFieldName().equals(
-                        "APC_UPLOAD_PROGRESS"))
-                {
-
-                    try (final InputStream inputStream
-                                 = nextFileItemStream.openStream())
-                    {
-                        UID = new BufferedReader(
-                                new InputStreamReader(inputStream)).readLine();
-                        ((UploadProgressListener) upload.getProgressListener()).
-                                setUID(UID);
-                        UPLOAD_STATE.put(UID);
-                    }
-                }
-                else if (nextFileItemStream.getFieldName().startsWith(
+                if (nextFileItemStream.getFieldName().startsWith(
                         UPLOAD_FILE_KEY))
                 {
-                    try
-                    {
-                        newNodeURI = handleUpload(nextFileItemStream);
-                    }
-                    finally
-                    {
-                        UPLOAD_STATE.scheduleRemove(UID, 5000);
-                    }
+                    newNodeURI = handleUpload(nextFileItemStream);
+
                 }
                 else if (nextFileItemStream.getFieldName().equals(
                         "inheritPermissionsCheckBox"))
@@ -241,7 +213,7 @@ public class UploadServerResource extends NodeServerResource
         {
             final String path = getCurrentItemURI().getPath() + "/"
                                 + URLEncoder.encode(filename, "UTF-8");
-            final String source = "vos://cadc.nrc.ca!vospace/" + path;
+            final String source = "vos://cadc.nrc.ca!vospace" + path;
             final DataNode dataNode;
             final View view;
 
@@ -259,7 +231,7 @@ public class UploadServerResource extends NodeServerResource
 
             final VOSpaceClient client = createClient(new RegistryClient());
             final List<Protocol> protocols = new ArrayList<>();
-            protocols.add(new Protocol(VOS.PROTOCOL_HTTPS_PUT,
+            protocols.add(new Protocol(VOS.PROTOCOL_HTTP_PUT,
                                        client.getBaseURL(), null));
 
             final Transfer transfer = new Transfer(dataNode.getUri().getURI(),
@@ -429,42 +401,5 @@ public class UploadServerResource extends NodeServerResource
             final DiskFileItemFactory factory)
     {
         return new ServletFileUpload(factory);
-    }
-
-    private final class UploadProgressListener implements ProgressListener
-    {
-        private String UID;
-
-
-        private UploadProgressListener()
-        {
-
-        }
-
-
-        public void update(final long bytesRead, final long contentLength,
-                           final int index)
-        {
-            if (getUID() != null)
-            {
-                final UploadStateController.UploadFileDTO uploadFileDTO =
-                        UPLOAD_STATE.get(getUID());
-
-                if (uploadFileDTO != null)
-                {
-                    uploadFileDTO.update(bytesRead, contentLength);
-                }
-            }
-        }
-
-        private String getUID()
-        {
-            return UID;
-        }
-
-        public void setUID(final String UID)
-        {
-            this.UID = UID;
-        }
     }
 }

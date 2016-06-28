@@ -83,6 +83,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.security.PrivilegedAction;
 
+
 public abstract class NodeServerResource extends SecureServerResource
 {
     static final int DEFAULT_PAGE_SIZE = 300;
@@ -136,8 +137,8 @@ public abstract class NodeServerResource extends SecureServerResource
                                     }
                                     catch (NodeNotFoundException e)
                                     {
-                                        getResponse()
-                                                .setStatus(Status.CLIENT_ERROR_NOT_FOUND);
+                                        getResponse().setStatus(
+                                                Status.CLIENT_ERROR_NOT_FOUND);
                                         return null;
                                     }
                                 });

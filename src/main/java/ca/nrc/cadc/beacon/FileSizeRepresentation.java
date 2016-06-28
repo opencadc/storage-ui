@@ -90,9 +90,13 @@ public class FileSizeRepresentation
 
         while (true)
         {
-            if (n < THRESHOLD)
+            if (n < 0.0D)
             {
-                n = Math.round(n * 100.0) / 100.0;
+                return "--";
+            }
+            else if (n < THRESHOLD)
+            {
+                n = Math.round(n * 100.0D) / 100.0D;
                 return n + SIZE_FORMAT_TYPES[c];
             }
             else

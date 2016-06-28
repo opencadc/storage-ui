@@ -86,5 +86,7 @@ public class FileSizeRepresentationTest
         assertEquals("Wrong size.", "60.54TB",
                      testSubject.getSizeHumanReadable(1024L * 1000L * 1000L
                                                       * 1000L * 65L));
+        assertEquals("Wrong display size.", "--",
+                     testSubject.getSizeHumanReadable(-986635L));
     }
 }

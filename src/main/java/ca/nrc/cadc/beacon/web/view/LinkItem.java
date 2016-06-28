@@ -29,4 +29,14 @@ public class LinkItem extends StorageItem
     public String getLinkURI() {
         return "/vospace/nodes" + uri.getPath();
     }
+
+    /**
+     * Links have no size.
+     * @return      String '--'.
+     */
+    @Override
+    public String getSizeHumanReadable()
+    {
+        return NO_SIZE_DISPLAY;
+    }
 }
