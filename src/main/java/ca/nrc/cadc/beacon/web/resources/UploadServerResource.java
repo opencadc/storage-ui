@@ -79,15 +79,18 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.json.JSONWriter;
 import org.restlet.data.MediaType;
+import org.restlet.data.Status;
 import org.restlet.ext.servlet.ServletUtils;
 import org.restlet.representation.Representation;
-import org.restlet.representation.StringRepresentation;
+import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -142,20 +145,52 @@ public class UploadServerResource extends NodeServerResource
             if (!fileItemIterator.hasNext())
             {
                 // Some problem occurs, sent back a simple line of text.
+                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 getResponse().setEntity(
-                        new StringRepresentation(
-                                "Unable to upload corrupted or "
-                                + "incompatible data.", MediaType.TEXT_PLAIN));
+                        new WriterRepresentation(MediaType.APPLICATION_JSON)
+                        {
+                            @Override
+                            public void write(final Writer writer) throws
+                                                                   IOException
+                            {
+                                final JSONWriter jsonWriter =
+                                        new JSONWriter(writer);
+
+                                jsonWriter.object().key("error")
+                                        .value("Unable to upload corrupted or incompatible data.")
+                                        .endObject();
+
+                                writer.flush();
+                            }
+                        });
             }
             else
             {
                 writeOut(fileItemIterator);
+                getResponse().setStatus(Status.SUCCESS_CREATED);
+                getResponse().setEntity(
+                        new WriterRepresentation(MediaType.APPLICATION_JSON)
+                        {
+                            @Override
+                            public void write(final Writer writer) throws
+                                                                   IOException
+                            {
+                                final JSONWriter jsonWriter =
+                                        new JSONWriter(writer);
+
+                                jsonWriter.object().key("code").value(0)
+                                        .endObject();
+
+                                writer.flush();
+                            }
+                        });
             }
         }
         else
         {
-//            processError(Status.CLIENT_ERROR_BAD_REQUEST,
-//                         "Nothing to upload or invalid data.");
+            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+            getResponse().setEntity("Nothing to upload or invalid data.",
+                                    MediaType.TEXT_PLAIN);
         }
     }
 
@@ -199,10 +234,9 @@ public class UploadServerResource extends NodeServerResource
     /**
      * Perform the actual upload.
      *
-     *
-     * @param fileItemStream            The upload file item stream.
+     * @param fileItemStream The upload file item stream.
      * @return The URI to the new node.
-     * @throws IOException                If anything goes wrong.
+     * @throws IOException If anything goes wrong.
      */
     protected VOSURI handleUpload(final FileItemStream fileItemStream)
             throws IOException, IllegalArgumentException
@@ -256,10 +290,10 @@ public class UploadServerResource extends NodeServerResource
     /**
      * Do the secure upload.
      *
-     * @param inputStream       The InputStream to pull from.
-     * @param client            The VOSpaceClient instance.
-     * @param dataNode             The DataNode to upload to.
-     * @param transfer          The Transfer object.
+     * @param inputStream The InputStream to pull from.
+     * @param client      The VOSpaceClient instance.
+     * @param dataNode    The DataNode to upload to.
+     * @param transfer    The Transfer object.
      */
     protected void uploadSecure(final InputStream inputStream,
                                 final VOSpaceClient client,
@@ -366,7 +400,7 @@ public class UploadServerResource extends NodeServerResource
     /**
      * Perform the HTTPS command.
      *
-     * @param newNode   The newly created Node.
+     * @param newNode The newly created Node.
      */
     protected void setNodeSecure(final Node newNode)
             throws MalformedURLException
@@ -378,8 +412,8 @@ public class UploadServerResource extends NodeServerResource
      * Parse the representation into a Map for easier access to Form elements.
      *
      * @return Map of field names to File Items, or empty Map.
-     *                      Never null.
-     * @throws Exception    If the Upload could not be parsed.
+     * Never null.
+     * @throws Exception If the Upload could not be parsed.
      */
     ServletFileUpload parseRepresentation() throws Exception
     {
@@ -394,7 +428,7 @@ public class UploadServerResource extends NodeServerResource
     /**
      * External method of obtaining a Restlet File Upload.
      *
-     * @param factory       Factory used to create the upload.
+     * @param factory Factory used to create the upload.
      * @return RestletFileUpload instance.
      */
     protected ServletFileUpload createFileUpload(

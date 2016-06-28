@@ -68,7 +68,7 @@
 <script type="text/javascript"
         src="/beacon/js/jquery.tablesorter-2.7.2.min.js"></script>
 <script type="text/javascript"
-        src="/beacon/js/jquery.impromptu-3.2.min.js"></script>
+        src="/beacon/js/jquery-impromptu.min.js"></script>
 <script type="text/javascript" src="/beacon/js/filemanager.js"></script>
 
 <!--

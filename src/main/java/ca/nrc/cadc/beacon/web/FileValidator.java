@@ -73,7 +73,7 @@ import ca.nrc.cadc.util.StringUtil;
 public class FileValidator
 {
     private static final String VALID_FILENAME_REGEX =
-            "[a-zA-Z0-9_\\-()=+!,;:@*$.]+";
+            "[a-zA-Z0-9_\\-()=+!,;:@*$.\\s]+";
 
 
     public String getExtension(final String filename)

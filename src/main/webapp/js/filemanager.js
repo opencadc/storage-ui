@@ -205,6 +205,7 @@
   $.prompt.setDefaults({
                          overlayspeed: 'fast',
                          show: 'fadeIn',
+                         hide: 'fadeOut',
                          opacity: 0.4,
                          persistent: false
                        });
@@ -1359,8 +1360,6 @@
       parentNode = $('#filetree').find('ul.jqueryFileTree');
 
       parentNode.prepend(newNode);
-      createFileTree();
-
     }
     else
     {
@@ -1907,6 +1906,10 @@
                                         buttons: btns
                                       });
 
+                                      var $progressBar =
+                                        $("#total-progress").find(".progress-bar");
+                                      var $uploadResponse = $("#uploadresponse");
+
                                       $("div#multiple-uploads").dropzone({
                                                                            paramName: "upload",
                                                                            url: '/beacon/upload' + path,
@@ -1938,69 +1941,61 @@
                                                                              var dropzone = this;
                                                                              $("#process-upload").click(function ()
                                                                                                         {
-                                                                                                          // to proceed full queue parallelUploads ust be equal or > to maxFileSize  https://github.com/enyo/dropzone/issues/462
+                                                                                                          // To proceed full queue parallelUploads must be equal or > to maxFileSize.
+                                                                                                          // https://github.com/enyo/dropzone/issues/462
                                                                                                           dropzone.processQueue();
                                                                                                         });
                                                                            },
                                                                            totaluploadprogress: function (progress)
                                                                            {
-                                                                             $("#total-progress .progress-bar").css('width', progress + "%");
+                                                                             $progressBar.css('width', progress + "%");
                                                                            },
                                                                            sending: function (file, xhr, formData)
                                                                            {
                                                                              formData.append("mode", "add");
                                                                              formData.append("currentpath", path);
                                                                            },
-                                                                           success: function (file, response)
+                                                                           success: function (file, jsonResponse)
                                                                            {
-                                                                             $('#uploadresponse').empty().html(response);
-                                                                             var data = jQuery.parseJSON($('#uploadresponse').find('textarea').text());
+                                                                             $uploadResponse.empty().text(jsonResponse);
 
-                                                                             if (data['Code'] == 0)
+                                                                             if (jsonResponse.code == 0)
                                                                              {
                                                                                this.removeFile(file);
                                                                              }
                                                                              else
                                                                              {
-                                                                               // this.removeAllFiles();
                                                                                getFolderInfo(path);
-                                                                               $('#filetree').find('a[data-path="' +
-                                                                                                   path +
-                                                                                                   '"]').click();
-                                                                               $.prompt(data['Error']);
+                                                                               $.prompt(jsonResponse.error);
                                                                                error_flag = true;
                                                                              }
                                                                            },
-                                                                           complete: function (file)
+                                                                           complete: function ()
                                                                            {
-                                                                             if (this.getUploadingFiles().length ===
-                                                                                 0 &&
-                                                                                 this.getQueuedFiles().length ===
-                                                                                 0)
+                                                                             if ((this.getUploadingFiles().length === 0)
+                                                                                 && (this.getQueuedFiles().length === 0))
                                                                              {
-                                                                               $("#total-progress .progress-bar").css('width', '0%');
-                                                                               if (this.getRejectedFiles().length ===
-                                                                                   0 &&
-                                                                                   error_flag ===
-                                                                                   false)
+                                                                               $progressBar.css('width', '0%');
+
+                                                                               if ((this.getRejectedFiles().length === 0)
+                                                                                   && (error_flag === false))
                                                                                {
-                                                                                 setTimeout(function ()
-                                                                                            {
-                                                                                              $.prompt.close();
-                                                                                            }, 800);
+                                                                                 //setTimeout(function ()
+                                                                                 //           {
+                                                                                 $.prompt.close();
+                                                                                            //}, 800);
                                                                                }
+
                                                                                getFolderInfo(path);
-                                                                               if (path ==
-                                                                                   fileRoot)
-                                                                               {
-                                                                                 createFileTree();
-                                                                               }
-                                                                               $('#filetree').find('a[data-path="' +
-                                                                                                   path +
-                                                                                                   '"]').click().click();
+
                                                                                if (config.options.showConfirmation)
                                                                                {
-                                                                                 $.prompt(lg.successful_added_file);
+                                                                                 $.prompt(lg.successful_added_file, {
+                                                                                   submit: function()
+                                                                                   {
+                                                                                     window.location.reload(true);
+                                                                                   }
+                                                                                 });
                                                                                }
                                                                              }
                                                                            }
