@@ -66,81 +66,100 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
+import ca.nrc.cadc.beacon.UploadVerificationFailedException;
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.restlet.data.Status;
+import ca.nrc.cadc.vos.NodeProperty;
+import ca.nrc.cadc.vos.VOS;
 
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
 
-public abstract class NodeServerResource extends SecureServerResource
+public class UploadVerifier
 {
-    static final int DEFAULT_PAGE_SIZE = 300;
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
-
-    VOSURI getCurrentItemURI()
+    /**
+     * Verify that each byte is accounted for on the server side.
+     *
+     * @param byteCount The count of bytes.
+     * @param node      The node to verify.
+     */
+    public void verifyByteCount(final long byteCount, final Node node)
+            throws UploadVerificationFailedException
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        final String path = "/" + ((pathInRequest == null)
-                                   ? "" : pathInRequest.toString());
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
-    }
-
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(), 20);
-    }
-
-
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        return new VOSpaceClient(registryClient.getServiceURL(
-                URI.create("ivo://cadc.nrc.ca/vospace"), "http").
-                toExternalForm(), false);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient = createClient(registryClient);
-        final Subject currentUser = getCurrent();
-
-        if (currentUser.getPrincipals().isEmpty())
+        if (byteCount < 0)
         {
-            return voSpaceClient.getNode(folderURI.getPath(), query);
+            throw new IllegalArgumentException(
+                    "The given byte count cannot be a negative value.");
+        }
+        else if (node == null)
+        {
+            throw new IllegalArgumentException(
+                    "The given Node cannot be null.");
+        }
+
+        final NodeProperty contentLengthProperty =
+                node.findProperty(VOS.PROPERTY_URI_CONTENTLENGTH);
+        final long contentLength = contentLengthProperty == null
+                                   ? 0L
+                                   : Long.parseLong(
+                contentLengthProperty.getPropertyValue());
+
+        if (byteCount != contentLength)
+        {
+            throw new UploadVerificationFailedException("** ERROR ** - Upload did not succeed: "
+                                                        + String.format("File length counted [%d] does not "
+                                                                        + "match what the service said it "
+                                                                        + "should be [%d]", byteCount,
+                                                                        contentLength));
+        }
+    }
+
+    /**
+     * Verify the given MD5.
+     * <p>
+     * Note that the given MD5 will be converted to a Hex string, and then
+     * the string will be compared to what the returned Node provided.
+     *
+     * @param calculatedMD5 The byte array of the calculated MD5.
+     * @param node          The node to verify againts.
+     */
+    public void verifyMD5(final byte[] calculatedMD5, final Node node)
+            throws UploadVerificationFailedException
+    {
+        if (calculatedMD5 == null)
+        {
+            throw new IllegalArgumentException(
+                    "The calculated MD5 cannot be null.");
+        }
+        else if (node == null)
+        {
+            throw new IllegalArgumentException(
+                    "The given Node cannot be null.");
+        }
+
+        final NodeProperty MD5Property =
+                node.findProperty(VOS.PROPERTY_URI_CONTENTMD5);
+        final String serverMD5String = MD5Property == null
+                                       ? null
+                                       : MD5Property.getPropertyValue();
+
+        if (!StringUtil.hasLength(serverMD5String))
+        {
+            throw new UploadVerificationFailedException("** ERROR YOUR UPLOAD DID NOT SUCCEED **\n"
+                                                        + "MD5 checksum was not produced by "
+                                                        + "service!\nThis was not expected, please "
+                                                        + "contact canfarhelp@nrc-cnrc.gc.ca for "
+                                                        + "assistance.");
         }
         else
         {
-            return Subject.doAs(currentUser,
-                                (PrivilegedAction<Node>) () -> {
-                                    try
-                                    {
-                                        return voSpaceClient.getNode(
-                                                folderURI.getPath(), query);
-                                    }
-                                    catch (NodeNotFoundException e)
-                                    {
-                                        getResponse()
-                                                .setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-                                        return null;
-                                    }
-                                });
+            if (!ca.nrc.cadc.util.HexUtil.toHex(calculatedMD5).equals(
+                    serverMD5String))
+            {
+                throw new UploadVerificationFailedException(
+                        "** ERROR ** - Upload did not succeed: "
+                        + "MD5 checksum failed.");
+            }
         }
     }
 }

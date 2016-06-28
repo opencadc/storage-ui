@@ -66,81 +66,80 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.restlet.data.Status;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
-
-public abstract class NodeServerResource extends SecureServerResource
+public class UploadStateController
+        extends ConcurrentHashMap<String, UploadStateController.UploadFileDTO>
 {
-    static final int DEFAULT_PAGE_SIZE = 300;
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
-
-    VOSURI getCurrentItemURI()
+    public final class UploadFileDTO
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        final String path = "/" + ((pathInRequest == null)
-                                   ? "" : pathInRequest.toString());
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
-    }
-
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(), 20);
-    }
+        private long bytesRead = -1L;
+        private long totalBytes = -1L;
 
 
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        return new VOSpaceClient(registryClient.getServiceURL(
-                URI.create("ivo://cadc.nrc.ca/vospace"), "http").
-                toExternalForm(), false);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient = createClient(registryClient);
-        final Subject currentUser = getCurrent();
-
-        if (currentUser.getPrincipals().isEmpty())
+        private UploadFileDTO()
         {
-            return voSpaceClient.getNode(folderURI.getPath(), query);
         }
-        else
+
+
+        public long getBytesRead()
         {
-            return Subject.doAs(currentUser,
-                                (PrivilegedAction<Node>) () -> {
-                                    try
-                                    {
-                                        return voSpaceClient.getNode(
-                                                folderURI.getPath(), query);
-                                    }
-                                    catch (NodeNotFoundException e)
-                                    {
-                                        getResponse()
-                                                .setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-                                        return null;
-                                    }
-                                });
+            return bytesRead;
         }
+
+        private void setBytesRead(final long bytesRead)
+        {
+            this.bytesRead = bytesRead;
+        }
+
+        public void update(final long bytesRead, final long totalBytes)
+        {
+            setBytesRead(bytesRead);
+            setTotalBytes(totalBytes);
+        }
+
+        public long getTotalBytes()
+        {
+            return totalBytes;
+        }
+
+        private void setTotalBytes(final long totalBytes)
+        {
+            this.totalBytes = totalBytes;
+        }
+    }
+
+    /**
+     * Schedule a remove of something with the given key in a specified amount
+     * of milliseconds.
+     *
+     * @param key       The key of the item.
+     * @param delay     The delay to do the remove.
+     */
+    public void scheduleRemove(final String key, final long delay)
+    {
+        final Timer t = new Timer("SCHEDULE_REMOVE-" + key + "-"
+                                  + System.currentTimeMillis());
+        t.schedule(new TimerTask()
+        {
+            @Override
+            public void run()
+            {
+                if (containsKey(key))
+                {
+                    remove(key);
+                }
+            }
+        }, delay);
+    }
+
+    public UploadFileDTO put(final String key)
+    {
+        put(key, new UploadFileDTO());
+        return get(key);
     }
 }

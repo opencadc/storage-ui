@@ -66,81 +66,23 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.restlet.data.Status;
+import ca.nrc.cadc.net.OutputStreamWrapper;
 
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
-
-public abstract class NodeServerResource extends SecureServerResource
+public interface UploadOutputStreamWrapper extends OutputStreamWrapper
 {
-    static final int DEFAULT_PAGE_SIZE = 300;
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
+    /**
+     * Obtain the MD5 that was calculated during the upload.
+     *
+     * @return      byte[] calculatedMD5, or null if not yet run.
+     */
+    byte[] getCalculatedMD5();
 
-    VOSURI getCurrentItemURI()
-    {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        final String path = "/" + ((pathInRequest == null)
-                                   ? "" : pathInRequest.toString());
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
-    }
-
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(), 20);
-    }
-
-
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        return new VOSpaceClient(registryClient.getServiceURL(
-                URI.create("ivo://cadc.nrc.ca/vospace"), "http").
-                toExternalForm(), false);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient = createClient(registryClient);
-        final Subject currentUser = getCurrent();
-
-        if (currentUser.getPrincipals().isEmpty())
-        {
-            return voSpaceClient.getNode(folderURI.getPath(), query);
-        }
-        else
-        {
-            return Subject.doAs(currentUser,
-                                (PrivilegedAction<Node>) () -> {
-                                    try
-                                    {
-                                        return voSpaceClient.getNode(
-                                                folderURI.getPath(), query);
-                                    }
-                                    catch (NodeNotFoundException e)
-                                    {
-                                        getResponse()
-                                                .setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-                                        return null;
-                                    }
-                                });
-        }
-    }
+    /**
+     * Obtain a count of the bytes that was obtained during the upload.
+     *
+     * @return      long byte count.
+     */
+    long getByteCount();
 }

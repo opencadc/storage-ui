@@ -57,7 +57,7 @@
                   <a id="level-up" name="level-up" href="/beacon/list${folder.parentPath}" role="button" title="Up one level">
                     <span class="glyphicon glyphicon-level-up"></span>&nbsp;Up</a></li>
                 <li>
-                  <a id="home" name="home" type="button" title="Navigate to main root." href="/beacon/list/">
+                  <a id="root" name="root" type="button" title="Navigate to main root." href="/beacon/list/">
                     <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
                 <li class="dropdown">
                   <a title="New" class="dropdown-toggle" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">

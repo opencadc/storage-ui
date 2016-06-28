@@ -66,81 +66,51 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.restlet.data.Status;
+import ca.nrc.cadc.util.StringUtil;
 
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
-
-public abstract class NodeServerResource extends SecureServerResource
+public class FileValidator
 {
-    static final int DEFAULT_PAGE_SIZE = 300;
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
+    private static final String VALID_FILENAME_REGEX =
+            "[a-zA-Z0-9_\\-()=+!,;:@*$.]+";
 
-    VOSURI getCurrentItemURI()
+
+    public String getExtension(final String filename)
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        final String path = "/" + ((pathInRequest == null)
-                                   ? "" : pathInRequest.toString());
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
-    }
+        final String extension;
 
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(), 20);
-    }
-
-
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        return new VOSpaceClient(registryClient.getServiceURL(
-                URI.create("ivo://cadc.nrc.ca/vospace"), "http").
-                toExternalForm(), false);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient = createClient(registryClient);
-        final Subject currentUser = getCurrent();
-
-        if (currentUser.getPrincipals().isEmpty())
+        if (StringUtil.hasText(filename))
         {
-            return voSpaceClient.getNode(folderURI.getPath(), query);
+            int lastPoint = filename.lastIndexOf('.');
+
+            if (lastPoint >= 0)
+            {
+                extension = filename.substring(lastPoint + 1);
+            }
+            else
+            {
+                extension = "";
+            }
         }
         else
         {
-            return Subject.doAs(currentUser,
-                                (PrivilegedAction<Node>) () -> {
-                                    try
-                                    {
-                                        return voSpaceClient.getNode(
-                                                folderURI.getPath(), query);
-                                    }
-                                    catch (NodeNotFoundException e)
-                                    {
-                                        getResponse()
-                                                .setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-                                        return null;
-                                    }
-                                });
+            extension = "";
         }
+
+        return extension;
+    }
+
+    /**
+     * Validate the given String for use when submitting text entry values.
+     * This implementation will check for a null or empty String, as well as
+     * a String with a space in it, which is not allowed.
+     *
+     * @param filename     The String to validate.
+     * @return  True if it's valid, false otherwise.
+     */
+    public boolean validateString(final String filename)
+    {
+        return (filename != null) && filename.matches(VALID_FILENAME_REGEX);
     }
 }

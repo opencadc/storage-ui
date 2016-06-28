@@ -66,81 +66,132 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import ca.nrc.cadc.io.ByteCountOutputStream;
 import org.restlet.data.Status;
+import org.restlet.resource.ResourceException;
 
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
-public abstract class NodeServerResource extends SecureServerResource
+public class UploadOutputStreamWrapperImpl implements UploadOutputStreamWrapper
 {
-    static final int DEFAULT_PAGE_SIZE = 300;
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
+    private static final int DEFAULT_BUFFER_SIZE = 8192;
 
-    VOSURI getCurrentItemURI()
+
+    private InputStream sourceInputStream;
+    private long byteCount;
+    private byte[] calculatedMD5;
+    private int bufferSize;
+
+
+    /**
+     * Constructor to use the default buffer size.
+     *
+     * @param sourceInputStream The source stream.
+     */
+    public UploadOutputStreamWrapperImpl(final InputStream sourceInputStream)
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        final String path = "/" + ((pathInRequest == null)
-                                   ? "" : pathInRequest.toString());
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
+        this(sourceInputStream, DEFAULT_BUFFER_SIZE);
     }
 
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
+    /**
+     * Full Constructor.  Provide the source stream to read from, and the
+     * desired buffer size.
+     *
+     * @param sourceInputStream The source stream.
+     * @param bufferSize        The desired buffer size while reading.
+     */
+    public UploadOutputStreamWrapperImpl(final InputStream sourceInputStream,
+                                         final int bufferSize)
     {
-        return (ContainerNode) getNode(getCurrentItemURI(), 20);
+        this.sourceInputStream = sourceInputStream;
+        this.bufferSize = bufferSize;
     }
 
 
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
+    /**
+     * Perform the write operation to the given output.
+     *
+     * @param out The output to write to.
+     * @throws java.io.IOException For any unhandled error.
+     */
+    public void write(final OutputStream out) throws IOException
     {
-        return new VOSpaceClient(registryClient.getServiceURL(
-                URI.create("ivo://cadc.nrc.ca/vospace"), "http").
-                toExternalForm(), false);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient = createClient(registryClient);
-        final Subject currentUser = getCurrent();
-
-        if (currentUser.getPrincipals().isEmpty())
+        if (out == null)
         {
-            return voSpaceClient.getNode(folderURI.getPath(), query);
+            throw new IllegalArgumentException(
+                    "BUG - Given OutputStream cannot be null.");
         }
-        else
+
+        final MessageDigest messageDigest = getMD5Digest();
+        final ByteCountOutputStream outputStream =
+                new ByteCountOutputStream(out);
+        final BufferedInputStream bis =
+                new BufferedInputStream(getSourceInputStream(), getBufferSize());
+        final byte[] buffer = new byte[getBufferSize()];
+        int bytesRead;
+
+        while ((bytesRead = bis.read(buffer)) >= 0)
         {
-            return Subject.doAs(currentUser,
-                                (PrivilegedAction<Node>) () -> {
-                                    try
-                                    {
-                                        return voSpaceClient.getNode(
-                                                folderURI.getPath(), query);
-                                    }
-                                    catch (NodeNotFoundException e)
-                                    {
-                                        getResponse()
-                                                .setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-                                        return null;
-                                    }
-                                });
+            messageDigest.update(buffer, 0, bytesRead);
+            outputStream.write(buffer, 0, bytesRead);
         }
+
+        setByteCount(outputStream.getByteCount());
+        setCalculatedMD5(messageDigest.digest());
+    }
+
+    /**
+     * Obtain a new MD5 digester.
+     *
+     * @return MessageDigest instance.
+     */
+    protected MessageDigest getMD5Digest()
+    {
+        try
+        {
+            return MessageDigest.getInstance("MD5");
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            throw new ResourceException(Status.SERVER_ERROR_INTERNAL, e);
+        }
+    }
+
+
+    protected InputStream getSourceInputStream()
+    {
+        return sourceInputStream;
+    }
+
+    public int getBufferSize()
+    {
+        return bufferSize;
+    }
+
+    public long getByteCount()
+    {
+        return byteCount;
+    }
+
+    public void setByteCount(long byteCount)
+    {
+        this.byteCount = byteCount;
+    }
+
+    public byte[] getCalculatedMD5()
+    {
+        return calculatedMD5;
+    }
+
+    public void setCalculatedMD5(byte[] calculatedMD5)
+    {
+        this.calculatedMD5 = calculatedMD5;
     }
 }

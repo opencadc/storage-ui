@@ -71,10 +71,7 @@ package ca.nrc.cadc.beacon.web.restlet;
 import ca.nrc.cadc.auth.PrincipalExtractor;
 import ca.nrc.cadc.beacon.web.CookiePrincipalExtractorImpl;
 import ca.nrc.cadc.beacon.web.SubjectGenerator;
-import ca.nrc.cadc.beacon.web.resources.AccessControlServerResource;
-import ca.nrc.cadc.beacon.web.resources.MainPageServerResource;
-import ca.nrc.cadc.beacon.web.resources.PageServerResource;
-import ca.nrc.cadc.beacon.web.resources.StorageItemServerResource;
+import ca.nrc.cadc.beacon.web.resources.*;
 import org.restlet.*;
 import org.restlet.routing.Route;
 import org.restlet.routing.Router;
@@ -144,6 +141,8 @@ public class VOSpaceApplication extends Application
                 router.attach("/list/{path}", MainPageServerResource.class);
         final TemplateRoute rawRoute =
                 router.attach("/raw/{path}", MainPageServerResource.class);
+        final TemplateRoute uploadRoute =
+                router.attach("/upload/{path}", UploadServerResource.class);
 
         final Map<String, Variable> pageRouteVariables =
                 pageRoute.getTemplate().getVariables();
@@ -160,6 +159,10 @@ public class VOSpaceApplication extends Application
         final Map<String, Variable> rawRouteVariables =
                 rawRoute.getTemplate().getVariables();
         rawRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
+
+        final Map<String, Variable> uploadRouteVariables =
+                uploadRoute.getTemplate().getVariables();
+        uploadRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
 
         router.setContext(getContext());
         return router;

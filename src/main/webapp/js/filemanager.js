@@ -11,20 +11,18 @@
 
 (function ($)
 {
+  var $fileInfo = $("#fileInfo");
+  var fileRoot;
+  var baseURL;
+  var fullexpandedFolder;
+  var expandedFolder;
 
 // function to retrieve GET params
   $.urlParam = function (name)
   {
     var results = new RegExp('[\\?&]' + name +
                              '=([^&#]*)').exec(window.location.href);
-    if (results)
-    {
-      return results[1];
-    }
-    else
-    {
-      return 0;
-    }
+    return results ? results[1] : 0;
   };
 
   /*---------------------------------------------------------
@@ -80,9 +78,8 @@
     delete config.version;
   }
 
-
-// we merge default config and user config file
-  var config = $.extend({}, configd, config);
+  // we merge default config and user config file
+  config = $.extend({}, configd, config);
 
   if (config.options.logger)
   {
@@ -98,14 +95,15 @@
    * function to load a given css file into header
    * if not already included
    */
-  loadCSS = function (href)
+  var loadCSS = function (href)
   {
     // we check if already included
     if ($.inArray(href, HEAD_included_files) == -1)
     {
-      var cssLink = $("<link rel='stylesheet' type='text/css' href='" + href +
-                      "'>");
+      var cssLink = $("<link rel='stylesheet' type='text/css' href='" + href
+                      + "'>");
       $("head").append(cssLink);
+
       HEAD_included_files.push(href);
     }
   };
@@ -114,7 +112,7 @@
    * function to load a given js file into header
    * if not already included
    */
-  loadJS = function (src)
+  var loadJS = function (src)
   {
     // we check if already included
     if ($.inArray(src, HEAD_included_files) == -1)
@@ -131,11 +129,13 @@
    * a valid path on selectItem calls
    *
    */
-  smartPath = function (url, path)
+  var smartPath = function (url, path)
   {
     var a = url.split('/');
     var separator = '/' + a[a.length - 2] + '/';
     var pos = path.indexOf(separator);
+    var rvalue;
+
     // separator is not found
     // this can happen when not set dynamically with setFileRoot function - see
     //  : https://github.com/simogeo/Filemanager/issues/354
@@ -147,6 +147,7 @@
     {
       rvalue = url + path.substring(pos + separator.length);
     }
+
     if (config.options.logger)
     {
       console.log("url : " + url + " - path : " +
@@ -166,19 +167,22 @@
 // Read capabilities from config files if exists
 // else apply default settings
   var capabilities = config.options.capabilities ||
-                     ['select', 'download', 'rename', 'move', 'delete', 'replace'];
+    ['select', 'download', 'rename', 'move', 'delete',
+     'replace'];
 
 // Get localized messages from file 
 // through culture var or from URL
   if ($.urlParam('langCode') != 0)
   {
-    if (file_exists('/beacon/scripts/languages/' + $.urlParam('langCode') + '.js'))
+    if (file_exists('/beacon/scripts/languages/' + $.urlParam('langCode')
+                    + '.js'))
     {
       config.options.culture = $.urlParam('langCode');
     }
     else
     {
       var urlLang = $.urlParam('langCode').substring(0, 2);
+
       if (file_exists('/beacon/scripts/languages/' + urlLang + '.js'))
       {
         config.options.culture = urlLang;
@@ -188,7 +192,7 @@
 
   var lg = [];
   $.ajax({
-           url: '/beacon/scripts/languages/' + config.options.culture + '.js',
+           url: '/beacon/scripts/languages/' + config.options.culture + '.json',
            async: false,
            dataType: 'json',
            success: function (json)
@@ -219,17 +223,14 @@
 
     var newH = $(window).height() - $uploader.height() -
                $uploader.offset().top - bheight;
-    $('#splitter, #filetree, #fileinfo, .vsplitbar').height(newH);
-    //var newW = $('#splitter').width() - $('div.vsplitbar').width() -
-    //           $('#filetree').width();
-    //$('#fileinfo').width(newW);
+    $fileInfo.height(newH);
+    $('.vsplitbar').height(newH);
   };
 
 // Display Min Path
   var displayPath = function (path, reduce)
   {
-
-    reduce = (typeof reduce === "undefined") ? true : false;
+    reduce = (typeof reduce === "undefined");
 
     if (config.options.showFullPath == false)
     {
@@ -254,23 +255,8 @@
     {
       return path;
     }
-
   };
 
-// Set the view buttons state
-  var setViewButtonsFor = function (viewMode)
-  {
-    if (viewMode == 'grid')
-    {
-      $('#grid').addClass('ON');
-      $('#list').removeClass('ON');
-    }
-    else
-    {
-      $('#list').addClass('ON');
-      $('#grid').removeClass('ON');
-    }
-  };
 
 // Test if a given url exists
   function file_exists(url)
@@ -294,12 +280,8 @@
     // HEAD Results are usually shorter (faster) than GET
     req.open('HEAD', url, false);
     req.send(null);
-    if (req.status == 200)
-    {
-      return true;
-    }
 
-    return false;
+    return req.status == 200;
   }
 
 // preg_replace
@@ -309,7 +291,7 @@
     var new_str = String(str);
     for (i = 0; i < array_pattern.length; i++)
     {
-      var reg_exp = RegExp(array_pattern[i], "g");
+      var reg_exp = new RegExp(array_pattern[i], "g");
       var val_to_replace = array_pattern_replace[i];
       new_str = new_str.replace(reg_exp, val_to_replace);
     }
@@ -320,24 +302,30 @@
 // cleanString
   var cleanString = function (str)
   {
-
-    var cleaned = "";
     var p_search = ["Š", "š", "Đ", "đ", "Ž", "ž", "Č", "č", "Ć", "ć", "À",
-      "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì", "Í", "Î", "Ï",
-      "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "Ő", "Ø", "Ù", "Ú", "Û", "Ü", "Ý", "Þ", "ß",
-      "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë", "ì", "í",
-      "î", "ï", "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "ő", "ø", "ù", "ú", "û", "ü",
-      "ý", "ý", "þ", "ÿ", "Ŕ", "ŕ", " ", "'", "/"
+                    "Á", "Â", "Ã", "Ä", "Å", "Æ", "Ç", "È", "É", "Ê", "Ë", "Ì",
+                    "Í", "Î", "Ï",
+                    "Ñ", "Ò", "Ó", "Ô", "Õ", "Ö", "Ő", "Ø", "Ù", "Ú", "Û", "Ü",
+                    "Ý", "Þ", "ß",
+                    "à", "á", "â", "ã", "ä", "å", "æ", "ç", "è", "é", "ê", "ë",
+                    "ì", "í",
+                    "î", "ï", "ð", "ñ", "ò", "ó", "ô", "õ", "ö", "ő", "ø", "ù",
+                    "ú", "û", "ü",
+                    "ý", "ý", "þ", "ÿ", "Ŕ", "ŕ", " ", "'", "/"
     ];
     var p_replace = ["S", "s", "Dj", "dj", "Z", "z", "C", "c", "C", "c", "A",
-      "A", "A", "A", "A", "A", "A", "C", "E", "E", "E", "E", "I", "I", "I", "I",
-      "N", "O", "O", "O", "O", "O", "O", "O", "U", "U", "U", "U", "Y", "B", "Ss",
-      "a", "a", "a", "a", "a", "a", "a", "c", "e", "e", "e", "e", "i", "i",
-      "i", "i", "o", "n", "o", "o", "o", "o", "o", "o", "o", "u", "u", "u", "u",
-      "y", "y", "b", "y", "R", "r", "_", "_", ""
+                     "A", "A", "A", "A", "A", "A", "C", "E", "E", "E", "E", "I",
+                     "I", "I", "I",
+                     "N", "O", "O", "O", "O", "O", "O", "O", "U", "U", "U", "U",
+                     "Y", "B", "Ss",
+                     "a", "a", "a", "a", "a", "a", "a", "c", "e", "e", "e", "e",
+                     "i", "i",
+                     "i", "i", "o", "n", "o", "o", "o", "o", "o", "o", "o", "u",
+                     "u", "u", "u",
+                     "y", "y", "b", "y", "R", "r", "_", "_", ""
     ];
 
-    cleaned = preg_replace(p_search, p_replace, str);
+    var cleaned = preg_replace(p_search, p_replace, str);
 
     // allow only latin alphabet
     if (config.options.chars_only_latin)
@@ -359,7 +347,7 @@
 // nameFormat
   var nameFormat = function (input)
   {
-    filename = '';
+    var filename = '';
     if (input.lastIndexOf('.') != -1)
     {
       filename = cleanString(input.substr(0, input.lastIndexOf('.')));
@@ -395,15 +383,6 @@
     }
   };
 
-// Handle Error. Freeze interactive buttons and display
-// error message. Also called when auth() function return false (Code == "-1")
-  var handleError = function (errMsg)
-  {
-    $('#fileinfo').html('<h1>' + errMsg + '</h1>');
-    $('#newfile').attr("disabled", "disabled");
-    $('#upload').attr("disabled", "disabled");
-    $('#newfolder').attr("disabled", "disabled");
-  };
 
 // Test if Data structure has the 'cap' capability
 // 'cap' is one of 'select', 'rename', 'delete', 'download', move
@@ -415,14 +394,7 @@
     }
     if (data['File Type'] == 'dir' && cap == 'download')
     {
-      if (config.security.allowFolderDownload == true)
-      {
-        return true;
-      }
-      else
-      {
-        return false;
-      }
+      return config.security.allowFolderDownload == true;
     }
     if (typeof(data['Capabilities']) == "undefined")
     {
@@ -437,11 +409,10 @@
 // Test if file is authorized
   var isAuthorizedFile = function (filename)
   {
-
     var ext = getExtension(filename);
 
     // no extension is allowed
-    if (ext == '' && config.security.allowNoExtension == true)
+    if ((ext == '') && (config.security.allowNoExtension == true))
     {
       return true;
     }
@@ -462,20 +433,6 @@
     }
 
     return false;
-  };
-
-// from http://phpjs.org/functions/basename:360
-  var basename = function (path, suffix)
-  {
-    var b = path.replace(/^.*[\/\\]/g, '');
-
-    if (typeof(suffix) == 'string' &&
-        b.substr(b.length - suffix.length) == suffix)
-    {
-      b = b.substr(0, b.length - suffix.length);
-    }
-
-    return b;
   };
 
 // return filename extension 
@@ -504,66 +461,31 @@
 //Test if is editable file
   var isEditableFile = function (filename)
   {
-    if ($.inArray(getExtension(filename), config.edit.editExt) != -1)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
-  };
-
-// Test if is image file
-  var isImageFile = function (filename)
-  {
-    if ($.inArray(getExtension(filename), config.images.imagesExt) != -1)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return $.inArray(getExtension(filename), config.edit.editExt) != -1;
   };
 
 // Test if file is supported web video file
   var isVideoFile = function (filename)
   {
-    if ($.inArray(getExtension(filename), config.videos.videosExt) != -1)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return $.inArray(getExtension(filename), config.videos.videosExt) != -1;
   };
 
 // Test if file is supported web audio file
   var isAudioFile = function (filename)
   {
-    if ($.inArray(getExtension(filename), config.audios.audiosExt) != -1)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return $.inArray(getExtension(filename), config.audios.audiosExt) != -1;
   };
 
 // Test if file is pdf file
   var isPdfFile = function (filename)
   {
-    if ($.inArray(getExtension(filename), config.pdfs.pdfsExt) != -1)
-    {
-      return true;
-    }
-    else
-    {
-      return false;
-    }
+    return $.inArray(getExtension(filename), config.pdfs.pdfsExt) != -1;
+  };
+
+  var postFormatPlayer = function (_playerHTML)
+  {
+    $fileInfo.find('img').remove();
+    $fileInfo.find('#preview').find('#main-title').before(_playerHTML);
   };
 
 // Return HTML video player 
@@ -575,9 +497,7 @@
     code += '<img src="' + data['Preview'] + '" />';
     code += '</video>';
 
-    $("#fileinfo img").remove();
-    $('#fileinfo #preview #main-title').before(code);
-
+    postFormatPlayer(code);
   };
 
 //Return HTML audio player 
@@ -587,9 +507,7 @@
     code += '<img src="' + data['Preview'] + '" />';
     code += '</audio>';
 
-    $("#fileinfo img").remove();
-    $('#fileinfo #preview #main-title').before(code);
-
+    postFormatPlayer(code);
   };
 
 //Return PDF Reader 
@@ -600,30 +518,7 @@
                '" height="' + config.pdfs.pdfsReaderHeight +
                '" allowfullscreen webkitallowfullscreen></iframe>';
 
-    $("#fileinfo img").remove();
-    $('#fileinfo #preview #main-title').before(code);
-  };
-
-// Display icons on list view 
-// retrieving them from filetree
-// Called using SetInterval
-  var display_icons = function (timer)
-  {
-    $('#fileinfo').find('td:first-child').each(function ()
-                                               {
-                                                 var path = $(this).attr('data-path');
-                                                 var treenode = $('#filetree').find('a[data-path="' +
-                                                                                    path +
-                                                                                    '"]').parent();
-
-                                                 if (typeof treenode.css('background-image') !==
-                                                     "undefined")
-                                                 {
-                                                   $(this).css('background-image', treenode.css('background-image'));
-                                                   window.clearInterval(timer);
-                                                 }
-
-                                               });
+    postFormatPlayer(code);
   };
 
 // Sets the folder status, upload, and new folder functions 
@@ -632,43 +527,36 @@
   var setUploader = function (path)
   {
     path = $('#currentpath').val();
-    //$('#currentpath').val(path);
-    //$('#uploader h1').text(lg.current_folder +
-    //                       displayPath(path)).attr('title', displayPath(path, false)).attr('data-path', path);
 
-    $("#new_external_link").unbind().click(function()
-    {
-      var msg = '<input id="link_url" name="link_url" type="url" placeholder="http://example.com/path" />';
-      var createLinkURI = function (v, m)
-      {
-        if (v === 1)
-        {
-          var linkURL = m.children('#link_url').val();
+    $("#new_external_link").unbind().click(function ()
+                                           {
+                                             var msg = '<input id="link_url" name="link_url" type="url" placeholder="http://example.com/path" />';
+                                             var createLinkURI = function (v, m)
+                                             {
+                                               if (v === 1)
+                                               {
+                                                 var linkURL = m.children('#link_url').val();
 
-          if (linkURL != '')
-          {
-            alert("Create " + linkURL);
-          }
-        }
-      };
+                                                 if (linkURL != '')
+                                                 {
+                                                   alert("Create " + linkURL);
+                                                 }
+                                               }
+                                             };
 
-      var buttons = {};
-      buttons[lg.create_external_link] = true;
-      buttons[lg.cancel] = false;
+                                             var buttons = {};
+                                             buttons[lg.create_external_link] =
+                                               true;
+                                             buttons[lg.cancel] = false;
 
-      $.prompt(msg, {
-       callback: createLinkURI,
-       buttons: buttons
-      });
-    });
+                                             $.prompt(msg, {
+                                               callback: createLinkURI,
+                                               buttons: buttons
+                                             });
+                                           });
 
     $('#newfolder').unbind().click(function ()
                                    {
-                                     var foldername = lg.default_foldername;
-                                     var msg = lg.prompt_foldername +
-                                               ' : <input id="fname" name="fname" type="text" value="' +
-                                               foldername + '" />';
-
                                      var getFolderName = function (v, m)
                                      {
                                        if (v === 1)
@@ -677,7 +565,7 @@
 
                                          if (fname != '')
                                          {
-                                           foldername = cleanString(fname);
+                                           var folderName = cleanString(fname);
                                            var d = new Date(); // to prevent IE
                                                                // cache issues
                                            $.getJSON(fileConnector +
@@ -685,24 +573,15 @@
                                                      path +
                                                      '&config=' + userconfig +
                                                      '&name=' +
-                                                     encodeURIComponent(foldername) +
+                                                     encodeURIComponent(folderName) +
                                                      '&time=' +
                                                      d.getMilliseconds(), function (result)
                                                      {
                                                        if (result['Code'] == 0)
                                                        {
-                                                         addFolder(result['Parent'], result['Name']);
+                                                         addFolder(result['Parent'],
+                                                                   result['Name']);
                                                          getFolderInfo(result['Parent']);
-
-                                                         // seems to be necessary
-                                                         // when dealing w/ files
-                                                         // located on s3 (need
-                                                         // to look into a
-                                                         // cleaner solution
-                                                         // going forward)
-                                                         $('#filetree').find('a[data-path="' +
-                                                                             result['Parent'] +
-                                                                             '/"]').click().click();
                                                        }
                                                        else
                                                        {
@@ -721,6 +600,11 @@
                                        }
                                      };
 
+                                     var foldername = lg.default_foldername;
+                                     var msg = lg.prompt_foldername +
+                                               ' : <input id="fname" name="fname" type="text" value="' +
+                                               foldername + '" />';
+
                                      var btns = {};
                                      btns[lg.create_folder] = true;
                                      btns[lg.cancel] = false;
@@ -735,46 +619,47 @@
 // Called when detail views are loaded.
   var bindToolbar = function (data)
   {
-
-    // this little bit is purely cosmetic
-    $("#fileinfo button").each(function (index)
-                               {
-                                 // check if span doesn't exist yet, when
-                                 // bindToolbar called from renameItem for
-                                 // example
-                                 if ($(this).find('span').length == 0)
-                                 {
-                                   $(this).wrapInner('<span></span>');
-                                 }
-                               });
+    // Cosmetic
+    $fileInfo.find("button").each(function ()
+                                  {
+                                    // check if span doesn't exist yet, when
+                                    // bindToolbar called from renameItem for
+                                    // example
+                                    if ($(this).find('span').length == 0)
+                                    {
+                                      $(this).wrapInner('<span></span>');
+                                    }
+                                  });
 
     if (!has_capability(data, 'select'))
     {
-      $('#fileinfo').find('button#select').hide();
+      $fileInfo.find('button#select').hide();
     }
     else
     {
-      $('#fileinfo').find('button#select').click(function ()
-                                                 {
-                                                   selectItem(data);
-                                                 }).show();
+      $fileInfo.find('button#select').click(function ()
+                                            {
+                                              selectItem(data);
+                                            }).show();
+
       if (window.opener || window.tinyMCEPopup)
       {
-        $('#preview img').attr('title', lg.select);
-        $('#preview img').click(function ()
-                                {
-                                  selectItem(data);
-                                }).css("cursor", "pointer");
+        var $previewImage = $("#preview").find("img");
+        $previewImage.attr('title', lg.select);
+        $previewImage.click(function ()
+                            {
+                              selectItem(data);
+                            }).css("cursor", "pointer");
       }
     }
 
     if (!has_capability(data, 'rename'))
     {
-      $('#fileinfo').find('button#rename').hide();
+      $fileInfo.find('button#rename').hide();
     }
     else
     {
-      $('#fileinfo').find('button#rename').click(function ()
+      $fileInfo.find('button#rename').click(function ()
                                                  {
                                                    var newName = renameItem(data);
                                                    if (newName.length)
@@ -786,11 +671,11 @@
 
     if (!has_capability(data, 'move'))
     {
-      $('#fileinfo').find('button#move').hide();
+      $fileInfo.find('button#move').hide();
     }
     else
     {
-      $('#fileinfo').find('button#move').click(function ()
+      $fileInfo.find('button#move').click(function ()
                                                {
                                                  var newName = moveItem(data);
                                                  if (newName.length)
@@ -803,11 +688,11 @@
     // @todo
     if (!has_capability(data, 'replace'))
     {
-      $('#fileinfo').find('button#replace').hide();
+      $fileInfo.find('button#replace').hide();
     }
     else
     {
-      $('#fileinfo').find('button#replace').click(function ()
+      $fileInfo.find('button#replace').click(function ()
                                                   {
                                                     replaceItem(data);
                                                   }).show();
@@ -815,15 +700,15 @@
 
     if (!has_capability(data, 'delete'))
     {
-      $('#fileinfo').find('button#delete').hide();
+      $fileInfo.find('button#delete').hide();
     }
     else
     {
-      $('#fileinfo').find('button#delete').click(function ()
+      $fileInfo.find('button#delete').click(function ()
                                                  {
                                                    if (deleteItem(data))
                                                    {
-                                                     $('#fileinfo').html('<h1>' +
+                                                     $fileInfo.html('<h1>' +
                                                                          lg.select_from_left +
                                                                          '</h1>');
                                                    }
@@ -832,11 +717,11 @@
 
     if (!has_capability(data, 'download'))
     {
-      $('#fileinfo').find('button#download').hide();
+      $fileInfo.find('button#download').hide();
     }
     else
     {
-      $('#fileinfo').find('button#download').click(function ()
+      $fileInfo.find('button#download').click(function ()
                                                    {
                                                      window.location =
                                                        fileConnector +
@@ -845,58 +730,6 @@
                                                        '&config=' + userconfig;
                                                    }).show();
     }
-  };
-
-//Create FileTree and bind elements
-//called during initialization and also when adding a file
-//directly in root folder (via addNode)
-  var createFileTree = function ()
-  {
-
-    if ($('#filetree .mCSB_container').length > 0)
-    {
-      var el = '#filetree .mCSB_container';
-    }
-    else
-    {
-      var el = '#filetree';
-    }
-    // Creates file tree.
-    $(el).fileTree({
-                     root: fileRoot,
-                     datafunc: populateFileTree,
-                     multiFolder: false,
-                     folderCallback: function (path)
-                     {
-                       getFolderInfo(path);
-                     },
-                     expandedFolder: fullexpandedFolder,
-                     after: function (data)
-                     {
-                       $('#filetree').find('li a').each(function ()
-                                                        {
-                                                          $(this).contextMenu(
-                                                            {menu: getContextMenuOptions($(this))},
-                                                            function (action, el, pos)
-                                                            {
-                                                              var path = $(el).attr('data-path');
-                                                              setMenus(action, path);
-                                                            }
-                                                          );
-                                                        });
-                       //Search function
-                       if (config.options.searchBox == true)
-                       {
-                         $('#q').liveUpdate('#filetree ul').blur();
-                         $('#search span.q-inactive').html(lg.search);
-                         $('#search a.q-reset').attr('title', lg.search_reset);
-                       }
-                     }
-                   }, function (file)
-                   {
-                     getFileInfo(file);
-                   });
-
   };
 
 
@@ -912,13 +745,15 @@
 // NOTE: closes the window when finished.
   var selectItem = function (data)
   {
+    var url;
+
     if (config.options.baseUrl !== false)
     {
-      var url = smartPath(baseUrl, data['Path'].replace(fileRoot, ""));
+      url = smartPath(baseUrl, data['Path'].replace(fileRoot, ""));
     }
     else
     {
-      var url = data['Path'];
+      url = data['Path'];
     }
 
     if (window.opener || window.tinyMCEPopup || $.urlParam('field_name') ||
@@ -945,57 +780,59 @@
           }
         }
         tinyMCEPopup.close();
-        return;
-      }
-      // tinymce 4 and colorbox
-      if ($.urlParam('field_name'))
-      {
-        parent.document.getElementById($.urlParam('field_name')).value = url;
-
-        if (typeof parent.tinyMCE !== "undefined")
-        {
-          parent.tinyMCE.activeEditor.windowManager.close();
-        }
-        if (typeof parent.$.fn.colorbox !== "undefined")
-        {
-          parent.$.fn.colorbox.close();
-        }
-      }
-
-      else if ($.urlParam('CKEditor'))
-      {
-        // use CKEditor 3.0 + integration method
-        if (window.opener)
-        {
-          // Popup
-          window.opener.CKEDITOR.tools.callFunction($.urlParam('CKEditorFuncNum'), url);
-        }
-        else
-        {
-          // Modal (in iframe)
-          parent.CKEDITOR.tools.callFunction($.urlParam('CKEditorFuncNum'), url);
-          parent.CKEDITOR.tools.callFunction($.urlParam('CKEditorCleanUpFuncNum'));
-        }
       }
       else
       {
-        // use FCKEditor 2.0 integration method
-        if (data['Properties']['Width'] != '')
+        // tinymce 4 and colorbox
+        if ($.urlParam('field_name'))
         {
-          var p = url;
-          var w = data['Properties']['Width'];
-          var h = data['Properties']['Height'];
-          window.opener.SetUrl(p, w, h);
+          parent.document.getElementById($.urlParam('field_name')).value = url;
+
+          if (typeof parent.tinyMCE !== "undefined")
+          {
+            parent.tinyMCE.activeEditor.windowManager.close();
+          }
+          if (typeof parent.$.fn.colorbox !== "undefined")
+          {
+            parent.$.fn.colorbox.close();
+          }
+        }
+
+        else if ($.urlParam('CKEditor'))
+        {
+          // use CKEditor 3.0 + integration method
+          if (window.opener)
+          {
+            // Popup
+            window.opener.CKEDITOR.tools.callFunction($.urlParam('CKEditorFuncNum'), url);
+          }
+          else
+          {
+            // Modal (in iframe)
+            parent.CKEDITOR.tools.callFunction($.urlParam('CKEditorFuncNum'), url);
+            parent.CKEDITOR.tools.callFunction($.urlParam('CKEditorCleanUpFuncNum'));
+          }
         }
         else
         {
-          window.opener.SetUrl(url);
+          // use FCKEditor 2.0 integration method
+          if (data['Properties']['Width'] != '')
+          {
+            var p = url;
+            var w = data['Properties']['Width'];
+            var h = data['Properties']['Height'];
+            window.opener.SetUrl(p, w, h);
+          }
+          else
+          {
+            window.opener.SetUrl(url);
+          }
         }
-      }
 
-      if (window.opener)
-      {
-        window.close();
+        if (window.opener)
+        {
+          window.close();
+        }
       }
     }
     else
@@ -1060,7 +897,6 @@
           return false;
         }
 
-        var oldPath = data['Path'];
         var connectString = fileConnector + '?mode=rename&old=' +
                             encodeURIComponent(data['Path']) + '&new=' +
                             encodeURIComponent(givenName) + '&config=' +
@@ -1081,35 +917,27 @@
 
                      updateNode(oldPath, newPath, newName);
 
-                     var title = $("#preview h1").attr("title");
+                     var $previewH1 = $("#preview").find("h1");
+
+                     var title = $previewH1.attr("title");
 
                      if (typeof title != "undefined" && title == oldPath)
                      {
-                       $('#preview h1').text(newName);
+                       $previewH1.text(newName);
                      }
 
-                     if ($('#fileinfo').data('view') == 'grid')
-                     {
-                       $('#fileinfo img[data-path="' + oldPath +
-                         '"]').parent().next('p').text(newName);
-                       $('#fileinfo img[data-path="' + oldPath +
-                         '"]').attr('data-path', newPath);
-                     }
-                     else
-                     {
-                       $('#fileinfo td[data-path="' + oldPath +
-                         '"]').text(newName);
-                       $('#fileinfo td[data-path="' + oldPath +
-                         '"]').attr('data-path', newPath);
-                     }
-                     $("#preview h1").html(newName);
+                     var $tdInfo =
+                       $fileInfo.find('td[data-path="' + oldPath + '"]');
+                     $tdInfo.text(newName).attr('data-path', newPath);
+
+                     $previewH1.html(newName);
 
                      // actualized data for binding
                      data['Path'] = newPath;
                      data['Filename'] = newName;
 
                      // Bind toolbar functions.
-                     $('#fileinfo').find('button#rename, button#delete, button#download').unbind();
+                     $fileInfo.find('button#rename, button#delete, button#download').unbind();
                      bindToolbar(data);
 
                      if (config.options.showConfirmation)
@@ -1144,31 +972,19 @@
 // list views.
   var replaceItem = function (data)
   {
-
-    // @todo remove all this
-    // remove dynamic form if already exists
-    //$('#file-replacement').remove();
-
-
-    // we create a dynamic form with input File
-//	$form = $('<form id="file-replacement" method="post">');
-//	$form.append('<input id="fileR" name="fileR" type="file" />');
-//	$form.append('<input id="mode" name="mode" type="hidden" value="replace" />
-// '); $form.append('<input id="newfilepath" name="newfilepath" type="hidden"
-// value="' + data["Path"] + '" />'); $('body').prepend($form);
-
     // we auto-submit form when user filled it up
     $('#fileR').bind('change', function ()
     {
       $(this).closest("form#toolbar").submit();
     });
 
+    var $toolbar = $("#toolbar");
+
     // we set the connector to send data to
-    $('#toolbar').attr('action', fileConnector);
-    $('#toolbar').attr('method', 'post');
+    $toolbar.attr('action', fileConnector).attr('method', 'post');
 
     // submission script
-    $('#toolbar').ajaxForm({
+    $toolbar.ajaxForm({
                              target: '#uploadresponse',
                              beforeSubmit: function (arr, form, options)
                              {
@@ -1227,12 +1043,10 @@
 
                                  // Reloading file info
                                  getFileInfo(fullpath);
+
                                  // Visual effects for user to see action is
                                  // successful
                                  $('#preview').find('img').hide().fadeIn('slow'); // on right panel
-                                 $('ul.jqueryFileTree').find('li a[data-path="' +
-                                                             fullpath +
-                                                             '"]').parent().hide().fadeIn('slow'); // on fileTree
 
                                  if (config.options.showConfirmation)
                                  {
@@ -1278,7 +1092,6 @@
       if (rname != '')
       {
         var givenName = rname;
-        var oldPath = data['Path'];
         var connectString = fileConnector + '?mode=move&old=' +
                             encodeURIComponent(data['Path']) + '&new=' +
                             encodeURIComponent(givenName) + '&root=' +
@@ -1302,7 +1115,6 @@
                      // function
                      fullexpandedFolder = newPath;
 
-                     createFileTree();
                      getFolderInfo(newPath); // update list in main window
 
                      if (config.options.showConfirmation)
@@ -1405,10 +1217,9 @@
 // Save action is handled by the method using ajax
   var editItem = function (data)
   {
-
     isEdited = false;
 
-    $('#fileinfo').find('div#tools').append(' <a id="edit-file" href="#" title="' +
+    $fileInfo.find('div#tools').append(' <a id="edit-file" href="#" title="' +
                                             lg.edit + '"><span>' + lg.edit +
                                             '</span></a>');
 
@@ -1589,13 +1400,6 @@
 // delete operation.
   var removeNode = function (path)
   {
-    $('#filetree')
-      .find('a[data-path="' + path + '"]')
-      .parent()
-      .fadeOut('slow', function ()
-      {
-        $(this).remove();
-      });
     // if the actual view is the deleted folder, we display parent folder
     if ($('#uploader h1').attr('data-path') == path)
     {
@@ -1603,26 +1407,16 @@
       var parent = a.slice(0, length - 2).join('/') + '/';
       getFolderInfo(parent);
     }
-    // grid case
-    if ($('#fileinfo').data('view') == 'grid')
-    {
-      $('#contents img[data-path="' + path + '"]').parent().parent()
-        .fadeOut('slow', function ()
-        {
-          $(this).remove();
-        });
-    }
-    // list case
-    else
-    {
-      $('table#contents')
-        .find('td[data-path="' + path + '"]')
-        .parent()
-        .fadeOut('slow', function ()
-        {
-          $(this).remove();
-        });
-    }
+
+    $('table#contents')
+      .find('td[data-path="' + path + '"]')
+      .parent()
+      .fadeOut('slow', function ()
+      {
+        $(this).remove();
+      });
+
+
     // remove fileinfo when item to remove is currently selected
     if ($('#preview').length)
     {
@@ -1643,27 +1437,6 @@
     {
       parentNode.next('ul').prepend(newNode).prev('a').click().click();
     }
-    else
-    {
-      $('#filetree ul.jqueryFileTree').prepend(newNode);
-      $('#filetree').find('li a[data-path="' + parent + name +
-                          '/"]').attr('class', 'cap_rename cap_delete').click(function ()
-                                                                              {
-                                                                                getFolderInfo(parent +
-                                                                                              name +
-                                                                                              '/');
-                                                                              }).each(function ()
-                                                                                      {
-                                                                                        $(this).contextMenu(
-                                                                                          {menu: getContextMenuOptions($(this))},
-                                                                                          function (action, el, pos)
-                                                                                          {
-                                                                                            var path = $(el).attr('data-path');
-                                                                                            setMenus(action, path);
-                                                                                          });
-                                                                                      }
-      );
-    }
 
     if (config.options.showConfirmation)
     {
@@ -1683,103 +1456,11 @@
     if (path.lastIndexOf('/') == path.length - 1)
     {
       getFolderInfo(path);
-      $('#filetree').find('a[data-path="' + path + '"]').click();
     }
     else
     {
       getFileInfo(path);
     }
-  };
-
-  function getContextMenuOptions(elem)
-  {
-    var optionsID = elem.attr('class').replace(/ /g, '_');
-    if (optionsID == "")
-    {
-      return 'itemOptions';
-    }
-    if (!($('#' + optionsID).length))
-    {
-      // Create a clone to itemOptions with menus specific to this element
-      var newOptions = $('#itemOptions').clone().attr('id', optionsID);
-      if (!elem.hasClass('cap_select'))
-      {
-        $('.select', newOptions).remove();
-      }
-      if (!elem.hasClass('cap_download'))
-      {
-        $('.download', newOptions).remove();
-      }
-      if (!elem.hasClass('cap_rename'))
-      {
-        $('.rename', newOptions).remove();
-      }
-      if (!elem.hasClass('cap_move'))
-      {
-        $('.move', newOptions).remove();
-      }
-      $('.replace', newOptions).remove(); // we remove replace since it is not
-                                          // implemented on Opera + Chrome and
-                                          // works only if #preview panel is on
-                                          // on FF
-      if (!elem.hasClass('cap_delete'))
-      {
-        $('.delete', newOptions).remove();
-      }
-      $('#itemOptions').after(newOptions);
-    }
-    return optionsID;
-  }
-
-// Binds contextual menus to items in list and grid views.
-  var setMenus = function (action, path)
-  {
-    var d = new Date(); // to prevent IE cache issues
-    $.getJSON(fileConnector + '?mode=getinfo&path=' + encodeURIComponent(path) +
-              '&config=' + userconfig + '&time=' +
-              d.getMilliseconds(), function (data)
-              {
-                if ($('#fileinfo').data('view') == 'grid')
-                {
-                  var item = $('#fileinfo').find('img[data-path="' +
-                                                 data['Path'] + '"]').parent();
-                }
-                else
-                {
-                  var item = $('#fileinfo').find('td[data-path="' +
-                                                 data['Path'] + '"]').parent();
-                }
-
-                switch (action)
-                {
-                  case 'select':
-                    selectItem(data);
-                    break;
-
-                  case 'download': // todo implement javascript method to test if exstension is
-                 // correct
-                    window.location =
-                      fileConnector + '?mode=download&path=' + data['Path'] +
-                      '&config=' + userconfig + '&time=' + d.getMilliseconds();
-                    break;
-
-                  case 'rename':
-                    var newName = renameItem(data);
-                    break;
-
-                  case 'replace':
-                    replaceItem(data);
-                    break;
-
-                  case 'move':
-                    var newName = moveItem(data);
-                    break;
-
-                  case 'delete':
-                    deleteItem(data);
-                    break;
-                }
-              });
   };
 
 // Retrieves information about the specified file as a JSON
@@ -1789,7 +1470,6 @@
 // clicked in the file tree or list views.
   var getFileInfo = function (file)
   {
-
     //Hide context menu
     $('.contextMenu').hide();
 
@@ -1851,13 +1531,13 @@
     template += '</form>';
 
     // test if scrollbar plugin is enabled
-    if ($('#fileinfo .mCSB_container').length > 0)
+    if ($fileInfo.has('.mCSB_container'))
     {
-      $('#fileinfo .mCSB_container').html(template);
+      $fileInfo.find('.mCSB_container').html(template);
     }
     else
     {
-      $('#fileinfo').html(template);
+      $fileInfo.html(template);
     }
 
     $('#parentfolder').click(function ()
@@ -1873,9 +1553,9 @@
               {
                 if (data['Code'] == 0)
                 {
-                  $('#fileinfo').find('h1').text(data['Filename']).attr('title', file);
+                  $fileInfo.find('h1').text(data['Filename']).attr('title', file);
 
-                  $('#fileinfo').find('img').attr('src', data['Preview']);
+                  $fileInfo.find('img').attr('src', data['Preview']);
                   if (isVideoFile(data['Filename']) &&
                       config.videos.showVideoPlayer == true)
                   {
@@ -1900,18 +1580,20 @@
 
                   // copy URL instructions - zeroclipboard
                   var d = new Date(); // to prevent IE cache issues
+                  var url;
 
                   if (config.options.baseUrl !== false)
                   {
-                    var url = smartPath(baseUrl, data['Path'].replace(fileRoot, ""));
+                    url = smartPath(baseUrl, data['Path'].replace(fileRoot, ""));
                   }
                   else
                   {
-                    var url = data['Path'];
+                    url = data['Path'];
                   }
+
                   if (data['Protected'] == 0)
                   {
-                    $('#fileinfo').find('div#tools').append(' <a id="copy-button" data-clipboard-text="' +
+                    $fileInfo.find('div#tools').append(' <a id="copy-button" data-clipboard-text="' +
                                                             url + '" title="' +
                                                             lg.copy_to_clipboard +
                                                             '" href="#"><span>' +
@@ -1923,7 +1605,7 @@
                            d.getMilliseconds());
                     $('#copy-button').click(function ()
                                             {
-                                              $('#fileinfo').find('div#tools').append('<span id="copied">' +
+                                              $fileInfo.find('div#tools').append('<span id="copied">' +
                                                                                       lg.copied +
                                                                                       '</span>');
                                               $('#copied').delay(500).fadeOut(1000, function ()
@@ -1964,7 +1646,7 @@
                       '<dt>' + lg.size + '</dt><dd>' +
                       formatBytes(data['Properties']['Size']) + '</dd>';
                   }
-                  $('#fileinfo').find('dl').html(properties);
+                  $fileInfo.find('dl').html(properties);
 
                   // Bind toolbar functions.
                   bindToolbar(data);
@@ -1983,363 +1665,9 @@
 // and list views with sorting options.
   var getFolderInfo = function (path)
   {
-
     // Update location for status, upload, & new folder functions.
     setUploader(path);
-/*
-    // Display an activity indicator.
-    var loading = '<img id="activity" src="themes/' + config.options.theme +
-                  '/images/wait30trans.gif" width="30" height="30" />';
-
-    // test if scrollbar plugin is enabled
-    if ($('#fileinfo .mCSB_container').length > 0)
-    {
-      $('#fileinfo .mCSB_container').html(loading);
-    }
-    else
-    {
-      $('#fileinfo').html(loading);
-    }
-
-    $('#loading-wrap').fadeOut(800); // we remove loading screen div
-
-    // Retrieve the data and generate the markup.
-    var d = new Date(); // to prevent IE cache issues
-    var url = fileConnector + '?path=' + encodeURIComponent(path) + '&config=' +
-              userconfig + '&mode=getfolder&showThumbs=' +
-              config.options.showThumbs + '&time=' + d.getMilliseconds();
-    if ($.urlParam('type'))
-    {
-      url += '&type=' + $.urlParam('type');
-    }
-    $.getJSON(url, function (data)
-    {
-      var result = '';
-
-      // Is there any error or user is unauthorized?
-      if (data.Code == '-1')
-      {
-        handleError(data.Error);
-        return;
-      }
-
-      setDimensions(); //fix dimensions before all images load
-
-      if (data)
-      {
-        var counter = 0;
-        var totalSize = 0;
-        if ($('#fileinfo').data('view') == 'grid')
-        {
-          result += '<ul id="contents" class="grid">';
-
-          for (key in data)
-          {
-            counter++;
-            var props = data[key]['Properties'];
-            var cap_classes = "";
-            for (cap in capabilities)
-            {
-              if (has_capability(data[key], capabilities[cap]))
-              {
-                cap_classes += " cap_" + capabilities[cap];
-              }
-            }
-
-            var scaledWidth = 64;
-            var actualWidth = props['Width'];
-            if (actualWidth > 1 && actualWidth < scaledWidth)
-            {
-              scaledWidth =
-                actualWidth;
-            }
-
-            config.options.showTitleAttr ?
-            title = ' title="' + data[key]['Path'] + '"' : title = '';
-
-            result += '<li class="' + cap_classes + '"' + title +
-                      '"><div class="clip"><img src="' + data[key]['Preview'] +
-                      '" width="' + scaledWidth + '" alt="' +
-                      data[key]['Path'] + '" data-path="' + data[key]['Path'] +
-                      '" /></div><p>' + data[key]['Filename'] + '</p>';
-            if (props['Width'] && props['Width'] != '')
-            {
-              result +=
-                '<span class="meta dimensions">' + props['Width'] + 'x' +
-                props['Height'] + '</span>';
-            }
-            if (props['Size'] && props['Size'] != '')
-            {
-              result +=
-                '<span class="meta size">' + props['Size'] + '</span>';
-            }
-            if (props['Size'] && props['Size'] != '')
-            {
-              totalSize +=
-                props['Size'];
-            }
-            if (props['Date Created'] && props['Date Created'] != '')
-            {
-              result +=
-                '<span class="meta created">' + props['Date Created'] +
-                '</span>';
-            }
-            if (props['Date Modified'] &&
-                props['Date Modified'] != '')
-            {
-              result +=
-                '<span class="meta modified">' + props['Date Modified'] +
-                '</span>';
-            }
-            result += '</li>';
-          }
-
-          result += '</ul>';
-        }
-        else
-        {
-          result += '<table id="contents" class="list">';
-          result += '<thead><tr><th class="headerSortDown"><span>' + lg.name +
-                    '</span></th><th><span>' + lg.dimensions +
-                    '</span></th><th><span>' + lg.size +
-                    '</span></th><th><span>' + lg.modified +
-                    '</span></th></tr></thead>';
-          result += '<tbody>';
-
-          for (key in data)
-          {
-            counter++;
-            var path = data[key]['Path'];
-            var props = data[key]['Properties'];
-            var cap_classes = "";
-            config.options.showTitleAttr ?
-            title = ' title="' + data[key]['Path'] + '"' : title = '';
-
-            for (cap in capabilities)
-            {
-              if (has_capability(data[key], capabilities[cap]))
-              {
-                cap_classes += " cap_" + capabilities[cap];
-              }
-            }
-            result += '<tr class="' + cap_classes + '">';
-            result +=
-              '<td data-path="' + data[key]['Path'] + '"' + title + '">' +
-              data[key]['Filename'] + '</td>';
-
-            if (props['Width'] && props['Width'] != '')
-            {
-              result +=
-                ('<td>' + props['Width'] + 'x' + props['Height'] + '</td>');
-            }
-            else
-            {
-              result += '<td></td>';
-            }
-
-            if (props['Size'] && props['Size'] != '')
-            {
-              result += '<td><abbr title="' + props['Size'] + '">' +
-                        formatBytes(props['Size']) + '</abbr></td>';
-              totalSize += props['Size'];
-            }
-            else
-            {
-              result += '<td></td>';
-            }
-
-            if (props['Date Modified'] && props['Date Modified'] != '')
-            {
-              result += '<td>' + props['Date Modified'] + '</td>';
-            }
-            else
-            {
-              result += '<td></td>';
-            }
-
-            result += '</tr>';
-          }
-
-          result += '</tbody>';
-          result += '</table>';
-        }
-      }
-      else
-      {
-        result += '<h1>' + lg.could_not_retrieve_folder + '</h1>';
-      }
-
-      // Add the new markup to the DOM.
-      // test if scrollbar plugin is enabled
-      if ($('#fileinfo .mCSB_container').length > 0)
-      {
-        $('#fileinfo .mCSB_container').html(result);
-      }
-      else
-      {
-        $('#fileinfo').html(result);
-      }
-
-      // update #folder-info
-      $('#items-counter').text(counter);
-      $('#items-size').text(Math.round(totalSize / 1024 / 1024 * 100) / 100);
-
-      // Bind click events to create detail views and add
-      // contextual menu options.
-      if ($('#fileinfo').data('view') == 'grid')
-      {
-        $('#fileinfo').find('#contents li').click(function ()
-                                                  {
-                                                    var path = $(this).find('img').attr('data-path');
-                                                    if (config.options.quickSelect &&
-                                                        data[path]['File Type'] !=
-                                                        'dir' &&
-                                                        $(this).hasClass('cap_select'))
-                                                    {
-                                                      selectItem(data[path]);
-                                                    }
-                                                    else
-                                                    {
-                                                      getDetailView(path);
-                                                    }
-                                                  }).each(function ()
-                                                          {
-                                                            $(this).contextMenu(
-                                                              {menu: getContextMenuOptions($(this))},
-                                                              function (action, el, pos)
-                                                              {
-                                                                var path = $(el).find('img').attr('data-path');
-                                                                setMenus(action, path);
-                                                              }
-                                                            );
-                                                          });
-      }
-      else
-      {
-        $('#fileinfo tbody tr').click(function ()
-                                      {
-                                        var path = $('td:first-child', this).attr('data-path');
-                                        if (config.options.quickSelect &&
-                                            data[path]['File Type'] != 'dir' &&
-                                            $(this).hasClass('cap_select'))
-                                        {
-                                          selectItem(data[path]);
-                                        }
-                                        else
-                                        {
-                                          getDetailView(path);
-                                        }
-                                      }).each(function ()
-                                              {
-                                                $(this).contextMenu(
-                                                  {menu: getContextMenuOptions($(this))},
-                                                  function (action, el, pos)
-                                                  {
-                                                    var path = $('td:first-child', el).attr('data-path');
-                                                    setMenus(action, path);
-                                                  }
-                                                );
-                                              });
-
-        $('#fileinfo').find('table').tablesorter({
-                                                   textExtraction: function (node)
-                                                   {
-                                                     if ($(node).find('abbr').size())
-                                                     {
-                                                       return $(node).find('abbr').attr('title');
-                                                     }
-                                                     else
-                                                     {
-                                                       return node.innerHTML;
-                                                     }
-                                                   }
-                                                 });
-        // Calling display_icons() function
-        // to get icons from filteree
-        // Necessary to fix bug #170
-        // https://github.com/simogeo/Filemanager/issues/170
-        var timer = setInterval(function ()
-                                {
-                                  display_icons(timer)
-                                }, 300);
-
-      }
-    });
-    */
   };
-
-// Retrieve data (file/folder listing) for jqueryFileTree and pass the data back
-// to the callback function in jqueryFileTree
-  var populateFileTree = function (path, callback)
-  {
-    /*
-    var d = new Date(); // to prevent IE cache issues
-    var url = fileConnector + '?path=' + encodeURIComponent(path) + '&config=' +
-              userconfig + '&mode=getfolder&showThumbs=' +
-              config.options.showThumbs + '&time=' + d.getMilliseconds();
-    if ($.urlParam('type'))
-    {
-      url += '&type=' + $.urlParam('type');
-    }
-    $.getJSON(url, function (data)
-    {
-      var result = '';
-      // Is there any error or user is unauthorized?
-      if (data.Code == '-1')
-      {
-        handleError(data.Error);
-        return;
-      }
-      ;
-
-      if (data)
-      {
-        result += "<ul class=\"jqueryFileTree\" style=\"display: none;\">";
-        for (key in data)
-        {
-          var cap_classes = "";
-
-          for (cap in capabilities)
-          {
-            if (has_capability(data[key], capabilities[cap]))
-            {
-              cap_classes += " cap_" + capabilities[cap];
-            }
-          }
-          if (data[key]['File Type'] == 'dir')
-          {
-            var extraclass = data[key]['Protected'] == 0 ? '' :
-                             ' directory-locked';
-            result += "<li class=\"directory collapsed" + extraclass +
-                      "\"><a href=\"#\" class=\"" + cap_classes +
-                      "\" data-path=\"" + data[key]['Path'] + "\">" +
-                      data[key]['Filename'] + "</a></li>";
-          }
-          else
-          {
-            if (config.options.listFiles)
-            {
-              var extraclass = data[key]['Protected'] == 0 ? '' :
-                               ' file-locked';
-              result +=
-                "<li class=\"file ext_" + data[key]['File Type'].toLowerCase() +
-                extraclass + "\"><a href=\"#\" class=\"" + cap_classes +
-                "\" data-path=\"" + data[key]['Path'] + "\">" +
-                data[key]['Filename'] + "</a></li>";
-            }
-          }
-        }
-        result += "</ul>";
-      }
-      else
-      {
-        result += '<h1>' + lg.could_not_retrieve_folder + '</h1>';
-      }
-      callback(result);
-    });
-    */
-  };
-
 
   /*---------------------------------------------------------
    Initialization
@@ -2347,7 +1675,6 @@
 
   $(function ()
     {
-
       if (config.extras.extra_js)
       {
         for (var i = 0; i < config.extras.extra_js.length; i++)
@@ -2369,7 +1696,8 @@
       $('div.version').html(config.version);
 
       // Loading theme
-      loadCSS('/beacon/themes/' + config.options.theme + '/styles/filemanager.css');
+      loadCSS('/beacon/themes/' + config.options.theme +
+              '/styles/filemanager.css');
       $.ajax({
                url: '/beacon/themes/' + config.options.theme + '/styles/ie.css',
                async: false,
@@ -2386,7 +1714,8 @@
       if (config.edit.enabled)
       {
         loadCSS('/beacon/scripts/CodeMirror/lib/codemirror.css');
-        loadCSS('/beacon/scripts/CodeMirror/theme/' + config.edit.theme + '.css');
+        loadCSS('/beacon/scripts/CodeMirror/theme/' + config.edit.theme +
+                '.css');
         loadJS('/beacon/scripts/CodeMirror/lib/codemirror.js');
         loadJS('/beacon/scripts/CodeMirror/addon/selection/active-line.js');
         loadCSS('/beacon/scripts/CodeMirror/addon/display/fullscreen.css');
@@ -2417,11 +1746,11 @@
 
       if (config.options.baseUrl === false)
       {
-        baseUrl = window.location.protocol + "//" + window.location.host;
+        baseURL = window.location.protocol + "//" + window.location.host;
       }
       else
       {
-        baseUrl = config.options.baseUrl;
+        baseURL = config.options.baseUrl;
       }
 
       if ($.urlParam('exclusiveFolder') != 0)
@@ -2445,6 +1774,7 @@
         fullexpandedFolder = null;
       }
 
+      var $itemOptions = $("#itemOptions");
 
       $('#folder-info').html('<span id="items-counter"></span> ' + lg.items +
                              ' - ' + lg.size +
@@ -2454,17 +1784,13 @@
       // with localized text if necessary
       if (config.options.autoload == true)
       {
-        //$('#upload').append(lg.upload);
-        //$('#newfolder').append(lg.new_folder);
-        //$('#grid').attr('title', lg.grid_view);
-        //$('#list').attr('title', lg.list_view);
-        $('#fileinfo h1').append(lg.select_from_left);
-        $('#itemOptions a[href$="#select"]').append(lg.select);
-        $('#itemOptions a[href$="#download"]').append(lg.download);
-        $('#itemOptions a[href$="#rename"]').append(lg.rename);
-        $('#itemOptions a[href$="#move"]').append(lg.move);
-        $('#itemOptions a[href$="#replace"]').append(lg.replace);
-        $('#itemOptions a[href$="#delete"]').append(lg.del);
+        $fileInfo.find('h1').append(lg.select_from_left);
+        $itemOptions.find('a[href$="#select"]').append(lg.select);
+        $itemOptions.find('a[href$="#download"]').append(lg.download);
+        $itemOptions.find('a[href$="#rename"]').append(lg.rename);
+        $itemOptions.find('a[href$="#move"]').append(lg.move);
+        $itemOptions.find('a[href$="#replace"]').append(lg.replace);
+        $itemOptions.find('a[href$="#delete"]').append(lg.del);
       }
 
       /** Adding a close button triggering callback function if CKEditorCleanUpFuncNum passed */
@@ -2500,33 +1826,6 @@
       // cosmetic tweak for buttons
       $('button').wrapInner('<span></span>');
 
-      // Set initial view state.
-      $('#fileinfo').data('view', config.options.defaultViewMode);
-      setViewButtonsFor(config.options.defaultViewMode);
-
-      $('#home').click(function ()
-                       {
-                         var currentViewMode = $('#fileinfo').data('view');
-                         $('#fileinfo').data('view', currentViewMode);
-                         $('#filetree ul.jqueryFileTree > li.expanded > a').trigger('click');
-                         getFolderInfo(fileRoot);
-                       });
-
-      // Set buttons to switch between grid and list views.
-      $('#grid').click(function ()
-                       {
-                         setViewButtonsFor('grid');
-                         $('#fileinfo').data('view', 'grid');
-                         getFolderInfo($('#currentpath').val());
-                       });
-
-      $('#list').click(function ()
-                       {
-                         setViewButtonsFor('list');
-                         $('#fileinfo').data('view', 'list');
-                         getFolderInfo($('#currentpath').val());
-                       });
-
       // Provide initial values for upload form, status, etc.
       setUploader(fileRoot);
 
@@ -2552,11 +1851,6 @@
         // http://stackoverflow.com/questions/1544317/change-type-of-input-field-with-jquery
         $('#upload').remove();
 
-        /* TODO - add back in once upload works. */
-        /* jenkinsd */
-        //$("#newfolder").before('<button value="Upload" type="button" name="upload" id="upload" class="em"><span>' +
-        //                       lg.upload + '</span></button> ');
-
         $('#upload').unbind().click(function ()
                                     {
                                       // we create prompt
@@ -2574,7 +1868,7 @@
                                       msg += '<button id="process-upload">' +
                                              lg.upload + '</button></div>';
 
-                                      error_flag = false;
+                                      var error_flag = false;
                                       var path = $('#currentpath').val();
 
                                       var fileSize = (config.upload.fileSizeLimit !=
@@ -2582,12 +1876,13 @@
                                                      config.upload.fileSizeLimit :
                                                      256; // default dropzone
                                                           // value
+                                      var allowedFiles;
 
                                       if (config.security.uploadPolicy ==
                                           'DISALLOW_ALL')
                                       {
-                                        var allowedFiles = '.' +
-                                                           config.security.uploadRestrictions.join(',.');
+                                        allowedFiles =
+                                          '.' + config.security.uploadRestrictions.join(',.');
                                       }
                                       else
                                       {
@@ -2596,14 +1891,14 @@
                                         // built-in `acceptedFiles` params
                                         // Would be handled later by the
                                         // connector
-                                        var allowedFiles = null;
+                                        allowedFiles = null;
                                       }
 
                                       if ($.urlParam('type').toString().toLowerCase() ==
                                           'images' || config.upload.imagesOnly)
                                       {
-                                        var allowedFiles = '.' +
-                                                           config.images.imagesExt.join(',.');
+                                        allowedFiles =
+                                          '.' + config.images.imagesExt.join(',.');
                                       }
 
                                       var btns = {};
@@ -2613,10 +1908,9 @@
                                       });
 
                                       $("div#multiple-uploads").dropzone({
-                                                                           paramName: "newfile",
-                                                                           url: fileConnector +
-                                                                                '?config=' +
-                                                                                userconfig,
+                                                                           paramName: "upload",
+                                                                           url: '/beacon/upload' + path,
+                                                                           method: 'put',
                                                                            maxFilesize: fileSize,
                                                                            maxFiles: config.upload.number,
                                                                            addRemoveLinks: true,
@@ -2650,8 +1944,7 @@
                                                                            },
                                                                            totaluploadprogress: function (progress)
                                                                            {
-                                                                             $("#total-progress .progress-bar").css('width', progress +
-                                                                                                                             "%");
+                                                                             $("#total-progress .progress-bar").css('width', progress + "%");
                                                                            },
                                                                            sending: function (file, xhr, formData)
                                                                            {
@@ -2663,8 +1956,7 @@
                                                                              $('#uploadresponse').empty().html(response);
                                                                              var data = jQuery.parseJSON($('#uploadresponse').find('textarea').text());
 
-                                                                             if (data['Code'] ==
-                                                                                 0)
+                                                                             if (data['Code'] == 0)
                                                                              {
                                                                                this.removeFile(file);
                                                                              }
@@ -2676,9 +1968,7 @@
                                                                                                    path +
                                                                                                    '"]').click();
                                                                                $.prompt(data['Error']);
-                                                                               error_flag =
-                                                                                 true;
-
+                                                                               error_flag = true;
                                                                              }
                                                                            },
                                                                            complete: function (file)
@@ -2785,8 +2075,7 @@
                                     // if config.upload.fileSizeLimit == auto
                                     // we delegate size test to connector
                                     if (typeof FileReader !== "undefined" &&
-                                        typeof config.upload.fileSizeLimit !=
-                                        "auto")
+                                        typeof config.upload.fileSizeLimit != "auto")
                                     {
                                       // Check file size using html5 FileReader
                                       // API
@@ -2826,13 +2115,6 @@
                                       {
                                         $("#newfile").replaceWith($("#newfile").clone(true));
                                       }
-
-                                      // seems to be necessary when dealing w/
-                                      // files located on s3 (need to look into
-                                      // a cleaner solution going forward)
-                                      $('#filetree').find('a[data-path="' +
-                                                          data['Path'] +
-                                                          '/"]').click().click();
                                     }
                                     else
                                     {
@@ -2860,22 +2142,6 @@
 
         $(window).load(function ()
                        {
-                         $("#filetree").append('<div style="height:3000px"></div>'); // because if #filetree has height equal to 0, mCustomScrollbar is not applied
-                         $("#filetree").mCustomScrollbar({
-                                                           theme: csTheme,
-                                                           scrollButtons: {enable: csButton},
-                                                           advanced: {
-                                                             autoExpandHorizontalScroll: true,
-                                                             updateOnContentResize: true
-                                                           },
-                                                           callbacks: {
-                                                             onInit: function ()
-                                                             {
-                                                               createFileTree();
-                                                             }
-                                                           },
-                                                           axis: "yx"
-                                                         });
                          $("#fileinfo").mCustomScrollbar({
                                                            theme: csTheme,
                                                            scrollButtons: {enable: csButton},
@@ -2889,10 +2155,6 @@
 
                        });
       }
-      //else
-      //{
-      //  createFileTree();
-      //}
 
       // Disable select function if no window.opener
       if (!(window.opener || window.tinyMCEPopup ||
@@ -2917,13 +2179,6 @@
       setDimensions();
       $(window).resize(setDimensions);
 
-      // Provides support for adjustible columns.
-      //$('#splitter').splitter({
-      //                          sizeLeft: config.options.splitterMinWidth,
-      //                          minLeft: config.options.splitterMinWidth,
-      //                          minRight: 200
-      //                        });
-
       getDetailView(fileRoot + expandedFolder);
     });
 
@@ -2945,10 +2200,3 @@
 
 })(jQuery);
 
-$(window).load(function ()
-               {
-                 //$('#fileinfo').css({
-                 //                     'left': $('#splitter .vsplitbar').width() +
-                 //                             $('#filetree').width()
-                 //                   });
-               });
