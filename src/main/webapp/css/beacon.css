@@ -75,6 +75,12 @@ label {
   font-style: italic;
 }
 
+button#more_details {
+  margin-top: 0;
+  margin-bottom: 5px;
+  padding: 0 4px;
+}
+
 #uploader {
   display: block;
   text-align: right;

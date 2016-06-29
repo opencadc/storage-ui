@@ -11,7 +11,9 @@
 
     <ul class="nav nav-sidebar">
       <li><a href="http://www.github.com/opencadc/vosui">&nbsp;GitHub</a></li>
+      <li><a href="https://hub.docker.com/r/canfar/beacon/">&nbsp;Docker</a></li>
     </ul>
+
     <form id="uploader" method="post" class="hidden">
       <h1 title="${folder.path}" class="hidden">${folder.path}</h1>
       <div id="uploadresponse"></div>
@@ -24,7 +26,8 @@
         </div>
         <input id="newfile" name="newfile" type="file" />
       </div>
-      <button id="upload" name="upload" type="submit" value="Upload" class="em"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>
+      <button id="upload" name="upload" type="submit" value="Upload" class="em">
+        <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>
       <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
     </form>
   </div>
@@ -39,7 +42,8 @@
       <#else>
         <button id="more_details" name="more_details" class="btn btn-info btn-xs"
                 data-placement="bottom" data-toggle="popover"
-                role="button"><span class="glyphicon glyphicon-option-horizontal"></span></button>
+                role="button">
+          <span class="glyphicon glyphicon-eye-open"></span>&nbsp;<span class="caret"></span></button>
         ${folder.path}
       </#if>
       </h2>
