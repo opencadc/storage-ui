@@ -69,6 +69,7 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.web.*;
+import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
@@ -79,18 +80,17 @@ import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
 import org.apache.commons.fileupload.servlet.ServletFileUpload;
+import org.json.JSONException;
 import org.json.JSONWriter;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.servlet.ServletUtils;
 import org.restlet.representation.Representation;
-import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.Writer;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -145,45 +145,13 @@ public class UploadServerResource extends NodeServerResource
             if (!fileItemIterator.hasNext())
             {
                 // Some problem occurs, sent back a simple line of text.
-                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-                getResponse().setEntity(
-                        new WriterRepresentation(MediaType.APPLICATION_JSON)
-                        {
-                            @Override
-                            public void write(final Writer writer) throws
-                                                                   IOException
-                            {
-                                final JSONWriter jsonWriter =
-                                        new JSONWriter(writer);
-
-                                jsonWriter.object().key("error")
-                                        .value("Unable to upload corrupted or incompatible data.")
-                                        .endObject();
-
-                                writer.flush();
-                            }
-                        });
+                uploadError(Status.CLIENT_ERROR_BAD_REQUEST,
+                            "Unable to upload corrupted or incompatible data.");
             }
             else
             {
                 writeOut(fileItemIterator);
-                getResponse().setStatus(Status.SUCCESS_CREATED);
-                getResponse().setEntity(
-                        new WriterRepresentation(MediaType.APPLICATION_JSON)
-                        {
-                            @Override
-                            public void write(final Writer writer) throws
-                                                                   IOException
-                            {
-                                final JSONWriter jsonWriter =
-                                        new JSONWriter(writer);
-
-                                jsonWriter.object().key("code").value(0)
-                                        .endObject();
-
-                                writer.flush();
-                            }
-                        });
+                uploadSuccess();
             }
         }
         else
@@ -345,7 +313,7 @@ public class UploadServerResource extends NodeServerResource
                 message = "Error during upload.";
             }
 
-//            processError(e, Status.SERVER_ERROR_INTERNAL, message, true);
+            uploadError(Status.SERVER_ERROR_INTERNAL, message);
         }
     }
 
@@ -435,5 +403,36 @@ public class UploadServerResource extends NodeServerResource
             final DiskFileItemFactory factory)
     {
         return new ServletFileUpload(factory);
+    }
+
+
+    void uploadError(final Status status, final String message)
+    {
+        writeResponse(status,
+                      new JSONRepresentation()
+                      {
+                          @Override
+                          public void write(final JSONWriter jsonWriter)
+                                  throws JSONException
+                          {
+                              jsonWriter.object().key("error").value(message)
+                                      .endObject();
+                          }
+                      });
+    }
+
+    void uploadSuccess()
+    {
+        writeResponse(Status.SUCCESS_CREATED,
+                      new JSONRepresentation()
+                      {
+                          @Override
+                          public void write(final JSONWriter jsonWriter)
+                                  throws JSONException
+                          {
+                              jsonWriter.object().key("code").value(0)
+                                      .endObject();
+                          }
+                      });
     }
 }

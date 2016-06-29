@@ -66,63 +66,69 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web.restlet;
 
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import org.restlet.Response;
+import org.json.JSONException;
+import org.json.JSONWriter;
 import org.restlet.data.MediaType;
-import org.restlet.data.Status;
-import org.restlet.representation.Representation;
 import org.restlet.representation.WriterRepresentation;
-import org.restlet.resource.ServerResource;
 
-import javax.security.auth.Subject;
-import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Map;
 
-public class SecureServerResource extends ServerResource
+
+public abstract class JSONRepresentation extends WriterRepresentation
 {
-    final String SERVLET_CONTEXT_ATTRIBUTE_KEY =
-            "org.restlet.ext.servlet.ServletContext";
-
-    Subject getCurrent()
+    /**
+     * Constructor.
+     *
+     * @param mediaType The representation's mediaType.
+     */
+    public JSONRepresentation(final MediaType mediaType)
     {
-        return AuthenticationUtil.getCurrentSubject();
+        super(mediaType);
     }
 
-    ServletContext getServletContext()
+    /**
+     * Sensible empty constructor.
+     */
+    public JSONRepresentation()
     {
-        final Map<String, Object> attributes =
-                getApplication().getContext().getAttributes();
-
-        return (ServletContext) attributes.get(SERVLET_CONTEXT_ATTRIBUTE_KEY);
+        this(MediaType.APPLICATION_JSON);
     }
 
-    protected String getPath()
+
+    /**
+     * Writes the representation to a characters writer. This method is ensured
+     * to write the full content for each invocation unless it is a transient
+     * representation, in which case an exception is thrown.<br>
+     * <br>
+     * Note that the class implementing this method shouldn't flush or close the
+     * given {@link Writer} after writing to it as this will be handled
+     * by the Restlet connectors automatically.
+     *
+     * @param writer The characters writer.
+     * @throws IOException
+     */
+    @Override
+    public void write(final Writer writer) throws IOException
     {
-        return getRequest().getResourceRef().getPath();
+        final JSONWriter jsonWriter = new JSONWriter(writer);
+        write(jsonWriter);
     }
 
-    void writeResponse(final Status status, final String message)
-    {
-        writeResponse(status, new WriterRepresentation(MediaType.TEXT_PLAIN)
-        {
-            @Override
-            public void write(final Writer writer) throws IOException
-            {
-                writer.write(message);
-                writer.flush();
-            }
-        });
-    }
-
-    void writeResponse(final Status status, final Representation representation)
-    {
-        final Response response = getResponse();
-
-        response.setStatus(status);
-        response.setEntity(representation);
-    }
+    /**
+     * Writes the representation to a characters writer. This method is ensured
+     * to write the full content for each invocation unless it is a transient
+     * representation, in which case an exception is thrown.<br>
+     * <br>
+     * Note that the class implementing this method shouldn't flush or close the
+     * given {@link java.io.Writer} after writing to it as this will be handled
+     * by the Restlet connectors automatically.
+     *
+     * @param jsonWriter        The JSONWriter to write to.
+     * @throws JSONException    Any JSON errors.
+     */
+    public abstract void write(final JSONWriter jsonWriter)
+            throws JSONException;
 }
