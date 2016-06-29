@@ -56,6 +56,7 @@
         <nav class="navbar navbar-default">
           <div class="container-fluid">
             <div class="collapse navbar-collapse" id="navbar-functions">
+<#if !isRoot>
               <ul class="nav navbar-nav">
                 <li>
                   <a id="level-up" name="level-up" href="/beacon/list${folder.parentPath}" role="button" title="Up one level">
@@ -84,6 +85,7 @@
                   </ul>
                 </li>
               </ul>
+</#if>
               <div class="dataTables_filter" id="beacon_filter">
                 <form class="navbar-form navbar-left" role="search">
                   <input id="beacon_filter" class="form-control dataTables_filter"

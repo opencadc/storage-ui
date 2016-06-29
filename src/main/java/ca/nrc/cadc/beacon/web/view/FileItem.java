@@ -92,7 +92,7 @@ public class FileItem extends StorageItem
     @Override
     public String getLinkURI()
     {
-        return "/vospace/transfer" + uri.getPath();
+        return "/vospace/download" + uri.getPath();
     }
 }
 
