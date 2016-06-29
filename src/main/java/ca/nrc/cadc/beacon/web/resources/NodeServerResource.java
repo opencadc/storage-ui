@@ -87,6 +87,10 @@ import java.security.PrivilegedAction;
 public abstract class NodeServerResource extends SecureServerResource
 {
     static final int DEFAULT_PAGE_SIZE = 300;
+
+    // Page size for the initial page display.
+    static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
+
     static final URIExtractor URI_EXTRACTOR = new URIExtractor();
     final StorageItemFactory storageItemFactory =
             new StorageItemFactory(URI_EXTRACTOR);
@@ -102,7 +106,8 @@ public abstract class NodeServerResource extends SecureServerResource
     final ContainerNode getCurrentNode()
             throws NodeNotFoundException, MalformedURLException
     {
-        return (ContainerNode) getNode(getCurrentItemURI(), 20);
+        return (ContainerNode) getNode(getCurrentItemURI(),
+                                       DEFAULT_DISPLAY_PAGE_SIZE);
     }
 
 

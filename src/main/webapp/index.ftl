@@ -27,7 +27,7 @@
   <![endif]-->
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/beacon/css/datatables.css"/>
+  <link rel="stylesheet" href="/beacon/css/datatables.min.css"/>
   <link rel="stylesheet" href="/beacon/css/beacon.css"/>
 </head>
 
@@ -58,7 +58,7 @@
 
 <script type="text/javascript" src="/beacon/js/cadc.util.js"></script>
 <script type="text/javascript" src="/beacon/js/cadc.uri.js"></script>
-<script type="text/javascript" src="/beacon/js/datatables.js"></script>
+<script type="text/javascript" src="/beacon/js/datatables.min.js"></script>
 <script type="text/javascript" src="/beacon/js/file-size.js"></script>
 <script type="text/javascript" src="/beacon/js/jquery.csv-0.71.min.js"></script>
 <script type="text/javascript" src="/beacon/js/jquery-browser.js"></script>
@@ -134,7 +134,7 @@
                             loading: true,
                             processing: true,
                             deferRender: true,
-                            scrollY: "620px",
+                            scrollY: "75vh",
                             lengthChange: false,
                             scrollCollapse: true,
                             scroller: true,

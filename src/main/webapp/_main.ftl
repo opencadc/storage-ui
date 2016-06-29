@@ -93,7 +93,8 @@
             </div>
           </div>
         </nav>
-        <table id="beacon" class="table table-striped table-condensed table-hover">
+        <!-- The width style here MUST exist in this tag, rather than in the CSS file. -->
+        <table id="beacon" class="table table-striped table-condensed table-hover" style="width: 100%;">
           <thead>
             <tr>
               <th></th>
