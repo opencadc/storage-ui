@@ -77,6 +77,18 @@ ul > li.divider-vertical {
  * End navbar.
  */
 
+a.github-link {
+  background: url("images/GitHub-Mark-32px.png") 24px 50% no-repeat;
+}
+
+a.docker-link {
+  background: url("images/logo_docker.png") 20px 50% no-repeat;
+}
+
+a.social-link > span {
+  padding-left: 46px;
+}
+
 label {
   font-weight: 700;
 }

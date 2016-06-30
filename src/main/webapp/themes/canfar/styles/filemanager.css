@@ -19,28 +19,12 @@ video, audio {
 	margin:0.2em 0 0 1em;
 	line-height:1.9em;
 	font-size: 0.8em;
-	text-shadow:1px 1px 0px #ffffff;
+	text-shadow:1px 1px 0 #ffffff;
 	word-break: break-all;
 }
 
 #uploadresponse {
 	display: none;
-}
-
-#splitter {
-	background-color: white;
-	height: 400px;
-	/* no padding allowed */
-}
-
-#filetree {
-	overflow: auto;
-	border: 1px solid #ccc;
-	/* no margin or border allowed */
-}
-
-#filetree > ul {
-	padding: 4px;
 }
 
 #fileinfo {
@@ -56,11 +40,7 @@ video, audio {
 	background: #F4F1ED url(../../../scripts/jquery.splitter/vgrabber.gif) no-repeat center;
 }
 
-#fileinfo {
-	cursor: pointer;
-}
-
-#fileinfo *:not(."CodeMirror") {
+#fileinfo *:not("CodeMirror") {
 	color: #333;
 }
 
@@ -179,12 +159,12 @@ div#tools {
 
 button#browse {
 	margin-left:0;
-	-webkit-border-top-left-radius: 0px;
-	-webkit-border-bottom-left-radius: 0px;
-	-moz-border-radius-topleft: 0px;
-	-moz-border-radius-bottomleft: 0px;
-	border-top-left-radius: 0px;
-	border-bottom-left-radius: 0px;
+	-webkit-border-top-left-radius: 0;
+	-webkit-border-bottom-left-radius: 0;
+	-moz-border-radius-topleft: 0;
+	-moz-border-radius-bottomleft: 0;
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
 	min-height: 16px;
 	min-width: 40px;
 }
@@ -459,7 +439,7 @@ div.prompt-info {
 }
 
 #link-to-project {
-	background: transparent url(../../../images/fmlogo_wbg.png) no-repeat 0 0;
+	/*background: transparent url(../../images/fmlogo_wbg.png) no-repeat 0 0;*/
 	display:block;
 	height:12px;
 	width:45px;

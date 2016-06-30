@@ -10,8 +10,8 @@
     </ul>
 
     <ul class="nav nav-sidebar">
-      <li><a href="http://www.github.com/opencadc/vosui">&nbsp;GitHub</a></li>
-      <li><a href="https://hub.docker.com/r/canfar/beacon/">&nbsp;Docker</a></li>
+      <li><a class="github-link social-link" href="http://www.github.com/opencadc/vosui"><span>GitHub</span></a></li>
+      <li><a class="docker-link social-link" href="https://hub.docker.com/r/canfar/beacon/"><span>Docker</span></a></li>
     </ul>
 
     <form id="uploader" method="post" class="hidden">
