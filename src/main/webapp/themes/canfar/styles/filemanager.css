@@ -370,15 +370,15 @@ div.clip {
 }
 
 /* these apply to the contextual menus as well as the buttons */
-#select span, .contextMenu li.select a { background-image: url(../images/accept.png); }
-#download span, .contextMenu li.download a { background-image: url(../images/download.png); }
-#rename span, .contextMenu li.rename a { background-image: url(../images/tag.png); }
-#move span, .contextMenu li.move a { background-image: url(../images/move.png); }
-#replace span, .contextMenu li.replace a { background-image: url(../images/replace.png); }
-#delete span, .contextMenu li.delete a { background-image: url(../images/bin_closed.png); }
+/*#select span, .contextMenu li.select a { background-image: url(../images/accept.png); }*/
+/*#download span, .contextMenu li.download a { background-image: url(../images/download.png); }*/
+/*#rename span, .contextMenu li.rename a { background-image: url(../images/tag.png); }*/
+/*#move span, .contextMenu li.move a { background-image: url(../images/move.png); }*/
+/*#replace span, .contextMenu li.replace a { background-image: url(../images/replace.png); }*/
+/*#delete span, .contextMenu li.delete a { background-image: url(../images/bin_closed.png); }*/
 /*#upload span { background-image: url(../images/upload.png); }*/
-#upload span.loading { background-image: url(../images/ajax-loader.gif);color:#555555;font-size:0.9em; }
-#parentfolder span { background-image: url(../images/parentfolder.png); }
+/*#upload span.loading { background-image: url(../images/ajax-loader.gif);color:#555555;font-size:0.9em; }*/
+/*#parentfolder span { background-image: url(../images/parentfolder.png); }*/
 /*#newfolder span { background-image: url(../images/folder_add.png); }*/
 /*#home span { background-image: url(../images/house.png); background-position: center; }*/
 /*#level-up span { background-image: url(../images/level-up.png); background-position: center; }*/

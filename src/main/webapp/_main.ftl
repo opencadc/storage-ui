@@ -64,7 +64,7 @@
                 <li>
                   <a id="root" name="root" type="button" title="Navigate to main root." href="/beacon/list/">
                     <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
-                <li class="dropdown">
+                <li class="dropdown divider-vertical">
                   <a title="New" class="dropdown-toggle" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
                     <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></a>
                   <ul class="dropdown-menu">
@@ -84,6 +84,9 @@
                       <a id="new_external_link"><span class="glyphicon glyphicon-link"></span>&nbsp;External Link</a></li>
                   </ul>
                 </li>
+                <#--<li class="alert alert-danger">-->
+                  <#--<a id="delete" name="delete" href="/beacon/delete" class="alert-link" disabled="true">-->
+                    <#--<span class="glyphicon glyphicon-remove"></span>&nbsp;Delete</a></li>-->
               </ul>
 </#if>
               <div class="dataTables_filter" id="beacon_filter">

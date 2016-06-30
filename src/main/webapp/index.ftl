@@ -72,7 +72,7 @@
 <script type="text/javascript" src="/beacon/js/filemanager.js"></script>
 
 <!--
- AWAYS ensure the bootstram.min.js comes last!
+ AWAYS ensure the bootstrap.min.js comes last!
  The popover will not work otherwise.
 
  jenkinsd 2016.06.24
@@ -81,10 +81,16 @@
 
 <script type="text/javascript">
 
+  var ROW_SELECT_TYPE = "row";
   var lockedIcon =
       "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/beacon/unlock\" title=\"Unlock to modify.\">Unlock</a>";
   var publicLink =
       "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">Public</a>";
+  var selectButtonGroupID = "delete";
+  var deleteButtonHTML = "<span id='" + selectButtonGroupID + "' class='btn-group btn-group-xs'>"
+                         + "<button id='download' name='download' class='btn btn-success'><span class='glyphicon glyphicon-download'></span>&nbsp;Download</button>"
+                         + "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
+                         + "</span>";
   var stringUtil = new cadc.web.util.StringUtil(publicLink);
   var startURI = "<#if startURI??>${startURI}</#if>";
   var url = "/beacon/page${folder.path}";
@@ -129,7 +135,7 @@
                               search: "_INPUT_",
                               searchPlaceholder: "Search Name..."
                             },
-                            dom: "<'row'<'col-sm-12'i>>"
+                            dom: "<'row beacon-info-row'<'col-sm-12'i>>"
                                  + "<'row'<'col-sm-12'tr>>",
                             loading: true,
                             processing: true,
@@ -225,6 +231,45 @@
                             },
                             order: [[3, 'desc']]
                           });
+
+                      var deleteLinkContainerSelector =
+                          "[id='" + selectButtonGroupID + "']";
+
+                      $dt.on("select", function(event, dataTablesAPI, type,
+                                                indexes)
+                      {
+                        var $info = $(".dataTables_info");
+
+                        if (type === ROW_SELECT_TYPE)
+                        {
+                          $info.find(deleteLinkContainerSelector).remove();
+                          $info.append(deleteButtonHTML);
+                        }
+                      });
+
+                      $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt info.dt", function()
+                      {
+                        if ($dt.rows( { selected: true } ).count() > 0)
+                        {
+                          var $info = $(".dataTables_info");
+
+                          $info.find(deleteLinkContainerSelector).remove();
+                          $info.append(deleteButtonHTML);
+                        }
+                      });
+
+                      $dt.on("deselect", function(event, dataTablesAPI, type,
+                                                  indexes)
+                      {
+                        // If the indexes.length is 1, this that last item is
+                        // being removed (deselected).
+                        if ((type === ROW_SELECT_TYPE)
+                            && (indexes.length === 1))
+                        {
+                          $(".dataTables_info")
+                              .find(deleteLinkContainerSelector).remove();
+                        }
+                      });
 
                       /**
                        * We're putting a custom search field in, so we need to

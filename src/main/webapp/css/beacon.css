@@ -54,21 +54,35 @@ body {
  * End Sidebar
  */
 
+/*
+ * Navbar styles.
+ */
+
+span.select-info,
+ul > li.divider-vertical {
+  border-left: 1px solid #ccc;
+}
+
+.navbar-nav > li.alert {
+  margin-bottom: inherit;
+  padding: inherit;
+}
+
+.navbar-nav > li.alert > a {
+  color: #fff;
+}
+
+
+/*
+ * End navbar.
+ */
+
 label {
   font-weight: 700;
 }
 
-.auth-info {
-  color: #a1d1f1;
-}
-
 .dropdown-menu > li > a {
   cursor: pointer;
-}
-
-.starter-template {
-  padding: 20px 15px;
-  text-align: center;
 }
 
 .public_link {
@@ -79,6 +93,10 @@ button#more_details {
   margin-top: 0;
   margin-bottom: 5px;
   padding: 0 4px;
+}
+
+#fileinfo {
+  cursor: auto;
 }
 
 #uploader {
@@ -118,11 +136,15 @@ input[type=url] {
  *  DataTables
  */
 div.dataTables_wrapper div.dataTables_info {
-  padding: 10px 20px;
+  padding-left: 20px;
   white-space: nowrap;
   cursor: auto;
 }
 
 .popover {
   max-width: 500px;
+}
+
+.beacon-info-row {
+  height: 40px;
 }
