@@ -41,18 +41,18 @@
     {
       if ($.urlParam('config') != 0)
       {
-        url = '/beacon/scripts/' + $.urlParam('config');
+        url = '/storage/scripts/' + $.urlParam('config');
         userconfig = $.urlParam('config');
       }
       else
       {
-        url = '/beacon/scripts/filemanager.config.json';
+        url = '/storage/scripts/filemanager.config.json';
         userconfig = 'filemanager.config.json';
       }
     }
     else
     {
-      url = '/beacon/scripts/filemanager.config.default.json';
+      url = '/storage/scripts/filemanager.config.default.json';
     }
 
     $.ajax({
@@ -174,7 +174,7 @@
 // through culture var or from URL
   if ($.urlParam('langCode') != 0)
   {
-    if (file_exists('/beacon/scripts/languages/' + $.urlParam('langCode')
+    if (file_exists('/storage/scripts/languages/' + $.urlParam('langCode')
                     + '.js'))
     {
       config.options.culture = $.urlParam('langCode');
@@ -183,7 +183,7 @@
     {
       var urlLang = $.urlParam('langCode').substring(0, 2);
 
-      if (file_exists('/beacon/scripts/languages/' + urlLang + '.js'))
+      if (file_exists('/storage/scripts/languages/' + urlLang + '.js'))
       {
         config.options.culture = urlLang;
       }
@@ -192,7 +192,7 @@
 
   var lg = [];
   $.ajax({
-           url: '/beacon/scripts/languages/' + config.options.culture + '.json',
+           url: '/storage/scripts/languages/' + config.options.culture + '.json',
            async: false,
            dataType: 'json',
            success: function (json)
@@ -698,39 +698,31 @@
                                                     replaceItem(data);
                                                   }).show();
     }
-
-    if (!has_capability(data, 'delete'))
-    {
-      $fileInfo.find('button#delete').hide();
-    }
-    else
-    {
-      $fileInfo.find('button#delete').click(function ()
-                                                 {
-                                                   if (deleteItem(data))
-                                                   {
-                                                     $fileInfo.html('<h1>' +
-                                                                         lg.select_from_left +
-                                                                         '</h1>');
-                                                   }
-                                                 }).show();
-    }
-
-    if (!has_capability(data, 'download'))
-    {
-      $fileInfo.find('button#download').hide();
-    }
-    else
-    {
-      $fileInfo.find('button#download').click(function ()
-                                                   {
-                                                     window.location =
-                                                       fileConnector +
-                                                       '?mode=download&path=' +
-                                                       encodeURIComponent(data['Path']) +
-                                                       '&config=' + userconfig;
-                                                   }).show();
-    }
+    //
+    //if (has_capability(data, 'delete'))
+    //{
+    //  $fileInfo.find('button#delete').click(function()
+    //                                        {
+    //
+    //                                        });
+    //}
+    //
+    //
+    //if (!has_capability(data, 'download'))
+    //{
+    //  $fileInfo.find('button#download').hide();
+    //}
+    //else
+    //{
+    //  $fileInfo.find('button#download').click(function ()
+    //                                               {
+    //                                                 window.location =
+    //                                                   fileConnector +
+    //                                                   '?mode=download&path=' +
+    //                                                   encodeURIComponent(data['Path']) +
+    //                                                   '&config=' + userconfig;
+    //                                               }).show();
+    //}
   };
 
 
@@ -1154,53 +1146,47 @@
 
     var doDelete = function (v, m)
     {
-      if (v != 1)
+      if (v === 1)
       {
-        return false;
-      }
-      var d = new Date(); // to prevent IE cache issues
-      var connectString = fileConnector + '?mode=delete&path=' +
-                          encodeURIComponent(data['Path']) + '&time=' +
-                          d.getMilliseconds() + '&config=' + userconfig,
-        parent = data['Path'].split('/').reverse().slice(1).reverse().join('/') +
-                 '/';
 
-      $.ajax({
-               type: 'GET',
-               url: connectString,
-               dataType: 'json',
-               async: false,
-               success: function (result)
-               {
-                 if (result['Code'] == 0)
+        var d = new Date(); // to prevent IE cache issues
+        var connectString = fileConnector + encodeURIComponent(data['Path']),
+          parent = data['Path'].split('/').reverse().slice(1)
+                     .reverse().join('/') + '/';
+
+        $.ajax({
+                 type: 'GET',
+                 url: connectString,
+                 dataType: 'json',
+                 async: false,
+                 success: function (result)
                  {
-                   removeNode(result['Path']);
-                   var rootpath = result['Path'].substring(0, result['Path'].length -
-                                                              1); // removing
-                                                                  // the last
-                                                                  // slash
-                   rootpath = rootpath.substr(0, rootpath.lastIndexOf('/') + 1);
-                   $('#uploader h1').text(lg.current_folder +
-                                          displayPath(rootpath)).attr("title", displayPath(rootpath, false)).attr('data-path', rootpath);
-                   isDeleted = true;
-
-                   if (config.options.showConfirmation)
+                   if (result['Code'] == 0)
                    {
-                     $.prompt(lg.successful_delete);
-                   }
+                     removeNode(result['Path']);
+                     var rootpath = result['Path'].substring(0, result['Path'].length -
+                                                                1); // removing
+                                                                    // the last
+                                                                    // slash
+                     rootpath =
+                       rootpath.substr(0, rootpath.lastIndexOf('/') + 1);
+                     $('#uploader h1').text(lg.current_folder +
+                                            displayPath(rootpath)).attr("title", displayPath(rootpath, false)).attr('data-path', rootpath);
+                     isDeleted = true;
 
-                   // seems to be necessary when dealing w/ files located on s3
-                   // (need to look into a cleaner solution going forward)
-                   $('#filetree').find('a[data-path="' + parent +
-                                       '/"]').click().click();
+                     if (config.options.showConfirmation)
+                     {
+                       $.prompt(lg.successful_delete);
+                     }
+                   }
+                   else
+                   {
+                     isDeleted = false;
+                     $.prompt(result['Error']);
+                   }
                  }
-                 else
-                 {
-                   isDeleted = false;
-                   $.prompt(result['Error']);
-                 }
-               }
-             });
+               });
+      }
     };
     var btns = {};
     btns[lg.yes] = true;
@@ -1600,7 +1586,7 @@
                                                             '</span></a>');
                     // loading zeroClipboard code
 
-                    loadJS('/beacon/scripts/zeroclipboard/copy.js?d' +
+                    loadJS('/storage/scripts/zeroclipboard/copy.js?d' +
                            d.getMilliseconds());
                     $('#copy-button').click(function ()
                                             {
@@ -1695,10 +1681,10 @@
       $('div.version').html(config.version);
 
       // Loading theme
-      loadCSS('/beacon/themes/' + config.options.theme +
+      loadCSS('/storage/themes/' + config.options.theme +
               '/styles/filemanager.css');
       $.ajax({
-               url: '/beacon/themes/' + config.options.theme + '/styles/ie.css',
+               url: '/storage/themes/' + config.options.theme + '/styles/ie.css',
                async: false,
                success: function (data)
                {
@@ -1707,19 +1693,19 @@
              });
 
       // loading zeroClipboard
-      loadJS('/beacon/scripts/zeroclipboard/dist/ZeroClipboard.js');
+      loadJS('/storage/scripts/zeroclipboard/dist/ZeroClipboard.js');
 
       // Loading CodeMirror if enabled for online edition
       if (config.edit.enabled)
       {
-        loadCSS('/beacon/scripts/CodeMirror/lib/codemirror.css');
-        loadCSS('/beacon/scripts/CodeMirror/theme/' + config.edit.theme +
+        loadCSS('/storage/scripts/CodeMirror/lib/codemirror.css');
+        loadCSS('/storage/scripts/CodeMirror/theme/' + config.edit.theme +
                 '.css');
-        loadJS('/beacon/scripts/CodeMirror/lib/codemirror.js');
-        loadJS('/beacon/scripts/CodeMirror/addon/selection/active-line.js');
-        loadCSS('/beacon/scripts/CodeMirror/addon/display/fullscreen.css');
-        loadJS('/beacon/scripts/CodeMirror/addon/display/fullscreen.js');
-        loadJS('/beacon/scripts/CodeMirror/dynamic-mode.js');
+        loadJS('/storage/scripts/CodeMirror/lib/codemirror.js');
+        loadJS('/storage/scripts/CodeMirror/addon/selection/active-line.js');
+        loadCSS('/storage/scripts/CodeMirror/addon/display/fullscreen.css');
+        loadJS('/storage/scripts/CodeMirror/addon/display/fullscreen.js');
+        loadJS('/storage/scripts/CodeMirror/dynamic-mode.js');
       }
 
       if (!config.options.fileRoot)
@@ -1815,7 +1801,7 @@
       /** load searchbox */
       if (config.options.searchBox === true)
       {
-        loadJS("/beacon/scripts/filemanager.liveSearch.js");
+        loadJS("/storage/scripts/filemanager.liveSearch.js");
       }
       else
       {
@@ -1835,8 +1821,8 @@
       {
 
         // we load dropzone library
-        loadCSS('/beacon/scripts/dropzone/downloads/css/dropzone.css');
-        loadJS('/beacon/scripts/dropzone/downloads/dropzone.js');
+        loadCSS('/storage/scripts/dropzone/downloads/css/dropzone.css');
+        loadJS('/storage/scripts/dropzone/downloads/dropzone.js');
         Dropzone.autoDiscover = false;
 
         // we remove simple file upload element
@@ -1912,7 +1898,7 @@
 
                                       $("div#multiple-uploads").dropzone({
                                                                            paramName: "upload",
-                                                                           url: '/beacon/upload' + path,
+                                                                           url: '/storage/upload' + path,
                                                                            method: 'put',
                                                                            maxFilesize: fileSize,
                                                                            maxFiles: config.upload.number,
@@ -2127,8 +2113,8 @@
       // to prevent bug
       if (config.customScrollbar.enabled)
       {
-        loadCSS('/beacon/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.min.css');
-        loadJS('/beacon/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js');
+        loadCSS('/storage/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.min.css');
+        loadJS('/storage/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js');
 
         var csTheme = config.customScrollbar.theme != undefined ?
                       config.customScrollbar.theme : 'inset-2-dark';

@@ -131,10 +131,10 @@ public class VOSpaceApplication extends Application
         router.attach("/page", PageServerResource.class);
         final TemplateRoute pageRoute =
                 router.attach("/page/{path}", PageServerResource.class);
-        final TemplateRoute allRoute =
-                router.attach("/all/{path}", StorageItemServerResource.class);
 
         // Allow for an empty path to be the root.
+        final TemplateRoute itemRoute =
+                router.attach("/item/{path}", StorageItemServerResource.class);
         router.attach("/list", MainPageServerResource.class);
         router.attach("/list/", MainPageServerResource.class);
         final TemplateRoute listRoute =
@@ -149,7 +149,7 @@ public class VOSpaceApplication extends Application
         pageRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
 
         final Map<String, Variable> allRouteVariables =
-                allRoute.getTemplate().getVariables();
+                itemRoute.getTemplate().getVariables();
         allRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
 
         final Map<String, Variable> listRouteVariables =

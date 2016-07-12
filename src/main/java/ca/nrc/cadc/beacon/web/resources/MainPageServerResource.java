@@ -83,7 +83,7 @@ import javax.security.auth.Subject;
 import java.util.*;
 
 
-public class MainPageServerResource extends NodeServerResource
+public class MainPageServerResource extends StorageServerResource
 {
     private final Configuration configuration =
             new Configuration(Configuration.getVersion());

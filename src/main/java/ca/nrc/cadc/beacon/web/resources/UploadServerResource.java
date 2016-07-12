@@ -98,7 +98,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-public class UploadServerResource extends NodeServerResource
+public class UploadServerResource extends StorageServerResource
 {
     protected static final int BUFFER_SIZE = 8192;
     private static final String UPLOAD_FILE_KEY = "upload";

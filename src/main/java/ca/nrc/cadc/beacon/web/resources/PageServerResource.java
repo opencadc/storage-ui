@@ -83,7 +83,7 @@ import java.io.Writer;
 import java.net.URI;
 
 
-public class PageServerResource extends NodeServerResource
+public class PageServerResource extends StorageServerResource
 {
     @Get
     public Representation represent() throws Exception

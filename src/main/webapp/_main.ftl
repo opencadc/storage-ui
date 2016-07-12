@@ -11,7 +11,7 @@
 
     <ul class="nav nav-sidebar">
       <li><a class="github-link social-link" href="http://www.github.com/opencadc/vosui"><span>GitHub</span></a></li>
-      <li><a class="docker-link social-link" href="https://hub.docker.com/r/canfar/beacon/"><span>Docker</span></a></li>
+      <li><a class="docker-link social-link" href="https://hub.docker.com/r/canfar/storage/"><span>Docker</span></a></li>
     </ul>
 
     <form id="uploader" method="post" class="hidden">
@@ -21,7 +21,7 @@
       <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
       <div id="file-input-container" class="wb-inv">
         <div id="alt-fileinput">
-          <input id="filepath" name="filepath" type="text" />
+          <input id="filepath" name="filepath" type="text" title="File path." />
           <button id="browse" name="browse" type="button" class="btn" value="Browse"></button>
         </div>
         <input id="newfile" name="newfile" type="file" />
@@ -59,10 +59,10 @@
 <#if !isRoot>
               <ul class="nav navbar-nav">
                 <li>
-                  <a id="level-up" name="level-up" href="/beacon/list${folder.parentPath}" role="button" title="Up one level">
+                  <a id="level-up" name="level-up" href="/storage/list${folder.parentPath}" role="button" title="Up one level">
                     <span class="glyphicon glyphicon-level-up"></span>&nbsp;Up</a></li>
                 <li>
-                  <a id="root" name="root" type="button" title="Navigate to main root." href="/beacon/list/">
+                  <a id="root" name="root" type="button" title="Navigate to main root." href="/storage/list/">
                     <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
                 <li class="dropdown divider-vertical">
                   <a title="New" class="dropdown-toggle" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
@@ -74,9 +74,9 @@
                     <li>
                       <a id="upload">
                         <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;File</a>
-                      <form id="uploader" method="post" class="hidden">
+                      <fo2rm id="uploader" method="post" class="hidden">
                         <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
-                      </form>
+                      </fo2rm>
                     </li>
                     <li>
                       <a id="new_vospace_link"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
@@ -84,9 +84,6 @@
                       <a id="new_external_link"><span class="glyphicon glyphicon-link"></span>&nbsp;External Link</a></li>
                   </ul>
                 </li>
-                <#--<li class="alert alert-danger">-->
-                  <#--<a id="delete" name="delete" href="/beacon/delete" class="alert-link" disabled="true">-->
-                    <#--<span class="glyphicon glyphicon-remove"></span>&nbsp;Delete</a></li>-->
               </ul>
 </#if>
               <div class="dataTables_filter" id="beacon_filter">
@@ -116,7 +113,7 @@
             <#assign writeGroupNames = childItem.writeGroupNames>
             <tr>
               <td class="select-checkbox"></td>
-              <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a></td>
+              <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/storage${childItem.linkURI}"> ${childItem.name}</a></td>
               <td data-val="${childItem.sizeInBytes}">${childItem.sizeHumanReadable}</td>
               <td>${childItem.lastModifiedHumanReadable}</td>
               <td>${writeGroupNames}</td>

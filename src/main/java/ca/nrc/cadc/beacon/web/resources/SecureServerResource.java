@@ -80,12 +80,17 @@ import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.io.Writer;
+import java.net.URI;
 import java.util.Map;
 
 public class SecureServerResource extends ServerResource
 {
     final String SERVLET_CONTEXT_ATTRIBUTE_KEY =
             "org.restlet.ext.servlet.ServletContext";
+    final static URI VOSPACE_SERVICE_ID =
+            URI.create("ivo://cadc.nrc.ca/vospace");
+    final static URI DATA_SERVICE_ID = URI.create("ivo://cadc.nrc.ca/data");
+
 
     Subject getCurrent()
     {

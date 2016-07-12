@@ -72,7 +72,6 @@ import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.vos.VOSURI;
 
 import javax.security.auth.Subject;
-import java.io.IOException;
 
 
 public class CSVStorageItemProducer extends AbstractStorageItemProducer<StorageItemCSVWriter>
@@ -104,23 +103,10 @@ public class CSVStorageItemProducer extends AbstractStorageItemProducer<StorageI
         try
         {
             writePages();
-            storageItemWriter.flush();
         }
         catch (Exception e)
         {
             throw new RuntimeException(e);
-        }
-        finally
-        {
-            try
-            {
-                storageItemWriter.close();
-            }
-            catch (IOException e)
-            {
-                e.printStackTrace();
-                // Do nothing.
-            }
         }
     }
 }

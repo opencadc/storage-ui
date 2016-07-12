@@ -68,92 +68,50 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.PipedCSVWriter;
-import ca.nrc.cadc.beacon.PipedJSONWriter;
-import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.VOSURI;
-import org.restlet.data.MediaType;
-import org.restlet.data.Preference;
-import org.restlet.representation.Representation;
-import org.restlet.representation.WriterRepresentation;
+import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
+
+import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
 
-import javax.security.auth.Subject;
-import java.io.IOException;
-import java.io.Writer;
-import java.net.URI;
-import java.util.List;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 
-public class StorageItemServerResource extends NodeServerResource
+public class StorageItemServerResource extends StorageServerResource
 {
     @Get
-    public Representation representPageData() throws Exception
+    public void represent() throws Exception
     {
-        final String startURIParameterValue = getQueryValue("startURI");
-        final String pageSizeParameterValue = getQueryValue("pageSize");
-        final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
-                                ? new VOSURI(URI.create(startURIParameterValue))
-                                : null;
-        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
-                             ? Integer.parseInt(pageSizeParameterValue)
-                             : DEFAULT_PAGE_SIZE;
-        final Subject subject = getCurrent();
-
-        return wantsJSON() ? json(pageSize, startURI, subject)
-                           : csv(pageSize, startURI, subject);
+        final RegistryClient registryClient = new RegistryClient();
+        sendToDownload(registryClient);
     }
 
-    boolean wantsJSON()
+    /**
+     * Send a redirect to the proper download URL.
+     *
+     * @param registryClient    The RegistryClient to use.
+     */
+    void sendToDownload(final RegistryClient registryClient)
+            throws MalformedURLException
     {
-        final List<Preference<MediaType>> preferredMediaTypes =
-                getRequest().getClientInfo().getAcceptedMediaTypes();
-
-        for (final Preference<MediaType> preference : preferredMediaTypes)
-        {
-            if (preference.getMetadata().equals(MediaType.APPLICATION_JSON))
-            {
-                return true;
-            }
-        }
-
-        return false;
+        // TODO
+        // TODO - Is the data web service with the /pub/vospace path portable?
+        // TODO - It may be CADC specific.
+        // TODO - jenkinsd 2016.07.12
+        // TODO
+        final URL serverURL = registryClient.getServiceURL(DATA_SERVICE_ID,
+                                                           "http",
+                                                           "/pub/vospace");
+        final URL downloadURL = new URL(serverURL.toExternalForm()
+                                        + getCurrentPath());
+        getResponse().redirectSeeOther(downloadURL.toExternalForm());
     }
 
-    Representation json(final int pageSize, final VOSURI startURI,
-                        final Subject currentSubject)
-            throws Exception
+    @Delete
+    public void remove() throws Exception
     {
-        return new WriterRepresentation(MediaType.APPLICATION_JSON)
-        {
-            @Override
-            public void write(final Writer writer) throws IOException
-            {
-                final PipedJSONWriter pipedJSONWriter = new PipedJSONWriter();
-                pipedJSONWriter.start(pageSize, getCurrentItemURI(),
-                                      startURI, writer, currentSubject,
-                                      storageItemFactory);
-
-                writer.flush();
-            }
-        };
-    }
-
-    Representation csv(final int pageSize, final VOSURI startURI,
-                       final Subject currentSubject) throws Exception
-    {
-        return new WriterRepresentation(MediaType.TEXT_CSV)
-        {
-            @Override
-            public void write(final Writer writer) throws IOException
-            {
-                final PipedCSVWriter pipedCSVWriter = new PipedCSVWriter();
-                pipedCSVWriter.start(pageSize, getCurrentItemURI(),
-                                     startURI, writer, currentSubject,
-                                     storageItemFactory);
-
-                writer.flush();
-            }
-        };
+        final VOSpaceClient client = createClient();
+        client.deleteNode(getCurrentPath());
     }
 }

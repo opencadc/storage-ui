@@ -68,85 +68,61 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
+import ca.nrc.cadc.beacon.AbstractUnitTest;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.restlet.data.Status;
 
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
+import org.junit.Test;
+import org.restlet.Response;
+
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.easymock.EasyMock.*;
 
 
-public abstract class NodeServerResource extends SecureServerResource
+public class StorageItemServerResourceTest
+        extends AbstractUnitTest<StorageItemServerResource>
 {
-    static final int DEFAULT_PAGE_SIZE = 300;
-
-    // Page size for the initial page display.
-    static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
-
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
-
-    VOSURI getCurrentItemURI()
+    @Test
+    public void sendToDownload() throws Exception
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        final String path = "/" + ((pathInRequest == null)
-                                   ? "" : pathInRequest.toString());
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
-    }
+        final RegistryClient mockRegistryClient =
+                createMock(RegistryClient.class);
+        final Response mockResponse = createMock(Response.class);
+        final Map<String, Object> requestAttributes = new HashMap<>();
 
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(),
-                                       DEFAULT_DISPLAY_PAGE_SIZE);
-    }
+        requestAttributes.put("path", "my/file.txt");
 
-
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        return new VOSpaceClient(registryClient.getServiceURL(
-                URI.create("ivo://cadc.nrc.ca/vospace"), "http").
-                toExternalForm(), false);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final RegistryClient registryClient = new RegistryClient();
-        final VOSpaceClient voSpaceClient = createClient(registryClient);
-        final Subject currentUser = getCurrent();
-
-        if (currentUser.getPrincipals().isEmpty())
+        testSubject = new StorageItemServerResource()
         {
-            return voSpaceClient.getNode(folderURI.getPath(), query);
-        }
-        else
-        {
-            return Subject.doAs(currentUser,
-                                (PrivilegedAction<Node>) () -> {
-                                    try
-                                    {
-                                        return voSpaceClient.getNode(
-                                                folderURI.getPath(), query);
-                                    }
-                                    catch (NodeNotFoundException e)
-                                    {
-                                        getResponse().setStatus(
-                                                Status.CLIENT_ERROR_NOT_FOUND);
-                                        return null;
-                                    }
-                                });
-        }
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
+
+            @Override
+            public Map<String, Object> getRequestAttributes()
+            {
+                return requestAttributes;
+            }
+        };
+
+        final URL serverURL = new URL("http://mysite.com/download/do");
+
+        expect(mockRegistryClient.getServiceURL(
+                StorageItemServerResource.DATA_SERVICE_ID, "http",
+                "/pub/vospace")).andReturn(serverURL).once();
+
+        mockResponse.redirectSeeOther(
+                "http://mysite.com/download/do/my/file.txt");
+        expectLastCall().once();
+
+        replay(mockRegistryClient, mockResponse);
+
+        testSubject.sendToDownload(mockRegistryClient);
+
+        verify(mockRegistryClient, mockResponse);
     }
 }
