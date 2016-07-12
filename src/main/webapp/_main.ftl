@@ -74,9 +74,9 @@
                     <li>
                       <a id="upload">
                         <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;File</a>
-                      <fo2rm id="uploader" method="post" class="hidden">
+                      <form id="uploader" method="post" class="hidden">
                         <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
-                      </fo2rm>
+                      </form>
                     </li>
                     <li>
                       <a id="new_vospace_link"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
@@ -112,7 +112,7 @@
             <#assign uri = childItem.URI>
             <#assign writeGroupNames = childItem.writeGroupNames>
             <tr>
-              <td class="select-checkbox"></td>
+              <td data-path="${childItem.path}" class="select-checkbox"></td>
               <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/storage${childItem.linkURI}"> ${childItem.name}</a></td>
               <td data-val="${childItem.sizeInBytes}">${childItem.sizeHumanReadable}</td>
               <td>${childItem.lastModifiedHumanReadable}</td>

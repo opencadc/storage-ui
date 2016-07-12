@@ -88,12 +88,9 @@
   var publicLink =
       "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">Public</a>";
   var selectButtonGroupID = "delete";
-  var deleteButtonHTML = "<span id='" + selectButtonGroupID +
-                         "' class='btn-group btn-group-xs'>"
-                         +
-                         "<button id='download' name='download' class='btn btn-success'><span class='glyphicon glyphicon-download'></span>&nbsp;Download</button>"
-                         +
-                         "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
+  var deleteButtonHTML = "<span id='" + selectButtonGroupID
+                         + "' class='btn-group btn-group-xs'>"
+                         + "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
                          + "</span>";
   var stringUtil = new cadc.web.util.StringUtil(publicLink);
   var startURI = "<#if startURI??>${startURI}</#if>";
@@ -283,25 +280,16 @@
                                        $.each($dt.rows({selected: true}).data(),
                                               function (key, data)
                                               {
+                                                var path = (data.length > 8)
+                                                    ? data[9]
+                                                    : $(data[0]).data("path");
+
                                                 $.ajax({
                                                          method: "DELETE",
                                                          url: "/storage/item"
-                                                              + data[9]
+                                                              + path
                                                        });
                                               });
-                                     });
-
-                      $(document).on("click", "button#download",
-                                     function ()
-                                     {
-                                       var selectedRows =
-                                           $dt.rows({selected: true}).data();
-
-                                       $.each(selectedRows,
-                                              function (key, data)
-                                              {
-                                                console.log("Downloading: " + data[9]);
-                                              })
                                      });
 
                       /**
@@ -317,7 +305,6 @@
                       var successCallback = function (csvData)
                       {
                         var data = $.csv.toArrays(csvData);
-//                        var dataTableAPI = $beaconTable.dataTable();
                         var dl = data.length;
 
                         if (dl > 0)
@@ -326,11 +313,6 @@
                           {
                             var nextRow = data[di];
                             $dt.row.add(nextRow);
-
-//                            var rowID = nextRow[9];
-//                            var rowAddAPI = dataTableAPI.fnAddData(nextRow);
-//                            var node = dataTableAPI.fnSettings().aoData[rowAddAPI[0]].nTr;
-//                            node.setAttribute('id', rowID);
 
                             startURI = nextRow[10];
                           }
