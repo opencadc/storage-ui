@@ -22,7 +22,7 @@ For an embedded Jetty container, you can just run:
 
 To produce a running embedded Jetty container running on port `8080`, with a debug port on `5555`.
 
-Although untested, one should be able to pass one's own Registry settings into the `JAVA_OPTS` environment variable:
+Pass your own Registry settings into the `JAVA_OPTS` environment variable to use your own VOSpace service:
 
 `gradle -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.auth.BasicX509TrustManager.trust=true -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry lookup> run`
 
