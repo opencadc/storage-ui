@@ -68,49 +68,18 @@
 
 package ca.nrc.cadc.beacon;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.VOSURI;
-
-import javax.security.auth.Subject;
-
-
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public class UploadVerificationFailedException extends Exception
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
-    {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
-    }
-
-
     /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
+     * Constructs a new exception with the specified detail message.  The
+     * cause is not initialized, and may subsequently be initialized by
+     * a call to {@link #initCause}.
      *
-     * @see Thread#run()
+     * @param message the detail message. The detail message is saved for
+     *                later retrieval by the {@link #getMessage()} method.
      */
-    @Override
-    public void run()
+    public UploadVerificationFailedException(String message)
     {
-        try
-        {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        super(message);
     }
 }

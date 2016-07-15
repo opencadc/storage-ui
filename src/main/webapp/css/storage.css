@@ -54,25 +54,61 @@ body {
  * End Sidebar
  */
 
-label {
-  font-weight: 700;
+/*
+ * Navbar styles.
+ */
+
+span.select-info,
+ul > li.divider-vertical {
+  border-left: 1px solid #ccc;
 }
 
-.auth-info {
-  color: #a1d1f1;
+.navbar-nav > li.alert {
+  margin-bottom: inherit;
+  padding: inherit;
+}
+
+.navbar-nav > li.alert > a {
+  color: #fff;
+}
+
+
+/*
+ * End navbar.
+ */
+
+a.github-link {
+  background: url("images/GitHub-Mark-32px.png") 24px 50% no-repeat;
+}
+
+a.docker-link {
+  background: url("images/logo_docker.png") 20px 50% no-repeat;
+}
+
+a.social-link > span {
+  padding-left: 46px;
+}
+
+label {
+  font-weight: 700;
 }
 
 .dropdown-menu > li > a {
   cursor: pointer;
 }
 
-.starter-template {
-  padding: 20px 15px;
-  text-align: center;
-}
-
 .public_link {
   font-style: italic;
+}
+
+button#more_details {
+  margin-top: 0;
+  margin-bottom: 5px;
+  padding: 0 4px;
+}
+
+#fileinfo {
+  cursor: auto;
 }
 
 #uploader {
@@ -91,7 +127,7 @@ label {
   top: 0;
   left: 0;
   display: block;
-  background: white url('/beacon/themes/canfar/images/ajax-loader.gif') no-repeat center center;
+  background: white url('/storage/themes/canfar/images/ajax-loader.gif') no-repeat center center;
   z-index: 999;
   opacity: 0.7;
 }
@@ -112,11 +148,15 @@ input[type=url] {
  *  DataTables
  */
 div.dataTables_wrapper div.dataTables_info {
-  padding: 10px 20px;
+  padding-left: 20px;
   white-space: nowrap;
   cursor: auto;
 }
 
 .popover {
   max-width: 500px;
+}
+
+.beacon-info-row {
+  height: 40px;
 }

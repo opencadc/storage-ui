@@ -66,51 +66,69 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web.restlet;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.VOSURI;
+import org.json.JSONException;
+import org.json.JSONWriter;
+import org.restlet.data.MediaType;
+import org.restlet.representation.WriterRepresentation;
 
-import javax.security.auth.Subject;
+import java.io.IOException;
+import java.io.Writer;
 
 
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public abstract class JSONRepresentation extends WriterRepresentation
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
+    /**
+     * Constructor.
+     *
+     * @param mediaType The representation's mediaType.
+     */
+    public JSONRepresentation(final MediaType mediaType)
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
+        super(mediaType);
+    }
+
+    /**
+     * Sensible empty constructor.
+     */
+    public JSONRepresentation()
+    {
+        this(MediaType.APPLICATION_JSON);
     }
 
 
     /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
+     * Writes the representation to a characters writer. This method is ensured
+     * to write the full content for each invocation unless it is a transient
+     * representation, in which case an exception is thrown.<br>
+     * <br>
+     * Note that the class implementing this method shouldn't flush or close the
+     * given {@link Writer} after writing to it as this will be handled
+     * by the Restlet connectors automatically.
      *
-     * @see Thread#run()
+     * @param writer The characters writer.
+     * @throws IOException
      */
     @Override
-    public void run()
+    public void write(final Writer writer) throws IOException
     {
-        try
-        {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        final JSONWriter jsonWriter = new JSONWriter(writer);
+        write(jsonWriter);
     }
+
+    /**
+     * Writes the representation to a characters writer. This method is ensured
+     * to write the full content for each invocation unless it is a transient
+     * representation, in which case an exception is thrown.<br>
+     * <br>
+     * Note that the class implementing this method shouldn't flush or close the
+     * given {@link java.io.Writer} after writing to it as this will be handled
+     * by the Restlet connectors automatically.
+     *
+     * @param jsonWriter        The JSONWriter to write to.
+     * @throws JSONException    Any JSON errors.
+     */
+    public abstract void write(final JSONWriter jsonWriter)
+            throws JSONException;
 }

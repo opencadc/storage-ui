@@ -66,51 +66,63 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.beacon.AbstractUnitTest;
+import ca.nrc.cadc.reg.client.RegistryClient;
 
-import javax.security.auth.Subject;
+import org.junit.Test;
+import org.restlet.Response;
+
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.easymock.EasyMock.*;
 
 
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public class StorageItemServerResourceTest
+        extends AbstractUnitTest<StorageItemServerResource>
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
+    @Test
+    public void sendToDownload() throws Exception
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
-    }
+        final RegistryClient mockRegistryClient =
+                createMock(RegistryClient.class);
+        final Response mockResponse = createMock(Response.class);
+        final Map<String, Object> requestAttributes = new HashMap<>();
 
+        requestAttributes.put("path", "my/file.txt");
 
-    /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
-     *
-     * @see Thread#run()
-     */
-    @Override
-    public void run()
-    {
-        try
+        testSubject = new StorageItemServerResource()
         {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
+
+            @Override
+            public Map<String, Object> getRequestAttributes()
+            {
+                return requestAttributes;
+            }
+        };
+
+        final URL serverURL = new URL("http://mysite.com/download/do");
+
+        expect(mockRegistryClient.getServiceURL(
+                StorageItemServerResource.DATA_SERVICE_ID, "http",
+                "/pub/vospace")).andReturn(serverURL).once();
+
+        mockResponse.redirectSeeOther(
+                "http://mysite.com/download/do/my/file.txt");
+        expectLastCall().once();
+
+        replay(mockRegistryClient, mockResponse);
+
+        testSubject.sendToDownload(mockRegistryClient);
+
+        verify(mockRegistryClient, mockResponse);
     }
 }

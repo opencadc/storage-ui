@@ -70,26 +70,20 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.auth.HttpPrincipal;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.*;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
 import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
 import org.restlet.data.MediaType;
-import org.restlet.data.Status;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
 import java.util.*;
 
 
-public class MainPageServerResource extends NodeServerResource
+public class MainPageServerResource extends StorageServerResource
 {
     private final Configuration configuration =
             new Configuration(Configuration.getVersion());
@@ -112,10 +106,8 @@ public class MainPageServerResource extends NodeServerResource
     @Get
     public Representation represent() throws Exception
     {
-        final VOSURI folderURI = getCurrentItemURI();
         final Subject currentUser = getCurrent();
-        final ContainerNode containerNode = getContainerNode(folderURI, 20,
-                                                             currentUser);
+        final ContainerNode containerNode = getCurrentNode();
 
         return representContainerNode(containerNode, currentUser);
     }
@@ -158,52 +150,5 @@ public class MainPageServerResource extends NodeServerResource
 
         return new TemplateRepresentation("index.ftl", configuration, dataModel,
                                           MediaType.TEXT_HTML);
-    }
-
-    ContainerNode getContainerNode(final VOSURI folderURI,
-                                   final int pageSize,
-                                   final Subject currentUser) throws Exception
-    {
-        final String query = "limit=" + pageSize;
-        final RegistryClient registryClient = new RegistryClient();
-        if (currentUser.getPrincipals().isEmpty())
-        {
-            return getContainerNode(registryClient, folderURI, query, "http");
-        }
-        else
-        {
-            return Subject.doAs(currentUser,
-                                (PrivilegedAction<ContainerNode>) () -> {
-                try
-                {
-                    return getContainerNode(registryClient, folderURI,
-                                            query, "http");
-                }
-                catch (NodeNotFoundException e)
-                {
-                    getResponse().setStatus(Status.CLIENT_ERROR_NOT_FOUND);
-                    return null;
-                }
-                catch (MalformedURLException e)
-                {
-                    getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
-                    return null;
-                }
-            });
-        }
-    }
-
-    final ContainerNode getContainerNode(final RegistryClient registryClient,
-                                         final VOSURI folderURI,
-                                         final String query,
-                                         final String protocol)
-            throws NodeNotFoundException, MalformedURLException
-    {
-        final VOSpaceClient voSpaceClient =
-                new VOSpaceClient(registryClient.getServiceURL(
-                        URI.create("ivo://cadc.nrc.ca/vospace"), protocol).
-                        toExternalForm(), false);
-        return (ContainerNode) voSpaceClient.getNode(
-                folderURI.getPath(), query);
     }
 }

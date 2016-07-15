@@ -66,51 +66,80 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.VOSURI;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.ConcurrentHashMap;
 
-import javax.security.auth.Subject;
-
-
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public class UploadStateController
+        extends ConcurrentHashMap<String, UploadStateController.UploadFileDTO>
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
+    public final class UploadFileDTO
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
+        private long bytesRead = -1L;
+        private long totalBytes = -1L;
+
+
+        private UploadFileDTO()
+        {
+        }
+
+
+        public long getBytesRead()
+        {
+            return bytesRead;
+        }
+
+        private void setBytesRead(final long bytesRead)
+        {
+            this.bytesRead = bytesRead;
+        }
+
+        public void update(final long bytesRead, final long totalBytes)
+        {
+            setBytesRead(bytesRead);
+            setTotalBytes(totalBytes);
+        }
+
+        public long getTotalBytes()
+        {
+            return totalBytes;
+        }
+
+        private void setTotalBytes(final long totalBytes)
+        {
+            this.totalBytes = totalBytes;
+        }
     }
 
-
     /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
+     * Schedule a remove of something with the given key in a specified amount
+     * of milliseconds.
      *
-     * @see Thread#run()
+     * @param key       The key of the item.
+     * @param delay     The delay to do the remove.
      */
-    @Override
-    public void run()
+    public void scheduleRemove(final String key, final long delay)
     {
-        try
+        final Timer t = new Timer("SCHEDULE_REMOVE-" + key + "-"
+                                  + System.currentTimeMillis());
+        t.schedule(new TimerTask()
         {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+            @Override
+            public void run()
+            {
+                if (containsKey(key))
+                {
+                    remove(key);
+                }
+            }
+        }, delay);
+    }
+
+    public UploadFileDTO put(final String key)
+    {
+        put(key, new UploadFileDTO());
+        return get(key);
     }
 }

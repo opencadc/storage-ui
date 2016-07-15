@@ -11,7 +11,7 @@
       <#assign uri = childItem.URI>
       <#assign writeGroupNames = childItem.writeGroupNames>
       <div class="checkbox"><label><input id="SELECT_${uri}" type="checkbox" /><span class="hidden"></span></label></div>&nbsp;&nbsp;&nbsp;&nbsp;
-      <span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}" title=""> ${childItem.name}</a>&nbsp;&nbsp;&nbsp;&nbsp;
+      <span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/storage${childItem.linkURI}" title=""> ${childItem.name}</a>&nbsp;&nbsp;&nbsp;&nbsp;
       ${childItem.sizeHumanReadable}&nbsp;&nbsp;&nbsp;
       ${writeGroupNames}&nbsp;&nbsp;&nbsp;
       ${childItem.readGroupNames}&nbsp;&nbsp;&nbsp;

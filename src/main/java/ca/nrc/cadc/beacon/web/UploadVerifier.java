@@ -66,51 +66,100 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.beacon.UploadVerificationFailedException;
+import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.vos.Node;
+import ca.nrc.cadc.vos.NodeProperty;
+import ca.nrc.cadc.vos.VOS;
 
-import javax.security.auth.Subject;
 
-
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public class UploadVerifier
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
+    /**
+     * Verify that each byte is accounted for on the server side.
+     *
+     * @param byteCount The count of bytes.
+     * @param node      The node to verify.
+     */
+    public void verifyByteCount(final long byteCount, final Node node)
+            throws UploadVerificationFailedException
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
+        if (byteCount < 0)
+        {
+            throw new IllegalArgumentException(
+                    "The given byte count cannot be a negative value.");
+        }
+        else if (node == null)
+        {
+            throw new IllegalArgumentException(
+                    "The given Node cannot be null.");
+        }
+
+        final NodeProperty contentLengthProperty =
+                node.findProperty(VOS.PROPERTY_URI_CONTENTLENGTH);
+        final long contentLength = contentLengthProperty == null
+                                   ? 0L
+                                   : Long.parseLong(
+                contentLengthProperty.getPropertyValue());
+
+        if (byteCount != contentLength)
+        {
+            throw new UploadVerificationFailedException("** ERROR ** - Upload did not succeed: "
+                                                        + String.format("File length counted [%d] does not "
+                                                                        + "match what the service said it "
+                                                                        + "should be [%d]", byteCount,
+                                                                        contentLength));
+        }
     }
 
-
     /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
+     * Verify the given MD5.
+     * <p>
+     * Note that the given MD5 will be converted to a Hex string, and then
+     * the string will be compared to what the returned Node provided.
      *
-     * @see Thread#run()
+     * @param calculatedMD5 The byte array of the calculated MD5.
+     * @param node          The node to verify againts.
      */
-    @Override
-    public void run()
+    public void verifyMD5(final byte[] calculatedMD5, final Node node)
+            throws UploadVerificationFailedException
     {
-        try
+        if (calculatedMD5 == null)
         {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
+            throw new IllegalArgumentException(
+                    "The calculated MD5 cannot be null.");
         }
-        catch (Exception e)
+        else if (node == null)
         {
-            throw new RuntimeException(e);
+            throw new IllegalArgumentException(
+                    "The given Node cannot be null.");
+        }
+
+        final NodeProperty MD5Property =
+                node.findProperty(VOS.PROPERTY_URI_CONTENTMD5);
+        final String serverMD5String = MD5Property == null
+                                       ? null
+                                       : MD5Property.getPropertyValue();
+
+        if (!StringUtil.hasLength(serverMD5String))
+        {
+            throw new UploadVerificationFailedException("** ERROR YOUR UPLOAD DID NOT SUCCEED **\n"
+                                                        + "MD5 checksum was not produced by "
+                                                        + "service!\nThis was not expected, please "
+                                                        + "contact canfarhelp@nrc-cnrc.gc.ca for "
+                                                        + "assistance.");
+        }
+        else
+        {
+            if (!ca.nrc.cadc.util.HexUtil.toHex(calculatedMD5).equals(
+                    serverMD5String))
+            {
+                throw new UploadVerificationFailedException(
+                        "** ERROR ** - Upload did not succeed: "
+                        + "MD5 checksum failed.");
+            }
         }
     }
 }

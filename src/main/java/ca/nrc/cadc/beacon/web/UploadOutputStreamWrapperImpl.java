@@ -66,51 +66,132 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.io.ByteCountOutputStream;
+import org.restlet.data.Status;
+import org.restlet.resource.ResourceException;
 
-import javax.security.auth.Subject;
+import java.io.BufferedInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
-
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public class UploadOutputStreamWrapperImpl implements UploadOutputStreamWrapper
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
+    private static final int DEFAULT_BUFFER_SIZE = 8192;
+
+
+    private InputStream sourceInputStream;
+    private long byteCount;
+    private byte[] calculatedMD5;
+    private int bufferSize;
+
+
+    /**
+     * Constructor to use the default buffer size.
+     *
+     * @param sourceInputStream The source stream.
+     */
+    public UploadOutputStreamWrapperImpl(final InputStream sourceInputStream)
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
+        this(sourceInputStream, DEFAULT_BUFFER_SIZE);
+    }
+
+    /**
+     * Full Constructor.  Provide the source stream to read from, and the
+     * desired buffer size.
+     *
+     * @param sourceInputStream The source stream.
+     * @param bufferSize        The desired buffer size while reading.
+     */
+    public UploadOutputStreamWrapperImpl(final InputStream sourceInputStream,
+                                         final int bufferSize)
+    {
+        this.sourceInputStream = sourceInputStream;
+        this.bufferSize = bufferSize;
     }
 
 
     /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
+     * Perform the write operation to the given output.
      *
-     * @see Thread#run()
+     * @param out The output to write to.
+     * @throws java.io.IOException For any unhandled error.
      */
-    @Override
-    public void run()
+    public void write(final OutputStream out) throws IOException
+    {
+        if (out == null)
+        {
+            throw new IllegalArgumentException(
+                    "BUG - Given OutputStream cannot be null.");
+        }
+
+        final MessageDigest messageDigest = getMD5Digest();
+        final ByteCountOutputStream outputStream =
+                new ByteCountOutputStream(out);
+        final BufferedInputStream bis =
+                new BufferedInputStream(getSourceInputStream(), getBufferSize());
+        final byte[] buffer = new byte[getBufferSize()];
+        int bytesRead;
+
+        while ((bytesRead = bis.read(buffer)) >= 0)
+        {
+            messageDigest.update(buffer, 0, bytesRead);
+            outputStream.write(buffer, 0, bytesRead);
+        }
+
+        setByteCount(outputStream.getByteCount());
+        setCalculatedMD5(messageDigest.digest());
+    }
+
+    /**
+     * Obtain a new MD5 digester.
+     *
+     * @return MessageDigest instance.
+     */
+    protected MessageDigest getMD5Digest()
     {
         try
         {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
+            return MessageDigest.getInstance("MD5");
         }
-        catch (Exception e)
+        catch (NoSuchAlgorithmException e)
         {
-            throw new RuntimeException(e);
+            throw new ResourceException(Status.SERVER_ERROR_INTERNAL, e);
         }
+    }
+
+
+    protected InputStream getSourceInputStream()
+    {
+        return sourceInputStream;
+    }
+
+    public int getBufferSize()
+    {
+        return bufferSize;
+    }
+
+    public long getByteCount()
+    {
+        return byteCount;
+    }
+
+    public void setByteCount(long byteCount)
+    {
+        this.byteCount = byteCount;
+    }
+
+    public byte[] getCalculatedMD5()
+    {
+        return calculatedMD5;
+    }
+
+    public void setCalculatedMD5(byte[] calculatedMD5)
+    {
+        this.calculatedMD5 = calculatedMD5;
     }
 }

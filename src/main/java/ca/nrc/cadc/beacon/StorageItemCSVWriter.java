@@ -73,25 +73,30 @@ import ca.nrc.cadc.beacon.web.view.StorageItem;
 
 import com.opencsv.CSVWriter;
 
+import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class StorageItemCSVWriter extends StorageItemWriter
+public class StorageItemCSVWriter implements StorageItemWriter
 {
     private final CSVWriter csvWriter;
 
 
     public StorageItemCSVWriter(final Writer writer)
     {
-        super(writer);
-        this.csvWriter = new CSVWriter(writer);
+        this(new CSVWriter(writer));
+    }
+
+    public StorageItemCSVWriter(CSVWriter csvWriter)
+    {
+        this.csvWriter = csvWriter;
     }
 
 
     @Override
-    public void write(final StorageItem storageItem) throws Exception
+    public void write(final StorageItem storageItem) throws IOException
     {
         final List<String> row = new ArrayList<>();
 

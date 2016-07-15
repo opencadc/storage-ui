@@ -10,8 +10,10 @@
     </ul>
 
     <ul class="nav nav-sidebar">
-      <li><a href="http://www.github.com/opencadc/vosui">&nbsp;GitHub</a></li>
+      <li><a class="github-link social-link" href="http://www.github.com/opencadc/vosui"><span>GitHub</span></a></li>
+      <li><a class="docker-link social-link" href="https://hub.docker.com/r/canfar/storage/"><span>Docker</span></a></li>
     </ul>
+
     <form id="uploader" method="post" class="hidden">
       <h1 title="${folder.path}" class="hidden">${folder.path}</h1>
       <div id="uploadresponse"></div>
@@ -19,12 +21,13 @@
       <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
       <div id="file-input-container" class="wb-inv">
         <div id="alt-fileinput">
-          <input id="filepath" name="filepath" type="text" />
+          <input id="filepath" name="filepath" type="text" title="File path." />
           <button id="browse" name="browse" type="button" class="btn" value="Browse"></button>
         </div>
         <input id="newfile" name="newfile" type="file" />
       </div>
-      <button id="upload" name="upload" type="submit" value="Upload" class="em"><span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>
+      <button id="upload" name="upload" type="submit" value="Upload" class="em">
+        <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>
       <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
     </form>
   </div>
@@ -39,7 +42,8 @@
       <#else>
         <button id="more_details" name="more_details" class="btn btn-info btn-xs"
                 data-placement="bottom" data-toggle="popover"
-                role="button"><span class="glyphicon glyphicon-option-horizontal"></span></button>
+                role="button">
+          <span class="glyphicon glyphicon-eye-open"></span>&nbsp;<span class="caret"></span></button>
         ${folder.path}
       </#if>
       </h2>
@@ -52,14 +56,15 @@
         <nav class="navbar navbar-default">
           <div class="container-fluid">
             <div class="collapse navbar-collapse" id="navbar-functions">
+<#if !isRoot>
               <ul class="nav navbar-nav">
                 <li>
-                  <a id="level-up" name="level-up" href="/beacon/list${folder.parentPath}" role="button" title="Up one level">
+                  <a id="level-up" name="level-up" href="/storage/list${folder.parentPath}" role="button" title="Up one level">
                     <span class="glyphicon glyphicon-level-up"></span>&nbsp;Up</a></li>
                 <li>
-                  <a id="home" name="home" type="button" title="Navigate to main root." href="/beacon/list/">
+                  <a id="root" name="root" type="button" title="Navigate to main root." href="/storage/list/">
                     <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
-                <li class="dropdown">
+                <li class="dropdown divider-vertical">
                   <a title="New" class="dropdown-toggle" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
                     <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></a>
                   <ul class="dropdown-menu">
@@ -80,6 +85,7 @@
                   </ul>
                 </li>
               </ul>
+</#if>
               <div class="dataTables_filter" id="beacon_filter">
                 <form class="navbar-form navbar-left" role="search">
                   <input id="beacon_filter" class="form-control dataTables_filter"
@@ -89,7 +95,8 @@
             </div>
           </div>
         </nav>
-        <table id="beacon" class="table table-striped table-condensed table-hover">
+        <!-- The width style here MUST exist in this tag, rather than in the CSS file. -->
+        <table id="beacon" class="table table-striped table-condensed table-hover" style="width: 100%;">
           <thead>
             <tr>
               <th></th>
@@ -105,8 +112,8 @@
             <#assign uri = childItem.URI>
             <#assign writeGroupNames = childItem.writeGroupNames>
             <tr>
-              <td class="select-checkbox"></td>
-              <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/beacon${childItem.linkURI}"> ${childItem.name}</a></td>
+              <td data-path="${childItem.path}" class="select-checkbox"></td>
+              <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/storage${childItem.linkURI}"> ${childItem.name}</a></td>
               <td data-val="${childItem.sizeInBytes}">${childItem.sizeHumanReadable}</td>
               <td>${childItem.lastModifiedHumanReadable}</td>
               <td>${writeGroupNames}</td>

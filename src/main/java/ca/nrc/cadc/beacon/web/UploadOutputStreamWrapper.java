@@ -66,26 +66,23 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.net.OutputStreamWrapper;
 
-import java.net.URI;
-
-public abstract class NodeServerResource extends SecureServerResource
+public interface UploadOutputStreamWrapper extends OutputStreamWrapper
 {
-    static final int DEFAULT_PAGE_SIZE = 300;
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
+    /**
+     * Obtain the MD5 that was calculated during the upload.
+     *
+     * @return      byte[] calculatedMD5, or null if not yet run.
+     */
+    byte[] getCalculatedMD5();
 
-    VOSURI getCurrentItemURI()
-    {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        final String path = "/" + ((pathInRequest == null)
-                                   ? "" : pathInRequest.toString());
-        return new VOSURI(URI.create("vos://ca.nrc.cadc!vospace" + path));
-    }
+    /**
+     * Obtain a count of the bytes that was obtained during the upload.
+     *
+     * @return      long byte count.
+     */
+    long getByteCount();
 }

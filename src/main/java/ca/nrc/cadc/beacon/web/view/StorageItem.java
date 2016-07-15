@@ -83,6 +83,8 @@ public abstract class StorageItem
             new FileSizeRepresentation();
     private static final DateFormat DATE_FORMAT =
             DateUtil.getDateFormat("yyyy-MM-dd ' - ' HH:mm:ss", DateUtil.UTC);
+    static final String NO_SIZE_DISPLAY = "--";
+
     private final String name;
     private final long sizeInBytes;
     private final Date lastModified;

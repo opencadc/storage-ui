@@ -66,51 +66,77 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.web.StorageItemFactory;
+import ca.nrc.cadc.beacon.web.URIExtractor;
+import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.vos.ContainerNode;
+import ca.nrc.cadc.vos.Node;
+import ca.nrc.cadc.vos.NodeNotFoundException;
 import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
+import org.restlet.data.Status;
 
 import javax.security.auth.Subject;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.security.PrivilegedAction;
 
 
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public abstract class StorageServerResource extends SecureServerResource
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
+    protected static final String VOSPACE_NODE_URI_PREFIX =
+            "vos://ca.nrc.cadc!vospace";
+
+    // Page size for the initial page display.
+    static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
+
+    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
+    final StorageItemFactory storageItemFactory =
+            new StorageItemFactory(URI_EXTRACTOR);
+
+
+    String getCurrentPath()
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
+        final Object pathInRequest = getRequestAttributes().get("path");
+        return "/" + ((pathInRequest == null) ? "" : pathInRequest.toString());
+    }
+
+    VOSURI getCurrentItemURI()
+    {
+        return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX
+                                     + getCurrentPath()));
+    }
+
+    final ContainerNode getCurrentNode()
+            throws NodeNotFoundException, MalformedURLException
+    {
+        return (ContainerNode) getNode(getCurrentItemURI(),
+                                       DEFAULT_DISPLAY_PAGE_SIZE);
     }
 
 
-    /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
-     *
-     * @see Thread#run()
-     */
-    @Override
-    public void run()
+    protected VOSpaceClient createClient() throws MalformedURLException
     {
-        try
-        {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        final RegistryClient registryClient = new RegistryClient();
+        return createClient(registryClient);
+    }
+
+    protected VOSpaceClient createClient(final RegistryClient registryClient)
+            throws MalformedURLException
+    {
+        return new VOSpaceClient(
+                registryClient.getServiceURL(VOSPACE_SERVICE_ID, "http")
+                        .toExternalForm(), false);
+    }
+
+    Node getNode(final VOSURI folderURI, final int pageSize)
+            throws MalformedURLException, NodeNotFoundException
+    {
+        final String query = "limit=" + pageSize;
+        final VOSpaceClient voSpaceClient = createClient();
+
+        return voSpaceClient.getNode(folderURI.getPath(), query);
     }
 }

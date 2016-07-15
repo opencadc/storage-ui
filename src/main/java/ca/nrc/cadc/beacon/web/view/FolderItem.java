@@ -118,4 +118,14 @@ public class FolderItem extends StorageItem
     {
         return childIterator;
     }
+
+    /**
+     * Folders never have their size displayed for the time being.
+     * @return      String '--'.
+     */
+    @Override
+    public String getSizeHumanReadable()
+    {
+        return NO_SIZE_DISPLAY;
+    }
 }

@@ -66,51 +66,51 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.util.StringUtil;
 
-import javax.security.auth.Subject;
-
-
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public class FileValidator
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
+    private static final String VALID_FILENAME_REGEX =
+            "[a-zA-Z0-9_\\-()=+!,;:@*$.\\s]+";
+
+
+    public String getExtension(final String filename)
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
+        final String extension;
+
+        if (StringUtil.hasText(filename))
+        {
+            int lastPoint = filename.lastIndexOf('.');
+
+            if (lastPoint >= 0)
+            {
+                extension = filename.substring(lastPoint + 1);
+            }
+            else
+            {
+                extension = "";
+            }
+        }
+        else
+        {
+            extension = "";
+        }
+
+        return extension;
     }
 
-
     /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
+     * Validate the given String for use when submitting text entry values.
+     * This implementation will check for a null or empty String, as well as
+     * a String with a space in it, which is not allowed.
      *
-     * @see Thread#run()
+     * @param filename     The String to validate.
+     * @return  True if it's valid, false otherwise.
      */
-    @Override
-    public void run()
+    public boolean validateString(final String filename)
     {
-        try
-        {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        return (filename != null) && filename.matches(VALID_FILENAME_REGEX);
     }
 }

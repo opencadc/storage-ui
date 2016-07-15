@@ -69,16 +69,28 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.auth.AuthenticationUtil;
+import org.restlet.Response;
+import org.restlet.data.MediaType;
+import org.restlet.data.Status;
+import org.restlet.representation.Representation;
+import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.ServerResource;
 
 import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
+import java.io.IOException;
+import java.io.Writer;
+import java.net.URI;
 import java.util.Map;
 
 public class SecureServerResource extends ServerResource
 {
     final String SERVLET_CONTEXT_ATTRIBUTE_KEY =
             "org.restlet.ext.servlet.ServletContext";
+    final static URI VOSPACE_SERVICE_ID =
+            URI.create("ivo://cadc.nrc.ca/vospace");
+    final static URI DATA_SERVICE_ID = URI.create("ivo://cadc.nrc.ca/data");
+
 
     Subject getCurrent()
     {
@@ -96,5 +108,26 @@ public class SecureServerResource extends ServerResource
     protected String getPath()
     {
         return getRequest().getResourceRef().getPath();
+    }
+
+    void writeResponse(final Status status, final String message)
+    {
+        writeResponse(status, new WriterRepresentation(MediaType.TEXT_PLAIN)
+        {
+            @Override
+            public void write(final Writer writer) throws IOException
+            {
+                writer.write(message);
+                writer.flush();
+            }
+        });
+    }
+
+    void writeResponse(final Status status, final Representation representation)
+    {
+        final Response response = getResponse();
+
+        response.setStatus(status);
+        response.setEntity(representation);
     }
 }

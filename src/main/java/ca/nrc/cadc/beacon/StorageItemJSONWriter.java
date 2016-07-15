@@ -71,18 +71,23 @@ package ca.nrc.cadc.beacon;
 import ca.nrc.cadc.beacon.web.view.StorageItem;
 import org.json.JSONWriter;
 
+import java.io.IOException;
 import java.io.Writer;
 
 
-public class StorageItemJSONWriter extends StorageItemWriter
+public class StorageItemJSONWriter implements StorageItemWriter
 {
     private final JSONWriter jsonWriter;
 
 
-    public StorageItemJSONWriter(Writer writer)
+    public StorageItemJSONWriter(final Writer writer)
     {
-        super(writer);
-        this.jsonWriter = new JSONWriter(writer);
+        this(new JSONWriter(writer));
+    }
+
+    public StorageItemJSONWriter(final JSONWriter jsonWriter)
+    {
+        this.jsonWriter = jsonWriter;
     }
 
 
@@ -99,7 +104,7 @@ public class StorageItemJSONWriter extends StorageItemWriter
     }
 
     @Override
-    public void write(final StorageItem storageItem) throws Exception
+    public void write(final StorageItem storageItem) throws IOException
     {
         jsonWriter.object();
 
@@ -138,7 +143,5 @@ public class StorageItemJSONWriter extends StorageItemWriter
         jsonWriter.key("linkURI").value(storageItem.getLinkURI());
 
         jsonWriter.endObject();
-
-        flush();
     }
 }
