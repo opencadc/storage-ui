@@ -132,8 +132,15 @@
                           "dataTables_filter";
                       var $beaconTable = $("#beacon");
 
+                      // For quick pre-load.
+                      var rows = [];
+                    <#list initialRows as row>
+                      rows.push([${row}]);
+                    </#list>
+
                       var $dt = $beaconTable.DataTable(
                           {
+                            data: rows,
                             language: {
                               search: "_INPUT_",
                               searchPlaceholder: "Search Name..."
@@ -272,6 +279,18 @@
                           $(".dataTables_info")
                               .find(deleteLinkContainerSelector).remove();
                         }
+                      });
+
+                      $(document).on("click", "a#logout", function()
+                      {
+                        $.ajax({
+                                url: '/storage/ac/authenticate',
+                                method: 'DELETE'
+                               })
+                            .done(function()
+                                  {
+                                    window.location.reload(true);
+                                  });
                       });
 
                       $(document).on("click", "button#delete",

@@ -67,7 +67,11 @@
  */
 package ca.nrc.cadc.beacon;
 
+import ca.nrc.cadc.vos.VOSURI;
+
 public interface StorageItemProducer extends Runnable
 {
+    VOSURI getLastWrittenURI();
 
+    boolean writePage() throws Exception;
 }

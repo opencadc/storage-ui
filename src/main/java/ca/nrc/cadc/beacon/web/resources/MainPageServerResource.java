@@ -69,6 +69,8 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.auth.HttpPrincipal;
+import ca.nrc.cadc.beacon.StorageItemCSVWriter;
+import ca.nrc.cadc.beacon.StorageItemWriter;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.vos.*;
 import freemarker.cache.WebappTemplateLoader;
@@ -80,6 +82,8 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.util.*;
 
 
@@ -106,7 +110,7 @@ public class MainPageServerResource extends StorageServerResource
     @Get
     public Representation represent() throws Exception
     {
-        final Subject currentUser = getCurrent();
+        final Subject currentUser = getCurrentUser();
         final ContainerNode containerNode = getCurrentNode();
 
         return representContainerNode(containerNode, currentUser);
@@ -117,6 +121,37 @@ public class MainPageServerResource extends StorageServerResource
             throws Exception
     {
         final List<Node> childNodes = containerNode.getNodes();
+        final Iterator<String> initialRows = new Iterator<String>()
+        {
+            final Iterator<Node> childNodeIterator = childNodes.iterator();
+
+            @Override
+            public boolean hasNext()
+            {
+                return childNodeIterator.hasNext();
+            }
+
+            @Override
+            public String next()
+            {
+                final Writer writer = new StringWriter();
+                final StorageItemWriter storageItemWriter =
+                        new StorageItemCSVWriter(writer);
+
+                try
+                {
+                    storageItemWriter.write(storageItemFactory.translate(
+                            childNodeIterator.next()));
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e);
+                }
+
+                return writer.toString();
+            }
+        };
+
         final VOSURI startNextPageURI =
                 childNodes.isEmpty() ? null :
                 childNodes.get(childNodes.size() - 1).getUri();
@@ -124,19 +159,22 @@ public class MainPageServerResource extends StorageServerResource
         final FolderItem folderItem =
                 storageItemFactory.getFolderItemView(containerNode);
 
-        return representFolderItem(folderItem, currentUser, startNextPageURI);
+        return representFolderItem(folderItem, initialRows, currentUser,
+                                   startNextPageURI);
     }
 
     Representation representFolderItem(final FolderItem folderItem,
+                                       final Iterator<String> initialRows,
                                        final Subject currentUser,
                                        final VOSURI startNextPageURI)
     {
         final Map<String, Object> dataModel = new HashMap<>();
 
+        dataModel.put("initialRows", initialRows);
         dataModel.put("folder", folderItem);
         if (startNextPageURI != null)
         {
-            dataModel.put("startURI", startNextPageURI);
+            dataModel.put("startURI", startNextPageURI.toString());
         }
 
         final Set<HttpPrincipal> httpPrincipals =

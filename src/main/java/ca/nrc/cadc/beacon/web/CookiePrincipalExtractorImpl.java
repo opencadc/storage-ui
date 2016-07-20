@@ -98,30 +98,32 @@ public class CookiePrincipalExtractorImpl implements PrincipalExtractor
 
     void init()
     {
-        for (final Cookie ssoCookie : request.getCookies())
-        {
-            if ("CADC_SSO".equals(ssoCookie.getName()) && StringUtil
-                    .hasText(ssoCookie.getValue()))
-            {
-                SSOCookieManager ssoCookieManager = new SSOCookieManager();
+        request.getCookies().stream().filter(
+                ssoCookie -> "CADC_SSO".equals(ssoCookie.getName())
+                             && StringUtil.hasText(ssoCookie.getValue()))
+                .forEach(ssoCookie ->
+                         {
+                             final SSOCookieManager ssoCookieManager = new SSOCookieManager();
 
-                try
-                {
-                    cookiePrincipal = ssoCookieManager
-                            .parse(ssoCookie.getValue());
-                    cookieCredential =
-                            new SSOCookieCredential(
-                                    ssoCookie.getValue(),
-                                    NetUtil.getDomainName(request.
-                                            getResourceRef().toUrl()));
-                }
-                catch (IOException | InvalidDelegationTokenException e)
-                {
-                    System.out.println("Cannot use SSO Cookie. Reason: "
-                                       + e.getMessage());
-                }
-            }
-        }
+                             try
+                             {
+                                 cookiePrincipal =
+                                         ssoCookieManager
+                                                 .parse(ssoCookie.getValue());
+                                 cookieCredential =
+                                         new SSOCookieCredential(
+                                                 ssoCookie.getValue(),
+                                                 NetUtil.getDomainName(
+                                                         request.getResourceRef()
+                                                                 .toUrl()));
+                             }
+                             catch (IOException | InvalidDelegationTokenException e)
+                             {
+                                 System.out
+                                         .println("Cannot use SSO Cookie. Reason: "
+                                                  + e.getMessage());
+                             }
+                         });
     }
 
 

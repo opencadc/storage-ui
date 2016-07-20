@@ -92,7 +92,7 @@ public class SecureServerResource extends ServerResource
     final static URI DATA_SERVICE_ID = URI.create("ivo://cadc.nrc.ca/data");
 
 
-    Subject getCurrent()
+    Subject getCurrentUser()
     {
         return AuthenticationUtil.getCurrentSubject();
     }

@@ -71,11 +71,15 @@ package ca.nrc.cadc.beacon.web.resources;
 import ca.nrc.cadc.beacon.AbstractUnitTest;
 
 import ca.nrc.cadc.beacon.web.view.FolderItem;
+import ca.nrc.cadc.vos.VOSURI;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.security.auth.Subject;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
@@ -90,22 +94,31 @@ public class MainPageServerResourceTest
     @SuppressWarnings("unchecked")
     public void representFolderItem() throws Exception
     {
+        final FolderItem mockFolderItem = createMock(FolderItem.class);
+        final List<String> initialRowData = new ArrayList<>();
+        final Subject subject = new Subject();
+        final VOSURI startURI =
+                new VOSURI(URI.create("vos://myhost.com/node/1"));
+
+        initialRowData.add("child1");
+        initialRowData.add("child2");
+        initialRowData.add("child3");
+
         testSubject = new MainPageServerResource()
         {
             @Override
-            protected String getPath()
+            Subject getCurrentUser()
             {
-                return "/get/vospace";
+                return subject;
             }
         };
-
-        final FolderItem mockFolderItem = createMock(FolderItem.class);
-        final Subject subject = new Subject();
 
         replay(mockFolderItem);
 
         final Representation representation =
-                testSubject.representFolderItem(mockFolderItem, subject, null);
+                testSubject.representFolderItem(mockFolderItem,
+                                                initialRowData.iterator(),
+                                                subject, startURI);
 
         final TemplateRepresentation templateRepresentation =
                 (TemplateRepresentation) representation;
@@ -113,8 +126,11 @@ public class MainPageServerResourceTest
         final Map<String, Object> dataModel =
                 (Map<String, Object>) templateRepresentation.getDataModel();
 
-        assertTrue("Should only have one item.", (dataModel.size() == 1));
         assertTrue("Should be a folder.", dataModel.containsKey("folder"));
+        assertEquals("Should have URI for next page.",
+                     startURI.getURI().toString(), dataModel.get("startURI"));
+        assertTrue("Should contain initialRows",
+                   dataModel.containsKey("initialRows"));
 
         verify(mockFolderItem);
     }

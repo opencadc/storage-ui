@@ -143,7 +143,7 @@ public class VOSpaceApplication extends Application
             }
         };
 
-        router.attach("/ac/login", AccessControlServerResource.class);
+        router.attach("/ac/authenticate", AccessControlServerResource.class);
 
         router.attach("/page", PageServerResource.class);
         final TemplateRoute pageRoute =

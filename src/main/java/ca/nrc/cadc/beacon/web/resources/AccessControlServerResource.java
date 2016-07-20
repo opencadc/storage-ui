@@ -69,10 +69,10 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.web.AccessControlClient;
-import ca.nrc.cadc.net.NetUtil;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Form;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 
 
@@ -97,5 +97,15 @@ public class AccessControlServerResource extends SecureServerResource
         getResponse().getCookieSettings().add(cookieSetting);
         getResponse().redirectSeeOther("/storage/list"
                                        + form.getFirstValue("redirectPath"));
+    }
+
+    @Delete
+    public void logout() throws Exception
+    {
+        getRequest().getCookies().stream()
+                .filter(cookie -> cookie.getName().equals("CADC_SSO"))
+                .forEach(cookie -> getResponse().getCookieSettings().add(
+                        new CookieSetting(0, "CADC_SSO", null, "/", null,
+                                          null, 0, false, false)));
     }
 }

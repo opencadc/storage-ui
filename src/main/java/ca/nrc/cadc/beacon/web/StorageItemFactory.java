@@ -117,10 +117,7 @@ public class StorageItemFactory
             nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
                                       publicFlag, lockedFlag, writeGroupURIs,
                                       readGroupURIs, owner,
-                                      new StorageItemIterator(
-                                              ((ContainerNode) node).getNodes()
-                                                      .iterator(),
-                                              this));
+                                      ((ContainerNode) node).getNodes().size());
         }
         else if (node instanceof LinkNode)
         {
