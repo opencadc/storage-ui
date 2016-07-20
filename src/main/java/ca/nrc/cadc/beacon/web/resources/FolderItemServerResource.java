@@ -68,78 +68,28 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
-import ca.nrc.cadc.reg.client.RegistryClient;
+
 import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+
 import org.restlet.data.Status;
-
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
+import org.restlet.resource.Put;
 
 
-public abstract class StorageServerResource extends SecureServerResource
+public class FolderItemServerResource extends StorageItemServerResource
 {
-    protected static final String VOSPACE_NODE_URI_PREFIX =
-            "vos://ca.nrc.cadc!vospace";
-
-    // Page size for the initial page display.
-    static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
-
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
-
-
-    String getCurrentPath()
+    @Put
+    public void create() throws Exception
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        return "/" + ((pathInRequest == null) ? "" : pathInRequest.toString());
+        final VOSpaceClient client = createClient();
+        final ContainerNode containerNode = toContainerNode();
+
+        client.createNode(containerNode, false);
+        getResponse().setStatus(Status.SUCCESS_CREATED);
     }
 
-    VOSURI getCurrentItemURI()
+    ContainerNode toContainerNode()
     {
-        return toURI(getCurrentPath());
-    }
-
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(),
-                                       DEFAULT_DISPLAY_PAGE_SIZE);
-    }
-
-    VOSURI toURI(final String path)
-    {
-        return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + path));
-    }
-
-    protected VOSpaceClient createClient() throws MalformedURLException
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        return createClient(registryClient);
-    }
-
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        return new VOSpaceClient(
-                registryClient.getServiceURL(VOSPACE_SERVICE_ID, "http")
-                        .toExternalForm(), false);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final VOSpaceClient voSpaceClient = createClient();
-
-        return voSpaceClient.getNode(folderURI.getPath(), query);
+        return new ContainerNode(getCurrentItemURI());
     }
 }

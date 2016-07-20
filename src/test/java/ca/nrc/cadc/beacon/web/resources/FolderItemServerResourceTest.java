@@ -69,60 +69,71 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.AbstractUnitTest;
-import ca.nrc.cadc.reg.client.RegistryClient;
 
-import org.junit.Test;
+import ca.nrc.cadc.vos.ContainerNode;
+import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
+
 import org.restlet.Response;
 
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
+import java.net.MalformedURLException;
+import java.net.URI;
+
+import org.junit.Test;
+import org.restlet.data.Status;
 
 import static org.easymock.EasyMock.*;
 
 
-public class StorageItemServerResourceTest
-        extends AbstractUnitTest<StorageItemServerResource>
+public class FolderItemServerResourceTest
+        extends AbstractUnitTest<FolderItemServerResource>
 {
     @Test
-    public void sendToDownload() throws Exception
+    public void create() throws Exception
     {
-        final RegistryClient mockRegistryClient =
-                createMock(RegistryClient.class);
+        final VOSpaceClient mockClient = createMock(VOSpaceClient.class);
+        final VOSURI folderURI = new VOSURI(URI.create(
+                FolderItemServerResource.VOSPACE_NODE_URI_PREFIX
+                + "/my/node"));
+        final ContainerNode containerNode = new ContainerNode(folderURI);
         final Response mockResponse = createMock(Response.class);
-        final Map<String, Object> requestAttributes = new HashMap<>();
 
-        requestAttributes.put("path", "my/file.txt");
-
-        testSubject = new StorageItemServerResource()
+        testSubject = new FolderItemServerResource()
         {
+            @Override
+            protected VOSpaceClient createClient() throws MalformedURLException
+            {
+                return mockClient;
+            }
+
+            @Override
+            VOSURI getCurrentItemURI()
+            {
+                return folderURI;
+            }
+
+            /**
+             * Returns the handled response.
+             *
+             * @return The handled response.
+             */
             @Override
             public Response getResponse()
             {
                 return mockResponse;
             }
-
-            @Override
-            public Map<String, Object> getRequestAttributes()
-            {
-                return requestAttributes;
-            }
         };
 
-        final URL serverURL = new URL("http://mysite.com/download/do");
+        expect(mockClient.createNode(containerNode, false))
+                .andReturn(containerNode).once();
 
-        expect(mockRegistryClient.getServiceURL(
-                StorageItemServerResource.DATA_SERVICE_ID, "http",
-                "/pub/vospace")).andReturn(serverURL).once();
-
-        mockResponse.redirectSeeOther(
-                "http://mysite.com/download/do/my/file.txt");
+        mockResponse.setStatus(Status.SUCCESS_CREATED);
         expectLastCall().once();
 
-        replay(mockRegistryClient, mockResponse);
+        replay(mockClient, mockResponse);
 
-        testSubject.sendToDownload(mockRegistryClient);
+        testSubject.create();
 
-        verify(mockRegistryClient, mockResponse);
+        verify(mockClient, mockResponse);
     }
 }

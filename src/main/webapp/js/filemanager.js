@@ -25,6 +25,14 @@
     return results ? results[1] : 0;
   };
 
+  /**
+   * Page refresh.  Used after write operations to show updated state.
+   */
+  var refreshPage = function()
+  {
+    window.location.reload(true);
+  };
+
   /*---------------------------------------------------------
    Setup, Layout, and Status Functions
    ---------------------------------------------------------*/
@@ -258,6 +266,16 @@
     }
   };
 
+  /**
+   * Obtain the path of the current folder.
+   *
+   * @returns {*|{}}
+   */
+  var getCurrentPath = function()
+  {
+    return path = $('#currentpath').val();
+  };
+
 
 // Test if a given url exists
   function file_exists(url)
@@ -299,6 +317,17 @@
     return new_str;
   };
 
+  /**
+   * Check if the given string is a valid item name.
+   *
+   * @param str
+   * @returns {*|boolean}
+   */
+  var validFilename = function (str)
+  {
+    return str && /[a-zA-Z0-9_\-()=+!,;:@*$.]+/.test(str);
+  };
+
 // cleanString (), on the same model as server side (connector)
 // cleanString
   var cleanString = function (str)
@@ -335,6 +364,7 @@
     }
 
     cleaned = cleaned.replace(/[_]+/g, "_");
+
     // prevent bug https://github.com/simogeo/Filemanager/issues/474
     if (cleaned == "")
     {
@@ -527,7 +557,7 @@
 // whenever a new directory is selected.
   var setUploader = function (path)
   {
-    path = $('#currentpath').val();
+    path = getCurrentPath();
 
     $("#new_external_link").unbind().click(function ()
                                            {
@@ -558,61 +588,80 @@
 
     $('#newfolder').unbind().click(function ()
                                    {
-                                     var getFolderName = function (v, m)
+                                     var buttonAction = function (event, value,
+                                                                  message,
+                                                                  formVals)
                                      {
-                                       if (v === 1)
+                                       if (value === true)
                                        {
-                                         var fname = m.children('#fname').val();
+                                         var fname = formVals['fname'];
 
-                                         if (fname != '')
+                                         if (validFilename(fname))
                                          {
-                                           var folderName = cleanString(fname);
-                                           var d = new Date(); // to prevent IE
-                                                               // cache issues
-                                           $.getJSON(fileConnector +
-                                                     '?mode=addfolder&path=' +
-                                                     path +
-                                                     '&config=' + userconfig +
-                                                     '&name=' +
-                                                     encodeURIComponent(folderName) +
-                                                     '&time=' +
-                                                     d.getMilliseconds(), function (result)
-                                                     {
-                                                       if (result['Code'] == 0)
-                                                       {
-                                                         addFolder(result['Parent'],
-                                                                   result['Name']);
-                                                         getFolderInfo(result['Parent']);
-                                                       }
-                                                       else
-                                                       {
-                                                         $.prompt(result['Error']);
-                                                       }
-                                                     });
+                                           $.ajax(
+                                             {
+                                               url: config.options.folderConnector
+                                                    + getCurrentPath() + "/"
+                                                    + encodeURIComponent(fname),
+                                               method: "PUT",
+                                               contentType: "application/json",
+                                               statusCode: {
+                                                 201: function()
+                                                 {
+                                                   $.prompt(lg.successful_added_folder,
+                                                            {
+                                                              submit: refreshPage
+                                                            });
+                                                 },
+                                                 400: function()
+                                                 {
+
+                                                 },
+                                                 401: function()
+                                                 {
+                                                   $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                                                 },
+                                                 403: function()
+                                                 {
+                                                   $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                                                 },
+                                                 409: function()
+                                                 {
+                                                   $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
+                                                 }
+                                               }
+                                             });
                                          }
                                          else
                                          {
-                                           $.prompt(lg.no_foldername);
+                                           $.prompt(lg.INVALID_ITEM_NAME);
                                          }
                                        }
                                        else
                                        {
-                                         return false;
+                                         return true;
                                        }
                                      };
 
-                                     var foldername = lg.default_foldername;
-                                     var msg = lg.prompt_foldername +
-                                               ' : <input id="fname" name="fname" type="text" value="' +
-                                               foldername + '" />';
+                                     var msg = '<input id="fname" name="fname" type="text" class="form-control" placeholder="' + lg.prompt_foldername + '" value="" />';
 
-                                     var btns = {};
-                                     btns[lg.create_folder] = true;
-                                     btns[lg.cancel] = false;
-                                     $.prompt(msg, {
-                                       callback: getFolderName,
-                                       buttons: btns
-                                     });
+                                     var btns = [];
+                                     btns.push({
+                                                 "title": lg.create_folder,
+                                                 "value": true,
+                                                 "classes": "btn btn-primary"
+                                               });
+                                     btns.push({
+                                                 "title": lg.cancel,
+                                                 "value": false,
+                                                 "classes": "btn btn-default"
+                                               });
+                                     $.prompt(msg,
+                                              {
+                                                submit: buttonAction,
+                                                focus: "#fname",
+                                                buttons: btns
+                                              });
                                    });
   };
 
@@ -907,8 +956,6 @@
                      var newPath = result['New Path'];
                      var newName = result['New Name'];
                      var oldPath = result['Old Path'];
-
-                     updateNode(oldPath, newPath, newName);
 
                      var $previewH1 = $("#preview").find("h1");
 
@@ -1361,25 +1408,6 @@
     }
   };
 
-// Updates the specified node with a new name. Called after
-// a successful rename operation.
-  var updateNode = function (oldPath, newPath, newName)
-  {
-    var thisNode = $('#filetree').find('a[data-path="' + oldPath + '"]');
-    var parentNode = thisNode.parent().parent().prev('a');
-    thisNode.attr('data-path', newPath).text(newName);
-
-    // we work directly on root folder
-    // TODO optimize by binding only the renamed element
-    if (parentNode.length == 0)
-    {
-      createFileTree();
-    }
-    else
-    {
-      parentNode.click().click();
-    }
-  };
 
 // Removes the specified node. Called after a successful 
 // delete operation.
@@ -1408,27 +1436,6 @@
       getFolderInfo(path.substr(0, path.lastIndexOf('/') + 1));
     }
   };
-
-// Adds a new folder as the first item beneath the
-// specified parent node. Called after a new folder is
-// successfully created.
-  var addFolder = function (parent, name)
-  {
-    var newNode = '<li class="directory collapsed"><a data-path="' + parent +
-                  name + '/" href="#">' + name +
-                  '</a><ul class="jqueryFileTree" style="display: block;"></ul></li>';
-    var parentNode = $('#filetree').find('a[data-path="' + parent + '"]');
-    if (parent != fileRoot)
-    {
-      parentNode.next('ul').prepend(newNode).prev('a').click().click();
-    }
-
-    if (config.options.showConfirmation)
-    {
-      $.prompt(lg.successful_added_folder);
-    }
-  };
-
 
   /*---------------------------------------------------------
    Functions to Retrieve File and Folder Details
@@ -1854,7 +1861,7 @@
                                              lg.upload + '</button></div>';
 
                                       var error_flag = false;
-                                      var path = $('#currentpath').val();
+                                      var path = getCurrentPath();
 
                                       var fileSize = (config.upload.fileSizeLimit !=
                                                       'auto') ?
@@ -1898,7 +1905,7 @@
 
                                       $("div#multiple-uploads").dropzone({
                                                                            paramName: "upload",
-                                                                           url: '/storage/upload' + path,
+                                                                           url: config.options.fileConnector + path,
                                                                            method: 'put',
                                                                            maxFilesize: fileSize,
                                                                            maxFiles: config.upload.number,
@@ -1966,10 +1973,10 @@
                                                                                if ((this.getRejectedFiles().length === 0)
                                                                                    && (error_flag === false))
                                                                                {
-                                                                                 //setTimeout(function ()
-                                                                                 //           {
-                                                                                 $.prompt.close();
-                                                                                            //}, 800);
+                                                                                 setTimeout(function ()
+                                                                                            {
+                                                                                              $.prompt.close();
+                                                                                            }, 800);
                                                                                }
 
                                                                                getFolderInfo(path);
@@ -1979,7 +1986,7 @@
                                                                                  $.prompt(lg.successful_added_file, {
                                                                                    submit: function()
                                                                                    {
-                                                                                     window.location.reload(true);
+                                                                                     refreshPage();
                                                                                    }
                                                                                  });
                                                                                }

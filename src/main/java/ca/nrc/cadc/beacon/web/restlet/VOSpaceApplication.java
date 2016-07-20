@@ -72,6 +72,7 @@ import ca.nrc.cadc.auth.PrincipalExtractor;
 import ca.nrc.cadc.beacon.web.CookiePrincipalExtractorImpl;
 import ca.nrc.cadc.beacon.web.SubjectGenerator;
 import ca.nrc.cadc.beacon.web.resources.*;
+import ca.nrc.cadc.beacon.web.view.FolderItem;
 import org.restlet.*;
 import org.restlet.routing.Route;
 import org.restlet.routing.Router;
@@ -80,11 +81,27 @@ import org.restlet.routing.Variable;
 
 import javax.security.auth.Subject;
 import java.security.PrivilegedAction;
+import java.util.HashMap;
 import java.util.Map;
 
 
 public class VOSpaceApplication extends Application
 {
+    /**
+     * Constructor.
+     *
+     * @param context The context to use based on parent component context. This
+     *                context should be created using the
+     *                {@link Context#createChildContext()} method to ensure a proper
+     *                isolation with the other applications.
+     */
+    public VOSpaceApplication(Context context)
+    {
+        super(context);
+        setStatusService(new VOSpaceStatusService());
+    }
+
+
     /**
      * Creates a inbound root Restlet that will receive all incoming calls. In
      * general, instances of Router, Filter or Finder classes will be used as
@@ -133,36 +150,26 @@ public class VOSpaceApplication extends Application
                 router.attach("/page/{path}", PageServerResource.class);
 
         // Allow for an empty path to be the root.
-        final TemplateRoute itemRoute =
-                router.attach("/item/{path}", StorageItemServerResource.class);
         router.attach("/list", MainPageServerResource.class);
         router.attach("/list/", MainPageServerResource.class);
+
+        final TemplateRoute folderRoute =
+                router.attach("/folder/{path}", FolderItemServerResource.class);
+        final TemplateRoute fileRoute =
+                router.attach("/file/{path}", FileItemServerResource.class);
         final TemplateRoute listRoute =
                 router.attach("/list/{path}", MainPageServerResource.class);
         final TemplateRoute rawRoute =
                 router.attach("/raw/{path}", MainPageServerResource.class);
-        final TemplateRoute uploadRoute =
-                router.attach("/upload/{path}", UploadServerResource.class);
 
-        final Map<String, Variable> pageRouteVariables =
-                pageRoute.getTemplate().getVariables();
-        pageRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
+        final Map<String, Variable> routeVariables = new HashMap<>();
+        routeVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
 
-        final Map<String, Variable> allRouteVariables =
-                itemRoute.getTemplate().getVariables();
-        allRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
-
-        final Map<String, Variable> listRouteVariables =
-                listRoute.getTemplate().getVariables();
-        listRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
-
-        final Map<String, Variable> rawRouteVariables =
-                rawRoute.getTemplate().getVariables();
-        rawRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
-
-        final Map<String, Variable> uploadRouteVariables =
-                uploadRoute.getTemplate().getVariables();
-        uploadRouteVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
+        folderRoute.getTemplate().getVariables().putAll(routeVariables);
+        pageRoute.getTemplate().getVariables().putAll(routeVariables);
+        fileRoute.getTemplate().getVariables().putAll(routeVariables);
+        listRoute.getTemplate().getVariables().putAll(routeVariables);
+        rawRoute.getTemplate().getVariables().putAll(routeVariables);
 
         router.setContext(getContext());
         return router;

@@ -110,11 +110,6 @@ public abstract class UploadOutputStreamWrapperTestBase<U extends UploadOutputSt
         this.testData = testData;
     }
 
-    protected InputStream getInputStream()
-    {
-        return inputStream;
-    }
-
     protected void setInputStream(final InputStream inputStream)
     {
         this.inputStream = inputStream;

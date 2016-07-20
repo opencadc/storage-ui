@@ -68,78 +68,61 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
+import ca.nrc.cadc.beacon.AbstractUnitTest;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.restlet.data.Status;
 
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
+import org.junit.Test;
+import org.restlet.Response;
+
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.easymock.EasyMock.*;
 
 
-public abstract class StorageServerResource extends SecureServerResource
+public class FileItemServerResourceTest
+        extends AbstractUnitTest<FileItemServerResource>
 {
-    protected static final String VOSPACE_NODE_URI_PREFIX =
-            "vos://ca.nrc.cadc!vospace";
-
-    // Page size for the initial page display.
-    static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
-
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
-
-
-    String getCurrentPath()
+    @Test
+    public void sendToDownload() throws Exception
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        return "/" + ((pathInRequest == null) ? "" : pathInRequest.toString());
-    }
+        final RegistryClient mockRegistryClient =
+                createMock(RegistryClient.class);
+        final Response mockResponse = createMock(Response.class);
+        final Map<String, Object> requestAttributes = new HashMap<>();
 
-    VOSURI getCurrentItemURI()
-    {
-        return toURI(getCurrentPath());
-    }
+        requestAttributes.put("path", "my/file.txt");
 
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(),
-                                       DEFAULT_DISPLAY_PAGE_SIZE);
-    }
+        testSubject = new FileItemServerResource()
+        {
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
 
-    VOSURI toURI(final String path)
-    {
-        return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + path));
-    }
+            @Override
+            public Map<String, Object> getRequestAttributes()
+            {
+                return requestAttributes;
+            }
+        };
 
-    protected VOSpaceClient createClient() throws MalformedURLException
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        return createClient(registryClient);
-    }
+        final URL serverURL = new URL("http://mysite.com/download/do");
 
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        return new VOSpaceClient(
-                registryClient.getServiceURL(VOSPACE_SERVICE_ID, "http")
-                        .toExternalForm(), false);
-    }
+        expect(mockRegistryClient.getServiceURL(
+                StorageItemServerResource.DATA_SERVICE_ID, "http",
+                "/pub/vospace")).andReturn(serverURL).once();
 
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final VOSpaceClient voSpaceClient = createClient();
+        mockResponse.redirectSeeOther(
+                "http://mysite.com/download/do/my/file.txt");
+        expectLastCall().once();
 
-        return voSpaceClient.getNode(folderURI.getPath(), query);
+        replay(mockRegistryClient, mockResponse);
+
+        testSubject.sendToDownload(mockRegistryClient);
+
+        verify(mockRegistryClient, mockResponse);
     }
 }

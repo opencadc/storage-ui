@@ -66,80 +66,72 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web.restlet;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import ca.nrc.cadc.util.StringUtil;
+import org.restlet.Request;
+import org.restlet.Response;
 import org.restlet.data.Status;
+import org.restlet.resource.ResourceException;
+import org.restlet.service.StatusService;
 
-import javax.security.auth.Subject;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.security.PrivilegedAction;
+import java.io.FileNotFoundException;
 
 
-public abstract class StorageServerResource extends SecureServerResource
+/**
+ * Translate Exceptions into HTTP Statuses.
+ */
+public class VOSpaceStatusService extends StatusService
 {
-    protected static final String VOSPACE_NODE_URI_PREFIX =
-            "vos://ca.nrc.cadc!vospace";
-
-    // Page size for the initial page display.
-    static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
-
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
-
-
-    String getCurrentPath()
+    /**
+     * Returns a status for a given exception or error.
+     *
+     * @param throwable The exception or error caught.
+     * @param request   The request handled.
+     * @param response  The response updated.
+     * @return The representation of the given status.
+     */
+    @Override
+    public Status toStatus(final Throwable throwable, final Request request,
+                           final Response response)
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        return "/" + ((pathInRequest == null) ? "" : pathInRequest.toString());
-    }
+        final Status status;
 
-    VOSURI getCurrentItemURI()
-    {
-        return toURI(getCurrentPath());
-    }
+        if (throwable instanceof ResourceException)
+        {
+            final Throwable cause = throwable.getCause();
 
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(),
-                                       DEFAULT_DISPLAY_PAGE_SIZE);
-    }
+            if (cause == null)
+            {
+                status = super.toStatus(throwable, request, response);
+            }
+            else
+            {
+                status = toStatus(cause, request, response);
+            }
+        }
+        else if (throwable instanceof FileNotFoundException)
+        {
+            status = Status.CLIENT_ERROR_NOT_FOUND;
+        }
+        else if (StringUtil.hasText(throwable.getMessage()))
+        {
+            final String message = throwable.getMessage();
 
-    VOSURI toURI(final String path)
-    {
-        return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + path));
-    }
+            if (message.contains("(409)"))
+            {
+                status = Status.CLIENT_ERROR_CONFLICT;
+            }
+            else
+            {
+                status = super.toStatus(throwable, request, response);
+            }
+        }
+        else
+        {
+            status = super.toStatus(throwable, request, response);
+        }
 
-    protected VOSpaceClient createClient() throws MalformedURLException
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        return createClient(registryClient);
-    }
-
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        return new VOSpaceClient(
-                registryClient.getServiceURL(VOSPACE_SERVICE_ID, "http")
-                        .toExternalForm(), false);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize;
-        final VOSpaceClient voSpaceClient = createClient();
-
-        return voSpaceClient.getNode(folderURI.getPath(), query);
+        return status;
     }
 }
