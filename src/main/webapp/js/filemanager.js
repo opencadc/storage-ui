@@ -1480,7 +1480,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
 
         if ($.isEmptyObject(unsuccessful) && config.options.showConfirmation)
         {
-          $.prompt(lg.successful_delete);
+          $.prompt(lg.successful_delete,
+                   {
+                     submit: refreshPage
+                   });
         }
         else
         {
