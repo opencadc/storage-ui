@@ -82,30 +82,6 @@
 
 <script type="text/javascript">
 
-  var ROW_SELECT_TYPE = "row";
-  var lockedIcon =
-      "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/storage/unlock\" title=\"Unlock to modify.\">Unlock</a>";
-  var publicLink =
-      "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">Public</a>";
-  var selectButtonGroupID = "delete";
-  var deleteButtonHTML = "<span id='" + selectButtonGroupID
-                         + "' class='btn-group btn-group-xs'>"
-                         + "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
-                         + "</span>";
-  var stringUtil = new cadc.web.util.StringUtil(publicLink);
-  var startURI = "<#if startURI??>${startURI}</#if>";
-  var url = "/storage/page${folder.path}";
-  var defaultPageSize = 400;
-
-  var requestData = {};
-
-  requestData.pageSize = defaultPageSize;
-
-  if (startURI != "")
-  {
-    requestData.startURI = encodeURIComponent(startURI);
-  }
-
   $(document).ready(function ()
                     {
                     <#-- Intercept the JavaScript here for the Folder Details button. -->
@@ -130,7 +106,6 @@
                       // Override CSS for search filter field.
                       $.fn.DataTable.ext.oStdClasses.sFilter =
                           "dataTables_filter";
-                      var $beaconTable = $("#beacon");
 
                       // For quick pre-load.
                       var rows = [];
@@ -138,148 +113,9 @@
                       rows.push([${row}]);
                     </#list>
 
-                      var $dt = $beaconTable.DataTable(
-                          {
-                            data: rows,
-                            language: {
-                              search: "_INPUT_",
-                              searchPlaceholder: "Search Name..."
-                            },
-                            dom: "<'row beacon-info-row'<'col-sm-12'i>>"
-                                 + "<'row'<'col-sm-12'tr>>",
-                            loading: true,
-                            processing: true,
-                            deferRender: true,
-                            scrollY: "75vh",
-                            lengthChange: false,
-                            scrollCollapse: true,
-                            scroller: true,
-                            columnDefs: [
-                              {
-                                "targets": 0,
-                                "orderable": false,
-                                "className": 'select-checkbox',
-                                "searchable": false,
-                                "render": function (data, type, full)
-                                {
-                                  var renderedValue;
-
-                                  if (full.length > 6)
-                                  {
-                                    var lockedFlag = (full[7] === "true");
-
-                                    renderedValue = lockedFlag
-                                        ? lockedIcon : data;
-                                  }
-                                  else
-                                  {
-                                    renderedValue = data;
-                                  }
-
-                                  return renderedValue;
-                                }
-                              },
-                              {
-                                "targets": 1,
-                                "render": function (data, type, full)
-                                {
-                                  if (full.length > 10)
-                                  {
-                                    return '<span class="glyphicon ' + full[8]
-                                           + '"></span> <a href="/storage'
-                                           + full[11]
-                                           + '">' + data + '</a>';
-                                  }
-                                  else
-                                  {
-                                    return data;
-                                  }
-                                }
-                              },
-                              {
-                                "targets": 2,
-                                "type": "file-size",
-                                "searchable": false
-                              },
-                              {
-                                "targets": 5,
-                                "searchable": false,
-                                "render": function (data, type, full)
-                                {
-                                  var renderedValue;
-
-                                  if (full.length > 9)
-                                  {
-                                    var publicFlag = (full[6] === "true");
-                                    var path = full[9];
-
-                                    if (publicFlag === true)
-                                    {
-                                      renderedValue = stringUtil.format(path);
-                                    }
-                                    else
-                                    {
-                                      renderedValue = data;
-                                    }
-                                  }
-                                  else
-                                  {
-                                    renderedValue = data;
-                                  }
-
-                                  return renderedValue;
-                                }
-                              },
-                              {
-                                "targets": [3, 4],
-                                "searchable": false
-                              }
-                            ],
-                            select: {
-                              style: 'os',
-                              selector: 'td:first-child'
-                            },
-                            order: [[3, 'desc']]
-                          });
-
-                      var deleteLinkContainerSelector =
-                          "[id='" + selectButtonGroupID + "']";
-
-                      $dt.on("select", function (event, dataTablesAPI, type,
-                                                 indexes)
-                      {
-                        var $info = $(".dataTables_info");
-
-                        if (type === ROW_SELECT_TYPE)
-                        {
-                          $info.find(deleteLinkContainerSelector).remove();
-                          $info.append(deleteButtonHTML);
-                        }
-                      });
-
-                      $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt info.dt", function ()
-                      {
-                        if ($dt.rows({selected: true}).count() > 0)
-                        {
-                          var $info = $(".dataTables_info");
-
-                          $info.find(deleteLinkContainerSelector).remove();
-                          $info.append(deleteButtonHTML);
-                        }
-                      });
-
-                      $dt.on("deselect", function (event, dataTablesAPI, type,
-                                                   indexes)
-                      {
-                        // If the indexes.length is 1, this that last item is
-                        // being removed (deselected).
-                        if ((type === ROW_SELECT_TYPE)
-                            && (indexes.length === 1))
-                        {
-                          $(".dataTables_info")
-                              .find(deleteLinkContainerSelector).remove();
-                        }
-                      });
+                      fileManager(rows, $("#beacon"),
+                              "<#if startURI??>${startURI}</#if>",
+                              "${folder.path}");
 
                       $(document).on("click", "a#logout", function()
                       {
@@ -292,77 +128,7 @@
                                     window.location.reload(true);
                                   });
                       });
-
-                      $(document).on("click", "button#delete",
-                                     function ()
-                                     {
-                                       $.each($dt.rows({selected: true}).data(),
-                                              function (key, data)
-                                              {
-                                                var path = (data.length > 8)
-                                                    ? data[9]
-                                                    : $(data[0]).data("path");
-
-                                                $.ajax({
-                                                         method: "DELETE",
-                                                         url: "/storage/item"
-                                                              + path
-                                                       });
-                                              });
-                                     });
-
-                      /**
-                       * We're putting a custom search field in, so we need to
-                       * initialize the searching here.
-                       */
-                      $("input.dataTables_filter").on("keyup",
-                                                      function ()
-                                                      {
-                                                        $dt.search($(this).val()).draw();
-                                                      });
-
-                      var successCallback = function (csvData)
-                      {
-                        var data = $.csv.toArrays(csvData);
-                        var dl = data.length;
-
-                        if (dl > 0)
-                        {
-                          for (var di = 0; di < dl; di++)
-                          {
-                            var nextRow = data[di];
-                            $dt.row.add(nextRow);
-
-                            startURI = nextRow[10];
-                          }
-
-                          $dt.draw();
-
-                          requestData.startURI = startURI;
-                          getPage(requestData, successCallback);
-                        }
-                      };
-
-                      load(successCallback);
                     });
-
-  function load(_callback)
-  {
-    getPage(requestData, _callback);
-  }
-
-  function getPage(_data, _callback)
-  {
-    $.get({
-            url: url,
-            dataType: "text",
-            data: _data
-          })
-        .done(function (csvData)
-              {
-                _callback(csvData);
-              });
-  }
 </script>
 </body>
 </html>

@@ -153,6 +153,10 @@ public class VOSpaceApplication extends Application
         router.attach("/list", MainPageServerResource.class);
         router.attach("/list/", MainPageServerResource.class);
 
+        // Generic endpoint for files, folders, or links.
+        final TemplateRoute itemRoute =
+                router.attach("/item/{path}", StorageItemServerResource.class);
+
         final TemplateRoute folderRoute =
                 router.attach("/folder/{path}", FolderItemServerResource.class);
         final TemplateRoute fileRoute =
@@ -165,6 +169,7 @@ public class VOSpaceApplication extends Application
         final Map<String, Variable> routeVariables = new HashMap<>();
         routeVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
 
+        itemRoute.getTemplate().getVariables().putAll(routeVariables);
         folderRoute.getTemplate().getVariables().putAll(routeVariables);
         pageRoute.getTemplate().getVariables().putAll(routeVariables);
         fileRoute.getTemplate().getVariables().putAll(routeVariables);

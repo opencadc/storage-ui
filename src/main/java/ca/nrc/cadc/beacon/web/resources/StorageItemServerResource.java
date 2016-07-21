@@ -73,7 +73,7 @@ import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.resource.Delete;
 
 
-public abstract class StorageItemServerResource extends StorageServerResource
+public class StorageItemServerResource extends StorageServerResource
 {
     @Delete
     public void remove() throws Exception

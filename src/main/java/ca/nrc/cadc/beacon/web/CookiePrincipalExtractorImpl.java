@@ -72,7 +72,6 @@ import ca.nrc.cadc.auth.*;
 import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.util.StringUtil;
 import org.restlet.Request;
-import org.restlet.data.Cookie;
 
 import java.io.IOException;
 import java.security.Principal;
@@ -103,13 +102,13 @@ public class CookiePrincipalExtractorImpl implements PrincipalExtractor
                              && StringUtil.hasText(ssoCookie.getValue()))
                 .forEach(ssoCookie ->
                          {
-                             final SSOCookieManager ssoCookieManager = new SSOCookieManager();
+                             final SSOCookieManager ssoCookieManager =
+                                     new SSOCookieManager();
 
                              try
                              {
-                                 cookiePrincipal =
-                                         ssoCookieManager
-                                                 .parse(ssoCookie.getValue());
+                                 cookiePrincipal = ssoCookieManager.parse(
+                                         ssoCookie.getValue());
                                  cookieCredential =
                                          new SSOCookieCredential(
                                                  ssoCookie.getValue(),
@@ -119,9 +118,9 @@ public class CookiePrincipalExtractorImpl implements PrincipalExtractor
                              }
                              catch (IOException | InvalidDelegationTokenException e)
                              {
-                                 System.out
-                                         .println("Cannot use SSO Cookie. Reason: "
-                                                  + e.getMessage());
+                                 System.out.println(
+                                         "Cannot use SSO Cookie. Reason: "
+                                         + e.getMessage());
                              }
                          });
     }

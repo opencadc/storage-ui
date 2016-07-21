@@ -3,6 +3,8 @@
     "options": {
         "fileConnector": "/storage/file",
         "folderConnector": "/storage/folder",
+        "itemConnector": "/storage/item",
+        "pageConnector": "/storage/page",
         "culture": "en",
         "lang": "php",
         "theme": "canfar",

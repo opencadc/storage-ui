@@ -76,6 +76,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.service.StatusService;
 
 import java.io.FileNotFoundException;
+import java.security.AccessControlException;
 
 
 /**
@@ -113,6 +114,10 @@ public class VOSpaceStatusService extends StatusService
         else if (throwable instanceof FileNotFoundException)
         {
             status = Status.CLIENT_ERROR_NOT_FOUND;
+        }
+        else if (throwable instanceof AccessControlException)
+        {
+            status = Status.CLIENT_ERROR_UNAUTHORIZED;
         }
         else if (StringUtil.hasText(throwable.getMessage()))
         {
