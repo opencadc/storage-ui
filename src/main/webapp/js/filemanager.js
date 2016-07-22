@@ -1432,71 +1432,51 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
     var unsuccessful = {};
     var totalCompleteCount = 0;
 
-    var doDelete = function (event, value, message, formValues)
+    var doDelete = function ()
     {
-      if (value === true)
+      for (var p = 0; p < deleteCount; p++)
       {
-        for (var p = 0; p < deleteCount; p++)
-        {
-          var path = paths[p];
+        var path = paths[p];
 
-          $.ajax({
-                   type: 'DELETE',
-                   url: config.options.itemConnector + path,
-                   async: false,
-                   statusCode: {
-                     200: function ()
-                     {
-                       successful.push(path);
-                     },
-                     401: function ()
-                     {
-                       unsuccessful[path] = lg.ERROR_WRITING_PERM;
-                     },
-                     403: function ()
-                     {
-                       unsuccessful[path] = lg.ERROR_WRITING_PERM;
-                     },
-                     404: function()
-                     {
-                       unsuccessful[path] = lg.ERROR_NO_SUCH_ITEM;
-                     },
-                     500: function()
-                     {
-                       unsuccessful[path] = lg.ERROR_SERVER;
-                     }
-                   }
-                 })
-            .always(function()
-                    {
-                      totalCompleteCount++;
-                    });
-        }
-
-        while (totalCompleteCount < deleteCount)
-        {
-          // Wait
-        }
-
-        if ($.isEmptyObject(unsuccessful) && config.options.showConfirmation)
-        {
-          $.prompt(lg.successful_delete,
+        $.ajax({
+                 type: 'DELETE',
+                 url: config.options.itemConnector + path,
+                 async: false,
+                 statusCode: {
+                   200: function ()
                    {
-                     submit: refreshPage
-                   });
-        }
-        else
-        {
-          var output = "";
-
-          $.each(unsuccessful, function(path, error)
-          {
-            output += path + ": " + error + "<br />";
-          });
-
-          $.prompt(lg.unsuccessful_delete + "<br />" + output);
-        }
+                     successful.push(path);
+                   },
+                   401: function ()
+                   {
+                     unsuccessful[path] = lg.ERROR_WRITING_PERM;
+                   },
+                   403: function ()
+                   {
+                     unsuccessful[path] = lg.ERROR_WRITING_PERM;
+                   },
+                   404: function()
+                   {
+                     unsuccessful[path] = lg.ERROR_NO_SUCH_ITEM;
+                   },
+                   500: function()
+                   {
+                     unsuccessful[path] = lg.ERROR_SERVER;
+                   }
+                 }
+               })
+          .always(function()
+                  {
+                    totalCompleteCount++;
+                  });
       }
+
+      while (totalCompleteCount < deleteCount)
+      {
+        // Wait
+      }
+
+      return ($.isEmptyObject(unsuccessful));
     };
 
     var btns = [];
@@ -1513,10 +1493,59 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
 
     if (deleteCount > 0)
     {
-      $.prompt(msg, {
-        submit: doDelete,
-        buttons: btns
-      });
+      $.prompt.disableStateButtons("deletion");
+
+      $.prompt({
+                confirmation: {
+                  html: msg,
+                  buttons: btns,
+                  submit: function(e,v,m,f)
+                  {
+                    if (v === true)
+                    {
+                      e.preventDefault();
+                      $.prompt.nextState(function(event)
+                                         {
+                                           event.preventDefault();
+                                           var nextState = doDelete(event)
+                                             ? "successful" : "unsuccessful";
+                                           $.prompt.goToState(nextState);
+                                           return false;
+                                         });
+                      return false;
+                    }
+                    else
+                    {
+                      $.prompt.close();
+                    }
+                  }
+                },
+                deletion: {
+                  html: lg.deleting_message.replace('%d', deleteCount)
+                },
+                successful: {
+                  html: lg.successful_delete,
+                  buttons: [{
+                    "title": lg.no,
+                    "value": false,
+                    "classes": "btn btn-success"
+                  }],
+                  submit: refreshPage
+                },
+                unsuccessful: {
+                  html: function()
+                  {
+                    var output = "";
+
+                    $.each(unsuccessful, function(path, error)
+                    {
+                      output += path + ": " + error + "<br />";
+                    });
+
+                    return lg.unsuccessful_delete + "<br />" + output;
+                  }
+                }
+               });
     }
 
     return isDeleted;
