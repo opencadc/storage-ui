@@ -1,10 +1,10 @@
-#### VOSpace Browser 0.6
+#### VOSpace Browser Development Snapshot
 
 By default, this uses the CANFAR (CADC) VOSpace located at:
 
 <a rel="external" href="http://www.canfar.phys.uvic.ca/vospace">http://www.canfar.phys.uvic.ca/vospace</a>
 
-<a href="https://travis-ci.org/canfar/beacon"><img src="https://travis-ci.org/canfar/beacon.svg?branch=0.6" /></a>
+<a href="https://travis-ci.org/canfar/beacon"><img src="https://travis-ci.org/canfar/beacon.svg?branch=master" /></a>
 
 
 ### Building
