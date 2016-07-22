@@ -110,20 +110,27 @@ public class StorageItemFactory
         final String readGroupValues =
                 node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
         final URI[] readGroupURIs = uriExtractor.extract(readGroupValues);
+
+        final String readableFlagValue =
+                node.getPropertyValue(VOS.PROPERTY_URI_READABLE);
+        final boolean readableFlag = StringUtil.hasLength(readableFlagValue)
+                                     && Boolean.parseBoolean(readableFlagValue);
+
+
         final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
 
         if (node instanceof ContainerNode)
         {
             nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
                                       publicFlag, lockedFlag, writeGroupURIs,
-                                      readGroupURIs, owner,
+                                      readGroupURIs, owner, readableFlag,
                                       ((ContainerNode) node).getNodes().size());
         }
         else if (node instanceof LinkNode)
         {
             nextItem = new LinkItem(nodeURI, -1L, lastModifiedDate, publicFlag,
                                     lockedFlag, writeGroupURIs, readGroupURIs,
-                                    owner);
+                                    owner, readableFlag);
         }
         else
         {
@@ -134,7 +141,7 @@ public class StorageItemFactory
             nextItem = new FileItem(nodeURI, sizeInBytes,
                                     lastModifiedDate, publicFlag,
                                     lockedFlag, writeGroupURIs,
-                                    readGroupURIs, owner);
+                                    readGroupURIs, owner, readableFlag);
         }
 
         return nextItem;

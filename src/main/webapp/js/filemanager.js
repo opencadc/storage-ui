@@ -156,10 +156,21 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
           {
             if (full.length > 10)
             {
-              return '<span class="glyphicon ' + full[8]
-                     + '"></span> <a href="/storage'
-                     + full[11]
-                     + '">' + data + '</a>';
+              var itemNameDisplay =
+                '<span class="glyphicon ' + full[8] + '"></span>&nbsp;&nbsp;';
+
+              if (full[12] === "true")
+              {
+                itemNameDisplay += '<a href="/storage'
+                                   + full[11]
+                                   + '">' + data + '</a>';
+              }
+              else
+              {
+                itemNameDisplay += data;
+              }
+
+              return itemNameDisplay;
             }
             else
             {
@@ -1726,35 +1737,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
     if (config.options.showConfirmation)
     {
       $.prompt(lg.successful_added_file);
-    }
-  };
-
-
-// Removes the specified node. Called after a successful
-// delete operation.
-  var removeNode = function (path)
-  {
-    // if the actual view is the deleted folder, we display parent folder
-    if ($('#uploader h1').attr('data-path') == path)
-    {
-      var a = path.split('/');
-      var parent = a.slice(0, length - 2).join('/') + '/';
-      getFolderInfo(parent);
-    }
-
-    $('table#contents')
-      .find('td[data-path="' + path + '"]')
-      .parent()
-      .fadeOut('slow', function ()
-      {
-        $(this).remove();
-      });
-
-
-    // remove fileinfo when item to remove is currently selected
-    if ($('#preview').length)
-    {
-      getFolderInfo(path.substr(0, path.lastIndexOf('/') + 1));
     }
   };
 

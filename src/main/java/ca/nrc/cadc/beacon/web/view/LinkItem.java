@@ -5,18 +5,19 @@ import ca.nrc.cadc.vos.VOSURI;
 import java.net.URI;
 import java.util.Date;
 
+
 /**
- * Created by dustin on 28/06/16.
+ * Representation of a Link in VOSpace.
  */
 public class LinkItem extends StorageItem
 {
     public LinkItem(VOSURI uri, long sizeInBytes, Date lastModified,
                     boolean publicFlag, boolean lockedFlag,
                     URI[] writeGroupURIs, URI[] readGroupURIs,
-                    String owner)
+                    String owner, boolean readableFlag)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-                writeGroupURIs, readGroupURIs, owner);
+                writeGroupURIs, readGroupURIs, owner, readableFlag);
     }
 
 

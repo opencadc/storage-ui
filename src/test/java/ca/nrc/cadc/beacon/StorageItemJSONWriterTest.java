@@ -96,7 +96,7 @@ public class StorageItemJSONWriterTest
                                 FileItem.class, "file_css",
                                 new VOSURI(URI.create(
                                         "vos://ca.nrc.cadc!vospace/ME/NODE_DIR/NODEJ")),
-                                "/download/ME/NODE_DIR/NODEJ");
+                                "/download/ME/NODE_DIR/NODEJ", false);
 
         replay(mockStorageItem);
 
@@ -105,7 +105,7 @@ public class StorageItemJSONWriterTest
         verify(mockStorageItem);
 
         assertEquals("Wrong JSON Line.",
-                     "{\"_checkbox_\":\"\",\"name\":\"NODEJ\",\"size\":\"18.86MB\",\"date\":\"2012-11-17 - 01:21\",\"writeGroups\":null,\"readGroups\":null,\"public_flag\":\"true\",\"locked_flag\":\"false\",\"iconCSS\":\"file_css\",\"path\":\"/ME/NODE_DIR/NODEJ\",\"uri\":\"vos://ca.nrc.cadc!vospace/ME/NODE_DIR/NODEJ\",\"linkURI\":\"/download/ME/NODE_DIR/NODEJ\"}",
+                     "{\"_checkbox_\":\"\",\"name\":\"NODEJ\",\"size\":\"18.86MB\",\"date\":\"2012-11-17 - 01:21\",\"writeGroups\":null,\"readGroups\":null,\"public_flag\":\"true\",\"locked_flag\":\"false\",\"iconCSS\":\"file_css\",\"path\":\"/ME/NODE_DIR/NODEJ\",\"uri\":\"vos://ca.nrc.cadc!vospace/ME/NODE_DIR/NODEJ\",\"linkURI\":\"/download/ME/NODE_DIR/NODEJ\",\"readable_flag\":\"false\"}",
                      writer.toString());
     }
 }
