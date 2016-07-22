@@ -105,8 +105,7 @@ public abstract class StorageServerResource extends SecureServerResource
 
     VOSURI getCurrentItemURI()
     {
-        return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX
-                                     + getCurrentPath()));
+        return toURI(getCurrentPath());
     }
 
     final ContainerNode getCurrentNode()
@@ -116,6 +115,10 @@ public abstract class StorageServerResource extends SecureServerResource
                                        DEFAULT_DISPLAY_PAGE_SIZE);
     }
 
+    VOSURI toURI(final String path)
+    {
+        return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + path));
+    }
 
     protected VOSpaceClient createClient() throws MalformedURLException
     {

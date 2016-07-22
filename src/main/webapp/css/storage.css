@@ -119,17 +119,33 @@ button#more_details {
   overflow: hidden;
 }
 
-#loading-wrap {
-  position: fixed;
-  height: 100%;
-  width: 100%;
-  overflow: hidden;
-  top: 0;
-  left: 0;
-  display: block;
-  background: white url('/storage/themes/canfar/images/ajax-loader.gif') no-repeat center center;
-  z-index: 999;
-  opacity: 0.7;
+.glyphicon.fast-right-spinner {
+  -webkit-animation: glyphicon-spin-r 1s infinite linear;
+  animation: glyphicon-spin-r 1s infinite linear;
+}
+
+@-webkit-keyframes glyphicon-spin-r {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
+}
+
+@keyframes glyphicon-spin-r {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+
+  100% {
+    -webkit-transform: rotate(359deg);
+    transform: rotate(359deg);
+  }
 }
 
 main.container {

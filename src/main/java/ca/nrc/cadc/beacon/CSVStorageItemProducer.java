@@ -74,7 +74,8 @@ import ca.nrc.cadc.vos.VOSURI;
 import javax.security.auth.Subject;
 
 
-public class CSVStorageItemProducer extends AbstractStorageItemProducer<StorageItemCSVWriter>
+public class CSVStorageItemProducer
+        extends AbstractStorageItemProducer<StorageItemCSVWriter>
 {
     public CSVStorageItemProducer(int pageSize, VOSURI folderURI, VOSURI startURI,
                                   final StorageItemCSVWriter nodeWriter,

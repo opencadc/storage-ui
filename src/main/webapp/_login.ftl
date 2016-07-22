@@ -2,7 +2,7 @@
   <#if username??>
     <ul class="navbar-nav navbar-right list-unstyled">
       <li>
-        <a href="#" class="btn btn-md" role="button" title="Logout.">
+        <a class="btn btn-md" id="logout" role="button" title="Logout.">
           <span class="glyphicon glyphicon-log-out"></span></a></li>
       <li class="dropdown">
         <a title="User actions." class="dropdown-toggle btn btn-md" role="button" aria-expanded="false" data-toggle="dropdown">
@@ -16,7 +16,7 @@
     </ul>
   <#else>
     <form class="navbar-form navbar-right" id="loginForm" role="form" method="post"
-          action="/storage/ac/login">
+          action="/storage/ac/authenticate">
       <div class="form-group">
         <label for="username" class="hidden" id="usernameLabel">Username</label>
         <input type="text" id="username" name="username" class="form-control" tabindex="1" required="required" placeholder="Username" />

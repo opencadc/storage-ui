@@ -66,54 +66,63 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.view;
+package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.Node;
-import java.util.*;
+import ca.nrc.cadc.beacon.AbstractUnitTest;
+import ca.nrc.cadc.reg.client.RegistryClient;
+
+import org.junit.Test;
+import org.restlet.Response;
+
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.easymock.EasyMock.*;
 
 
-public class StorageItemIterator extends AbstractStorageItemIterator
+public class FileItemServerResourceTest
+        extends AbstractUnitTest<FileItemServerResource>
 {
-    private final Iterator<Node> childIterator;
-
-
-    public StorageItemIterator(final Iterator<Node> childIterator,
-                               final StorageItemFactory storageItemFactory)
+    @Test
+    public void sendToDownload() throws Exception
     {
-        super(storageItemFactory);
-        this.childIterator = childIterator;
-    }
+        final RegistryClient mockRegistryClient =
+                createMock(RegistryClient.class);
+        final Response mockResponse = createMock(Response.class);
+        final Map<String, Object> requestAttributes = new HashMap<>();
 
-    /**
-     * Returns {@code true} if the iteration has more elements.
-     * (In other words, returns {@code true} if {@link #next} would
-     * return an element rather than throwing an exception.)
-     *
-     * @return {@code true} if the iteration has more elements
-     */
-    @Override
-    public boolean hasNext()
-    {
-        return childIterator.hasNext();
-    }
+        requestAttributes.put("path", "my/file.txt");
 
-    /**
-     * Returns the next element in the iteration.
-     *
-     * @return the next element in the iteration
-     * @throws NoSuchElementException if the iteration has no more elements
-     */
-    @Override
-    public StorageItem next()
-    {
-        try
+        testSubject = new FileItemServerResource()
         {
-            return translateNode(childIterator.next());
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
+
+            @Override
+            public Map<String, Object> getRequestAttributes()
+            {
+                return requestAttributes;
+            }
+        };
+
+        final URL serverURL = new URL("http://mysite.com/download/do");
+
+        expect(mockRegistryClient.getServiceURL(
+                StorageItemServerResource.DATA_SERVICE_ID, "http",
+                "/pub/vospace")).andReturn(serverURL).once();
+
+        mockResponse.redirectSeeOther(
+                "http://mysite.com/download/do/my/file.txt");
+        expectLastCall().once();
+
+        replay(mockRegistryClient, mockResponse);
+
+        testSubject.sendToDownload(mockRegistryClient);
+
+        verify(mockRegistryClient, mockResponse);
     }
 }

@@ -66,28 +66,74 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.view;
+package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.Node;
+import ca.nrc.cadc.beacon.AbstractUnitTest;
 
-import java.util.Iterator;
+import ca.nrc.cadc.vos.ContainerNode;
+import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
 
-public abstract class AbstractStorageItemIterator
-        implements Iterator<StorageItem>
+import org.restlet.Response;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+
+import org.junit.Test;
+import org.restlet.data.Status;
+
+import static org.easymock.EasyMock.*;
+
+
+public class FolderItemServerResourceTest
+        extends AbstractUnitTest<FolderItemServerResource>
 {
-    final StorageItemFactory storageItemFactory;
-
-
-    public AbstractStorageItemIterator(
-            final StorageItemFactory storageItemFactory)
+    @Test
+    public void create() throws Exception
     {
-        this.storageItemFactory = storageItemFactory;
-    }
+        final VOSpaceClient mockClient = createMock(VOSpaceClient.class);
+        final VOSURI folderURI = new VOSURI(URI.create(
+                FolderItemServerResource.VOSPACE_NODE_URI_PREFIX
+                + "/my/node"));
+        final ContainerNode containerNode = new ContainerNode(folderURI);
+        final Response mockResponse = createMock(Response.class);
 
+        testSubject = new FolderItemServerResource()
+        {
+            @Override
+            protected VOSpaceClient createClient() throws MalformedURLException
+            {
+                return mockClient;
+            }
 
-    final StorageItem translateNode(final Node n) throws Exception
-    {
-        return storageItemFactory.translate(n);
+            @Override
+            VOSURI getCurrentItemURI()
+            {
+                return folderURI;
+            }
+
+            /**
+             * Returns the handled response.
+             *
+             * @return The handled response.
+             */
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
+        };
+
+        expect(mockClient.createNode(containerNode, false))
+                .andReturn(containerNode).once();
+
+        mockResponse.setStatus(Status.SUCCESS_CREATED);
+        expectLastCall().once();
+
+        replay(mockClient, mockResponse);
+
+        testSubject.create();
+
+        verify(mockClient, mockResponse);
     }
 }

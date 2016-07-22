@@ -72,30 +72,22 @@ import ca.nrc.cadc.vos.VOSURI;
 
 import java.net.URI;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Random;
 
 
 public class FolderItem extends StorageItem
 {
-//    private final int childCount;
-    private final Iterator<StorageItem> childIterator;
+    private final int childCount;
 
     public FolderItem(VOSURI uri, long sizeInBytes, Date lastModified,
                       boolean publicFlag, boolean lockedFlag,
                       URI[] writeGroupURIs, URI[] readGroupURIs, String owner,
-                      Iterator<StorageItem> childIterator)
+                      final int childCount)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
               writeGroupURIs, readGroupURIs, owner);
-        this.childIterator = childIterator;
+        this.childCount = childCount;
     }
 
-
-    public int getChildCount()
-    {
-        return new Random().nextInt(10000);
-    }
 
     public boolean isRoot()
     {
@@ -114,9 +106,9 @@ public class FolderItem extends StorageItem
         return "/list" + uri.getPath();
     }
 
-    public Iterator<StorageItem> getChildIterator()
+    public int getChildCount()
     {
-        return childIterator;
+        return childCount;
     }
 
     /**

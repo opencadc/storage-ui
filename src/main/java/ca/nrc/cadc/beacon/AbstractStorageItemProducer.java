@@ -152,6 +152,13 @@ public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
         }
     }
 
+    @Override
+    public VOSURI getLastWrittenURI()
+    {
+        return this.current;
+    }
+
+    @Override
     public boolean writePage() throws Exception
     {
         return writePage(nextPage());

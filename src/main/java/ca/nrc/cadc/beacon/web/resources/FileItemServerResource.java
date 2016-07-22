@@ -86,6 +86,7 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.servlet.ServletUtils;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 
@@ -93,12 +94,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class UploadServerResource extends StorageServerResource
+public class FileItemServerResource extends StorageItemServerResource
 {
     protected static final int BUFFER_SIZE = 8192;
     private static final String UPLOAD_FILE_KEY = "upload";
@@ -107,18 +109,46 @@ public class UploadServerResource extends StorageServerResource
     private final FileValidator fileValidator;
 
 
-    public UploadServerResource(final FileValidator fileValidator,
-                                final UploadVerifier uploadVerifier)
+    public FileItemServerResource(final FileValidator fileValidator,
+                                  final UploadVerifier uploadVerifier)
     {
         this.fileValidator = fileValidator;
         this.uploadVerifier = uploadVerifier;
     }
 
-    public UploadServerResource()
+    public FileItemServerResource()
     {
         this(new FileValidator(), new UploadVerifier());
     }
 
+
+    @Get
+    public void represent() throws Exception
+    {
+        final RegistryClient registryClient = new RegistryClient();
+        sendToDownload(registryClient);
+    }
+
+    /**
+     * Send a redirect to the proper download URL.
+     *
+     * @param registryClient    The RegistryClient to use.
+     */
+    void sendToDownload(final RegistryClient registryClient)
+            throws MalformedURLException
+    {
+        // TODO
+        // TODO - Is the data web service with the /pub/vospace path portable?
+        // TODO - It may be CADC specific.
+        // TODO - jenkinsd 2016.07.12
+        // TODO
+        final URL serverURL = registryClient.getServiceURL(DATA_SERVICE_ID,
+                                                           "http",
+                                                           "/pub/vospace");
+        final URL downloadURL = new URL(serverURL.toExternalForm()
+                                        + getCurrentPath());
+        getResponse().redirectSeeOther(downloadURL.toExternalForm());
+    }
 
     @Post
     @Put
@@ -215,11 +245,10 @@ public class UploadServerResource extends StorageServerResource
         {
             final String path = getCurrentItemURI().getPath() + "/"
                                 + URLEncoder.encode(filename, "UTF-8");
-            final String source = "vos://cadc.nrc.ca!vospace" + path;
             final DataNode dataNode;
             final View view;
 
-            dataNode = new DataNode(new VOSURI(URI.create(source)));
+            dataNode = new DataNode(toURI(path));
             view = new View(URI.create(VOS.VIEW_DEFAULT));
 
             // WebRT 19564: Add content type to the response of

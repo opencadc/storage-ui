@@ -59,6 +59,6 @@ task copyWAR(type: Copy, dependsOn: war) {
 }
 
 task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
-    commandLine 'docker', 'build', '-t', 'canfar/beacon', '-f', './docker/Dockerfile', './docker/'
+    commandLine 'docker', 'build', '-t', 'canfar/storage', '-f', './docker/Dockerfile', './docker/'
 }
 

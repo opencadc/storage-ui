@@ -96,7 +96,7 @@
           </div>
         </nav>
         <!-- The width style here MUST exist in this tag, rather than in the CSS file. -->
-        <table id="beacon" class="table table-striped table-condensed table-hover" style="width: 100%;">
+        <table id="beacon" class="table table-striped table-condensed table-hover" style="height: 100%; width: 100%;">
           <thead>
             <tr>
               <th></th>
@@ -108,18 +108,6 @@
             </tr>
           </thead>
           <tbody>
-          <#list folder.childIterator as childItem>
-            <#assign uri = childItem.URI>
-            <#assign writeGroupNames = childItem.writeGroupNames>
-            <tr>
-              <td data-path="${childItem.path}" class="select-checkbox"></td>
-              <td><span class="glyphicon ${childItem.itemIconCSS}"></span> <a href="/storage${childItem.linkURI}"> ${childItem.name}</a></td>
-              <td data-val="${childItem.sizeInBytes}">${childItem.sizeHumanReadable}</td>
-              <td>${childItem.lastModifiedHumanReadable}</td>
-              <td>${writeGroupNames}</td>
-              <td><#if childItem.public><a href="#" class="public_link" title="Change group read access.">Public</a><#else>${childItem.readGroupNames}</#if></td>
-            </tr>
-          </#list>
           </tbody>
         </table>
       </div>

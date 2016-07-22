@@ -66,63 +66,77 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web.restlet;
 
-import ca.nrc.cadc.beacon.AbstractUnitTest;
-import ca.nrc.cadc.reg.client.RegistryClient;
-
-import org.junit.Test;
+import ca.nrc.cadc.util.StringUtil;
+import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.data.Status;
+import org.restlet.resource.ResourceException;
+import org.restlet.service.StatusService;
 
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.easymock.EasyMock.*;
+import java.io.FileNotFoundException;
+import java.security.AccessControlException;
 
 
-public class StorageItemServerResourceTest
-        extends AbstractUnitTest<StorageItemServerResource>
+/**
+ * Translate Exceptions into HTTP Statuses.
+ */
+public class VOSpaceStatusService extends StatusService
 {
-    @Test
-    public void sendToDownload() throws Exception
+    /**
+     * Returns a status for a given exception or error.
+     *
+     * @param throwable The exception or error caught.
+     * @param request   The request handled.
+     * @param response  The response updated.
+     * @return The representation of the given status.
+     */
+    @Override
+    public Status toStatus(final Throwable throwable, final Request request,
+                           final Response response)
     {
-        final RegistryClient mockRegistryClient =
-                createMock(RegistryClient.class);
-        final Response mockResponse = createMock(Response.class);
-        final Map<String, Object> requestAttributes = new HashMap<>();
+        final Status status;
 
-        requestAttributes.put("path", "my/file.txt");
-
-        testSubject = new StorageItemServerResource()
+        if (throwable instanceof ResourceException)
         {
-            @Override
-            public Response getResponse()
+            final Throwable cause = throwable.getCause();
+
+            if (cause == null)
             {
-                return mockResponse;
+                status = super.toStatus(throwable, request, response);
             }
-
-            @Override
-            public Map<String, Object> getRequestAttributes()
+            else
             {
-                return requestAttributes;
+                status = toStatus(cause, request, response);
             }
-        };
+        }
+        else if (throwable instanceof FileNotFoundException)
+        {
+            status = Status.CLIENT_ERROR_NOT_FOUND;
+        }
+        else if (throwable instanceof AccessControlException)
+        {
+            status = Status.CLIENT_ERROR_UNAUTHORIZED;
+        }
+        else if (StringUtil.hasText(throwable.getMessage()))
+        {
+            final String message = throwable.getMessage();
 
-        final URL serverURL = new URL("http://mysite.com/download/do");
+            if (message.contains("(409)"))
+            {
+                status = Status.CLIENT_ERROR_CONFLICT;
+            }
+            else
+            {
+                status = super.toStatus(throwable, request, response);
+            }
+        }
+        else
+        {
+            status = super.toStatus(throwable, request, response);
+        }
 
-        expect(mockRegistryClient.getServiceURL(
-                StorageItemServerResource.DATA_SERVICE_ID, "http",
-                "/pub/vospace")).andReturn(serverURL).once();
-
-        mockResponse.redirectSeeOther(
-                "http://mysite.com/download/do/my/file.txt");
-        expectLastCall().once();
-
-        replay(mockRegistryClient, mockResponse);
-
-        testSubject.sendToDownload(mockRegistryClient);
-
-        verify(mockRegistryClient, mockResponse);
+        return status;
     }
 }

@@ -68,46 +68,13 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import org.restlet.resource.Delete;
-import org.restlet.resource.Get;
-
-import java.net.MalformedURLException;
-import java.net.URL;
 
 
 public class StorageItemServerResource extends StorageServerResource
 {
-    @Get
-    public void represent() throws Exception
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        sendToDownload(registryClient);
-    }
-
-    /**
-     * Send a redirect to the proper download URL.
-     *
-     * @param registryClient    The RegistryClient to use.
-     */
-    void sendToDownload(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        // TODO
-        // TODO - Is the data web service with the /pub/vospace path portable?
-        // TODO - It may be CADC specific.
-        // TODO - jenkinsd 2016.07.12
-        // TODO
-        final URL serverURL = registryClient.getServiceURL(DATA_SERVICE_ID,
-                                                           "http",
-                                                           "/pub/vospace");
-        final URL downloadURL = new URL(serverURL.toExternalForm()
-                                        + getCurrentPath());
-        getResponse().redirectSeeOther(downloadURL.toExternalForm());
-    }
-
     @Delete
     public void remove() throws Exception
     {

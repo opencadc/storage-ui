@@ -9,14 +9,8 @@
  *  @copyright  Authors
  */
 
-(function ($)
+function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
 {
-  var $fileInfo = $("#fileInfo");
-  var fileRoot;
-  var baseURL;
-  var fullexpandedFolder;
-  var expandedFolder;
-
 // function to retrieve GET params
   $.urlParam = function (name)
   {
@@ -85,6 +79,236 @@
   {
     var start = new Date().getTime();
   }
+
+  var ROW_SELECT_TYPE = "row";
+  var lockedIcon =
+    "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/storage/unlock\" title=\"Unlock to modify.\">Unlock</a>";
+  var publicLink =
+    "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">Public</a>";
+  var selectButtonGroupID = "delete";
+  var deleteButtonHTML = "<span id='" + selectButtonGroupID
+                         + "' class='btn-group btn-group-xs'>"
+                         +
+                         "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
+                         + "</span>";
+  var stringUtil = new cadc.web.util.StringUtil(publicLink);
+  var url = config.options.pageConnector + _folderPath;
+  var defaultPageSize = 400;
+
+  var requestData = {};
+
+  requestData.pageSize = defaultPageSize;
+
+  if (_startURI != "")
+  {
+    requestData.startURI = encodeURIComponent(_startURI);
+  }
+
+  var $fileInfo = $("#fileInfo");
+  var fileRoot;
+  var baseURL;
+  var fullexpandedFolder;
+  var expandedFolder;
+  var $dt = _$beaconTable.DataTable(
+    {
+      data: _initialData,
+      language: {
+        search: "_INPUT_",
+        searchPlaceholder: "Search Name..."
+      },
+      dom: "<'row beacon-info-row'<'col-sm-12'i>>"
+           + "<'row'<'col-sm-12'tr>>",
+      loading: true,
+      processing: true,
+      deferRender: true,
+      scrollY: "75vh",
+      lengthChange: false,
+      scrollCollapse: true,
+      scroller: true,
+      columnDefs: [
+        {
+          "targets": 0,
+          "orderable": false,
+          "className": 'select-checkbox',
+          "searchable": false,
+          "render": function (data, type, full)
+          {
+            var renderedValue;
+
+            if (full.length > 6)
+            {
+              var lockedFlag = (full[7] === "true");
+
+              renderedValue = lockedFlag
+                ? lockedIcon : data;
+            }
+            else
+            {
+              renderedValue = data;
+            }
+
+            return renderedValue;
+          }
+        },
+        {
+          "targets": 1,
+          "render": function (data, type, full)
+          {
+            if (full.length > 10)
+            {
+              return '<span class="glyphicon ' + full[8]
+                     + '"></span> <a href="/storage'
+                     + full[11]
+                     + '">' + data + '</a>';
+            }
+            else
+            {
+              return data;
+            }
+          }
+        },
+        {
+          "targets": 2,
+          "type": "file-size",
+          "searchable": false
+        },
+        {
+          "targets": 5,
+          "searchable": false,
+          "render": function (data, type, full)
+          {
+            var renderedValue;
+
+            if (full.length > 9)
+            {
+              var publicFlag = (full[6] === "true");
+              var path = full[9];
+
+              if (publicFlag === true)
+              {
+                renderedValue = stringUtil.format(path);
+              }
+              else
+              {
+                renderedValue = data;
+              }
+            }
+            else
+            {
+              renderedValue = data;
+            }
+
+            return renderedValue;
+          }
+        },
+        {
+          "targets": [3, 4],
+          "searchable": false
+        }
+      ],
+      select: {
+        style: 'os',
+        selector: 'td:first-child'
+      },
+      order: [[3, 'desc']]
+    });
+
+  var deleteLinkContainerSelector =
+    "[id='" + selectButtonGroupID + "']";
+
+  $dt.on("select", function (event, dataTablesAPI, type)
+  {
+    var $info = $(".dataTables_info");
+
+    if (type === ROW_SELECT_TYPE)
+    {
+      $info.find(deleteLinkContainerSelector).remove();
+      $info.append(deleteButtonHTML);
+    }
+  });
+
+  $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt info.dt", function ()
+  {
+    if ($dt.rows({selected: true}).count() > 0)
+    {
+      var $info = $(".dataTables_info");
+
+      $info.find(deleteLinkContainerSelector).remove();
+      $info.append(deleteButtonHTML);
+    }
+  });
+
+  $dt.on("deselect", function (event, dataTablesAPI, type)
+  {
+    // If the indexes.length is 1, this that last item is
+    // being removed (deselected).
+    if ((type === ROW_SELECT_TYPE)
+        && ($dt.rows({selected: true}).count() <= 0))
+    {
+      $(".dataTables_info")
+        .find(deleteLinkContainerSelector).remove();
+    }
+  });
+
+  /**
+   * We're putting a custom search field in, so we need to
+   * initialize the searching here.
+   */
+  $("input.dataTables_filter").on("keyup",
+                                  function ()
+                                  {
+                                    $dt.search($(this).val()).draw();
+                                  });
+
+  var getPage = function (_data, _callback)
+  {
+    $.get({
+            url: url,
+            dataType: "text",
+            data: _data
+          })
+      .done(function (csvData)
+            {
+              _callback(csvData);
+            });
+  };
+
+  var load = function (_callback)
+  {
+    getPage(requestData, _callback);
+  };
+
+  var successCallback = function (csvData)
+  {
+    var data = $.csv.toArrays(csvData);
+    var dl = data.length;
+
+    if (dl > 0)
+    {
+      for (var di = 0; di < dl; di++)
+      {
+        var nextRow = data[di];
+        $dt.row.add(nextRow);
+
+        _startURI = nextRow[10];
+      }
+
+      $dt.draw();
+
+      requestData.startURI = _startURI;
+      getPage(requestData, successCallback);
+    }
+  };
+
+  load(successCallback);
+
+  /**
+   * Page refresh.  Used after write operations to show updated state.
+   */
+  var refreshPage = function ()
+  {
+    window.location.reload(true);
+  };
 
 // <head> included files collector
   var HEAD_included_files = [];
@@ -170,7 +394,7 @@
     ['select', 'download', 'rename', 'move', 'delete',
      'replace'];
 
-// Get localized messages from file 
+// Get localized messages from file
 // through culture var or from URL
   if ($.urlParam('langCode') != 0)
   {
@@ -192,7 +416,8 @@
 
   var lg = [];
   $.ajax({
-           url: '/storage/scripts/languages/' + config.options.culture + '.json',
+           url: '/storage/scripts/languages/' + config.options.culture +
+                '.json',
            async: false,
            dataType: 'json',
            success: function (json)
@@ -225,7 +450,6 @@
     var newH = $(window).height() - $uploader.height() -
                $uploader.offset().top - bheight;
     $fileInfo.height(newH);
-    $('.vsplitbar').height(newH);
   };
 
 // Display Min Path
@@ -256,6 +480,16 @@
     {
       return path;
     }
+  };
+
+  /**
+   * Obtain the path of the current folder.
+   *
+   * @returns {*|{}}
+   */
+  var getCurrentPath = function ()
+  {
+    return path = $('#currentpath').val();
   };
 
 
@@ -299,6 +533,17 @@
     return new_str;
   };
 
+  /**
+   * Check if the given string is a valid item name.
+   *
+   * @param str
+   * @returns {*|boolean}
+   */
+  var validFilename = function (str)
+  {
+    return str && /[a-zA-Z0-9_\-()=+!,;:@*$.]+/.test(str);
+  };
+
 // cleanString (), on the same model as server side (connector)
 // cleanString
   var cleanString = function (str)
@@ -335,6 +580,7 @@
     }
 
     cleaned = cleaned.replace(/[_]+/g, "_");
+
     // prevent bug https://github.com/simogeo/Filemanager/issues/474
     if (cleaned == "")
     {
@@ -436,7 +682,7 @@
     return false;
   };
 
-// return filename extension 
+// return filename extension
   var getExtension = function (filename)
   {
     if (filename.split('.').length == 1)
@@ -489,7 +735,7 @@
     $fileInfo.find('#preview').find('#main-title').before(_playerHTML);
   };
 
-// Return HTML video player 
+// Return HTML video player
   var getVideoPlayer = function (data)
   {
     var code = '<video width=' + config.videos.videosPlayerWidth + ' height=' +
@@ -501,7 +747,7 @@
     postFormatPlayer(code);
   };
 
-//Return HTML audio player 
+//Return HTML audio player
   var getAudioPlayer = function (data)
   {
     var code = '<audio src="' + data['Path'] + '" controls="controls">';
@@ -511,7 +757,7 @@
     postFormatPlayer(code);
   };
 
-//Return PDF Reader 
+//Return PDF Reader
   var getPdfReader = function (data)
   {
     var code = '<iframe id="fm-pdf-viewer" src = "scripts/ViewerJS/index.html#' +
@@ -522,12 +768,12 @@
     postFormatPlayer(code);
   };
 
-// Sets the folder status, upload, and new folder functions 
-// to the path specified. Called on initial page load and 
+// Sets the folder status, upload, and new folder functions
+// to the path specified. Called on initial page load and
 // whenever a new directory is selected.
   var setUploader = function (path)
   {
-    path = $('#currentpath').val();
+    path = getCurrentPath();
 
     $("#new_external_link").unbind().click(function ()
                                            {
@@ -558,61 +804,82 @@
 
     $('#newfolder').unbind().click(function ()
                                    {
-                                     var getFolderName = function (v, m)
+                                     var buttonAction = function (event, value,
+                                                                  message,
+                                                                  formVals)
                                      {
-                                       if (v === 1)
+                                       if (value === true)
                                        {
-                                         var fname = m.children('#fname').val();
+                                         var fname = formVals['fname'];
 
-                                         if (fname != '')
+                                         if (validFilename(fname))
                                          {
-                                           var folderName = cleanString(fname);
-                                           var d = new Date(); // to prevent IE
-                                                               // cache issues
-                                           $.getJSON(fileConnector +
-                                                     '?mode=addfolder&path=' +
-                                                     path +
-                                                     '&config=' + userconfig +
-                                                     '&name=' +
-                                                     encodeURIComponent(folderName) +
-                                                     '&time=' +
-                                                     d.getMilliseconds(), function (result)
-                                                     {
-                                                       if (result['Code'] == 0)
-                                                       {
-                                                         addFolder(result['Parent'],
-                                                                   result['Name']);
-                                                         getFolderInfo(result['Parent']);
-                                                       }
-                                                       else
-                                                       {
-                                                         $.prompt(result['Error']);
-                                                       }
-                                                     });
+                                           $.ajax(
+                                             {
+                                               url: config.options.folderConnector
+                                                    + getCurrentPath() + "/"
+                                                    + encodeURIComponent(fname),
+                                               method: "PUT",
+                                               contentType: "application/json",
+                                               statusCode: {
+                                                 201: function ()
+                                                 {
+                                                   $.prompt(lg.successful_added_folder,
+                                                            {
+                                                              submit: refreshPage
+                                                            });
+                                                 },
+                                                 400: function ()
+                                                 {
+
+                                                 },
+                                                 401: function ()
+                                                 {
+                                                   $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                                                 },
+                                                 403: function ()
+                                                 {
+                                                   $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                                                 },
+                                                 409: function ()
+                                                 {
+                                                   $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
+                                                 }
+                                               }
+                                             });
                                          }
                                          else
                                          {
-                                           $.prompt(lg.no_foldername);
+                                           $.prompt(lg.INVALID_ITEM_NAME);
                                          }
                                        }
                                        else
                                        {
-                                         return false;
+                                         return true;
                                        }
                                      };
 
-                                     var foldername = lg.default_foldername;
-                                     var msg = lg.prompt_foldername +
-                                               ' : <input id="fname" name="fname" type="text" value="' +
-                                               foldername + '" />';
+                                     var msg = '<input id="fname" name="fname" type="text" class="form-control" placeholder="' +
+                                               lg.prompt_foldername +
+                                               '" value="" />';
 
-                                     var btns = {};
-                                     btns[lg.create_folder] = true;
-                                     btns[lg.cancel] = false;
-                                     $.prompt(msg, {
-                                       callback: getFolderName,
-                                       buttons: btns
-                                     });
+                                     var btns = [];
+                                     btns.push({
+                                                 "title": lg.create_folder,
+                                                 "value": true,
+                                                 "classes": "btn btn-primary"
+                                               });
+                                     btns.push({
+                                                 "title": lg.cancel,
+                                                 "value": false,
+                                                 "classes": "btn btn-default"
+                                               });
+                                     $.prompt(msg,
+                                              {
+                                                submit: buttonAction,
+                                                focus: "#fname",
+                                                buttons: btns
+                                              });
                                    });
   };
 
@@ -661,13 +928,13 @@
     else
     {
       $fileInfo.find('button#rename').click(function ()
-                                                 {
-                                                   var newName = renameItem(data);
-                                                   if (newName.length)
-                                                   {
-                                                     $('#fileinfo > h1').text(newName);
-                                                   }
-                                                 }).show();
+                                            {
+                                              var newName = renameItem(data);
+                                              if (newName.length)
+                                              {
+                                                $('#fileinfo > h1').text(newName);
+                                              }
+                                            }).show();
     }
 
     if (!has_capability(data, 'move'))
@@ -677,13 +944,13 @@
     else
     {
       $fileInfo.find('button#move').click(function ()
-                                               {
-                                                 var newName = moveItem(data);
-                                                 if (newName.length)
-                                                 {
-                                                   $('#fileinfo > h1').text(newName);
-                                                 }
-                                               }).show();
+                                          {
+                                            var newName = moveItem(data);
+                                            if (newName.length)
+                                            {
+                                              $('#fileinfo > h1').text(newName);
+                                            }
+                                          }).show();
     }
 
     // @todo
@@ -694,18 +961,33 @@
     else
     {
       $fileInfo.find('button#replace').click(function ()
-                                                  {
-                                                    replaceItem(data);
-                                                  }).show();
+                                             {
+                                               replaceItem(data);
+                                             }).show();
     }
-    //
-    //if (has_capability(data, 'delete'))
-    //{
-    //  $fileInfo.find('button#delete').click(function()
-    //                                        {
-    //
-    //                                        });
-    //}
+
+    if (has_capability(data, 'delete'))
+    {
+      $fileInfo.find('button#delete').click(function ()
+                                            {
+                                              $.each($dt.rows({selected: true}).data(),
+                                                     function (key, data)
+                                                     {
+                                                       var path = (data.length >
+                                                                   8)
+                                                         ? data[9]
+                                                         :
+                                                                  $(data[0]).data("path");
+
+                                                       $.ajax({
+                                                                method: "DELETE",
+                                                                url: config.options.itemConnector
+                                                                     +
+                                                                     encodeURIComponent(path)
+                                                              });
+                                                     });
+                                            });
+    }
     //
     //
     //if (!has_capability(data, 'download'))
@@ -718,11 +1000,9 @@
     //                                               {
     //                                                 window.location =
     //                                                   fileConnector +
-    //                                                   '?mode=download&path=' +
-    //                                                   encodeURIComponent(data['Path']) +
-    //                                                   '&config=' + userconfig;
-    //                                               }).show();
-    //}
+    //                                                   '?mode=download&path='
+    // + encodeURIComponent(data['Path']) + '&config=' + userconfig; }).show();
+    // }
   };
 
 
@@ -732,9 +1012,9 @@
 
 // Calls the SetUrl function for FCKEditor compatibility,
 // passes file path, dimensions, and alt text back to the
-// opening window. Triggered by clicking the "Select" 
+// opening window. Triggered by clicking the "Select"
 // button in detail views or choosing the "Select"
-// contextual menu option in list views. 
+// contextual menu option in list views.
 // NOTE: closes the window when finished.
   var selectItem = function (data)
   {
@@ -836,7 +1116,7 @@
 
 // Renames the current item and returns the new name.
 // Called by clicking the "Rename" button in detail views
-// or choosing the "Rename" contextual menu option in 
+// or choosing the "Rename" contextual menu option in
 // list views.
   var renameItem = function (data)
   {
@@ -908,8 +1188,6 @@
                      var newName = result['New Name'];
                      var oldPath = result['Old Path'];
 
-                     updateNode(oldPath, newPath, newName);
-
                      var $previewH1 = $("#preview").find("h1");
 
                      var title = $previewH1.attr("title");
@@ -978,83 +1256,85 @@
 
     // submission script
     $toolbar.ajaxForm({
-                             target: '#uploadresponse',
-                             beforeSubmit: function (arr, form, options)
-                             {
+                        target: '#uploadresponse',
+                        beforeSubmit: function (arr, form, options)
+                        {
 
-                               var newFile = $('#fileR', form).val();
+                          var newFile = $('#fileR', form).val();
 
-                               // Test if a value is given
-                               if (newFile == '')
-                               {
-                                 return false;
-                               }
+                          // Test if a value is given
+                          if (newFile == '')
+                          {
+                            return false;
+                          }
 
-                               // Check if file extension is matching with the
-                               // original
-                               if (getExtension(newFile) != data["File Type"])
-                               {
-                                 $.prompt(lg.ERROR_REPLACING_FILE + " ." +
-                                          getExtension(data["Filename"]));
-                                 return false;
-                               }
-                               $('#replace').attr('disabled', true);
-                               $('#upload span').addClass('loading').text(lg.loading_data);
+                          // Check if file extension is matching with the
+                          // original
+                          if (getExtension(newFile) != data["File Type"])
+                          {
+                            $.prompt(lg.ERROR_REPLACING_FILE + " ." +
+                                     getExtension(data["Filename"]));
+                            return false;
+                          }
+                          $('#replace').attr('disabled', true);
+                          $('#upload span').addClass('loading').text(lg.loading_data);
 
-                               // if config.upload.fileSizeLimit == auto we
-                               // delegate size test to connector
-                               if (typeof FileReader !== "undefined" &&
-                                   typeof config.upload.fileSizeLimit != "auto")
-                               {
-                                 // Check file size using html5 FileReader API
-                                 var size = $('#fileR', form).get(0).files[0].size;
-                                 if (size >
-                                     config.upload.fileSizeLimit * 1024 * 1024)
-                                 {
-                                   $.prompt("<p>" + lg.file_too_big +
-                                            "</p><p>" + lg.file_size_limit +
-                                            config.upload.fileSizeLimit + " " +
-                                            lg.mb + ".</p>");
-                                   $('#upload').removeAttr('disabled').find("span").removeClass('loading').text(lg.upload);
-                                   return false;
-                                 }
-                               }
-                             },
-                             error: function (jqXHR, textStatus, errorThrown)
-                             {
-                               $('#upload').removeAttr('disabled').find("span").removeClass('loading').text(lg.upload);
-                               $.prompt(lg.ERROR_UPLOADING_FILE);
-                             },
-                             success: function (result)
-                             {
-                               var data = jQuery.parseJSON($('#uploadresponse').find('textarea').text());
+                          // if config.upload.fileSizeLimit == auto we
+                          // delegate size test to connector
+                          if (typeof FileReader !== "undefined" &&
+                              typeof config.upload.fileSizeLimit != "auto")
+                          {
+                            // Check file size using html5 FileReader API
+                            var size = $('#fileR', form).get(0).files[0].size;
+                            if (size >
+                                config.upload.fileSizeLimit * 1024 * 1024)
+                            {
+                              $.prompt("<p>" + lg.file_too_big +
+                                       "</p><p>" + lg.file_size_limit +
+                                       config.upload.fileSizeLimit + " " +
+                                       lg.mb + ".</p>");
+                              $('#upload').removeAttr('disabled').find("span").removeClass('loading').text(lg.upload);
+                              return false;
+                            }
+                          }
+                        },
+                        error: function (jqXHR, textStatus, errorThrown)
+                        {
+                          $('#upload').removeAttr('disabled').find("span").removeClass('loading').text(lg.upload);
+                          $.prompt(lg.ERROR_UPLOADING_FILE);
+                        },
+                        success: function (result)
+                        {
+                          var data = jQuery.parseJSON($('#uploadresponse').find('textarea').text());
 
-                               if (data['Code'] == 0)
-                               {
-                                 var fullpath = data["Path"] + '/' +
-                                                data["Name"];
+                          if (data['Code'] == 0)
+                          {
+                            var fullpath = data["Path"] + '/' +
+                                           data["Name"];
 
-                                 // Reloading file info
-                                 getFileInfo(fullpath);
+                            // Reloading file info
+                            getFileInfo(fullpath);
 
-                                 // Visual effects for user to see action is
-                                 // successful
-                                 $('#preview').find('img').hide().fadeIn('slow'); // on right panel
+                            // Visual effects for user to see action is
+                            // successful
+                            $('#preview').find('img').hide().fadeIn('slow'); // on
+                                                                             // right
+                                                                             // panel
 
-                                 if (config.options.showConfirmation)
-                                 {
-                                   $.prompt(lg.successful_replace);
-                                 }
+                            if (config.options.showConfirmation)
+                            {
+                              $.prompt(lg.successful_replace);
+                            }
 
-                               }
-                               else
-                               {
-                                 $.prompt(data['Error']);
-                               }
-                               $('#replace').removeAttr('disabled');
-                               $('#upload span').removeClass('loading').text(lg.upload);
-                             }
-                           });
+                          }
+                          else
+                          {
+                            $.prompt(data['Error']);
+                          }
+                          $('#replace').removeAttr('disabled');
+                          $('#upload span').removeClass('loading').text(lg.upload);
+                        }
+                      });
 
     // we pass data path value - original file
     $('#newfilepath').val(data["Path"]);
@@ -1136,68 +1416,156 @@
     return finalName;
   };
 
-// Prompts for confirmation, then deletes the current item.
-// Called by clicking the "Delete" button in detail views
-// or choosing the "Delete contextual menu item in list views.
-  var deleteItem = function (data)
+  /**
+   * Prompts for confirmation, then deletes the items.
+   * Called by clicking the "Delete" button after selecting items.
+   *
+   * @param paths     Array of paths to delete.
+   * @returns {boolean}
+   */
+  var deleteItems = function (paths)
   {
     var isDeleted = false;
     var msg = lg.confirmation_delete;
+    var deleteCount = paths.length;
+    var successful = [];
+    var unsuccessful = {};
+    var totalCompleteCount = 0;
 
-    var doDelete = function (v, m)
+    var doDelete = function ()
     {
-      if (v === 1)
+      for (var p = 0; p < deleteCount; p++)
       {
-
-        var d = new Date(); // to prevent IE cache issues
-        var connectString = fileConnector + encodeURIComponent(data['Path']),
-          parent = data['Path'].split('/').reverse().slice(1)
-                     .reverse().join('/') + '/';
+        var path = paths[p];
 
         $.ajax({
-                 type: 'GET',
-                 url: connectString,
-                 dataType: 'json',
+                 type: 'DELETE',
+                 url: config.options.itemConnector + path,
                  async: false,
-                 success: function (result)
-                 {
-                   if (result['Code'] == 0)
+                 statusCode: {
+                   200: function ()
                    {
-                     removeNode(result['Path']);
-                     var rootpath = result['Path'].substring(0, result['Path'].length -
-                                                                1); // removing
-                                                                    // the last
-                                                                    // slash
-                     rootpath =
-                       rootpath.substr(0, rootpath.lastIndexOf('/') + 1);
-                     $('#uploader h1').text(lg.current_folder +
-                                            displayPath(rootpath)).attr("title", displayPath(rootpath, false)).attr('data-path', rootpath);
-                     isDeleted = true;
-
-                     if (config.options.showConfirmation)
-                     {
-                       $.prompt(lg.successful_delete);
-                     }
-                   }
-                   else
+                     successful.push(path);
+                   },
+                   401: function ()
                    {
-                     isDeleted = false;
-                     $.prompt(result['Error']);
+                     unsuccessful[path] = lg.ERROR_WRITING_PERM;
+                   },
+                   403: function ()
+                   {
+                     unsuccessful[path] = lg.ERROR_WRITING_PERM;
+                   },
+                   404: function()
+                   {
+                     unsuccessful[path] = lg.ERROR_NO_SUCH_ITEM;
+                   },
+                   500: function()
+                   {
+                     unsuccessful[path] = lg.ERROR_SERVER;
                    }
                  }
-               });
+               })
+          .always(function()
+                  {
+                    totalCompleteCount++;
+                  });
       }
+
+      while (totalCompleteCount < deleteCount)
+      {
+        // Wait
+      }
+
+      return ($.isEmptyObject(unsuccessful));
     };
-    var btns = {};
-    btns[lg.yes] = true;
-    btns[lg.no] = false;
-    $.prompt(msg, {
-      callback: doDelete,
-      buttons: btns
-    });
+
+    var btns = [];
+    btns.push({
+                "title": lg.yes,
+                "value": true,
+                "classes": "btn btn-danger"
+              });
+    btns.push({
+                "title": lg.no,
+                "value": false,
+                "classes": "btn btn-default"
+              });
+
+    if (deleteCount > 0)
+    {
+      $.prompt.disableStateButtons("deletion");
+
+      $.prompt({
+                confirmation: {
+                  html: msg,
+                  buttons: btns,
+                  submit: function(e,v,m,f)
+                  {
+                    if (v === true)
+                    {
+                      e.preventDefault();
+                      $.prompt.nextState(function(event)
+                                         {
+                                           event.preventDefault();
+                                           var nextState = doDelete(event)
+                                             ? "successful" : "unsuccessful";
+                                           $.prompt.goToState(nextState);
+                                           return false;
+                                         });
+                      return false;
+                    }
+                    else
+                    {
+                      $.prompt.close();
+                    }
+                  }
+                },
+                deletion: {
+                  html: lg.deleting_message.replace('%d', deleteCount)
+                },
+                successful: {
+                  html: lg.successful_delete,
+                  buttons: [{
+                    "title": lg.no,
+                    "value": false,
+                    "classes": "btn btn-success"
+                  }],
+                  submit: refreshPage
+                },
+                unsuccessful: {
+                  html: function()
+                  {
+                    var output = "";
+
+                    $.each(unsuccessful, function(path, error)
+                    {
+                      output += path + ": " + error + "<br />";
+                    });
+
+                    return lg.unsuccessful_delete + "<br />" + output;
+                  }
+                }
+               });
+    }
 
     return isDeleted;
   };
+
+  $(document).on("click", "button#delete",
+                 function ()
+                 {
+                   var paths = [];
+
+                   $.each($dt.rows({selected: true}).data(),
+                          function (key, data)
+                          {
+                            paths.push((data.length > 8)
+                                         ? data[9]
+                                         : $(data[0]).data("path"));
+                          });
+
+                   deleteItems(paths);
+                 });
 
 // Display an 'edit' link for editable files
 // Then let user change the content of the file
@@ -1207,8 +1575,8 @@
     isEdited = false;
 
     $fileInfo.find('div#tools').append(' <a id="edit-file" href="#" title="' +
-                                            lg.edit + '"><span>' + lg.edit +
-                                            '</span></a>');
+                                       lg.edit + '"><span>' + lg.edit +
+                                       '</span></a>');
 
     $('#edit-file').click(function ()
                           {
@@ -1361,27 +1729,8 @@
     }
   };
 
-// Updates the specified node with a new name. Called after
-// a successful rename operation.
-  var updateNode = function (oldPath, newPath, newName)
-  {
-    var thisNode = $('#filetree').find('a[data-path="' + oldPath + '"]');
-    var parentNode = thisNode.parent().parent().prev('a');
-    thisNode.attr('data-path', newPath).text(newName);
 
-    // we work directly on root folder
-    // TODO optimize by binding only the renamed element
-    if (parentNode.length == 0)
-    {
-      createFileTree();
-    }
-    else
-    {
-      parentNode.click().click();
-    }
-  };
-
-// Removes the specified node. Called after a successful 
+// Removes the specified node. Called after a successful
 // delete operation.
   var removeNode = function (path)
   {
@@ -1408,27 +1757,6 @@
       getFolderInfo(path.substr(0, path.lastIndexOf('/') + 1));
     }
   };
-
-// Adds a new folder as the first item beneath the
-// specified parent node. Called after a new folder is
-// successfully created.
-  var addFolder = function (parent, name)
-  {
-    var newNode = '<li class="directory collapsed"><a data-path="' + parent +
-                  name + '/" href="#">' + name +
-                  '</a><ul class="jqueryFileTree" style="display: block;"></ul></li>';
-    var parentNode = $('#filetree').find('a[data-path="' + parent + '"]');
-    if (parent != fileRoot)
-    {
-      parentNode.next('ul').prepend(newNode).prev('a').click().click();
-    }
-
-    if (config.options.showConfirmation)
-    {
-      $.prompt(lg.successful_added_folder);
-    }
-  };
-
 
   /*---------------------------------------------------------
    Functions to Retrieve File and Folder Details
@@ -1569,7 +1897,8 @@
 
                   if (config.options.baseUrl !== false)
                   {
-                    url = smartPath(baseUrl, data['Path'].replace(fileRoot, ""));
+                    url =
+                      smartPath(baseUrl, data['Path'].replace(fileRoot, ""));
                   }
                   else
                   {
@@ -1579,11 +1908,11 @@
                   if (data['Protected'] == 0)
                   {
                     $fileInfo.find('div#tools').append(' <a id="copy-button" data-clipboard-text="' +
-                                                            url + '" title="' +
-                                                            lg.copy_to_clipboard +
-                                                            '" href="#"><span>' +
-                                                            lg.copy_to_clipboard +
-                                                            '</span></a>');
+                                                       url + '" title="' +
+                                                       lg.copy_to_clipboard +
+                                                       '" href="#"><span>' +
+                                                       lg.copy_to_clipboard +
+                                                       '</span></a>');
                     // loading zeroClipboard code
 
                     loadJS('/storage/scripts/zeroclipboard/copy.js?d' +
@@ -1591,8 +1920,8 @@
                     $('#copy-button').click(function ()
                                             {
                                               $fileInfo.find('div#tools').append('<span id="copied">' +
-                                                                                      lg.copied +
-                                                                                      '</span>');
+                                                                                 lg.copied +
+                                                                                 '</span>');
                                               $('#copied').delay(500).fadeOut(1000, function ()
                                               {
                                                 $(this).remove();
@@ -1684,7 +2013,8 @@
       loadCSS('/storage/themes/' + config.options.theme +
               '/styles/filemanager.css');
       $.ajax({
-               url: '/storage/themes/' + config.options.theme + '/styles/ie.css',
+               url: '/storage/themes/' + config.options.theme +
+                    '/styles/ie.css',
                async: false,
                success: function (data)
                {
@@ -1791,8 +2121,6 @@
       }
 
       /** Input file Replacement */
-      $('#browse').append('+');
-      $('#browse').attr('title', lg.browse);
       $("#newfile").change(function ()
                            {
                              $("#filepath").val($(this).val().replace(/.+[\\\/]/, ""));
@@ -1854,7 +2182,7 @@
                                              lg.upload + '</button></div>';
 
                                       var error_flag = false;
-                                      var path = $('#currentpath').val();
+                                      var path = getCurrentPath();
 
                                       var fileSize = (config.upload.fileSizeLimit !=
                                                       'auto') ?
@@ -1867,7 +2195,8 @@
                                           'DISALLOW_ALL')
                                       {
                                         allowedFiles =
-                                          '.' + config.security.uploadRestrictions.join(',.');
+                                          '.' +
+                                          config.security.uploadRestrictions.join(',.');
                                       }
                                       else
                                       {
@@ -1883,7 +2212,8 @@
                                           'images' || config.upload.imagesOnly)
                                       {
                                         allowedFiles =
-                                          '.' + config.images.imagesExt.join(',.');
+                                          '.' +
+                                          config.images.imagesExt.join(',.');
                                       }
 
                                       var btns = {};
@@ -1898,7 +2228,8 @@
 
                                       $("div#multiple-uploads").dropzone({
                                                                            paramName: "upload",
-                                                                           url: '/storage/upload' + path,
+                                                                           url: config.options.fileConnector +
+                                                                                path,
                                                                            method: 'put',
                                                                            maxFilesize: fileSize,
                                                                            maxFiles: config.upload.number,
@@ -1927,14 +2258,14 @@
                                                                              var dropzone = this;
                                                                              $("#process-upload").click(function ()
                                                                                                         {
-                                                                                                          // To proceed full queue parallelUploads must be equal or > to maxFileSize.
-                                                                                                          // https://github.com/enyo/dropzone/issues/462
+                                                                                                          // To proceed full queue parallelUploads must be equal or > to maxFileSize. https://github.com/enyo/dropzone/issues/462
                                                                                                           dropzone.processQueue();
                                                                                                         });
                                                                            },
                                                                            totaluploadprogress: function (progress)
                                                                            {
-                                                                             $progressBar.css('width', progress + "%");
+                                                                             $progressBar.css('width', progress +
+                                                                                                       "%");
                                                                            },
                                                                            sending: function (file, xhr, formData)
                                                                            {
@@ -1945,7 +2276,8 @@
                                                                            {
                                                                              $uploadResponse.empty().text(jsonResponse);
 
-                                                                             if (jsonResponse.code == 0)
+                                                                             if (jsonResponse.code ==
+                                                                                 0)
                                                                              {
                                                                                this.removeFile(file);
                                                                              }
@@ -1953,23 +2285,30 @@
                                                                              {
                                                                                getFolderInfo(path);
                                                                                $.prompt(jsonResponse.error);
-                                                                               error_flag = true;
+                                                                               error_flag =
+                                                                                 true;
                                                                              }
                                                                            },
                                                                            complete: function ()
                                                                            {
-                                                                             if ((this.getUploadingFiles().length === 0)
-                                                                                 && (this.getQueuedFiles().length === 0))
+                                                                             if ((this.getUploadingFiles().length ===
+                                                                                  0)
+                                                                                 &&
+                                                                                 (this.getQueuedFiles().length ===
+                                                                                  0))
                                                                              {
                                                                                $progressBar.css('width', '0%');
 
-                                                                               if ((this.getRejectedFiles().length === 0)
-                                                                                   && (error_flag === false))
+                                                                               if ((this.getRejectedFiles().length ===
+                                                                                    0)
+                                                                                   &&
+                                                                                   (error_flag ===
+                                                                                    false))
                                                                                {
-                                                                                 //setTimeout(function ()
-                                                                                 //           {
-                                                                                 $.prompt.close();
-                                                                                            //}, 800);
+                                                                                 setTimeout(function ()
+                                                                                            {
+                                                                                              $.prompt.close();
+                                                                                            }, 800);
                                                                                }
 
                                                                                getFolderInfo(path);
@@ -1977,9 +2316,9 @@
                                                                                if (config.options.showConfirmation)
                                                                                {
                                                                                  $.prompt(lg.successful_added_file, {
-                                                                                   submit: function()
+                                                                                   submit: function ()
                                                                                    {
-                                                                                     window.location.reload(true);
+                                                                                     refreshPage();
                                                                                    }
                                                                                  });
                                                                                }
@@ -2056,7 +2395,8 @@
                                     // if config.upload.fileSizeLimit == auto
                                     // we delegate size test to connector
                                     if (typeof FileReader !== "undefined" &&
-                                        typeof config.upload.fileSizeLimit != "auto")
+                                        typeof config.upload.fileSizeLimit !=
+                                        "auto")
                                     {
                                       // Check file size using html5 FileReader
                                       // API
@@ -2178,6 +2518,5 @@
                  {
                    setDimensions();
                  });
-
-})(jQuery);
+};
 
