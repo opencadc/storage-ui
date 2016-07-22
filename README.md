@@ -4,7 +4,7 @@ By default, this uses the CANFAR (CADC) VOSpace located at:
 
 <a rel="external" href="http://www.canfar.phys.uvic.ca/vospace">http://www.canfar.phys.uvic.ca/vospace</a>
 
-<a href="https://travis-ci.org/canfar/beacon"><img src="https://travis-ci.org/canfar/beacon.svg?branch=0.6" /></a>
+<a href="https://travis-ci.org/opencadc/storage"><img src="https://travis-ci.org/opencadc/storage.svg?branch=0.6" /></a>
 
 
 ### Building
@@ -34,7 +34,7 @@ Or deploy the `war` file in `build/libs` into a Java container such as Tomcat.
 
 See the Docker repo here:
 
-<a rel="external" href="https://hub.docker.com/r/canfar/beacon/">https://hub.docker.com/r/canfar/beacon/</a>
+<a rel="external" href="https://hub.docker.com/r/opencadc/storage/">https://hub.docker.com/r/opencadc/storage/</a>
 
 Or build your own with the provided Dockerfile (from the same directory as the Dockerfile):
 
