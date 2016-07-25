@@ -77,22 +77,23 @@ public class FileItem extends StorageItem
 {
     public FileItem(VOSURI uri, long sizeInBytes, Date lastModified,
                     boolean publicFlag, boolean lockedFlag,
-                    URI[] writeGroupURIs, URI[] readGroupURIs, String owner)
+                    URI[] writeGroupURIs, URI[] readGroupURIs, String owner,
+                    boolean readableFlag)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-              writeGroupURIs, readGroupURIs, owner);
+              writeGroupURIs, readGroupURIs, owner, readableFlag);
     }
 
     @Override
     public String getItemIconCSS()
     {
-        return "glyphicon-cloud-download";
+        return "glyphicon-" + (isReadable() ? "cloud-download" : "file");
     }
 
     @Override
     public String getLinkURI()
     {
-        return "/item" + uri.getPath();
+        return "/file" + uri.getPath();
     }
 }
 

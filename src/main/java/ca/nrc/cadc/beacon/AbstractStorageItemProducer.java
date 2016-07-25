@@ -111,7 +111,7 @@ public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
 
     String getQuery()
     {
-        return "limit=" + ((pageSize > 0) ? pageSize : 300)
+        return "detail=max&limit=" + ((pageSize > 0) ? pageSize : 300)
                + ((current == null)
                   ? "" : "&uri=" + NetUtil.encode(current.toString()));
     }

@@ -77,14 +77,19 @@ import java.util.Date;
 public class FolderItem extends StorageItem
 {
     private final int childCount;
+    private final boolean writableFlag;
+
 
     public FolderItem(VOSURI uri, long sizeInBytes, Date lastModified,
                       boolean publicFlag, boolean lockedFlag,
                       URI[] writeGroupURIs, URI[] readGroupURIs, String owner,
+                      boolean readableFlag, final boolean writableFlag,
                       final int childCount)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-              writeGroupURIs, readGroupURIs, owner);
+              writeGroupURIs, readGroupURIs, owner, readableFlag);
+
+        this.writableFlag = writableFlag;
         this.childCount = childCount;
     }
 
@@ -97,13 +102,18 @@ public class FolderItem extends StorageItem
     @Override
     public String getItemIconCSS()
     {
-        return "glyphicon-folder-open";
+        return "glyphicon-folder-" + (isReadable() ? "open" : "close");
     }
 
     @Override
     public String getLinkURI()
     {
         return "/list" + uri.getPath();
+    }
+
+    public boolean isWritable()
+    {
+        return writableFlag;
     }
 
     public int getChildCount()

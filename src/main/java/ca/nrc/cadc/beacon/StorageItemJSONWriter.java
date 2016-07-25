@@ -142,6 +142,10 @@ public class StorageItemJSONWriter implements StorageItemWriter
         // Link URI
         jsonWriter.key("linkURI").value(storageItem.getLinkURI());
 
+        // Readable flag
+        jsonWriter.key("readable_flag").value(
+                Boolean.toString(storageItem.isReadable()));
+
         jsonWriter.endObject();
     }
 }

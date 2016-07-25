@@ -69,7 +69,7 @@
         "number": 5,
         "overwrite": false,
         "imagesOnly": false,
-        "fileSizeLimit": 16
+        "fileSizeLimit": 256
     },
     "exclude": {
         "unallowed_files": [
