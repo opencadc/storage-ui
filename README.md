@@ -38,7 +38,7 @@ See the Docker repo here:
 
 Or build your own with the provided Dockerfile (from the same directory as the Dockerfile):
 
-`docker build -t beacon .`
+`docker build -t storage .`
 
 It uses the lightweight Tomcat java container that was built using Alpine Linux found here:
 
@@ -46,9 +46,9 @@ It uses the lightweight Tomcat java container that was built using Alpine Linux 
 
 Then run it:
 
-`docker run --name beacon -d -p 8080:8080 -p 5555:5555 beacon`
+`docker run --name storage -d -p 8080:8080 -p 5555:5555 storage`
 
 Or mount your own built `war`:
 
-`docker run --name beacon -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps beacon`
+`docker run --name storage -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps storage`
 
