@@ -68,11 +68,13 @@
 
 package ca.nrc.cadc.beacon.web;
 
+import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.beacon.web.view.*;
 import ca.nrc.cadc.date.DateUtil;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 
+import javax.security.auth.Subject;
 import java.net.URI;
 import java.util.Date;
 
@@ -116,6 +118,13 @@ public class StorageItemFactory
         final boolean readableFlag = StringUtil.hasLength(readableFlagValue)
                                      && Boolean.parseBoolean(readableFlagValue);
 
+        // TODO - Setup for when the feature is ready.  Currently just checks
+        // TODO - for a logged in user.
+        // TODO - jenkinsd 2016.07.25
+        final Subject currentUser = AuthenticationUtil.getCurrentSubject();
+        final boolean writableFlag = ((currentUser != null)
+                                      && !currentUser.getPrincipals().isEmpty());
+
 
         final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
 
@@ -124,6 +133,7 @@ public class StorageItemFactory
             nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
                                       publicFlag, lockedFlag, writeGroupURIs,
                                       readGroupURIs, owner, readableFlag,
+                                      writableFlag,
                                       ((ContainerNode) node).getNodes().size());
         }
         else if (node instanceof LinkNode)

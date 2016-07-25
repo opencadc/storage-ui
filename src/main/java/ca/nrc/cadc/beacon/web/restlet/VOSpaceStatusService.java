@@ -69,6 +69,7 @@
 package ca.nrc.cadc.beacon.web.restlet;
 
 import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.vos.NodeAlreadyExistsException;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Status;
@@ -118,6 +119,10 @@ public class VOSpaceStatusService extends StatusService
         else if (throwable instanceof AccessControlException)
         {
             status = Status.CLIENT_ERROR_UNAUTHORIZED;
+        }
+        else if (throwable instanceof NodeAlreadyExistsException)
+        {
+            status = Status.CLIENT_ERROR_CONFLICT;
         }
         else if (StringUtil.hasText(throwable.getMessage()))
         {

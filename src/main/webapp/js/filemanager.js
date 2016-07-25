@@ -2254,6 +2254,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                                              formData.append("mode", "add");
                                                                              formData.append("currentpath", path);
                                                                            },
+                                                                           error: function()
+                                                                           {
+                                                                             error_flag = true;
+                                                                           },
                                                                            success: function (file, jsonResponse)
                                                                            {
                                                                              $uploadResponse.empty().text(jsonResponse);
@@ -2267,25 +2271,18 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                                              {
                                                                                getFolderInfo(path);
                                                                                $.prompt(jsonResponse.error);
-                                                                               error_flag =
-                                                                                 true;
+                                                                               error_flag = true;
                                                                              }
                                                                            },
                                                                            complete: function ()
                                                                            {
-                                                                             if ((this.getUploadingFiles().length ===
-                                                                                  0)
-                                                                                 &&
-                                                                                 (this.getQueuedFiles().length ===
-                                                                                  0))
+                                                                             if ((this.getUploadingFiles().length === 0)
+                                                                                 && (this.getQueuedFiles().length === 0))
                                                                              {
                                                                                $progressBar.css('width', '0%');
 
-                                                                               if ((this.getRejectedFiles().length ===
-                                                                                    0)
-                                                                                   &&
-                                                                                   (error_flag ===
-                                                                                    false))
+                                                                               if ((this.getRejectedFiles().length === 0)
+                                                                                   && (error_flag === false))
                                                                                {
                                                                                  setTimeout(function ()
                                                                                             {
@@ -2293,9 +2290,17 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                                                             }, 800);
                                                                                }
 
-                                                                               getFolderInfo(path);
+                                                                               if (error_flag === true)
+                                                                               {
+                                                                                 var rejects = this.getRejectedFiles();
 
-                                                                               if (config.options.showConfirmation)
+                                                                                 for (var rfi = 0, rfl = rejects.length; rfi < rfl; rfi++)
+                                                                                 {
+                                                                                   var next = rejects[rfi];
+                                                                                   console.log("Next reject: " + next);
+                                                                                 }
+                                                                               }
+                                                                               else if (config.options.showConfirmation)
                                                                                {
                                                                                  $.prompt(lg.successful_added_file, {
                                                                                    submit: function ()
