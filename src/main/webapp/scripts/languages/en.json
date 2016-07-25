@@ -91,6 +91,7 @@
     "successful_edit": "Content update successful.",
     "support_fm": "Filemanager is a free software, please support !",
     "unsuccessful_delete": "Delete was <span class='text-warning'>unsuccessful</span>.",
+    "unsuccessful_added_file": "Upload failed.",
     "upload": "Upload",
     "version": "version",
     "yes": "Yes"

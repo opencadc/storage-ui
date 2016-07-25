@@ -116,7 +116,7 @@
 
                       fileManager(rows, $("#beacon"),
                               "<#if startURI??>${startURI}</#if>",
-                              "${folder.path}");
+                              "${folder.path}", ${folder.writable?c});
 
                       $(document).on("click", "a#logout", function()
                       {
