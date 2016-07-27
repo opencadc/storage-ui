@@ -64,7 +64,7 @@
                 <li>
                   <a id="root" name="root" type="button" title="Navigate to main root." href="/storage/list/">
                     <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
-                <li class="dropdown divider-vertical">
+                <li class="dropdown divider-vertical <#if !folder.writable>disabled</#if>">
                   <a title="New" class="dropdown-toggle" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
                     <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></a>
                   <ul class="dropdown-menu">
@@ -96,7 +96,7 @@
           </div>
         </nav>
         <!-- The width style here MUST exist in this tag, rather than in the CSS file. -->
-        <table id="beacon" class="table table-striped table-condensed table-hover" style="height: 100%; width: 100%;">
+        <table id="beacon" class="table table-striped table-condensed table-hover" style="width: 100%;">
           <thead>
             <tr>
               <th></th>

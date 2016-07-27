@@ -87,7 +87,8 @@ public abstract class AbstractStorageItemWriterTest<T extends StorageItemWriter>
                                                 final Class<T2> type,
                                                 final String itemCSS,
                                                 final VOSURI uri,
-                                                final String linkURI)
+                                                final String linkURI,
+                                                final boolean isReadable)
             throws Exception
     {
         final T2 mockStorageItem = createMock(type);
@@ -109,6 +110,7 @@ public abstract class AbstractStorageItemWriterTest<T extends StorageItemWriter>
         expect(mockStorageItem.getPath()).andReturn(uri.getPath()).once();
         expect(mockStorageItem.getURI()).andReturn(uri).once();
         expect(mockStorageItem.getLinkURI()).andReturn(linkURI).once();
+        expect(mockStorageItem.isReadable()).andReturn(isReadable).once();
 
         return mockStorageItem;
     }

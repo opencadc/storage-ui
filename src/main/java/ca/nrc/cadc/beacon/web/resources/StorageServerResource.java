@@ -137,7 +137,7 @@ public abstract class StorageServerResource extends SecureServerResource
     Node getNode(final VOSURI folderURI, final int pageSize)
             throws MalformedURLException, NodeNotFoundException
     {
-        final String query = "limit=" + pageSize;
+        final String query = "limit=" + pageSize + "&detail=max";
         final VOSpaceClient voSpaceClient = createClient();
 
         return voSpaceClient.getNode(folderURI.getPath(), query);

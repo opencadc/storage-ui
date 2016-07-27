@@ -9,6 +9,7 @@
   <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
   <meta name="description" content="User storage system.">
   <meta name="author" content="Canadian Astronomy Data Centre">
+  <meta name="keywords" content="VOSpace, IVOA, CADC, Canadian Astronomy Data Centre">
   <link rel="icon" href="../../favicon.ico">
 
   <title>User Storage</title>
@@ -94,10 +95,8 @@
                             content: function ()
                             {
                               return '<table class="table table-condensed table-bordered">'
-                                     +
-                                     '<tbody><tr><td>Owned by</td><td class="info"><strong>${folder.owner}</strong></td></tr>'
-                                     +
-                                     '<tr><td>Last used</td><td class="info">${folder.lastModifiedHumanReadable}</td></tr>'
+                                     + '<tbody><tr><td>Owned by</td><td class="info"><strong>${folder.owner}</strong></td></tr>'
+                                     + '<tr><td>Last used</td><td class="info">${folder.lastModifiedHumanReadable}</td></tr>'
                                      + '</tbody></table>';
                             }
                           });
@@ -115,7 +114,7 @@
 
                       fileManager(rows, $("#beacon"),
                               "<#if startURI??>${startURI}</#if>",
-                              "${folder.path}");
+                              "${folder.path}", ${folder.writable?c});
 
                       $(document).on("click", "a#logout", function()
                       {
