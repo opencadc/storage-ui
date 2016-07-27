@@ -27,8 +27,9 @@ public class LinkItem extends StorageItem
     }
 
     @Override
-    public String getLinkURI() {
-        return "/vospace/nodes" + uri.getPath();
+    public String getLinkURI()
+    {
+        return "/link" + uri.getPath();
     }
 
     /**

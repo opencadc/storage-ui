@@ -170,6 +170,7 @@ public class MainPageServerResource extends StorageServerResource
     {
         final Map<String, Object> dataModel = new HashMap<>();
 
+
         dataModel.put("initialRows", initialRows);
         dataModel.put("folder", folderItem);
         if (startNextPageURI != null)

@@ -193,7 +193,8 @@ public class FileItemServerResource extends StorageItemServerResource
     }
 
     protected void writeOut(final FileItemIterator fileItemIterator)
-            throws IOException, IllegalArgumentException, NodeNotFoundException
+            throws IOException, IllegalArgumentException, NodeNotFoundException,
+                   NodeAlreadyExistsException
     {
         boolean inheritParentPermissions = false;
         VOSURI newNodeURI = null;
@@ -237,7 +238,8 @@ public class FileItemServerResource extends StorageItemServerResource
      * @throws IOException If anything goes wrong.
      */
     protected VOSURI handleUpload(final FileItemStream fileItemStream)
-            throws IOException, IllegalArgumentException
+            throws IOException, IllegalArgumentException,
+                   NodeAlreadyExistsException
     {
         final String filename = fileItemStream.getName();
 
@@ -296,6 +298,7 @@ public class FileItemServerResource extends StorageItemServerResource
                                 final VOSpaceClient client,
                                 final DataNode dataNode,
                                 final Transfer transfer)
+            throws NodeAlreadyExistsException
     {
         final UploadOutputStreamWrapper outputStreamWrapper =
                 new UploadOutputStreamWrapperImpl(inputStream, BUFFER_SIZE);
@@ -304,11 +307,20 @@ public class FileItemServerResource extends StorageItemServerResource
 
         try
         {
-            client.getNode(path);
+            // Due to a bug in VOSpace that returns a 400 while checking
+            // for an existing Node, we will work around it by checking manually
+            // rather than looking for a NodeNotFoundException as expected, and
+            // return the 409 code, while maintaining backward compatibility
+            // with the catch below.
+            // jenkinsd 2016.07.25
+            if (client.getNode(path) != null)
+            {
+                throw new NodeAlreadyExistsException("Not found: " + path);
+            }
         }
         catch (NodeNotFoundException e)
         {
-            client.createNode(dataNode);
+            client.createNode(dataNode, false);
         }
 
         final ClientTransfer ct = client.createTransfer(transfer);

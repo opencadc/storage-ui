@@ -91,6 +91,7 @@
     "successful_replace": "Fichier remplacé avec succès.", 
     "support_fm": "Filemanager est un projet libre, supportez-le !",
     "unsuccessful_delete": "Suppression <span class='text-warning'>n'a pas réussi</span>.",
+    "unsuccessful_added_file": "Téléchargement n'a pas réussi.",
     "upload": "Télécharger", 
     "version": "version", 
     "yes": "Oui"

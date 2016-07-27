@@ -1,4 +1,4 @@
-FROM canfar/tomcat
+FROM opencadc/tomcat
 
 # Default options for the Java runtime.  Other CANFAR ones can include:
 # -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for CANFAR registry entries>

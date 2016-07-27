@@ -9,7 +9,8 @@
  *  @copyright  Authors
  */
 
-function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
+function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
+                     _canWriteFlag)
 {
 // function to retrieve GET params
   $.urlParam = function (name)
@@ -104,6 +105,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
     requestData.startURI = encodeURIComponent(_startURI);
   }
 
+  var selectInput = _canWriteFlag ? {
+    style: 'os',
+    selector: 'td:first-child'
+  } : false;
+
   var $fileInfo = $("#fileInfo");
   var fileRoot;
   var baseURL;
@@ -129,7 +135,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
         {
           "targets": 0,
           "orderable": false,
-          "className": 'select-checkbox',
+          "className": (_canWriteFlag ? 'select-checkbox' : 'disabled'),
           "searchable": false,
           "render": function (data, type, full)
           {
@@ -217,10 +223,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
           "searchable": false
         }
       ],
-      select: {
-        style: 'os',
-        selector: 'td:first-child'
-      },
+      select: selectInput,
       order: [[3, 'desc']]
     });
 
@@ -976,44 +979,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                replaceItem(data);
                                              }).show();
     }
-
-    if (has_capability(data, 'delete'))
-    {
-      $fileInfo.find('button#delete').click(function ()
-                                            {
-                                              $.each($dt.rows({selected: true}).data(),
-                                                     function (key, data)
-                                                     {
-                                                       var path = (data.length >
-                                                                   8)
-                                                         ? data[9]
-                                                         :
-                                                                  $(data[0]).data("path");
-
-                                                       $.ajax({
-                                                                method: "DELETE",
-                                                                url: config.options.itemConnector
-                                                                     +
-                                                                     encodeURIComponent(path)
-                                                              });
-                                                     });
-                                            });
-    }
-    //
-    //
-    //if (!has_capability(data, 'download'))
-    //{
-    //  $fileInfo.find('button#download').hide();
-    //}
-    //else
-    //{
-    //  $fileInfo.find('button#download').click(function ()
-    //                                               {
-    //                                                 window.location =
-    //                                                   fileConnector +
-    //                                                   '?mode=download&path='
-    // + encodeURIComponent(data['Path']) + '&config=' + userconfig; }).show();
-    // }
   };
 
 
@@ -1568,11 +1533,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                    var paths = [];
 
                    $.each($dt.rows({selected: true}).data(),
-                          function (key, data)
+                          function (key, itemData)
                           {
-                            paths.push((data.length > 8)
-                                         ? data[9]
-                                         : $(data[0]).data("path"));
+                            paths.push(itemData[9]);
                           });
 
                    deleteItems(paths);
@@ -2154,7 +2117,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                 $('#uploader h1').attr('title') +
                                                 '</h2><div id="multiple-uploads" class="dropzone"></div>';
                                       msg +=
-                                        '<div id="total-progress"><div data-dz-uploadprogress="" style="width:0%;" class="progress-bar"></div></div>';
+                                        '<div id="total-progress"><div data-dz-uploadprogress="" style="width:0;" class="progress-bar"></div></div>';
                                       msg += '<div class="prompt-info">' +
                                              lg.dz_dictMaxFilesExceeded.replace('%s', config.upload.number) +
                                              lg.file_size_limit +
@@ -2165,38 +2128,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
 
                                       var error_flag = false;
                                       var path = getCurrentPath();
-
-                                      var fileSize = (config.upload.fileSizeLimit !=
-                                                      'auto') ?
-                                                     config.upload.fileSizeLimit :
-                                                     256; // default dropzone
-                                                          // value
-                                      var allowedFiles;
-
-                                      if (config.security.uploadPolicy ==
-                                          'DISALLOW_ALL')
-                                      {
-                                        allowedFiles =
-                                          '.' +
-                                          config.security.uploadRestrictions.join(',.');
-                                      }
-                                      else
-                                      {
-                                        // we allow any extension since we have
-                                        // no easy way to handle the the
-                                        // built-in `acceptedFiles` params
-                                        // Would be handled later by the
-                                        // connector
-                                        allowedFiles = null;
-                                      }
-
-                                      if ($.urlParam('type').toString().toLowerCase() ==
-                                          'images' || config.upload.imagesOnly)
-                                      {
-                                        allowedFiles =
-                                          '.' +
-                                          config.images.imagesExt.join(',.');
-                                      }
 
                                       var btns = {};
                                       btns[lg.close] = false;
@@ -2213,7 +2144,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                                            url: config.options.fileConnector +
                                                                                 path,
                                                                            method: 'put',
-                                                                           maxFilesize: fileSize,
+                                                                           maxFilesize: config.upload.fileSizeLimit,  // 10GB max.
                                                                            maxFiles: config.upload.number,
                                                                            addRemoveLinks: true,
                                                                            parallelUploads: config.upload.number,
@@ -2221,14 +2152,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                                            dictRemoveFile: lg.del,
                                                                            dictMaxFilesExceeded: lg.dz_dictMaxFilesExceeded.replace("%s", config.upload.number),
                                                                            dictDefaultMessage: lg.dz_dictDefaultMessage,
-                                                                           dictInvalidFileType: lg.dz_dictInvalidFileType,
-                                                                           dictFileTooBig: lg.file_too_big +
-                                                                                           ' ' +
-                                                                                           lg.file_size_limit +
-                                                                                           config.upload.fileSizeLimit +
-                                                                                           ' ' +
-                                                                                           lg.mb,
-                                                                           acceptedFiles: allowedFiles,
+                                                                           acceptedFiles: null,
                                                                            autoProcessQueue: false,
                                                                            init: function ()
                                                                            {
@@ -2254,6 +2178,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                                              formData.append("mode", "add");
                                                                              formData.append("currentpath", path);
                                                                            },
+                                                                           error: function()
+                                                                           {
+                                                                             error_flag = true;
+                                                                           },
                                                                            success: function (file, jsonResponse)
                                                                            {
                                                                              $uploadResponse.empty().text(jsonResponse);
@@ -2267,35 +2195,28 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                                              {
                                                                                getFolderInfo(path);
                                                                                $.prompt(jsonResponse.error);
-                                                                               error_flag =
-                                                                                 true;
+                                                                               error_flag = true;
                                                                              }
                                                                            },
                                                                            complete: function ()
                                                                            {
-                                                                             if ((this.getUploadingFiles().length ===
-                                                                                  0)
-                                                                                 &&
-                                                                                 (this.getQueuedFiles().length ===
-                                                                                  0))
+                                                                             if ((this.getUploadingFiles().length === 0)
+                                                                                 && (this.getQueuedFiles().length === 0))
                                                                              {
                                                                                $progressBar.css('width', '0%');
 
-                                                                               if ((this.getRejectedFiles().length ===
-                                                                                    0)
-                                                                                   &&
-                                                                                   (error_flag ===
-                                                                                    false))
+                                                                               if (error_flag === true)
                                                                                {
-                                                                                 setTimeout(function ()
-                                                                                            {
-                                                                                              $.prompt.close();
-                                                                                            }, 800);
+                                                                                 var rejects = this.getRejectedFiles();
+
+                                                                                 for (var rfi = 0, rfl = rejects.length; rfi < rfl; rfi++)
+                                                                                 {
+
+                                                                                 }
+
+                                                                                 $.prompt(lg.unsuccessful_added_file);
                                                                                }
-
-                                                                               getFolderInfo(path);
-
-                                                                               if (config.options.showConfirmation)
+                                                                               else if (config.options.showConfirmation)
                                                                                {
                                                                                  $.prompt(lg.successful_added_file, {
                                                                                    submit: function ()
@@ -2304,7 +2225,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath)
                                                                                    }
                                                                                  });
                                                                                }
+                                                                               else
+                                                                               {
+                                                                                 refreshPage();
+                                                                               }
                                                                              }
+
+                                                                             // Reset.
+                                                                             error_flag = false;
                                                                            }
                                                                          });
 
