@@ -68,13 +68,11 @@
 
 package ca.nrc.cadc.beacon.web;
 
-import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.beacon.web.view.*;
 import ca.nrc.cadc.date.DateUtil;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 
-import javax.security.auth.Subject;
 import java.net.URI;
 import java.util.Date;
 
