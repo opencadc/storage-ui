@@ -89,8 +89,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var selectButtonGroupID = "delete";
   var deleteButtonHTML = "<span id='" + selectButtonGroupID
                          + "' class='btn-group btn-group-xs'>"
-                         +
-                         "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
+                         + "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
                          + "</span>";
   var stringUtil = new cadc.web.util.StringUtil(publicLink);
   var url = config.options.pageConnector + _folderPath;
@@ -167,9 +166,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
               if (full[12] === "true")
               {
-                itemNameDisplay += '<a href="/storage'
-                                   + full[11]
-                                   + '">' + data + '</a>';
+                itemNameDisplay += '<a href="' + full[11] + '">' + data + '</a>';
               }
               else
               {
@@ -1502,7 +1499,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                 successful: {
                   html: lg.successful_delete,
                   buttons: [{
-                    "title": lg.no,
+                    "title": lg.close,
                     "value": false,
                     "classes": "btn btn-success"
                   }],

@@ -70,21 +70,59 @@ package ca.nrc.cadc.beacon.web;
 
 import ca.nrc.cadc.beacon.web.view.*;
 import ca.nrc.cadc.date.DateUtil;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 
+import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.Date;
 
 
 public class StorageItemFactory
 {
+    public final static URI DATA_SERVICE_ID =
+            URI.create("ivo://cadc.nrc.ca/data");
+
+
     private final URIExtractor uriExtractor;
+    private final URL downloadServiceURL;
+    private final String contextPath;
 
 
-    public StorageItemFactory(final URIExtractor uriExtractor)
+    public StorageItemFactory(final URIExtractor uriExtractor,
+                              final RegistryClient registryClient,
+                              final String contextPath)
+            throws MalformedURLException
     {
         this.uriExtractor = uriExtractor;
+        this.downloadServiceURL =
+                registryClient.getServiceURL(DATA_SERVICE_ID, "http",
+                                             "/pub/vospace");
+        this.contextPath = contextPath;
+    }
+
+
+    String getTarget(final DataNode dataNode) throws MalformedURLException
+    {
+        // TODO
+        // TODO - Is the data web service with the /pub/vospace path portable?
+        // TODO - It may be CADC specific.
+        // TODO - jenkinsd 2016.07.12
+        // TODO
+        return (downloadServiceURL.toExternalForm()
+                + dataNode.getUri().getPath());
+    }
+
+    String getTarget(final ContainerNode containerNode)
+    {
+        return contextPath + "/list" + containerNode.getUri().getPath();
+    }
+
+    String getTarget(final LinkNode linkNode)
+    {
+        return contextPath + "/link" + linkNode.getUri().getPath();
     }
 
 
@@ -121,22 +159,25 @@ public class StorageItemFactory
         final boolean writableFlag = StringUtil.hasLength(writableFlagValue)
                                      && Boolean.parseBoolean(writableFlagValue);
 
-
         final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
+
 
         if (node instanceof ContainerNode)
         {
+            final ContainerNode containerNode = (ContainerNode) node;
             nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
                                       publicFlag, lockedFlag, writeGroupURIs,
                                       readGroupURIs, owner, readableFlag,
                                       writableFlag,
-                                      ((ContainerNode) node).getNodes().size());
+                                      containerNode.getNodes().size(),
+                                      getTarget(containerNode));
         }
         else if (node instanceof LinkNode)
         {
             nextItem = new LinkItem(nodeURI, -1L, lastModifiedDate, publicFlag,
                                     lockedFlag, writeGroupURIs, readGroupURIs,
-                                    owner, readableFlag);
+                                    owner, readableFlag,
+                                    getTarget((LinkNode) node));
         }
         else
         {
@@ -147,7 +188,8 @@ public class StorageItemFactory
             nextItem = new FileItem(nodeURI, sizeInBytes,
                                     lastModifiedDate, publicFlag,
                                     lockedFlag, writeGroupURIs,
-                                    readGroupURIs, owner, readableFlag);
+                                    readGroupURIs, owner, readableFlag,
+                                    getTarget((DataNode) node));
         }
 
         return nextItem;

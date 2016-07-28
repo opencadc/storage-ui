@@ -136,7 +136,7 @@ public class StorageItemCSVWriter implements StorageItemWriter
         row.add(storageItem.getURI().toString());
 
         // Link for click action. [11]
-        row.add(storageItem.getLinkURI());
+        row.add(storageItem.getTargetURL());
 
         // Readable flag.  [12]
         row.add(Boolean.toString(storageItem.isReadable()));
