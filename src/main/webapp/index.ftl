@@ -95,10 +95,9 @@
                             content: function ()
                             {
                               return '<table class="table table-condensed table-bordered">'
-                                     +
-                                     '<tbody><tr><td>Owned by</td><td class="info"><strong>${folder.owner}</strong></td></tr>'
-                                     +
-                                     '<tr><td>Last used</td><td class="info">${folder.lastModifiedHumanReadable}</td></tr>'
+                                     + '<tbody><tr><td>Owned by</td><td class="info"><strong>${folder.owner}</strong></td></tr>'
+                                     + '<tr><td>Last used</td><td class="info">${folder.lastModifiedHumanReadable}</td></tr>'
+                                     + '<tr><td colspan="2">Is <#if !folder.writable><span class="text-danger">not </span></#if>writable by you.</td></tr>'
                                      + '</tbody></table>';
                             }
                           });
