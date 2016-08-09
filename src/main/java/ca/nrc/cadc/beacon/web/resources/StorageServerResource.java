@@ -77,6 +77,7 @@ import ca.nrc.cadc.vos.NodeNotFoundException;
 import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.data.Status;
+import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
 import java.net.MalformedURLException;
@@ -93,8 +94,27 @@ public abstract class StorageServerResource extends SecureServerResource
     static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
 
     static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-    final StorageItemFactory storageItemFactory =
-            new StorageItemFactory(URI_EXTRACTOR);
+
+    protected final RegistryClient registryClient;
+    protected final StorageItemFactory storageItemFactory;
+
+
+
+    public StorageServerResource()
+    {
+        this.registryClient = new RegistryClient();
+
+        try
+        {
+            this.storageItemFactory =
+                    new StorageItemFactory(URI_EXTRACTOR, registryClient,
+                                           getServletContext().getContextPath());
+        }
+        catch (MalformedURLException e)
+        {
+            throw new ResourceException(Status.SERVER_ERROR_INTERNAL, e);
+        }
+    }
 
 
     String getCurrentPath()
@@ -121,13 +141,6 @@ public abstract class StorageServerResource extends SecureServerResource
     }
 
     protected VOSpaceClient createClient() throws MalformedURLException
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        return createClient(registryClient);
-    }
-
-    protected VOSpaceClient createClient(final RegistryClient registryClient)
-            throws MalformedURLException
     {
         return new VOSpaceClient(
                 registryClient.getServiceURL(VOSPACE_SERVICE_ID, "http")

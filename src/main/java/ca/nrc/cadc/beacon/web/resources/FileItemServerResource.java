@@ -70,7 +70,7 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.web.*;
 import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
-import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.net.OutputStreamWrapper;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.ClientTransfer;
@@ -86,7 +86,6 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.servlet.ServletUtils;
 import org.restlet.representation.Representation;
-import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 
@@ -94,7 +93,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -121,34 +119,6 @@ public class FileItemServerResource extends StorageItemServerResource
         this(new FileValidator(), new UploadVerifier());
     }
 
-
-    @Get
-    public void represent() throws Exception
-    {
-        final RegistryClient registryClient = new RegistryClient();
-        sendToDownload(registryClient);
-    }
-
-    /**
-     * Send a redirect to the proper download URL.
-     *
-     * @param registryClient    The RegistryClient to use.
-     */
-    void sendToDownload(final RegistryClient registryClient)
-            throws MalformedURLException
-    {
-        // TODO
-        // TODO - Is the data web service with the /pub/vospace path portable?
-        // TODO - It may be CADC specific.
-        // TODO - jenkinsd 2016.07.12
-        // TODO
-        final URL serverURL = registryClient.getServiceURL(DATA_SERVICE_ID,
-                                                           "http",
-                                                           "/pub/vospace");
-        final URL downloadURL = new URL(serverURL.toExternalForm()
-                                        + getCurrentPath());
-        getResponse().redirectSeeOther(downloadURL.toExternalForm());
-    }
 
     @Post
     @Put
@@ -180,7 +150,7 @@ public class FileItemServerResource extends StorageItemServerResource
             }
             else
             {
-                writeOut(fileItemIterator);
+                upload(fileItemIterator);
                 uploadSuccess();
             }
         }
@@ -192,7 +162,7 @@ public class FileItemServerResource extends StorageItemServerResource
         }
     }
 
-    protected void writeOut(final FileItemIterator fileItemIterator)
+    protected void upload(final FileItemIterator fileItemIterator)
             throws IOException, IllegalArgumentException, NodeNotFoundException,
                    NodeAlreadyExistsException
     {
@@ -209,7 +179,7 @@ public class FileItemServerResource extends StorageItemServerResource
                 if (nextFileItemStream.getFieldName().startsWith(
                         UPLOAD_FILE_KEY))
                 {
-                    newNodeURI = handleUpload(nextFileItemStream);
+                    newNodeURI = upload(nextFileItemStream);
 
                 }
                 else if (nextFileItemStream.getFieldName().equals(
@@ -237,7 +207,7 @@ public class FileItemServerResource extends StorageItemServerResource
      * @return The URI to the new node.
      * @throws IOException If anything goes wrong.
      */
-    protected VOSURI handleUpload(final FileItemStream fileItemStream)
+    VOSURI upload(final FileItemStream fileItemStream)
             throws IOException, IllegalArgumentException,
                    NodeAlreadyExistsException
     {
@@ -247,11 +217,7 @@ public class FileItemServerResource extends StorageItemServerResource
         {
             final String path = getCurrentItemURI().getPath() + "/"
                                 + URLEncoder.encode(filename, "UTF-8");
-            final DataNode dataNode;
-            final View view;
-
-            dataNode = new DataNode(toURI(path));
-            view = new View(URI.create(VOS.VIEW_DEFAULT));
+            final DataNode dataNode = new DataNode(toURI(path));
 
             // WebRT 19564: Add content type to the response of
             // uploaded items.
@@ -262,18 +228,11 @@ public class FileItemServerResource extends StorageItemServerResource
 
             dataNode.setProperties(properties);
 
-            final VOSpaceClient client = createClient(new RegistryClient());
-            final List<Protocol> protocols = new ArrayList<>();
-            protocols.add(new Protocol(VOS.PROTOCOL_HTTP_PUT,
-                                       client.getBaseURL(), null));
-
-            final Transfer transfer = new Transfer(dataNode.getUri().getURI(),
-                                                   Direction.pushToVoSpace, view,
-                                                   protocols);
+            final VOSpaceClient client = createClient();
 
             try (final InputStream inputStream = fileItemStream.openStream())
             {
-                uploadSecure(inputStream, client, dataNode, transfer);
+                upload(inputStream, client, dataNode);
             }
 
             return dataNode.getUri();
@@ -292,18 +251,16 @@ public class FileItemServerResource extends StorageItemServerResource
      * @param inputStream The InputStream to pull from.
      * @param client      The VOSpaceClient instance.
      * @param dataNode    The DataNode to upload to.
-     * @param transfer    The Transfer object.
      */
-    protected void uploadSecure(final InputStream inputStream,
-                                final VOSpaceClient client,
-                                final DataNode dataNode,
-                                final Transfer transfer)
+    protected void upload(final InputStream inputStream,
+                          final VOSpaceClient client,
+                          final DataNode dataNode)
             throws NodeAlreadyExistsException
     {
+        final String path = dataNode.getUri().getPath();
+
         final UploadOutputStreamWrapper outputStreamWrapper =
                 new UploadOutputStreamWrapperImpl(inputStream, BUFFER_SIZE);
-
-        final String path = dataNode.getUri().getPath();
 
         try
         {
@@ -315,7 +272,7 @@ public class FileItemServerResource extends StorageItemServerResource
             // jenkinsd 2016.07.25
             if (client.getNode(path) != null)
             {
-                throw new NodeAlreadyExistsException("Not found: " + path);
+                throw new NodeAlreadyExistsException(path);
             }
         }
         catch (NodeNotFoundException e)
@@ -323,17 +280,9 @@ public class FileItemServerResource extends StorageItemServerResource
             client.createNode(dataNode, false);
         }
 
-        final ClientTransfer ct = client.createTransfer(transfer);
-
         try
         {
-            ct.setOutputStreamWrapper(outputStreamWrapper);
-            ct.runTransfer();
-
-            uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(),
-                                           dataNode);
-            uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(),
-                                     dataNode);
+            upload(outputStreamWrapper, client, dataNode);
         }
         catch (Exception e)
         {
@@ -356,6 +305,36 @@ public class FileItemServerResource extends StorageItemServerResource
 
             uploadError(Status.SERVER_ERROR_INTERNAL, message);
         }
+    }
+
+    /**
+     * Abstract away the Transfer stuff.  It's cumbersome.
+     *
+     * @param outputStreamWrapper       The OutputStream wrapper.
+     * @param client                    A VOSpace Client to use.
+     * @param dataNode                  The node to upload.
+     * @throws Exception
+     */
+    void upload(final UploadOutputStreamWrapper outputStreamWrapper,
+                final VOSpaceClient client, final DataNode dataNode) throws Exception
+    {
+        final List<Protocol> protocols = new ArrayList<>();
+        protocols.add(new Protocol(VOS.PROTOCOL_HTTP_PUT,
+                                   client.getBaseURL(), null));
+        final Transfer transfer = new Transfer(dataNode.getUri().getURI(),
+                                               Direction.pushToVoSpace,
+                                               new View(URI.create(VOS.VIEW_DEFAULT)),
+                                               protocols);
+
+        final ClientTransfer ct = client.createTransfer(transfer);
+        ct.setOutputStreamWrapper(outputStreamWrapper);
+
+        ct.runTransfer();
+
+        uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(),
+                                       dataNode);
+        uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(),
+                                 dataNode);
     }
 
     void setInheritedPermissions(final VOSURI newNodeURI)
@@ -411,10 +390,9 @@ public class FileItemServerResource extends StorageItemServerResource
      *
      * @param newNode The newly created Node.
      */
-    protected void setNodeSecure(final Node newNode)
-            throws MalformedURLException
+    void setNodeSecure(final Node newNode) throws MalformedURLException
     {
-        createClient(new RegistryClient()).setNode(newNode);
+        createClient().setNode(newNode);
     }
 
     /**

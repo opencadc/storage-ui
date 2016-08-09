@@ -82,6 +82,8 @@ import java.net.URI;
 import org.junit.Test;
 import org.restlet.data.Status;
 
+import javax.servlet.ServletContext;
+
 import static org.easymock.EasyMock.*;
 
 
@@ -97,6 +99,13 @@ public class FolderItemServerResourceTest
                 + "/my/node"));
         final ContainerNode containerNode = new ContainerNode(folderURI);
         final Response mockResponse = createMock(Response.class);
+        final ServletContext mockServletContext =
+                createMock(ServletContext.class);
+
+        expect(mockServletContext.getContextPath()).andReturn("/teststorage")
+                .once();
+
+        replay(mockServletContext);
 
         testSubject = new FolderItemServerResource()
         {
@@ -122,6 +131,12 @@ public class FolderItemServerResourceTest
             {
                 return mockResponse;
             }
+
+            @Override
+            ServletContext getServletContext()
+            {
+                return mockServletContext;
+            }
         };
 
         expect(mockClient.createNode(containerNode, false))
@@ -134,6 +149,6 @@ public class FolderItemServerResourceTest
 
         testSubject.create();
 
-        verify(mockClient, mockResponse);
+        verify(mockClient, mockResponse, mockServletContext);
     }
 }

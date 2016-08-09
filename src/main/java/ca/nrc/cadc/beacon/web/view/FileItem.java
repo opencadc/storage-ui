@@ -73,27 +73,23 @@ import ca.nrc.cadc.vos.VOSURI;
 import java.net.URI;
 import java.util.Date;
 
+
 public class FileItem extends StorageItem
 {
     public FileItem(VOSURI uri, long sizeInBytes, Date lastModified,
                     boolean publicFlag, boolean lockedFlag,
                     URI[] writeGroupURIs, URI[] readGroupURIs, String owner,
-                    boolean readableFlag)
+                    boolean readableFlag, final String targetURL)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-              writeGroupURIs, readGroupURIs, owner, readableFlag);
+              writeGroupURIs, readGroupURIs, owner, readableFlag, targetURL);
     }
+
 
     @Override
     public String getItemIconCSS()
     {
         return "glyphicon-" + (isReadable() ? "cloud-download" : "file");
-    }
-
-    @Override
-    public String getLinkURI()
-    {
-        return "/file" + uri.getPath();
     }
 }
 
