@@ -68,8 +68,8 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.vos.client.VOSpaceClient;
 
+import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.resource.Delete;
 
 

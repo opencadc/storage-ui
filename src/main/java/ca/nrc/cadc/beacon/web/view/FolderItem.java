@@ -84,10 +84,10 @@ public class FolderItem extends StorageItem
                       boolean publicFlag, boolean lockedFlag,
                       URI[] writeGroupURIs, URI[] readGroupURIs, String owner,
                       boolean readableFlag, final boolean writableFlag,
-                      final int childCount)
+                      final int childCount, String targetURL)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-              writeGroupURIs, readGroupURIs, owner, readableFlag);
+              writeGroupURIs, readGroupURIs, owner, readableFlag, targetURL);
 
         this.writableFlag = writableFlag;
         this.childCount = childCount;
@@ -103,12 +103,6 @@ public class FolderItem extends StorageItem
     public String getItemIconCSS()
     {
         return "glyphicon-folder-" + (isReadable() ? "open" : "close");
-    }
-
-    @Override
-    public String getLinkURI()
-    {
-        return "/list" + uri.getPath();
     }
 
     public boolean isWritable()

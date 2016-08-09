@@ -140,7 +140,7 @@ public class StorageItemJSONWriter implements StorageItemWriter
         jsonWriter.key("uri").value(storageItem.getURI().toString());
 
         // Link URI
-        jsonWriter.key("linkURI").value(storageItem.getLinkURI());
+        jsonWriter.key("linkURI").value(storageItem.getTargetURL());
 
         // Readable flag
         jsonWriter.key("readable_flag").value(

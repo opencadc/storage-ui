@@ -76,6 +76,7 @@ import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -104,12 +105,27 @@ public class MainPageServerResourceTest
         initialRowData.add("child2");
         initialRowData.add("child3");
 
+        final ServletContext mockServletContext =
+                createMock(ServletContext.class);
+
+        expect(mockServletContext.getContextPath()).andReturn("/teststorage")
+                .once();
+
+        replay(mockServletContext);
+
+
         testSubject = new MainPageServerResource()
         {
             @Override
             Subject getCurrentUser()
             {
                 return subject;
+            }
+
+            @Override
+            ServletContext getServletContext()
+            {
+                return mockServletContext;
             }
         };
 
@@ -132,6 +148,6 @@ public class MainPageServerResourceTest
         assertTrue("Should contain initialRows",
                    dataModel.containsKey("initialRows"));
 
-        verify(mockFolderItem);
+        verify(mockFolderItem, mockServletContext);
     }
 }

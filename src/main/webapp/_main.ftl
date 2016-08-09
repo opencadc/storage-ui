@@ -65,7 +65,7 @@
                   <a id="root" name="root" type="button" title="Navigate to main root." href="/storage/list/">
                     <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
                 <li class="dropdown divider-vertical <#if !folder.writable>disabled</#if>">
-                  <a title="New" class="dropdown-toggle" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
+                  <a title="New" class="dropdown-toggle <#if !folder.writable>disabled</#if>" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
                     <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></a>
                   <ul class="dropdown-menu">
                     <li>

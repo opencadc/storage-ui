@@ -92,6 +92,7 @@ public abstract class StorageItem
     private final URI[] readGroupURIs;
     private final String owner;
     private final boolean readableFlag;
+    private final String targetURL;
 
     final VOSURI uri;
     final boolean publicFlag;
@@ -101,21 +102,11 @@ public abstract class StorageItem
     public StorageItem(VOSURI uri, long sizeInBytes, Date lastModified,
                        boolean publicFlag, boolean lockedFlag,
                        URI[] writeGroupURIs, URI[] readGroupURIs,
-                       final String owner, boolean readableFlag)
-    {
-        this(uri, uri.getName(), sizeInBytes, lastModified, publicFlag,
-             lockedFlag, writeGroupURIs, readGroupURIs, owner, readableFlag);
-    }
-
-
-    public StorageItem(VOSURI uri, String name, long sizeInBytes,
-                       Date lastModified, boolean publicFlag,
-                       boolean lockedFlag, URI[] writeGroupURIs,
-                       URI[] readGroupURIs, final String owner,
-                       boolean readable)
+                       final String owner, boolean readableFlag,
+                       String targetURL)
     {
         this.uri = uri;
-        this.name = name;
+        this.name = getURI().getName();
         this.sizeInBytes = sizeInBytes;
         this.lastModified = lastModified;
         this.publicFlag = publicFlag;
@@ -123,8 +114,10 @@ public abstract class StorageItem
         this.writeGroupURIs = writeGroupURIs;
         this.readGroupURIs = readGroupURIs;
         this.owner = owner;
-        this.readableFlag = readable;
+        this.readableFlag = readableFlag;
+        this.targetURL = targetURL;
     }
+
 
     public String getSizeHumanReadable()
     {
@@ -203,5 +196,8 @@ public abstract class StorageItem
 
     public abstract String getItemIconCSS();
 
-    public abstract String getLinkURI();
+    public String getTargetURL()
+    {
+        return targetURL;
+    }
 }
