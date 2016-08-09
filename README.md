@@ -1,4 +1,4 @@
-#### VOSpace Browser 0.6
+#### User Storage User Interface 0.6
 
 By default, this uses the CANFAR (CADC) VOSpace located at:
 
@@ -30,7 +30,7 @@ Pass your own Registry settings into the `JAVA_OPTS` environment variable to use
 
 Or deploy the `war` file in `build/libs` into a Java container such as Tomcat.
 
-Then, in your browser, look at <a href="http://localhost:8080/beacon/list">http://localhost:8080/beacon/list</a>.
+Then, in your browser, look at <a href="http://localhost:8080/storage/list">http://localhost:8080/storage/list</a>.
 
 #### Running with Docker
 
@@ -44,17 +44,17 @@ It uses the lightweight Tomcat java container that was built using Alpine Linux 
 
 To run it as-is and use the CANFAR VOSpace Service, use:
 
-`docker run --name beacon -d -p 8080:8080 -p 5555:5555 beacon`
+`docker run --name storage -d -p 8080:8080 -p 5555:5555 opencadc/storage`
 
-Then, in your browser, look at <a href="http://localhost:8080/beacon/list">http://localhost:8080/beacon/list</a>.
+Then, in your browser, look at <a href="http://localhost:8080/storage/list">http://localhost:8080/storage/list</a>.
 
 ##### Running with Docker for your environment
 
 To run in your environment, create your own Dockerfile:
 
 ```
-# This is the Docker hub location for the VOSpace Browser (Project Beacon)
-FROM canfar/beacon
+# This is the Docker hub location for the User Storage User Interface (Project Beacon)
+FROM opencadc/storage
 
 # The JAVA_OPTS variable to pass to Tomcat.  Note the -Dca.nrc.cadc.reg.client.RegistryClient.host property.
 ENV JAVA_OPTS "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.auth.BasicX509TrustManager.trust=true -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry lookup>"
@@ -62,14 +62,14 @@ ENV JAVA_OPTS "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=555
 
 Then run:
 
-`docker build -t mybeacon .`
+`docker build -t user_storage_ui .`
 
 Then run it:
 
-`docker run --name mybeacon -d -p 8080:8080 -p 5555:5555 mybeacon`
+`docker run --name storage -d -p 8080:8080 -p 5555:5555 user_storage_ui`
 
 Or mount your own built `war`:
 
-`docker run --name mybeacon -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps mybeacon`
+`docker run --name storage -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps user_storage_ui`
 
-Then, in your browser, look at <a href="http://localhost:8080/beacon/list">http://localhost:8080/beacon/list</a>.
+Then, in your browser, look at <a href="http://localhost:8080/storage/list">http://localhost:8080/storage/list</a>.
