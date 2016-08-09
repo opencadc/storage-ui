@@ -89,7 +89,6 @@ public class SecureServerResource extends ServerResource
             "org.restlet.ext.servlet.ServletContext";
     final static URI VOSPACE_SERVICE_ID =
             URI.create("ivo://cadc.nrc.ca/vospace");
-    final static URI DATA_SERVICE_ID = URI.create("ivo://cadc.nrc.ca/data");
 
 
     Subject getCurrentUser()

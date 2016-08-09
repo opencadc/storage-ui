@@ -14,22 +14,16 @@ public class LinkItem extends StorageItem
     public LinkItem(VOSURI uri, long sizeInBytes, Date lastModified,
                     boolean publicFlag, boolean lockedFlag,
                     URI[] writeGroupURIs, URI[] readGroupURIs,
-                    String owner, boolean readableFlag)
+                    String owner, boolean readableFlag, String targetURL)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-                writeGroupURIs, readGroupURIs, owner, readableFlag);
+                writeGroupURIs, readGroupURIs, owner, readableFlag, targetURL);
     }
 
 
     @Override
     public String getItemIconCSS() {
         return "glyphicon-link";
-    }
-
-    @Override
-    public String getLinkURI()
-    {
-        return "/link" + uri.getPath();
     }
 
     /**
