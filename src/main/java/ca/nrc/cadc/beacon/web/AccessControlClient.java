@@ -69,7 +69,6 @@
 package ca.nrc.cadc.beacon.web;
 
 
-import ca.nrc.cadc.ac.client.UserClient;
 import ca.nrc.cadc.net.HttpPost;
 import ca.nrc.cadc.reg.client.LocalAuthority;
 import ca.nrc.cadc.reg.client.RegistryClient;
@@ -82,7 +81,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class AccessControlClient extends UserClient
+
+public class AccessControlClient
 {
     private final static String FRAGMENT_DELIMITER = "#";
     private final static String LOGIN_FRAGMENT = FRAGMENT_DELIMITER + "login";
@@ -104,7 +104,6 @@ public class AccessControlClient extends UserClient
     private AccessControlClient(final URI serviceURI,
                                 final RegistryClient registryClient)
     {
-        super(serviceURI);
         this.registryClient = registryClient;
         this.loginURI = URI.create(serviceURI.toASCIIString()
                 + LOGIN_FRAGMENT);

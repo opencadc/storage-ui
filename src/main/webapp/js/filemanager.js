@@ -121,7 +121,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         search: "_INPUT_",
         searchPlaceholder: "Search Name..."
       },
-      dom: "<'row beacon-info-row'<'col-sm-12'i>>"
+      dom: "<'row beacon-info-row'<'col-sm-12'<'progress'<'beacon-progress active progress-bar progress-bar-info progress-bar-striped'>>i>>"
            + "<'row'<'col-sm-12'tr>>",
       loading: true,
       processing: true,
@@ -224,6 +224,12 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       order: [[3, 'desc']]
     });
 
+  var max = 577;
+
+  // Setup the Progress Bar.
+  $("div.beacon-progress").attr("role", "progressbar").attr("aria-valuenow", "2")
+    .attr("aria-valuemin", "0").attr("aria-valuemax", max + "").html("<span class='sr-only'>0%</span>");
+
   var deleteLinkContainerSelector =
     "[id='" + selectButtonGroupID + "']";
 
@@ -287,10 +293,16 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var load = function (_callback)
   {
     getPage(requestData, _callback);
+    $("div.beacon-progress").removeClass("active");
   };
 
   var successCallback = function (csvData)
   {
+    var currentCount = $dt.rows().count();
+    var percentage = ((currentCount / max) * 100.0) + '%';
+    $("div.beacon-progress").css('width', percentage)
+      .attr('aria-valuenow', currentCount).find(".sr-only").text(percentage);
+
     var data = $.csv.toArrays(csvData);
     var dl = data.length;
 
