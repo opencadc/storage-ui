@@ -42,7 +42,7 @@ Or build your own with the provided Dockerfile (from the same directory as the D
 
 It uses the lightweight Tomcat java container that was built using Alpine Linux found here:
 
-<a href="https://hub.docker.com/r/canfar/tomcat/" rel="external">https://hub.docker.com/r/canfar/tomcat/</a>
+<a href="https://hub.docker.com/r/opencadc/tomcat/" rel="external">https://hub.docker.com/r/opencadc/tomcat/</a>
 
 Then run it:
 
