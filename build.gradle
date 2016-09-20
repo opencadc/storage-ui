@@ -45,6 +45,7 @@ clean {
 
 task initDockerize(type: Copy, dependsOn: build) {
     from 'Dockerfile'
+    from 'src/main/resources/LocalAuthority.properties'
     into 'docker/'
 }
 
