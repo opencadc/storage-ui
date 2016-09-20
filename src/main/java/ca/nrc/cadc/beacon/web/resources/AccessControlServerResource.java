@@ -68,7 +68,8 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.AccessControlClient;
+
+import ca.nrc.cadc.web.AccessControlClient;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Form;
 import org.restlet.representation.Representation;

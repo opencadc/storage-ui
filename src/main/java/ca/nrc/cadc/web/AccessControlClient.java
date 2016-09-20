@@ -66,34 +66,33 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web;
+package ca.nrc.cadc.web;
 
 
+import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.net.HttpPost;
+import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.LocalAuthority;
 import ca.nrc.cadc.reg.client.RegistryClient;
 
 import java.io.ByteArrayOutputStream;
-import java.net.MalformedURLException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 
-
 public class AccessControlClient
 {
-    private final static String FRAGMENT_DELIMITER = "#";
-    private final static String LOGIN_FRAGMENT = FRAGMENT_DELIMITER + "login";
-
     private final RegistryClient registryClient;
     private final URI loginURI;
 
 
     public AccessControlClient() throws IllegalArgumentException
     {
-        this(new LocalAuthority().getServiceURI("ums"), new RegistryClient());
+        this(new LocalAuthority().getServiceURI(
+                Standards.UMS_LOGIN_01.toString()), new RegistryClient());
     }
 
     /**
@@ -101,25 +100,18 @@ public class AccessControlClient
      *
      * @param serviceURI            The Service URI.
      * @param registryClient        The Registry client for lookups.*/
-    private AccessControlClient(final URI serviceURI,
-                                final RegistryClient registryClient)
+    AccessControlClient(final URI serviceURI,
+                        final RegistryClient registryClient)
     {
         this.registryClient = registryClient;
-        this.loginURI = URI.create(serviceURI.toASCIIString()
-                + LOGIN_FRAGMENT);
+        this.loginURI = serviceURI;
     }
 
 
     private URL lookupLoginURL()
     {
-        try
-        {
-            return registryClient.getServiceURL(loginURI, "http");
-        }
-        catch (MalformedURLException e)
-        {
-            throw new RuntimeException(e);
-        }
+        return registryClient.getServiceURL(loginURI, Standards.UMS_LOGIN_01,
+                                            AuthMethod.ANON);
     }
 
     /**
@@ -131,32 +123,13 @@ public class AccessControlClient
      */
     public String login(final String username, final char[] password)
     {
-        final URL loginURL = lookupLoginURL();
-
-        if (loginURL == null)
-        {
-            throw new IllegalArgumentException("No service endpoint for uri "
-                                               + this.loginURI);
-        }
-        else
-        {
-            return doLogin(loginURL, username, password);
-        }
-    }
-
-    private String doLogin(final URL loginURL, final String username,
-                           final char[] password)
-    {
-        final ByteArrayOutputStream out = new ByteArrayOutputStream();
+        final OutputStream out = new ByteArrayOutputStream();
         final Map<String, Object> payload = new HashMap<>();
 
         payload.put("username", username);
         payload.put("password", new String(password));
-        final HttpPost post = new HttpPost(loginURL, payload, out);
 
-        post.run();
-
-        final int responseCode = post.getResponseCode();
+        final int responseCode = post(payload, out);
 
         if (responseCode == 200)
         {
@@ -168,5 +141,21 @@ public class AccessControlClient
                     String.format("Unable to login '%s' due to Error %d.",
                                   username, responseCode));
         }
+    }
+
+    /**
+     * Post the output.
+     *
+     * @param payload       The payload to send.
+     * @param out           The stream for any output.
+     * @return              Int response code.
+     */
+    int post(final Map<String, Object> payload, final OutputStream out)
+    {
+        final HttpPost post = new HttpPost(lookupLoginURL(), payload, out);
+
+        post.run();
+
+        return post.getResponseCode();
     }
 }

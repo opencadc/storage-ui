@@ -10,7 +10,7 @@
  */
 
 function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
-                     _canWriteFlag)
+                     _canWriteFlag, _totalDataCount)
 {
 // function to retrieve GET params
   $.urlParam = function (name)
@@ -89,7 +89,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var selectButtonGroupID = "delete";
   var deleteButtonHTML = "<span id='" + selectButtonGroupID
                          + "' class='btn-group btn-group-xs'>"
-                         + "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
+                         +
+                         "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
                          + "</span>";
   var stringUtil = new cadc.web.util.StringUtil(publicLink);
   var url = config.options.pageConnector + _folderPath;
@@ -166,7 +167,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
               if (full[12] === "true")
               {
-                itemNameDisplay += '<a href="' + full[11] + '">' + data + '</a>';
+                itemNameDisplay +=
+                  '<a href="' + full[11] + '">' + data + '</a>';
               }
               else
               {
@@ -224,11 +226,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       order: [[3, 'desc']]
     });
 
-  var max = 577;
-
   // Setup the Progress Bar.
   $("div.beacon-progress").attr("role", "progressbar").attr("aria-valuenow", "2")
-    .attr("aria-valuemin", "0").attr("aria-valuemax", max + "").html("<span class='sr-only'>0%</span>");
+    .attr("aria-valuemin", "0").attr("aria-valuemax", _totalDataCount + "")
+    .html("<span class='sr-only'>0%</span>");
 
   var deleteLinkContainerSelector =
     "[id='" + selectButtonGroupID + "']";
@@ -244,16 +245,17 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     }
   });
 
-  $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt info.dt", function ()
-  {
-    if ($dt.rows({selected: true}).count() > 0)
-    {
-      var $info = $(".dataTables_info");
+  $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt info.dt",
+         function ()
+         {
+           if ($dt.rows({selected: true}).count() > 0)
+           {
+             var $info = $(".dataTables_info");
 
-      $info.find(deleteLinkContainerSelector).remove();
-      $info.append(deleteButtonHTML);
-    }
-  });
+             $info.find(deleteLinkContainerSelector).remove();
+             $info.append(deleteButtonHTML);
+           }
+         });
 
   $dt.on("deselect", function (event, dataTablesAPI, type)
   {
@@ -299,7 +301,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var successCallback = function (csvData)
   {
     var currentCount = $dt.rows().count();
-    var percentage = ((currentCount / max) * 100.0) + '%';
+    var percentage = ((currentCount / _totalDataCount) * 100.0) + '%';
     $("div.beacon-progress").css('width', percentage)
       .attr('aria-valuenow', currentCount).find(".sr-only").text(percentage);
 
@@ -814,15 +816,23 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                                }
                                              };
 
-                                             var buttons = {};
-                                             buttons[lg.create_external_link] =
-                                               true;
-                                             buttons[lg.cancel] = false;
-
-                                             $.prompt(msg, {
-                                               callback: createLinkURI,
-                                               buttons: buttons
-                                             });
+                                             var btns = [];
+                                             btns.push({
+                                                         "title": lg.create_external_link,
+                                                         "value": true,
+                                                         "classes": "btn btn-primary"
+                                                       });
+                                             btns.push({
+                                                         "title": lg.cancel,
+                                                         "value": false,
+                                                         "classes": "btn btn-default"
+                                                       });
+                                             $.prompt(msg,
+                                                      {
+                                                        submit: createLinkURI,
+                                                        focus: "#link_url",
+                                                        buttons: btns
+                                                      });
                                            });
 
     $('#newfolder').unbind().click(function ()
@@ -1440,17 +1450,17 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                    {
                      unsuccessful[path] = lg.ERROR_WRITING_PERM;
                    },
-                   404: function()
+                   404: function ()
                    {
                      unsuccessful[path] = lg.ERROR_NO_SUCH_ITEM;
                    },
-                   500: function()
+                   500: function ()
                    {
                      unsuccessful[path] = lg.ERROR_SERVER;
                    }
                  }
                })
-          .always(function()
+          .always(function ()
                   {
                     totalCompleteCount++;
                   });
@@ -1481,55 +1491,55 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       $.prompt.disableStateButtons("deletion");
 
       $.prompt({
-                confirmation: {
-                  html: msg,
-                  buttons: btns,
-                  submit: function(e,v,m,f)
-                  {
-                    if (v === true)
-                    {
-                      e.preventDefault();
-                      $.prompt.nextState(function(event)
-                                         {
-                                           event.preventDefault();
-                                           var nextState = doDelete(event)
-                                             ? "successful" : "unsuccessful";
-                                           $.prompt.goToState(nextState);
-                                           return false;
-                                         });
-                      return false;
-                    }
-                    else
-                    {
-                      $.prompt.close();
-                    }
-                  }
-                },
-                deletion: {
-                  html: lg.deleting_message.replace('%d', deleteCount)
-                },
-                successful: {
-                  html: lg.successful_delete,
-                  buttons: [{
-                    "title": lg.close,
-                    "value": false,
-                    "classes": "btn btn-success"
-                  }],
-                  submit: refreshPage
-                },
-                unsuccessful: {
-                  html: function()
-                  {
-                    var output = "";
+                 confirmation: {
+                   html: msg,
+                   buttons: btns,
+                   submit: function (e, v, m, f)
+                   {
+                     if (v === true)
+                     {
+                       e.preventDefault();
+                       $.prompt.nextState(function (event)
+                                          {
+                                            event.preventDefault();
+                                            var nextState = doDelete(event)
+                                              ? "successful" : "unsuccessful";
+                                            $.prompt.goToState(nextState);
+                                            return false;
+                                          });
+                       return false;
+                     }
+                     else
+                     {
+                       $.prompt.close();
+                     }
+                   }
+                 },
+                 deletion: {
+                   html: lg.deleting_message.replace('%d', deleteCount)
+                 },
+                 successful: {
+                   html: lg.successful_delete,
+                   buttons: [{
+                     "title": lg.close,
+                     "value": false,
+                     "classes": "btn btn-success"
+                   }],
+                   submit: refreshPage
+                 },
+                 unsuccessful: {
+                   html: function ()
+                   {
+                     var output = "";
 
-                    $.each(unsuccessful, function(path, error)
-                    {
-                      output += path + ": " + error + "<br />";
-                    });
+                     $.each(unsuccessful, function (path, error)
+                     {
+                       output += path + ": " + error + "<br />";
+                     });
 
-                    return lg.unsuccessful_delete + "<br />" + output;
-                  }
-                }
+                     return lg.unsuccessful_delete + "<br />" + output;
+                   }
+                 }
                });
     }
 
@@ -2187,9 +2197,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                                                              formData.append("mode", "add");
                                                                              formData.append("currentpath", path);
                                                                            },
-                                                                           error: function()
+                                                                           error: function ()
                                                                            {
-                                                                             error_flag = true;
+                                                                             error_flag =
+                                                                               true;
                                                                            },
                                                                            success: function (file, jsonResponse)
                                                                            {
@@ -2204,21 +2215,29 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                                                              {
                                                                                getFolderInfo(path);
                                                                                $.prompt(jsonResponse.error);
-                                                                               error_flag = true;
+                                                                               error_flag =
+                                                                                 true;
                                                                              }
                                                                            },
                                                                            complete: function ()
                                                                            {
-                                                                             if ((this.getUploadingFiles().length === 0)
-                                                                                 && (this.getQueuedFiles().length === 0))
+                                                                             if ((this.getUploadingFiles().length ===
+                                                                                  0)
+                                                                                 &&
+                                                                                 (this.getQueuedFiles().length ===
+                                                                                  0))
                                                                              {
                                                                                $progressBar.css('width', '0%');
 
-                                                                               if (error_flag === true)
+                                                                               if (error_flag ===
+                                                                                   true)
                                                                                {
                                                                                  var rejects = this.getRejectedFiles();
 
-                                                                                 for (var rfi = 0, rfl = rejects.length; rfi < rfl; rfi++)
+                                                                                 for (var rfi = 0, rfl = rejects.length;
+                                                                                      rfi <
+                                                                                      rfl;
+                                                                                      rfi++)
                                                                                  {
 
                                                                                  }
@@ -2241,7 +2260,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                                                              }
 
                                                                              // Reset.
-                                                                             error_flag = false;
+                                                                             error_flag =
+                                                                               false;
                                                                            }
                                                                          });
 

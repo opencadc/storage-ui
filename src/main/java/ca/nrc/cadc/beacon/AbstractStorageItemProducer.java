@@ -70,7 +70,6 @@ package ca.nrc.cadc.beacon;
 
 import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.net.NetUtil;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.ContainerNode;
 import ca.nrc.cadc.vos.Node;
 import ca.nrc.cadc.vos.VOSURI;
@@ -118,11 +117,8 @@ public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
 
     List<Node> nextPage() throws Exception
     {
-        final RegistryClient registryClient = new RegistryClient();
         final VOSpaceClient voSpaceClient =
-                new VOSpaceClient(registryClient.getServiceURL(
-                        URI.create("ivo://cadc.nrc.ca/vospace"),
-                        "http").toExternalForm(), false);
+                new VOSpaceClient(URI.create("ivo://cadc.nrc.ca/vospace"));
 
         final List<Node> nodes =
                 Subject.doAs(user, (PrivilegedExceptionAction<List<Node>>) () ->
