@@ -76,7 +76,6 @@ import org.restlet.Request;
 import java.io.IOException;
 import java.security.Principal;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -102,13 +101,11 @@ public class CookiePrincipalExtractorImpl implements PrincipalExtractor
                              && StringUtil.hasText(ssoCookie.getValue()))
                 .forEach(ssoCookie ->
                          {
-                             final SSOCookieManager ssoCookieManager =
-                                     new SSOCookieManager();
-
                              try
                              {
-                                 cookiePrincipal = ssoCookieManager.parse(
-                                         ssoCookie.getValue());
+                                 cookiePrincipal =
+                                         new CookiePrincipal(
+                                                 ssoCookie.getValue());
                                  cookieCredential =
                                          new SSOCookieCredential(
                                                  ssoCookie.getValue(),
@@ -116,7 +113,7 @@ public class CookiePrincipalExtractorImpl implements PrincipalExtractor
                                                          request.getResourceRef()
                                                                  .toUrl()));
                              }
-                             catch (IOException | InvalidDelegationTokenException e)
+                             catch (IOException e)
                              {
                                  System.out.println(
                                          "Cannot use SSO Cookie. Reason: "
@@ -156,25 +153,9 @@ public class CookiePrincipalExtractorImpl implements PrincipalExtractor
 
     private void addHTTPPrincipal(Set<Principal> principals)
     {
-        final String httpUser = getAuthenticatedUsername();
-
-        if (StringUtil.hasText(httpUser))
-        {
-            principals.add(new HttpPrincipal(httpUser));
-        }
-        else if (cookiePrincipal != null)
+        if (cookiePrincipal != null)
         {
             principals.add(cookiePrincipal);
         }
-
-    }
-
-    protected String getAuthenticatedUsername()
-    {
-        final List<Principal> clientPrincipals =
-                request.getClientInfo().getPrincipals();
-
-        return clientPrincipals.isEmpty() ? null
-                                          : clientPrincipals.get(0).getName();
     }
 }

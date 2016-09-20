@@ -79,16 +79,17 @@ import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.data.Status;
 import org.restlet.resource.ResourceException;
 
-import javax.security.auth.Subject;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.security.PrivilegedAction;
 
 
 public abstract class StorageServerResource extends SecureServerResource
 {
     protected static final String VOSPACE_NODE_URI_PREFIX =
             "vos://ca.nrc.cadc!vospace";
+    protected static final URI SERVICE_URI =
+            URI.create("ivo://cadc.nrc.ca/vospace");
+
 
     // Page size for the initial page display.
     static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
@@ -142,9 +143,7 @@ public abstract class StorageServerResource extends SecureServerResource
 
     protected VOSpaceClient createClient() throws MalformedURLException
     {
-        return new VOSpaceClient(
-                registryClient.getServiceURL(VOSPACE_SERVICE_ID, "http")
-                        .toExternalForm(), false);
+        return new VOSpaceClient(SERVICE_URI);
     }
 
     Node getNode(final VOSURI folderURI, final int pageSize)

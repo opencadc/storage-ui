@@ -68,7 +68,9 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.auth.CookiePrincipal;
 import ca.nrc.cadc.auth.HttpPrincipal;
+import ca.nrc.cadc.auth.SSOCookieManager;
 import ca.nrc.cadc.beacon.StorageItemCSVWriter;
 import ca.nrc.cadc.beacon.StorageItemWriter;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
@@ -82,6 +84,7 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
@@ -167,6 +170,7 @@ public class MainPageServerResource extends StorageServerResource
                                        final Iterator<String> initialRows,
                                        final Subject currentUser,
                                        final VOSURI startNextPageURI)
+            throws Exception
     {
         final Map<String, Object> dataModel = new HashMap<>();
 
@@ -178,13 +182,16 @@ public class MainPageServerResource extends StorageServerResource
             dataModel.put("startURI", startNextPageURI.toString());
         }
 
-        final Set<HttpPrincipal> httpPrincipals =
-                currentUser.getPrincipals(HttpPrincipal.class);
+        final Set<CookiePrincipal> cookiePrincipals =
+                currentUser.getPrincipals(CookiePrincipal.class);
 
-        if (!httpPrincipals.isEmpty())
+        if (!cookiePrincipals.isEmpty())
         {
-            dataModel.put("username", httpPrincipals.toArray(
-                    new HttpPrincipal[httpPrincipals.size()])[0].getName());
+            final SSOCookieManager cookieManager = new SSOCookieManager();
+            final HttpPrincipal httpPrincipal =
+                    cookieManager.parse(cookiePrincipals.toArray(
+                    new CookiePrincipal[cookiePrincipals.size()])[0].getName());
+            dataModel.put("username", httpPrincipal.getName());
         }
 
         return new TemplateRepresentation("index.ftl", configuration, dataModel,

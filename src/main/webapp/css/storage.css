@@ -46,6 +46,10 @@ body {
   background-color: #428bca;
 }
 
+.navbar.navbar-default {
+  margin-bottom: -5px;
+}
+
 .navbar-default .navbar-collapse, .navbar-default .navbar-form {
   cursor: auto;
 }
@@ -72,6 +76,27 @@ ul > li.divider-vertical {
   color: #fff;
 }
 
+div.progress
+{
+  height: 7px;
+}
+
+div.beacon-progress
+{
+  padding-top: 0;
+  min-width: 2.0em;
+  width: 2px;
+}
+
+/*
+  Give enough height so that when the Delete button is enabled the table won't
+  jump down.
+  jenkinsd 2016.08.10
+*/
+div.beacon-info-row
+{
+  height: 55px;
+}
 
 /*
  * End navbar.
@@ -171,8 +196,4 @@ div.dataTables_wrapper div.dataTables_info {
 
 .popover {
   max-width: 500px;
-}
-
-.beacon-info-row {
-  height: 40px;
 }

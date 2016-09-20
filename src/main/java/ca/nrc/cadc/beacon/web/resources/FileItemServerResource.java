@@ -68,9 +68,11 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.beacon.web.*;
 import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
-import ca.nrc.cadc.net.OutputStreamWrapper;
+import ca.nrc.cadc.reg.Standards;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.ClientTransfer;
@@ -93,6 +95,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -319,8 +322,12 @@ public class FileItemServerResource extends StorageItemServerResource
                 final VOSpaceClient client, final DataNode dataNode) throws Exception
     {
         final List<Protocol> protocols = new ArrayList<>();
+        final RegistryClient registryClient = new RegistryClient();
+        final URL baseURL = registryClient
+                .getServiceURL(dataNode.getUri().getServiceURI(),
+                               Standards.VOSPACE_TRANSFERS_20, AuthMethod.ANON);
         protocols.add(new Protocol(VOS.PROTOCOL_HTTP_PUT,
-                                   client.getBaseURL(), null));
+                                   baseURL.toString(), null));
         final Transfer transfer = new Transfer(dataNode.getUri().getURI(),
                                                Direction.pushToVoSpace,
                                                new View(URI.create(VOS.VIEW_DEFAULT)),

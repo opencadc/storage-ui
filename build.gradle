@@ -1,32 +1,30 @@
 plugins {
-    id "java"
-    id "war"
+    id 'java'
+    id 'maven'
+    id 'war'
 }
 
 repositories {
     jcenter()
-    maven {
-        url  "${opencadc_maven_url}"
-    }
+    mavenLocal()
 }
 
 dependencies {
-    compile group: 'log4j', name: 'log4j', version: '1.2.+'
+    compile 'log4j:log4j:1.2.+'
     compile 'org.freemarker:freemarker:2.3.24-incubating'
     compile 'com.opencsv:opencsv:3.+'
-    compile group: 'org.restlet.jee', name: 'org.restlet', version: '2.3.+'
-    compile group: 'org.restlet.jee', name: 'org.restlet.ext.servlet', version: '2.3.+'
-    compile group: 'org.restlet.jee', name: 'org.restlet.ext.freemarker', version: '2.3.+'
-    compile group: 'org.restlet.jee', name: 'org.restlet.ext.json', version: '2.3.+'
+    compile 'org.restlet.jee:org.restlet:2.3.+'
+    compile 'org.restlet.jee:org.restlet.ext.servlet:2.3.+'
+    compile 'org.restlet.jee:org.restlet.ext.freemarker:2.3.+'
+    compile 'org.restlet.jee:org.restlet.ext.json:2.3.+'
     
-    compile 'opencadc.ca:cadcLog:3.+'
-    compile 'opencadc.ca:cadcRegistry:1.+'
-    compile 'opencadc.ca:cadcVOSI:3.+'
-    compile 'opencadc.ca:cadcVOS-Server:2.+'
-    compile 'opencadc.ca:cadcAccessControl:1.+'
-    compile 'opencadc.ca:cadcAccessControl-Identity:1.+'
+    compile 'org.opencadc:cadc-registry:1.+'
+    compile 'org.opencadc:cadc-vosi:1.+'
+    compile 'org.opencadc:cadc-vos-server:1.+'
+    compile 'org.opencadc:cadc-access-control:1.+'
+    compile 'org.opencadc:cadc-access-control-identity:1.+'
 
-    providedCompile "javax.servlet:servlet-api:2.5"
+//    providedCompile 'javax.servlet:servlet-api:2.5'
 
     testCompile 'junit:junit:4.+'
     testCompile 'org.easymock:easymock:3.+'
@@ -34,7 +32,6 @@ dependencies {
 
 war {
     archiveName 'storage.' + extension
-    webXml = file('src/xml/web.xml')
 }
 
 clean {

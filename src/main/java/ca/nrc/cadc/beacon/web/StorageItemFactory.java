@@ -68,8 +68,10 @@
 
 package ca.nrc.cadc.beacon.web;
 
+import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.beacon.web.view.*;
 import ca.nrc.cadc.date.DateUtil;
+import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
@@ -82,12 +84,12 @@ import java.util.Date;
 
 public class StorageItemFactory
 {
-    public final static URI DATA_SERVICE_ID =
-            URI.create("ivo://cadc.nrc.ca/data");
+//    public final static URI DATA_SERVICE_ID =
+//            URI.create("ivo://cadc.nrc.ca/data");
 
 
     private final URIExtractor uriExtractor;
-    private final URL downloadServiceURL;
+    private final RegistryClient registryClient;
     private final String contextPath;
 
 
@@ -97,9 +99,7 @@ public class StorageItemFactory
             throws MalformedURLException
     {
         this.uriExtractor = uriExtractor;
-        this.downloadServiceURL =
-                registryClient.getServiceURL(DATA_SERVICE_ID, "http",
-                                             "/pub/vospace");
+        this.registryClient = registryClient;
         this.contextPath = contextPath;
     }
 
@@ -111,6 +111,10 @@ public class StorageItemFactory
         // TODO - It may be CADC specific.
         // TODO - jenkinsd 2016.07.12
         // TODO
+        final URL downloadServiceURL = registryClient
+                .getServiceURL(dataNode.getUri().getServiceURI(),
+                               Standards.VOSPACE_TRANSFERS_20,
+                               AuthMethod.ANON);
         return (downloadServiceURL.toExternalForm()
                 + dataNode.getUri().getPath());
     }
@@ -161,6 +165,11 @@ public class StorageItemFactory
 
         final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
 
+        final String totalChildCountValue =
+                node.getPropertyValue("ivo://ivoa.net/vospace/core#childCount");
+        final int totalChildCount = StringUtil.hasLength(totalChildCountValue)
+                                    ? Integer.parseInt(totalChildCountValue)
+                                    : 577;
 
         if (node instanceof ContainerNode)
         {
@@ -168,8 +177,7 @@ public class StorageItemFactory
             nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
                                       publicFlag, lockedFlag, writeGroupURIs,
                                       readGroupURIs, owner, readableFlag,
-                                      writableFlag,
-                                      containerNode.getNodes().size(),
+                                      writableFlag, totalChildCount,
                                       getTarget(containerNode));
         }
         else if (node instanceof LinkNode)
