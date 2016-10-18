@@ -71,6 +71,7 @@ package ca.nrc.cadc.beacon.web;
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.beacon.web.view.*;
 import ca.nrc.cadc.date.DateUtil;
+import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
@@ -108,12 +109,17 @@ public class StorageItemFactory
         // TODO - It may be CADC specific.
         // TODO - jenkinsd 2016.07.12
         // TODO
+        final VOSURI dataNodeURI = dataNode.getUri();
+
         final URL downloadServiceURL = registryClient
-                .getServiceURL(dataNode.getUri().getServiceURI(),
-                               Standards.VOSPACE_NODES_20,
+                .getServiceURL(dataNodeURI.getServiceURI(),
+                               Standards.VOSPACE_SYNC_21,
                                AuthMethod.ANON);
-        return (downloadServiceURL.toExternalForm()
-                + dataNode.getUri().getPath() + "?view=data");
+        final String query = "?target=" + NetUtil.encode(dataNodeURI.toString())
+                             + "&direction=" + Direction.pullFromVoSpaceValue
+                             + "&protocol="
+                             + NetUtil.encode(VOS.PROTOCOL_HTTP_GET);
+        return (downloadServiceURL.toExternalForm() + query);
     }
 
     private String getTarget(final ContainerNode containerNode)
@@ -126,6 +132,12 @@ public class StorageItemFactory
         return contextPath + "/link" + linkNode.getUri().getPath();
     }
 
+    /**
+     * Parse this node's last modified date.
+     *
+     * @param node The Node whose date to parse.
+     * @return The Date parsed, or null if it cannot be parsed.
+     */
     private Date parseDate(final Node node)
     {
         final String dateProperty =
