@@ -69,12 +69,11 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.LinkNode;
-import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Put;
 
 import java.net.URI;
@@ -95,6 +94,16 @@ public class LinkItemServerResource extends StorageItemServerResource
         super(registryClient, voSpaceClient);
     }
 
+    /**
+     * Resolve the current link, and redirect to the endpoint.
+     *
+     * @throws Exception        Bubble errors to the top.
+     */
+    @Get
+    public void resolve() throws Exception
+    {
+        resolveLink();
+    }
 
     /**
      * Create a link node at this location.  The current path is the name of
@@ -109,14 +118,7 @@ public class LinkItemServerResource extends StorageItemServerResource
     {
         final JSONObject jsonObject = payload.getJsonObject();
 
-        createNode(toLinkNode(URI.create(jsonObject.getString("link_url"))),
-                   false);
+        createLink(URI.create(jsonObject.getString("link_url")));
         getResponse().setStatus(Status.SUCCESS_CREATED);
-    }
-
-    private LinkNode toLinkNode(final URI target)
-    {
-        final VOSURI linkNodeURI = toURI(getCurrentPath());
-        return new LinkNode(linkNodeURI, target);
     }
 }

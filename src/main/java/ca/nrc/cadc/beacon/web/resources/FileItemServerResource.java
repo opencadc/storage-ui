@@ -317,7 +317,7 @@ public class FileItemServerResource extends StorageItemServerResource
      * @throws Exception To capture transfer and upload failures.
      */
     void upload(final UploadOutputStreamWrapper outputStreamWrapper,
-                        final DataNode dataNode) throws Exception
+                final DataNode dataNode) throws Exception
     {
         final RegistryClient registryClient = new RegistryClient();
         final URL baseURL = registryClient

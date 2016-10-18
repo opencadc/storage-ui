@@ -70,7 +70,6 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.AbstractUnitTest;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.restlet.Request;
 import org.restlet.Response;
 
 import javax.servlet.ServletContext;
@@ -81,7 +80,6 @@ abstract class AbstractServerResourceTest<T extends SecureServerResource>
         extends AbstractUnitTest<T>
 {
     final VOSpaceClient mockVOSpaceClient = createMock(VOSpaceClient.class);
-    final Request mockRequest = createMock(Request.class);
     final Response mockResponse = createMock(Response.class);
     final ServletContext mockServletContext =
             createMock(ServletContext.class);

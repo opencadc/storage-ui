@@ -95,15 +95,16 @@ public abstract class StorageItem
     private final String targetURL;
 
     final VOSURI uri;
-    final boolean publicFlag;
-    final boolean lockedFlag;
+
+    private final boolean publicFlag;
+    private final boolean lockedFlag;
 
 
-    public StorageItem(VOSURI uri, long sizeInBytes, Date lastModified,
-                       boolean publicFlag, boolean lockedFlag,
-                       URI[] writeGroupURIs, URI[] readGroupURIs,
-                       final String owner, boolean readableFlag,
-                       String targetURL)
+    StorageItem(VOSURI uri, long sizeInBytes, Date lastModified,
+                boolean publicFlag, boolean lockedFlag,
+                URI[] writeGroupURIs, URI[] readGroupURIs,
+                final String owner, boolean readableFlag,
+                String targetURL)
     {
         this.uri = uri;
         this.name = getURI().getName();
@@ -131,7 +132,7 @@ public abstract class StorageItem
 
     public String getLastModifiedHumanReadable()
     {
-        return DATE_FORMAT.format(lastModified);
+        return (lastModified == null) ? "" : DATE_FORMAT.format(lastModified);
     }
 
     public String getPath()
@@ -144,7 +145,10 @@ public abstract class StorageItem
         return name;
     }
 
-    public VOSURI getURI() { return uri; }
+    public VOSURI getURI()
+    {
+        return uri;
+    }
 
     public boolean isReadable()
     {
@@ -181,7 +185,7 @@ public abstract class StorageItem
         return owner;
     }
 
-    public String getURINames(final URI[] uris)
+    private String getURINames(final URI[] uris)
     {
         final String[] names = new String[uris.length];
         final int urisLength = uris.length;

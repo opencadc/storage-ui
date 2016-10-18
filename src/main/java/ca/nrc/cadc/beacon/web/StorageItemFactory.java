@@ -79,6 +79,7 @@ import ca.nrc.cadc.vos.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.text.ParseException;
 import java.util.Date;
 
 
@@ -125,16 +126,38 @@ public class StorageItemFactory
         return contextPath + "/link" + linkNode.getUri().getPath();
     }
 
+    private Date parseDate(final Node node)
+    {
+        final String dateProperty =
+                node.getPropertyValue(VOS.PROPERTY_URI_DATE);
 
-    public StorageItem translate(final Node node) throws Exception
+        if (dateProperty == null)
+        {
+            return null;
+        }
+        else
+        {
+            try
+            {
+                return DateUtil.getDateFormat(DateUtil.IVOA_DATE_FORMAT,
+                                              DateUtil.UTC).parse(dateProperty);
+            }
+            catch (ParseException e)
+            {
+                // Date cannot be parsed for some reason.
+                return null;
+            }
+        }
+    }
+
+
+    public StorageItem translate(final Node node)
     {
         final StorageItem nextItem;
         final VOSURI nodeURI = node.getUri();
         final boolean isRoot = nodeURI.isRoot();
-        final Date lastModifiedDate =
-                isRoot ? null : DateUtil
-                        .getDateFormat(DateUtil.IVOA_DATE_FORMAT, DateUtil.UTC)
-                        .parse(node.getPropertyValue(VOS.PROPERTY_URI_DATE));
+        final Date lastModifiedDate = isRoot ? null : parseDate(node);
+
         final boolean publicFlag =
                 Boolean.parseBoolean(
                         node.getPropertyValue(VOS.PROPERTY_URI_ISPUBLIC));

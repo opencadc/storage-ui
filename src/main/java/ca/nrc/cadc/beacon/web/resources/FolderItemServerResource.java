@@ -70,7 +70,6 @@ package ca.nrc.cadc.beacon.web.resources;
 
 
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
 
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.data.Status;
@@ -95,14 +94,7 @@ public class FolderItemServerResource extends StorageItemServerResource
     @Put
     public void create() throws Exception
     {
-        final ContainerNode containerNode = toContainerNode();
-
-        createNode(containerNode, false);
+        createFolder();
         getResponse().setStatus(Status.SUCCESS_CREATED);
-    }
-
-    private ContainerNode toContainerNode()
-    {
-        return new ContainerNode(getCurrentItemURI());
     }
 }

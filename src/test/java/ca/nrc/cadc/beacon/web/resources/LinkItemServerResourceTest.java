@@ -68,6 +68,7 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.vos.ContainerNode;
 import ca.nrc.cadc.vos.LinkNode;
 import ca.nrc.cadc.vos.VOSURI;
 import org.json.JSONObject;
@@ -148,6 +149,76 @@ public class LinkItemServerResourceTest
         };
 
         testSubject.create(payload);
+
+        verify(mockVOSpaceClient, mockServletContext, mockResponse);
+    }
+
+    @Test
+    public void resolve() throws Exception
+    {
+        final String getNodeRequestQuery = "limit=-1";
+        final Map<String, Object> attributes = new HashMap<>();
+
+        attributes.put("path", "curr/dir/MY_LINK");
+
+        expect(mockServletContext.getContextPath())
+                .andReturn("/servletpath").once();
+
+        final URI target = URI.create("vos://cadc.nrc.ca!vospace/other/dir/my/dir");
+        final LinkNode linkNode =
+                new LinkNode(new VOSURI(URI.create(
+                        StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
+                        + "/curr/dir/MY_LINK")), target);
+
+        final ContainerNode targetContainerNode =
+                new ContainerNode(new VOSURI(target));
+
+        mockResponse.redirectTemporary("/servletpath/list/other/dir/my/dir");
+        expectLastCall().once();
+
+        expect(mockVOSpaceClient.getNode("/curr/dir/MY_LINK",
+                                         getNodeRequestQuery)).andReturn(
+                                                 linkNode).once();
+
+        expect(mockVOSpaceClient.getNode("/other/dir/my/dir",
+                                         getNodeRequestQuery))
+                .andReturn(targetContainerNode).once();
+
+        replay(mockVOSpaceClient, mockServletContext, mockResponse);
+
+        testSubject = new LinkItemServerResource(null, mockVOSpaceClient)
+        {
+            @Override
+            ServletContext getServletContext()
+            {
+                return mockServletContext;
+            }
+
+            /**
+             * Returns the request attributes.
+             *
+             * @return The request attributes.
+             * @see Request#getAttributes()
+             */
+            @Override
+            public Map<String, Object> getRequestAttributes()
+            {
+                return attributes;
+            }
+
+            /**
+             * Returns the handled response.
+             *
+             * @return The handled response.
+             */
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
+        };
+
+        testSubject.resolve();
 
         verify(mockVOSpaceClient, mockServletContext, mockResponse);
     }
