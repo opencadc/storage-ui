@@ -1,0 +1,4 @@
+FROM quay.io/coreos/etcd
+
+RUN etcdctl set /services/vospace "{\"hostname\": \"vospace\", \"port\": 8080}"
+RUN etcdctl set /services/ac "{\"hostname\": \"www.canfar.phys.uvic.ca\", \"port\": 443}"

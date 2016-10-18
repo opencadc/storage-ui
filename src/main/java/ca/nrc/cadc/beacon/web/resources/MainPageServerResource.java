@@ -84,15 +84,14 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
 
 
-public class MainPageServerResource extends StorageServerResource
+public class MainPageServerResource extends StorageItemServerResource
 {
-    private final Configuration configuration =
+    private final Configuration freemarkerConfiguration =
             new Configuration(Configuration.getVersion());
 
 
@@ -105,8 +104,8 @@ public class MainPageServerResource extends StorageServerResource
     {
         super.doInit();
 
-        configuration.setLocalizedLookup(false);
-        configuration.setTemplateLoader(
+        freemarkerConfiguration.setLocalizedLookup(false);
+        freemarkerConfiguration.setTemplateLoader(
                 new WebappTemplateLoader(getServletContext()));
     }
 
@@ -119,8 +118,8 @@ public class MainPageServerResource extends StorageServerResource
         return representContainerNode(containerNode, currentUser);
     }
 
-    Representation representContainerNode(final ContainerNode containerNode,
-                                          final Subject currentUser)
+    private Representation representContainerNode(
+            final ContainerNode containerNode, final Subject currentUser)
             throws Exception
     {
         final List<Node> childNodes = containerNode.getNodes();
@@ -194,7 +193,7 @@ public class MainPageServerResource extends StorageServerResource
             dataModel.put("username", httpPrincipal.getName());
         }
 
-        return new TemplateRepresentation("index.ftl", configuration, dataModel,
+        return new TemplateRepresentation("index.ftl", freemarkerConfiguration, dataModel,
                                           MediaType.TEXT_HTML);
     }
 }

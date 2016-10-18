@@ -69,16 +69,28 @@
 package ca.nrc.cadc.beacon.web.restlet;
 
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONWriter;
 import org.restlet.data.MediaType;
+import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.WriterRepresentation;
 
 import java.io.IOException;
 import java.io.Writer;
 
 
-public abstract class JSONRepresentation extends WriterRepresentation
+public abstract class JSONRepresentation extends JsonRepresentation
 {
+    /**
+     * Constructor from a JSON object.
+     *
+     * @param jsonObject The JSON object.
+     */
+    public JSONRepresentation(JSONObject jsonObject)
+    {
+        super(jsonObject);
+    }
+
     /**
      * Constructor.
      *

@@ -1,0 +1,24 @@
+version: '2'
+services:
+  ui:
+    image: opencadc/storage
+    ports:
+      - '8080:8080'
+      - '5555:5555'
+    networks:
+      - 'vospace'
+    environment:
+      - 'CATALINA_OPTS=-Dcadc.search.acServiceID=ivo://cadc.nrc.ca/ac -Dcadc.search.vospaceServiceID=ivo://cadc.nrc.ca/vospace -Dca.nrc.cadc.reg.client.RegistryClient.host=jenkinsd.cadc.dao.nrc.ca'
+    depends_on:
+      - vospace
+    volumes:
+      - /usr/local/vosui/webapps:/usr/local/tomcat/webapps
+  vospace:
+    image: opencadc/vospace
+    networks:
+      - 'vospace'
+
+# Create the network 'archive' for which this system will run within.
+networks:
+  vospace:
+    driver: 'bridge'

@@ -83,12 +83,10 @@ import java.io.Writer;
 import java.net.URI;
 import java.util.Map;
 
-public class SecureServerResource extends ServerResource
+class SecureServerResource extends ServerResource
 {
-    final String SERVLET_CONTEXT_ATTRIBUTE_KEY =
+    private static final String SERVLET_CONTEXT_ATTRIBUTE_KEY =
             "org.restlet.ext.servlet.ServletContext";
-    final static URI VOSPACE_SERVICE_ID =
-            URI.create("ivo://cadc.nrc.ca/vospace");
 
 
     Subject getCurrentUser()
@@ -107,19 +105,6 @@ public class SecureServerResource extends ServerResource
     protected String getPath()
     {
         return getRequest().getResourceRef().getPath();
-    }
-
-    void writeResponse(final Status status, final String message)
-    {
-        writeResponse(status, new WriterRepresentation(MediaType.TEXT_PLAIN)
-        {
-            @Override
-            public void write(final Writer writer) throws IOException
-            {
-                writer.write(message);
-                writer.flush();
-            }
-        });
     }
 
     void writeResponse(final Status status, final Representation representation)

@@ -68,53 +68,40 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.AbstractUnitTest;
 
 import ca.nrc.cadc.vos.ContainerNode;
 import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import org.restlet.Response;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 
-import org.junit.Test;
 import org.restlet.data.Status;
 
 import javax.servlet.ServletContext;
 
+import org.junit.Test;
 import static org.easymock.EasyMock.*;
 
 
 public class FolderItemServerResourceTest
-        extends AbstractUnitTest<FolderItemServerResource>
+        extends AbstractServerResourceTest<FolderItemServerResource>
 {
     @Test
     public void create() throws Exception
     {
-        final VOSpaceClient mockClient = createMock(VOSpaceClient.class);
         final VOSURI folderURI = new VOSURI(URI.create(
-                FolderItemServerResource.VOSPACE_NODE_URI_PREFIX
+                StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
                 + "/my/node"));
         final ContainerNode containerNode = new ContainerNode(folderURI);
-        final Response mockResponse = createMock(Response.class);
-        final ServletContext mockServletContext =
-                createMock(ServletContext.class);
 
         expect(mockServletContext.getContextPath()).andReturn("/teststorage")
                 .once();
 
         replay(mockServletContext);
 
-        testSubject = new FolderItemServerResource()
+        testSubject = new FolderItemServerResource(null, mockVOSpaceClient)
         {
-            @Override
-            protected VOSpaceClient createClient() throws MalformedURLException
-            {
-                return mockClient;
-            }
-
             @Override
             VOSURI getCurrentItemURI()
             {
@@ -139,16 +126,16 @@ public class FolderItemServerResourceTest
             }
         };
 
-        expect(mockClient.createNode(containerNode, false))
+        expect(mockVOSpaceClient.createNode(containerNode, false))
                 .andReturn(containerNode).once();
 
         mockResponse.setStatus(Status.SUCCESS_CREATED);
         expectLastCall().once();
 
-        replay(mockClient, mockResponse);
+        replay(mockVOSpaceClient, mockResponse);
 
         testSubject.create();
 
-        verify(mockClient, mockResponse, mockServletContext);
+        verify(mockVOSpaceClient, mockResponse, mockServletContext);
     }
 }

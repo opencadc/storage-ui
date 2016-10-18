@@ -70,8 +70,9 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.AbstractUnitTest;
 
+import ca.nrc.cadc.beacon.web.FileValidator;
 import ca.nrc.cadc.beacon.web.UploadOutputStreamWrapper;
-import ca.nrc.cadc.net.OutputStreamWrapper;
+import ca.nrc.cadc.beacon.web.UploadVerifier;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.apache.commons.fileupload.FileItemStream;
@@ -79,7 +80,6 @@ import org.restlet.Response;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 
 import java.security.MessageDigest;
@@ -124,9 +124,6 @@ public class FileItemServerResourceTest
 
         expectedDataNode.setProperties(propertyList);
 
-//        final UploadVerifier mockUploadVerifier =
-//                createMock(UploadVerifier.class);
-
         requestAttributes.put("path", "my/file.txt");
 
         final ServletContext mockServletContext =
@@ -137,7 +134,9 @@ public class FileItemServerResourceTest
 
         replay(mockServletContext);
 
-        testSubject = new FileItemServerResource()
+        testSubject = new FileItemServerResource(null, mockVOSpaceClient,
+                                                 new UploadVerifier(),
+                                                 new FileValidator())
         {
             @Override
             public Response getResponse()
@@ -163,24 +162,17 @@ public class FileItemServerResourceTest
                 return parentURI;
             }
 
-            @Override
-            protected VOSpaceClient createClient() throws MalformedURLException
-            {
-                return mockVOSpaceClient;
-            }
 
             /**
              * Abstract away the Transfer stuff.  It's cumbersome.
              *
              * @param outputStreamWrapper The OutputStream wrapper.
-             * @param client              A VOSpace Client to use.
              * @param dataNode            The node to upload.
-             * @throws Exception
+             * @throws Exception To capture transfer and upload failures.
              */
             @Override
             void upload(UploadOutputStreamWrapper outputStreamWrapper,
-                        VOSpaceClient client, DataNode dataNode)
-                    throws Exception
+                        DataNode dataNode) throws Exception
             {
                 // Do nothing.
             }
@@ -196,11 +188,6 @@ public class FileItemServerResourceTest
         expect(mockFileItemStream.getName()).andReturn("MYUPLOADFILE.txt").once();
         expect(mockFileItemStream.openStream()).andReturn(inputStream).once();
         expect(mockFileItemStream.getContentType()).andReturn("text/plain").once();
-
-//        mockUploadVerifier.verifyByteCount(dataBytes.length, expectedDataNode);
-//        expectLastCall().once();
-//
-//        mockUploadVerifier.verifyMD5();
 
         replay(mockVOSpaceClient, mockResponse, mockFileItemStream);
 

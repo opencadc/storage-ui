@@ -93,7 +93,6 @@ import org.restlet.resource.Put;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -103,23 +102,27 @@ import java.util.List;
 
 public class FileItemServerResource extends StorageItemServerResource
 {
-    protected static final int BUFFER_SIZE = 8192;
+    private static final int BUFFER_SIZE = 8192;
     private static final String UPLOAD_FILE_KEY = "upload";
 
     private final UploadVerifier uploadVerifier;
     private final FileValidator fileValidator;
 
 
-    public FileItemServerResource(final FileValidator fileValidator,
-                                  final UploadVerifier uploadVerifier)
+    FileItemServerResource(final RegistryClient registryClient,
+                           final VOSpaceClient voSpaceClient,
+                           final UploadVerifier uploadVerifier,
+                           final FileValidator fileValidator)
     {
-        this.fileValidator = fileValidator;
+        super(registryClient, voSpaceClient);
         this.uploadVerifier = uploadVerifier;
+        this.fileValidator = fileValidator;
     }
 
     public FileItemServerResource()
     {
-        this(new FileValidator(), new UploadVerifier());
+        this.uploadVerifier = new UploadVerifier();
+        this.fileValidator = new FileValidator();
     }
 
 
@@ -231,11 +234,9 @@ public class FileItemServerResource extends StorageItemServerResource
 
             dataNode.setProperties(properties);
 
-            final VOSpaceClient client = createClient();
-
             try (final InputStream inputStream = fileItemStream.openStream())
             {
-                upload(inputStream, client, dataNode);
+                upload(inputStream, dataNode);
             }
 
             return dataNode.getUri();
@@ -252,11 +253,9 @@ public class FileItemServerResource extends StorageItemServerResource
      * Do the secure upload.
      *
      * @param inputStream The InputStream to pull from.
-     * @param client      The VOSpaceClient instance.
      * @param dataNode    The DataNode to upload to.
      */
     protected void upload(final InputStream inputStream,
-                          final VOSpaceClient client,
                           final DataNode dataNode)
             throws NodeAlreadyExistsException
     {
@@ -273,19 +272,19 @@ public class FileItemServerResource extends StorageItemServerResource
             // return the 409 code, while maintaining backward compatibility
             // with the catch below.
             // jenkinsd 2016.07.25
-            if (client.getNode(path) != null)
+            if (voSpaceClient.getNode(path) != null)
             {
                 throw new NodeAlreadyExistsException(path);
             }
         }
         catch (NodeNotFoundException e)
         {
-            client.createNode(dataNode, false);
+            createNode(dataNode, false);
         }
 
         try
         {
-            upload(outputStreamWrapper, client, dataNode);
+            upload(outputStreamWrapper, dataNode);
         }
         catch (Exception e)
         {
@@ -313,19 +312,18 @@ public class FileItemServerResource extends StorageItemServerResource
     /**
      * Abstract away the Transfer stuff.  It's cumbersome.
      *
-     * @param outputStreamWrapper       The OutputStream wrapper.
-     * @param client                    A VOSpace Client to use.
-     * @param dataNode                  The node to upload.
-     * @throws Exception
+     * @param outputStreamWrapper The OutputStream wrapper.
+     * @param dataNode            The node to upload.
+     * @throws Exception To capture transfer and upload failures.
      */
     void upload(final UploadOutputStreamWrapper outputStreamWrapper,
-                final VOSpaceClient client, final DataNode dataNode) throws Exception
+                        final DataNode dataNode) throws Exception
     {
-        final List<Protocol> protocols = new ArrayList<>();
         final RegistryClient registryClient = new RegistryClient();
         final URL baseURL = registryClient
                 .getServiceURL(dataNode.getUri().getServiceURI(),
                                Standards.VOSPACE_TRANSFERS_20, AuthMethod.ANON);
+        final List<Protocol> protocols = new ArrayList<>();
         protocols.add(new Protocol(VOS.PROTOCOL_HTTP_PUT,
                                    baseURL.toString(), null));
         final Transfer transfer = new Transfer(dataNode.getUri().getURI(),
@@ -333,7 +331,7 @@ public class FileItemServerResource extends StorageItemServerResource
                                                new View(URI.create(VOS.VIEW_DEFAULT)),
                                                protocols);
 
-        final ClientTransfer ct = client.createTransfer(transfer);
+        final ClientTransfer ct = voSpaceClient.createTransfer(transfer);
         ct.setOutputStreamWrapper(outputStreamWrapper);
 
         ct.runTransfer();
@@ -344,64 +342,6 @@ public class FileItemServerResource extends StorageItemServerResource
                                  dataNode);
     }
 
-    void setInheritedPermissions(final VOSURI newNodeURI)
-            throws NodeNotFoundException, MalformedURLException
-    {
-        final ContainerNode parentNode = getCurrentNode();
-        final Node newNode = getNode(newNodeURI, -1);
-        final List<NodeProperty> newNodeProperties = newNode.getProperties();
-
-        // Clean slate.
-        newNodeProperties.remove(
-                new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, ""));
-        newNodeProperties.remove(
-                new NodeProperty(VOS.PROPERTY_URI_GROUPWRITE, ""));
-        newNodeProperties.remove(
-                new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, ""));
-
-        final String parentReadGroupURIValue =
-                parentNode.getPropertyValue(
-                        VOS.PROPERTY_URI_GROUPREAD);
-        if (StringUtil.hasText(parentReadGroupURIValue))
-        {
-            newNodeProperties.add(
-                    new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
-                                     parentReadGroupURIValue));
-        }
-
-        final String parentWriteGroupURIValue =
-                parentNode.getPropertyValue(
-                        VOS.PROPERTY_URI_GROUPWRITE);
-        if (StringUtil.hasText(parentWriteGroupURIValue))
-        {
-            newNodeProperties.add(
-                    new NodeProperty(VOS.PROPERTY_URI_GROUPWRITE,
-                                     parentWriteGroupURIValue));
-        }
-
-        final String isPublicValue =
-                parentNode.getPropertyValue(
-                        VOS.PROPERTY_URI_ISPUBLIC);
-        if (StringUtil.hasText(isPublicValue))
-        {
-            newNodeProperties.add(
-                    new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC,
-                                     isPublicValue));
-        }
-
-        setNodeSecure(newNode);
-    }
-
-    /**
-     * Perform the HTTPS command.
-     *
-     * @param newNode The newly created Node.
-     */
-    void setNodeSecure(final Node newNode) throws MalformedURLException
-    {
-        createClient().setNode(newNode);
-    }
-
     /**
      * Parse the representation into a Map for easier access to Form elements.
      *
@@ -409,7 +349,7 @@ public class FileItemServerResource extends StorageItemServerResource
      * Never null.
      * @throws Exception If the Upload could not be parsed.
      */
-    ServletFileUpload parseRepresentation() throws Exception
+    private ServletFileUpload parseRepresentation() throws Exception
     {
         // 1/ Create a factory for disk-based file items
         final DiskFileItemFactory factory = new DiskFileItemFactory();
@@ -425,14 +365,14 @@ public class FileItemServerResource extends StorageItemServerResource
      * @param factory Factory used to create the upload.
      * @return RestletFileUpload instance.
      */
-    protected ServletFileUpload createFileUpload(
+    private ServletFileUpload createFileUpload(
             final DiskFileItemFactory factory)
     {
         return new ServletFileUpload(factory);
     }
 
 
-    void uploadError(final Status status, final String message)
+    private void uploadError(final Status status, final String message)
     {
         writeResponse(status,
                       new JSONRepresentation()
@@ -447,7 +387,7 @@ public class FileItemServerResource extends StorageItemServerResource
                       });
     }
 
-    void uploadSuccess()
+    private void uploadSuccess()
     {
         writeResponse(Status.SUCCESS_CREATED,
                       new JSONRepresentation()

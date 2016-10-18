@@ -69,6 +69,7 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.web.AccessControlClient;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Form;
@@ -84,7 +85,8 @@ public class AccessControlServerResource extends SecureServerResource
     {
         final Form form = new Form(payload);
         final AccessControlClient accessControlClient =
-                new AccessControlClient();
+                (AccessControlClient) getContext().getAttributes().get(
+                        VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY);
 
         final String cookieValue =
                 accessControlClient.login(form.getFirstValue("username"),

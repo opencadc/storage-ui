@@ -108,9 +108,6 @@ public class MainPageServerResourceTest
         final ServletContext mockServletContext =
                 createMock(ServletContext.class);
 
-        expect(mockServletContext.getContextPath()).andReturn("/teststorage")
-                .once();
-
         replay(mockServletContext);
 
 

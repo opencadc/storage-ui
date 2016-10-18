@@ -66,25 +66,23 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.beacon.AbstractUnitTest;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
+import org.restlet.Request;
+import org.restlet.Response;
 
-import javax.security.auth.Subject;
-import java.io.Writer;
+import javax.servlet.ServletContext;
 
+import static org.easymock.EasyMock.createMock;
 
-public class PipedCSVWriter extends AbstractPipedWriter
+abstract class AbstractServerResourceTest<T extends SecureServerResource>
+        extends AbstractUnitTest<T>
 {
-    @Override
-    StorageItemProducer getStorageItemProducer(int pageSize, VOSURI folderURI,
-                                               VOSURI startURI, Writer writer,
-                                               final Subject user,
-                                               final StorageItemFactory storageItemFactory)
-    {
-        return new CSVStorageItemProducer(pageSize, folderURI, startURI,
-                                          new StorageItemCSVWriter(writer),
-                                          user, storageItemFactory);
-    }
+    final VOSpaceClient mockVOSpaceClient = createMock(VOSpaceClient.class);
+    final Request mockRequest = createMock(Request.class);
+    final Response mockResponse = createMock(Response.class);
+    final ServletContext mockServletContext =
+            createMock(ServletContext.class);
 }

@@ -18,17 +18,28 @@ dependencies {
     compile 'org.restlet.jee:org.restlet.ext.freemarker:2.3.+'
     compile 'org.restlet.jee:org.restlet.ext.json:2.3.+'
     
+    compile 'org.opencadc:cadc-util:[1.0.5,]'
     compile 'org.opencadc:cadc-registry:1.+'
     compile 'org.opencadc:cadc-vosi:1.+'
-    compile 'org.opencadc:cadc-vos-server:1.+'
+
+    compile 'org.opencadc:cadc-vos:1.+'
+
+    // Exclude the old restlet from being inserted here.
+    compile ('org.opencadc:cadc-vos-server:1.+') {
+        exclude group: 'org.restlet.jee'
+        exclude group: 'org.restlet.jse'
+    }
+
     compile 'org.opencadc:cadc-access-control:1.+'
     compile 'org.opencadc:cadc-access-control-identity:1.+'
-
-//    providedCompile 'javax.servlet:servlet-api:2.5'
+    compile 'org.apache.commons:commons-configuration2:2.+'
+    compile 'javax.websocket:javax.websocket-api:1.+'
 
     testCompile 'junit:junit:4.+'
     testCompile 'org.easymock:easymock:3.+'
 }
+
+def docker_image_name = 'opencadc/storage'
 
 war {
     archiveName 'storage.' + extension
@@ -56,6 +67,6 @@ task copyWAR(type: Copy, dependsOn: war) {
 }
 
 task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
-    commandLine 'docker', 'build', '-t', 'opencadc/storage', '-f', './docker/Dockerfile', './docker/'
+    commandLine 'docker', 'build', '-t', docker_image_name, '-f', './docker/Dockerfile', './docker/'
 }
 

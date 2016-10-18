@@ -72,7 +72,6 @@ package ca.nrc.cadc.web;
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.net.HttpPost;
 import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.LocalAuthority;
 import ca.nrc.cadc.reg.client.RegistryClient;
 
 import java.io.ByteArrayOutputStream;
@@ -86,40 +85,42 @@ import java.util.Map;
 public class AccessControlClient
 {
     private final RegistryClient registryClient;
-    private final URI loginURI;
+    private final URI groupManagementServiceURI;
 
 
-    public AccessControlClient() throws IllegalArgumentException
+    public AccessControlClient(final URI serviceURI)
+            throws IllegalArgumentException
     {
-        this(new LocalAuthority().getServiceURI(
-                Standards.UMS_LOGIN_01.toString()), new RegistryClient());
+        this(serviceURI, new RegistryClient());
     }
 
     /**
      * Complete constructor.
      *
-     * @param serviceURI            The Service URI.
-     * @param registryClient        The Registry client for lookups.*/
-    AccessControlClient(final URI serviceURI,
-                        final RegistryClient registryClient)
+     * @param serviceURI     The Service URI.
+     * @param registryClient The Registry client for lookups.
+     */
+    private AccessControlClient(final URI serviceURI,
+                                final RegistryClient registryClient)
     {
         this.registryClient = registryClient;
-        this.loginURI = serviceURI;
+        this.groupManagementServiceURI = serviceURI;
     }
 
 
     private URL lookupLoginURL()
     {
-        return registryClient.getServiceURL(loginURI, Standards.UMS_LOGIN_01,
+        return registryClient.getServiceURL(groupManagementServiceURI,
+                                            Standards.UMS_LOGIN_01,
                                             AuthMethod.ANON);
     }
 
     /**
      * Perform a username/password verification and return the cookie value.
      *
-     * @param username      The username.
-     * @param password      The password char array.
-     * @return              String cookie value.
+     * @param username The username.
+     * @param password The password char array.
+     * @return String cookie value.
      */
     public String login(final String username, final char[] password)
     {
@@ -146,11 +147,11 @@ public class AccessControlClient
     /**
      * Post the output.
      *
-     * @param payload       The payload to send.
-     * @param out           The stream for any output.
-     * @return              Int response code.
+     * @param payload The payload to send.
+     * @param out     The stream for any output.
+     * @return Int response code.
      */
-    int post(final Map<String, Object> payload, final OutputStream out)
+    private int post(final Map<String, Object> payload, final OutputStream out)
     {
         final HttpPost post = new HttpPost(lookupLoginURL(), payload, out);
 

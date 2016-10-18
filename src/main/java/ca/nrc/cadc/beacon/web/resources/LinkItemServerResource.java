@@ -68,90 +68,55 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
-import ca.nrc.cadc.beacon.web.URIExtractor;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
+import ca.nrc.cadc.vos.LinkNode;
 import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+import org.json.JSONObject;
 import org.restlet.data.Status;
-import org.restlet.resource.ResourceException;
+import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.resource.Put;
 
-import java.net.MalformedURLException;
 import java.net.URI;
 
 
-public abstract class StorageServerResource extends SecureServerResource
+public class LinkItemServerResource extends StorageItemServerResource
 {
-    protected static final String VOSPACE_NODE_URI_PREFIX =
-            "vos://ca.nrc.cadc!vospace";
-    protected static final URI SERVICE_URI =
-            URI.create("ivo://cadc.nrc.ca/vospace");
-
-
-    // Page size for the initial page display.
-    static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
-
-    static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-
-    protected final RegistryClient registryClient;
-    protected final StorageItemFactory storageItemFactory;
-
-
-
-    public StorageServerResource()
+    /**
+     * Empty constructor needed for Restlet to manage it.
+     */
+    public LinkItemServerResource()
     {
-        this.registryClient = new RegistryClient();
+    }
 
-        try
-        {
-            this.storageItemFactory =
-                    new StorageItemFactory(URI_EXTRACTOR, registryClient,
-                                           getServletContext().getContextPath());
-        }
-        catch (MalformedURLException e)
-        {
-            throw new ResourceException(Status.SERVER_ERROR_INTERNAL, e);
-        }
+    LinkItemServerResource(final RegistryClient registryClient,
+                           final VOSpaceClient voSpaceClient)
+    {
+        super(registryClient, voSpaceClient);
     }
 
 
-    String getCurrentPath()
+    /**
+     * Create a link node at this location.  The current path is the name of
+     * the link to create.
+     *
+     * @param payload       The JSON payload in the form of:
+     *                      <code>{"link_name": name, "link_url": url}</code>
+     * @throws Exception    To bubble up any errors.
+     */
+    @Put("json")
+    public void create(final JsonRepresentation payload) throws Exception
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        return "/" + ((pathInRequest == null) ? "" : pathInRequest.toString());
+        final JSONObject jsonObject = payload.getJsonObject();
+
+        createNode(toLinkNode(URI.create(jsonObject.getString("link_url"))),
+                   false);
+        getResponse().setStatus(Status.SUCCESS_CREATED);
     }
 
-    VOSURI getCurrentItemURI()
+    private LinkNode toLinkNode(final URI target)
     {
-        return toURI(getCurrentPath());
-    }
-
-    final ContainerNode getCurrentNode()
-            throws NodeNotFoundException, MalformedURLException
-    {
-        return (ContainerNode) getNode(getCurrentItemURI(),
-                                       DEFAULT_DISPLAY_PAGE_SIZE);
-    }
-
-    VOSURI toURI(final String path)
-    {
-        return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + path));
-    }
-
-    protected VOSpaceClient createClient() throws MalformedURLException
-    {
-        return new VOSpaceClient(SERVICE_URI);
-    }
-
-    Node getNode(final VOSURI folderURI, final int pageSize)
-            throws MalformedURLException, NodeNotFoundException
-    {
-        final String query = "limit=" + pageSize + "&detail=max";
-        final VOSpaceClient voSpaceClient = createClient();
-
-        return voSpaceClient.getNode(folderURI.getPath(), query);
+        final VOSURI linkNodeURI = toURI(getCurrentPath());
+        return new LinkNode(linkNodeURI, target);
     }
 }

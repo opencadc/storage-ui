@@ -70,6 +70,7 @@ package ca.nrc.cadc.beacon;
 
 import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import javax.security.auth.Subject;
 
@@ -80,10 +81,11 @@ public class CSVStorageItemProducer
     public CSVStorageItemProducer(int pageSize, VOSURI folderURI, VOSURI startURI,
                                   final StorageItemCSVWriter nodeWriter,
                                   final Subject user,
-                                  final StorageItemFactory storageItemFactory)
+                                  final StorageItemFactory storageItemFactory,
+                                  final VOSpaceClient voSpaceClient)
     {
         super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
+              storageItemFactory, voSpaceClient);
     }
 
 

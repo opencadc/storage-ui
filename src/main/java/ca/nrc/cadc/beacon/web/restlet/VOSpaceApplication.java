@@ -72,7 +72,11 @@ import ca.nrc.cadc.auth.PrincipalExtractor;
 import ca.nrc.cadc.beacon.web.CookiePrincipalExtractorImpl;
 import ca.nrc.cadc.beacon.web.SubjectGenerator;
 import ca.nrc.cadc.beacon.web.resources.*;
-import ca.nrc.cadc.beacon.web.view.FolderItem;
+import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
+import ca.nrc.cadc.web.AccessControlClient;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.SystemConfiguration;
 import org.restlet.*;
 import org.restlet.routing.Route;
 import org.restlet.routing.Router;
@@ -80,6 +84,7 @@ import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
 
 import javax.security.auth.Subject;
+import java.net.URI;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
@@ -87,6 +92,27 @@ import java.util.Map;
 
 public class VOSpaceApplication extends Application
 {
+    public static final String VOSPACE_CLIENT_KEY =
+            "org.opencadc.vospace.client";
+    public static final String REGISTRY_CLIENT_KEY =
+            "org.opencadc.registry.client";
+    public static final String ACCESS_CONTROL_CLIENT_KEY =
+            "org.opencadc.ac.client";
+
+    private static final String DEFAULT_SERVICE_ID =
+            "ivo://cadc.nrc.ca/vospace";
+    private static final String VOSPACE_SERVICE_PROPERTY_KEY =
+            "org.opencadc.vospace.service_id";
+
+    private static final String DEFAULT_GMS_SERVICE_ID =
+            "ivo://cadc.nrc.ca/gms";
+    private static final String GMS_SERVICE_PROPERTY_KEY =
+            "org.opencadc.gms.service_id";
+
+
+    private final Configuration configuration = new SystemConfiguration();
+
+
     /**
      * Constructor.
      *
@@ -113,7 +139,15 @@ public class VOSpaceApplication extends Application
     @Override
     public Restlet createInboundRoot()
     {
-        final Router router = new Router()
+        final Context context = getContext();
+
+        context.getAttributes().put(VOSPACE_CLIENT_KEY, createVOSpaceClient());
+        context.getAttributes().put(REGISTRY_CLIENT_KEY,
+                                    createRegistryClient());
+        context.getAttributes().put(ACCESS_CONTROL_CLIENT_KEY,
+                                    createAccessControlClient());
+
+        final Router router = new Router(context)
         {
             private final SubjectGenerator subjectGenerator =
                     createSubjectGenerator();
@@ -136,7 +170,8 @@ public class VOSpaceApplication extends Application
                 final Subject subject =
                         subjectGenerator.generate(principalExtractor);
 
-                Subject.doAs(subject, (PrivilegedAction<Void>) () -> {
+                Subject.doAs(subject, (PrivilegedAction<Void>) () ->
+                {
                     next.handle(request, response);
                     return null;
                 });
@@ -156,11 +191,12 @@ public class VOSpaceApplication extends Application
         // Generic endpoint for files, folders, or links.
         final TemplateRoute itemRoute =
                 router.attach("/item/{path}", StorageItemServerResource.class);
-
         final TemplateRoute folderRoute =
                 router.attach("/folder/{path}", FolderItemServerResource.class);
         final TemplateRoute fileRoute =
                 router.attach("/file/{path}", FileItemServerResource.class);
+        final TemplateRoute linkRoute =
+                router.attach("/link/{path}", LinkItemServerResource.class);
         final TemplateRoute listRoute =
                 router.attach("/list/{path}", MainPageServerResource.class);
         final TemplateRoute rawRoute =
@@ -171,6 +207,7 @@ public class VOSpaceApplication extends Application
 
         itemRoute.getTemplate().getVariables().putAll(routeVariables);
         folderRoute.getTemplate().getVariables().putAll(routeVariables);
+        linkRoute.getTemplate().getVariables().putAll(routeVariables);
         pageRoute.getTemplate().getVariables().putAll(routeVariables);
         fileRoute.getTemplate().getVariables().putAll(routeVariables);
         listRoute.getTemplate().getVariables().putAll(routeVariables);
@@ -182,10 +219,31 @@ public class VOSpaceApplication extends Application
 
     /**
      * Override at will.
-     * @return      SubjectGenerator implementation.
+     *
+     * @return SubjectGenerator implementation.
      */
-    SubjectGenerator createSubjectGenerator()
+    private SubjectGenerator createSubjectGenerator()
     {
         return new SubjectGenerator();
+    }
+
+    private VOSpaceClient createVOSpaceClient()
+    {
+        return new VOSpaceClient(URI.create(
+                configuration.getString(VOSPACE_SERVICE_PROPERTY_KEY,
+                                        DEFAULT_SERVICE_ID)));
+    }
+
+    private RegistryClient createRegistryClient()
+    {
+        return new RegistryClient();
+    }
+
+    private AccessControlClient createAccessControlClient()
+    {
+        return new AccessControlClient(URI.create(
+                configuration.getString(
+                        VOSpaceApplication.GMS_SERVICE_PROPERTY_KEY,
+                        VOSpaceApplication.DEFAULT_GMS_SERVICE_ID)));
     }
 }

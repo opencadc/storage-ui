@@ -76,28 +76,28 @@ import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import javax.security.auth.Subject;
-import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
 
-public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
+abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
         implements StorageItemProducer
 {
-    int pageCount = 0;
-    VOSURI current;
-    final int pageSize;
-    final VOSURI folderURI;
-    final Subject user;
-    final T storageItemWriter;
-    final StorageItemFactory storageItemFactory;
+    private VOSURI current;
+    private final int pageSize;
+    private final VOSURI folderURI;
+    private final Subject user;
+    private final T storageItemWriter;
+    private final StorageItemFactory storageItemFactory;
+    private final VOSpaceClient voSpaceClient;
 
 
-    public AbstractStorageItemProducer(int pageSize, VOSURI folderURI,
-                                       final VOSURI startURI,
-                                       final T storageItemWriter,
-                                       final Subject user,
-                                       final StorageItemFactory storageItemFactory)
+    AbstractStorageItemProducer(int pageSize, VOSURI folderURI,
+                                final VOSURI startURI,
+                                final T storageItemWriter,
+                                final Subject user,
+                                final StorageItemFactory storageItemFactory,
+                                final VOSpaceClient voSpaceClient)
     {
         this.pageSize = pageSize;
         this.folderURI = folderURI;
@@ -105,6 +105,7 @@ public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
         this.storageItemWriter = storageItemWriter;
         this.user = user;
         this.storageItemFactory = storageItemFactory;
+        this.voSpaceClient = voSpaceClient;
     }
 
 
@@ -115,11 +116,8 @@ public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
                   ? "" : "&uri=" + NetUtil.encode(current.toString()));
     }
 
-    List<Node> nextPage() throws Exception
+    private List<Node> nextPage() throws Exception
     {
-        final VOSpaceClient voSpaceClient =
-                new VOSpaceClient(URI.create("ivo://cadc.nrc.ca/vospace"));
-
         final List<Node> nodes =
                 Subject.doAs(user, (PrivilegedExceptionAction<List<Node>>) () ->
                         ((ContainerNode) voSpaceClient.getNode(
@@ -130,7 +128,7 @@ public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
                                            : null;
     }
 
-    boolean writePage(final List<Node> page) throws Exception
+    private boolean writePage(final List<Node> page) throws Exception
     {
         if (page == null)
         {
@@ -160,11 +158,13 @@ public abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
         return writePage(nextPage());
     }
 
-    protected void writePages() throws Exception
+    void writePages() throws Exception
     {
-        while (writePage())
+        boolean hasMore = writePage();
+
+        while (hasMore)
         {
-            pageCount++;
+            hasMore = writePage();
         }
     }
 }

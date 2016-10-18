@@ -69,26 +69,39 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
 
+import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.data.Status;
 import org.restlet.resource.Put;
 
 
 public class FolderItemServerResource extends StorageItemServerResource
 {
+    /**
+     * Empty constructor needed for Restlet to manage it.
+     */
+    public FolderItemServerResource()
+    {
+    }
+
+    FolderItemServerResource(final RegistryClient registryClient,
+                             final VOSpaceClient voSpaceClient)
+    {
+        super(registryClient, voSpaceClient);
+    }
+
     @Put
     public void create() throws Exception
     {
-        final VOSpaceClient client = createClient();
         final ContainerNode containerNode = toContainerNode();
 
-        client.createNode(containerNode, false);
+        createNode(containerNode, false);
         getResponse().setStatus(Status.SUCCESS_CREATED);
     }
 
-    ContainerNode toContainerNode()
+    private ContainerNode toContainerNode()
     {
         return new ContainerNode(getCurrentItemURI());
     }

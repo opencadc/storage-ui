@@ -440,16 +440,16 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   }
 
   var lg = [];
-  $.ajax({
-           url: '/storage/scripts/languages/' + config.options.culture +
-                '.json',
-           async: false,
-           dataType: 'json',
-           success: function (json)
-           {
-             lg = json;
-           }
-         });
+  $.getJSON('/storage/scripts/languages/' + config.options.culture + '.json')
+    .done(function (json)
+          {
+            lg = json;
+          })
+    .fail(function (request, textStatus, errorThrown)
+          {
+            console.log("Error (" + request.status + "): "
+                        + textStatus + "\n" + errorThrown);
+          });
 
 // Options for alert, prompt, and confirm dialogues.
   $.prompt.setDefaults({
@@ -802,17 +802,64 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
     $("#new_external_link").unbind().click(function ()
                                            {
-                                             var msg = '<input id="link_url" name="link_url" type="url" placeholder="http://example.com/path" />';
-                                             var createLinkURI = function (v, m)
-                                             {
-                                               if (v === 1)
-                                               {
-                                                 var linkURL = m.children('#link_url').val();
+                                             var linkURLExample = 'http://example.com/path';
+                                             var msg = '<div class="form-group"><label for="link_name" class="hidden">' + lg.name + '</label><input id="link_name" name="link_name" type="text" class="form-control" placeholder="' + lg.name + '" /></div>'
+                                                       + '<div class="form-group"><label for="link_name" class="hidden">' + linkURLExample + '</label><input id="link_url" name="link_url" type="url" class="form-control" placeholder="' + linkURLExample + '" /></div>';
 
-                                                 if (linkURL != '')
+                                             var createLinkURI =
+                                               function (event, value, message,
+                                                         formVals)
+                                             {
+                                               if (value === true)
+                                               {
+                                                 var linkName = formVals['link_name'];
+
+                                                 if (validFilename(linkName))
                                                  {
-                                                   alert("Create " + linkURL);
+                                                   $.ajax(
+                                                     {
+                                                       url: config.options.linkConnector
+                                                            + getCurrentPath() +
+                                                            "/" + encodeURIComponent(linkName),
+                                                       method: "PUT",
+                                                       data: JSON.stringify(formVals),
+                                                       contentType: "application/json",
+                                                       statusCode: {
+                                                         201: function ()
+                                                         {
+                                                           $.prompt(lg.successful_added_link,
+                                                                    {
+                                                                      submit: refreshPage
+                                                                    });
+                                                         },
+                                                         400: function ()
+                                                         {
+
+                                                         },
+                                                         401: function ()
+                                                         {
+                                                           $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                                                         },
+                                                         403: function ()
+                                                         {
+                                                           $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                                                         },
+                                                         409: function ()
+                                                         {
+                                                           $.prompt(lg.LINK_ALREADY_EXISTS.replace(/%s/g,
+                                                                                                   linkName));
+                                                         }
+                                                       }
+                                                     });
                                                  }
+                                                 else
+                                                 {
+                                                   $.prompt(lg.INVALID_ITEM_NAME);
+                                                 }
+                                               }
+                                               else
+                                               {
+                                                 return true;
                                                }
                                              };
 
@@ -830,7 +877,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                              $.prompt(msg,
                                                       {
                                                         submit: createLinkURI,
-                                                        focus: "#link_url",
+                                                        focus: "#link_name",
                                                         buttons: btns
                                                       });
                                            });

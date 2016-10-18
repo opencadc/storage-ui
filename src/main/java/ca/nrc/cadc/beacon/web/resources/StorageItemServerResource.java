@@ -68,17 +68,185 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-
+import ca.nrc.cadc.beacon.web.StorageItemFactory;
+import ca.nrc.cadc.beacon.web.URIExtractor;
+import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
+import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+import org.restlet.data.Status;
 import org.restlet.resource.Delete;
+import org.restlet.resource.ResourceException;
+
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.util.List;
 
 
-public class StorageItemServerResource extends StorageServerResource
+public class StorageItemServerResource extends SecureServerResource
 {
-    @Delete
-    public void remove() throws Exception
+    static final String VOSPACE_NODE_URI_PREFIX = "vos://ca.nrc.cadc!vospace";
+
+
+    // Page size for the initial page display.
+    private static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
+    private static final URIExtractor URI_EXTRACTOR = new URIExtractor();
+
+    StorageItemFactory storageItemFactory;
+    VOSpaceClient voSpaceClient;
+
+
+    /**
+     * Empty constructor needed for Restlet to manage it.
+     */
+    public StorageItemServerResource()
     {
-        final VOSpaceClient client = createClient();
-        client.deleteNode(getCurrentPath());
+    }
+
+    /**
+     * Complete constructor for testing.
+     * @param registryClient        The Registry client to use.
+     * @param voSpaceClient         The VOSpace Client to use.
+     */
+    StorageItemServerResource(final RegistryClient registryClient,
+                              final VOSpaceClient voSpaceClient)
+    {
+        initialize(registryClient, voSpaceClient);
+    }
+
+
+    /**
+     * Set-up method.  This ensures there is a context first before pulling
+     * out some necessary objects for further work.
+     *
+     * Tester
+     */
+    @Override
+    protected void doInit() throws ResourceException
+    {
+        initialize(((RegistryClient) getContext().getAttributes().get(
+                VOSpaceApplication.REGISTRY_CLIENT_KEY)),
+                   ((VOSpaceClient) getContext().getAttributes().get(
+                           VOSpaceApplication.VOSPACE_CLIENT_KEY)));
+    }
+
+    private void initialize(final RegistryClient registryClient,
+                            final VOSpaceClient voSpaceClient)
+    {
+        try
+        {
+            this.storageItemFactory =
+                    new StorageItemFactory(URI_EXTRACTOR, registryClient,
+                                           getServletContext()
+                                                   .getContextPath());
+        }
+        catch (MalformedURLException e)
+        {
+            throw new ResourceException(Status.SERVER_ERROR_INTERNAL, e);
+        }
+
+        this.voSpaceClient = voSpaceClient;
+    }
+
+
+    String getCurrentPath()
+    {
+        final Object pathInRequest = getRequestAttributes().get("path");
+        return "/" + ((pathInRequest == null) ? "" : pathInRequest.toString());
+    }
+
+    VOSURI getCurrentItemURI()
+    {
+        return toURI(getCurrentPath());
+    }
+
+    final ContainerNode getCurrentNode()
+            throws NodeNotFoundException, MalformedURLException
+    {
+        return (ContainerNode) getNode(getCurrentItemURI(),
+                                       DEFAULT_DISPLAY_PAGE_SIZE);
+    }
+
+    VOSURI toURI(final String path)
+    {
+        return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + path));
+    }
+
+    private Node getNode(final VOSURI folderURI, final int pageSize)
+            throws MalformedURLException, NodeNotFoundException
+    {
+        final String query = "limit=" + pageSize + "&detail=max";
+
+        return voSpaceClient.getNode(folderURI.getPath(), query);
+    }
+
+    void setInheritedPermissions(final VOSURI newNodeURI)
+            throws NodeNotFoundException, MalformedURLException
+    {
+        final ContainerNode parentNode = getCurrentNode();
+        final Node newNode = getNode(newNodeURI, -1);
+        final List<NodeProperty> newNodeProperties = newNode.getProperties();
+
+        // Clean slate.
+        newNodeProperties.remove(
+                new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, ""));
+        newNodeProperties.remove(
+                new NodeProperty(VOS.PROPERTY_URI_GROUPWRITE, ""));
+        newNodeProperties.remove(
+                new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, ""));
+
+        final String parentReadGroupURIValue =
+                parentNode.getPropertyValue(
+                        VOS.PROPERTY_URI_GROUPREAD);
+        if (StringUtil.hasText(parentReadGroupURIValue))
+        {
+            newNodeProperties.add(
+                    new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
+                                     parentReadGroupURIValue));
+        }
+
+        final String parentWriteGroupURIValue =
+                parentNode.getPropertyValue(
+                        VOS.PROPERTY_URI_GROUPWRITE);
+        if (StringUtil.hasText(parentWriteGroupURIValue))
+        {
+            newNodeProperties.add(
+                    new NodeProperty(VOS.PROPERTY_URI_GROUPWRITE,
+                                     parentWriteGroupURIValue));
+        }
+
+        final String isPublicValue =
+                parentNode.getPropertyValue(
+                        VOS.PROPERTY_URI_ISPUBLIC);
+        if (StringUtil.hasText(isPublicValue))
+        {
+            newNodeProperties.add(
+                    new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC,
+                                     isPublicValue));
+        }
+
+        setNodeSecure(newNode);
+    }
+
+    /**
+     * Perform the HTTPS command.
+     *
+     * @param newNode The newly created Node.
+     */
+    private void setNodeSecure(final Node newNode) throws MalformedURLException
+    {
+        voSpaceClient.setNode(newNode);
+    }
+
+    void createNode(final Node newNode, final boolean checkForDuplicate)
+    {
+        voSpaceClient.createNode(newNode, checkForDuplicate);
+    }
+
+    @Delete
+    public void deleteNode()
+    {
+        voSpaceClient.deleteNode(getCurrentPath());
     }
 }

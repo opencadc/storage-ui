@@ -66,51 +66,89 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.web.StorageItemFactory;
+import ca.nrc.cadc.vos.LinkNode;
 import ca.nrc.cadc.vos.VOSURI;
+import org.json.JSONObject;
+import org.junit.Test;
+import org.restlet.Request;
+import org.restlet.Response;
+import org.restlet.data.Status;
+import org.restlet.ext.json.JsonRepresentation;
 
-import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.easymock.EasyMock.*;
 
 
-public class JSONStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemJSONWriter>
+public class LinkItemServerResourceTest
+        extends AbstractServerResourceTest<LinkItemServerResource>
 {
-    public JSONStorageItemProducer(final int pageSize, VOSURI folderURI,
-                                   final VOSURI startURI,
-                                   final StorageItemJSONWriter nodeWriter,
-                                   final Subject user,
-                                   final StorageItemFactory storageItemFactory)
+    @Test
+    public void createLink() throws Exception
     {
-        super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory);
-    }
+        final URI target = URI.create("http://gohere.com/to/see");
+        final LinkNode linkNode =
+                new LinkNode(new VOSURI(URI.create(
+                        StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
+                        + "/curr/dir/MY_LINK")), target);
 
+        expect(mockServletContext.getContextPath()).andReturn("/to").once();
+        expect(mockVOSpaceClient.createNode(linkNode, false))
+                .andReturn(linkNode).once();
 
-    /**
-     * When an object implementing interface <code>Runnable</code> is used
-     * to create a thread, starting the thread causes the object's
-     * <code>run</code> method to be called in that separately executing
-     * thread.
-     * <p/>
-     * The general contract of the method <code>run</code> is that it may
-     * take any action whatsoever.
-     *
-     * @see Thread#run()
-     */
-    @Override
-    public void run()
-    {
-        try
+        final JSONObject sourceJSON = new JSONObject("{\"link_name\":\"MY_LINK\","
+                                                     + "\"link_url\":\"http://gohere.com/to/see\"}");
+
+        final JsonRepresentation payload = new JsonRepresentation(sourceJSON);
+
+        final Map<String, Object> attributes = new HashMap<>();
+
+        attributes.put("path", "curr/dir/MY_LINK");
+
+        mockResponse.setStatus(Status.SUCCESS_CREATED);
+        expectLastCall().once();
+
+        replay(mockVOSpaceClient, mockServletContext, mockResponse);
+
+        testSubject = new LinkItemServerResource(null, mockVOSpaceClient)
         {
-            storageItemWriter.beginArray();
-            writePages();
-            storageItemWriter.endArray();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+            @Override
+            ServletContext getServletContext()
+            {
+                return mockServletContext;
+            }
+
+            /**
+             * Returns the request attributes.
+             *
+             * @return The request attributes.
+             * @see Request#getAttributes()
+             */
+            @Override
+            public Map<String, Object> getRequestAttributes()
+            {
+                return attributes;
+            }
+
+            /**
+             * Returns the handled response.
+             *
+             * @return The handled response.
+             */
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
+        };
+
+        testSubject.create(payload);
+
+        verify(mockVOSpaceClient, mockServletContext, mockResponse);
     }
 }

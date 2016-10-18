@@ -83,7 +83,7 @@ import java.io.Writer;
 import java.net.URI;
 
 
-public class PageServerResource extends StorageServerResource
+public class PageServerResource extends StorageItemServerResource
 {
     @Get
     public Representation represent() throws Exception
@@ -103,10 +103,13 @@ public class PageServerResource extends StorageServerResource
             public void write(final Writer writer) throws IOException
             {
                 final CSVStorageItemProducer csvNodeProducer =
-                        new CSVStorageItemProducer(pageSize, getCurrentItemURI(),
-                                                   startURI, new StorageItemCSVWriter(writer),
+                        new CSVStorageItemProducer(pageSize,
+                                                   getCurrentItemURI(),
+                                                   startURI,
+                                                   new StorageItemCSVWriter(writer),
                                                    currentSubject,
-                                                   storageItemFactory);
+                                                   storageItemFactory,
+                                                   voSpaceClient);
 
                 try
                 {

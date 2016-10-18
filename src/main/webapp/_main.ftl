@@ -78,8 +78,8 @@
                         <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
                       </form>
                     </li>
-                    <li>
-                      <a id="new_vospace_link"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
+                    <li class="disabled">
+                      <a id="new_vospace_link" class="disabled"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
                     <li>
                       <a id="new_external_link"><span class="glyphicon glyphicon-link"></span>&nbsp;External Link</a></li>
                   </ul>

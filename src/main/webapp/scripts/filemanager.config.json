@@ -4,6 +4,7 @@
         "fileConnector": "/storage/file",
         "folderConnector": "/storage/folder",
         "itemConnector": "/storage/item",
+        "linkConnector": "/storage/link",
         "pageConnector": "/storage/page",
         "culture": "en",
         "lang": "php",

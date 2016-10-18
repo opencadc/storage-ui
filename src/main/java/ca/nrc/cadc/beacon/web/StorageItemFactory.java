@@ -84,10 +84,6 @@ import java.util.Date;
 
 public class StorageItemFactory
 {
-//    public final static URI DATA_SERVICE_ID =
-//            URI.create("ivo://cadc.nrc.ca/data");
-
-
     private final URIExtractor uriExtractor;
     private final RegistryClient registryClient;
     private final String contextPath;
@@ -104,7 +100,7 @@ public class StorageItemFactory
     }
 
 
-    String getTarget(final DataNode dataNode) throws MalformedURLException
+    private String getTarget(final DataNode dataNode)
     {
         // TODO
         // TODO - Is the data web service with the /pub/vospace path portable?
@@ -113,18 +109,18 @@ public class StorageItemFactory
         // TODO
         final URL downloadServiceURL = registryClient
                 .getServiceURL(dataNode.getUri().getServiceURI(),
-                               Standards.VOSPACE_TRANSFERS_20,
+                               Standards.VOSPACE_NODES_20,
                                AuthMethod.ANON);
         return (downloadServiceURL.toExternalForm()
-                + dataNode.getUri().getPath());
+                + dataNode.getUri().getPath() + "?view=data");
     }
 
-    String getTarget(final ContainerNode containerNode)
+    private String getTarget(final ContainerNode containerNode)
     {
         return contextPath + "/list" + containerNode.getUri().getPath();
     }
 
-    String getTarget(final LinkNode linkNode)
+    private String getTarget(final LinkNode linkNode)
     {
         return contextPath + "/link" + linkNode.getUri().getPath();
     }
@@ -158,11 +154,6 @@ public class StorageItemFactory
         final boolean readableFlag = StringUtil.hasLength(readableFlagValue)
                                      && Boolean.parseBoolean(readableFlagValue);
 
-        final String writableFlagValue =
-                node.getPropertyValue(VOS.PROPERTY_URI_WRITABLE);
-        final boolean writableFlag = StringUtil.hasLength(writableFlagValue)
-                                     && Boolean.parseBoolean(writableFlagValue);
-
         final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
 
         final String totalChildCountValue =
@@ -173,6 +164,12 @@ public class StorageItemFactory
 
         if (node instanceof ContainerNode)
         {
+            final String writableFlagValue =
+                    node.getPropertyValue(VOS.PROPERTY_URI_WRITABLE);
+            final boolean writableFlag =
+                    StringUtil.hasLength(writableFlagValue)
+                    && Boolean.parseBoolean(writableFlagValue);
+
             final ContainerNode containerNode = (ContainerNode) node;
             nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
                                       publicFlag, lockedFlag, writeGroupURIs,
