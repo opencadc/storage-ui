@@ -1,4 +1,7 @@
-#### User Storage User Interface 0.7.1
+---
+---
+
+#### User Storage User Interface 0.8
 
 By default, this uses the CANFAR (CADC) VOSpace located at:
 
@@ -26,7 +29,18 @@ To produce a running embedded Jetty container running on port `8080`, with a deb
 
 Pass your own Registry settings into the `JAVA_OPTS` environment variable to use your own VOSpace service:
 
-`gradle -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.auth.BasicX509TrustManager.trust=true -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry lookup> run`
+`gradle -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.auth.BasicX509TrustManager.trust=true -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry host> run`
+
+To specify the Service ID (often called Resource ID) of your services.  The User Storage Interface relies on two services:
+
+
+ - VOSpace
+ - Group Management Service (Access Control)
+
+To specify the Service ID for each service, add the appropriate System property for those, too e.g.:
+
+`... -Dorg.opencadc.vospace.service_id=ivo://<your domain>/<vospace service name> -Dorg.opencadc.gms.service_id=ivo://<your domain>/<gms service name> ...`
+
 
 Or deploy the `war` file in `build/libs` into a Java container such as Tomcat.
 
@@ -38,9 +52,9 @@ See the Docker repo here:
 
 <a rel="external" href="https://hub.docker.com/r/opencadc/storage/">https://hub.docker.com/r/opencadc/storage/</a>
 
-It uses the lightweight Tomcat java container that was built using Alpine Linux found here:
+It uses the lightweight Tomcat 8.5 java container that was built using Alpine Linux found here:
 
-<a href="https://hub.docker.com/r/opencadc/tomcat/" rel="external">https://hub.docker.com/r/opencadc/tomcat/</a>
+<a href="https://hub.docker.com/_/tomcat/" rel="external">https://hub.docker.com/_/tomcat/</a>
 
 To run it as-is and use the CANFAR VOSpace Service, use:
 
