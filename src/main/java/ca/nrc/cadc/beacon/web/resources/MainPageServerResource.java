@@ -91,8 +91,7 @@ import java.util.*;
 
 public class MainPageServerResource extends StorageItemServerResource
 {
-    private final Configuration freemarkerConfiguration =
-            new Configuration(Configuration.getVersion());
+    private final Configuration freemarkerConfiguration = new Configuration();
 
 
     /**

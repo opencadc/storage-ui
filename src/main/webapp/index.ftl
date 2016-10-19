@@ -9,7 +9,8 @@
   <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
   <meta name="description" content="User storage system.">
   <meta name="author" content="Canadian Astronomy Data Centre">
-  <meta name="keywords" content="VOSpace, IVOA, CADC, Canadian Astronomy Data Centre">
+  <meta name="keywords"
+        content="VOSpace, IVOA, CADC, Canadian Astronomy Data Centre">
   <link rel="icon" href="../../favicon.ico">
 
   <title>User Storage</title>
@@ -57,8 +58,7 @@
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <#--<script src="/storage/js/ie10-viewport-bug-workaround.js"></script>-->
 
-<script type="text/javascript" src="/storage/js/cadc.util.js"></script>
-<script type="text/javascript" src="/storage/js/cadc.uri.js"></script>
+<script type="text/javascript" src="/storage/js/org.opencadc.js"></script>
 <script type="text/javascript" src="/storage/js/datatables.min.js"></script>
 <script type="text/javascript" src="/storage/js/file-size.js"></script>
 <script type="text/javascript"
@@ -95,9 +95,12 @@
                             content: function ()
                             {
                               return '<table class="table table-condensed table-bordered">'
-                                     + '<tbody><tr><td>Owned by</td><td class="info"><strong>${folder.owner}</strong></td></tr>'
-                                     + '<tr><td>Last used</td><td class="info">${folder.lastModifiedHumanReadable}</td></tr>'
-                                     + '<tr><td colspan="2">Is <#if !folder.writable><span class="text-danger">not </span></#if>writable by you.</td></tr>'
+                                     +
+                                     '<tbody><tr><td>Owned by</td><td class="info"><strong>${folder.owner}</strong></td></tr>'
+                                     +
+                                     '<tr><td>Last used</td><td class="info">${folder.lastModifiedHumanReadable}</td></tr>'
+                                     +
+                                     '<tr><td colspan="2">Is <#if !folder.writable><span class="text-danger">not </span></#if>writable by you.</td></tr>'
                                      + '</tbody></table>';
                             }
                           });
@@ -113,18 +116,29 @@
                       rows.push([${row}]);
                     </#list>
 
-                      fileManager(rows, $("#beacon"),
-                              "<#if startURI??>${startURI}</#if>",
-                              "${folder.path}", ${folder.writable?c},
-                              ${folder.childCount});
+                      $.getJSON('/storage/scripts/languages/' +
+                                $("html").attr("lang") + '.json')
+                          .done(function (json)
+                                {
+                                  fileManager(rows, $("#beacon"),
+                                              "<#if startURI??>${startURI}</#if>",
+                                              "${folder.path}", ${folder.writable?c},
+                                              ${folder.childCount} , json);
+                                })
+                          .fail(function (request, textStatus, errorThrown)
+                                {
+                                  console.log("Error (" + request.status + "): "
+                                              + textStatus + "\n" +
+                                              errorThrown);
+                                });
 
-                      $(document).on("click", "a#logout", function()
+                      $(document).on("click", "a#logout", function ()
                       {
                         $.ajax({
-                                url: '/storage/ac/authenticate',
-                                method: 'DELETE'
+                                 url: '/storage/ac/authenticate',
+                                 method: 'DELETE'
                                })
-                            .done(function()
+                            .done(function ()
                                   {
                                     window.location.reload(true);
                                   });

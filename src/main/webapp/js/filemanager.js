@@ -10,7 +10,7 @@
  */
 
 function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
-                     _canWriteFlag, _totalDataCount)
+                     _canWriteFlag, _totalDataCount, lg)
 {
 // function to retrieve GET params
   $.urlParam = function (name)
@@ -85,14 +85,15 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var lockedIcon =
     "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/storage/unlock\" title=\"Unlock to modify.\">Unlock</a>";
   var publicLink =
-    "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">Public</a>";
+    "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
   var selectButtonGroupID = "delete";
   var deleteButtonHTML = "<span id='" + selectButtonGroupID
                          + "' class='btn-group btn-group-xs'>"
-                         +
-                         "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;Delete</button>"
+                         + "<button id='delete' name='delete' class='btn btn-danger'><span class='glyphicon glyphicon-remove-circle'></span>&nbsp;{1}</button>"
+                         + "<button id='download' name='download' class='btn btn-success'><span class='glyphicon glyphicon-download'></span>&nbsp;{2}</button>"
                          + "</span>";
-  var stringUtil = new cadc.web.util.StringUtil(publicLink);
+
+  var stringUtil = new org.opencadc.StringUtil();
   var url = config.options.pageConnector + _folderPath;
   var defaultPageSize = 400;
 
@@ -104,6 +105,15 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   {
     requestData.startURI = encodeURIComponent(_startURI);
   }
+
+// Options for alert, prompt, and confirm dialogues.
+  $.prompt.setDefaults({
+                         overlayspeed: 'fast',
+                         show: 'fadeIn',
+                         hide: 'fadeOut',
+                         opacity: 0.4,
+                         persistent: false
+                       });
 
   var selectInput = _canWriteFlag ? {
     style: 'os',
@@ -202,7 +212,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
               if (publicFlag === true)
               {
-                renderedValue = stringUtil.format(path);
+                renderedValue = stringUtil.format(publicLink, [lg.public]);
               }
               else
               {
@@ -241,7 +251,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     if (type === ROW_SELECT_TYPE)
     {
       $info.find(deleteLinkContainerSelector).remove();
-      $info.append(deleteButtonHTML);
+      $info.append(stringUtil.format(deleteButtonHTML, [lg.del, lg.download]));
     }
   });
 
@@ -253,7 +263,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
              var $info = $(".dataTables_info");
 
              $info.find(deleteLinkContainerSelector).remove();
-             $info.append(deleteButtonHTML);
+             $info.append(stringUtil.format(deleteButtonHTML,
+                                            [lg.del, lg.download]));
            }
          });
 
@@ -438,27 +449,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       }
     }
   }
-
-  var lg = [];
-  $.getJSON('/storage/scripts/languages/' + config.options.culture + '.json')
-    .done(function (json)
-          {
-            lg = json;
-          })
-    .fail(function (request, textStatus, errorThrown)
-          {
-            console.log("Error (" + request.status + "): "
-                        + textStatus + "\n" + errorThrown);
-          });
-
-// Options for alert, prompt, and confirm dialogues.
-  $.prompt.setDefaults({
-                         overlayspeed: 'fast',
-                         show: 'fadeIn',
-                         hide: 'fadeOut',
-                         opacity: 0.4,
-                         persistent: false
-                       });
 
 // Forces columns to fill the layout vertically.
 // Called on initial page load and on resize.
@@ -798,88 +788,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 // whenever a new directory is selected.
   var setUploader = function (path)
   {
-    path = getCurrentPath();
-
     $("#new_external_link").unbind().click(function ()
                                            {
-                                             var linkURLExample = 'http://example.com/path';
-                                             var msg = '<div class="form-group"><label for="link_name" class="hidden">' + lg.name + '</label><input id="link_name" name="link_name" type="text" class="form-control" placeholder="' + lg.name + '" /></div>'
-                                                       + '<div class="form-group"><label for="link_name" class="hidden">' + linkURLExample + '</label><input id="link_url" name="link_url" type="url" class="form-control" placeholder="' + linkURLExample + '" /></div>';
-
-                                             var createLinkURI =
-                                               function (event, value, message,
-                                                         formVals)
-                                             {
-                                               if (value === true)
-                                               {
-                                                 var linkName = formVals['link_name'];
-
-                                                 if (validFilename(linkName))
-                                                 {
-                                                   $.ajax(
-                                                     {
-                                                       url: config.options.linkConnector
-                                                            + getCurrentPath() +
-                                                            "/" + encodeURIComponent(linkName),
-                                                       method: "PUT",
-                                                       data: JSON.stringify(formVals),
-                                                       contentType: "application/json",
-                                                       statusCode: {
-                                                         201: function ()
-                                                         {
-                                                           $.prompt(lg.successful_added_link,
-                                                                    {
-                                                                      submit: refreshPage
-                                                                    });
-                                                         },
-                                                         400: function ()
-                                                         {
-
-                                                         },
-                                                         401: function ()
-                                                         {
-                                                           $.prompt(lg.NOT_ALLOWED_SYSTEM);
-                                                         },
-                                                         403: function ()
-                                                         {
-                                                           $.prompt(lg.NOT_ALLOWED_SYSTEM);
-                                                         },
-                                                         409: function ()
-                                                         {
-                                                           $.prompt(lg.LINK_ALREADY_EXISTS.replace(/%s/g,
-                                                                                                   linkName));
-                                                         }
-                                                       }
-                                                     });
-                                                 }
-                                                 else
-                                                 {
-                                                   $.prompt(lg.INVALID_ITEM_NAME);
-                                                 }
-                                               }
-                                               else
-                                               {
-                                                 return true;
-                                               }
-                                             };
-
-                                             var btns = [];
-                                             btns.push({
-                                                         "title": lg.create_external_link,
-                                                         "value": true,
-                                                         "classes": "btn btn-primary"
-                                                       });
-                                             btns.push({
-                                                         "title": lg.cancel,
-                                                         "value": false,
-                                                         "classes": "btn btn-default"
-                                                       });
-                                             $.prompt(msg,
-                                                      {
-                                                        submit: createLinkURI,
-                                                        focus: "#link_name",
-                                                        buttons: btns
-                                                      });
+                                             popupCreateLink();
                                            });
 
     $('#newfolder').unbind().click(function ()
@@ -1459,6 +1370,133 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   };
 
   /**
+   * Prompt for a link name and URL, then issue a create request to the server.
+   */
+  var popupCreateLink = function()
+  {
+    var linkURLExample = 'http://example.com/path';
+    var msg = '<div class="form-group"><label for="link_name" class="hidden">' + lg.name
+              + '</label><input id="link_name" name="link_name" type="text" class="form-control" placeholder="' + lg.name + '" /></div>'
+              + '<div class="form-group"><label for="link_name" class="hidden">' + linkURLExample
+              + '</label><input id="link_url" name="link_url" type="url" class="form-control" placeholder="' + linkURLExample + '" /></div>';
+
+    var errorMessage;
+
+    var doLinkCreate = function(_formVals)
+    {
+      var returnValue = null;
+      var linkName = _formVals["link_name"];
+
+      if (validFilename(linkName))
+      {
+        $.ajax(
+          {
+            url: config.options.linkConnector
+                 + getCurrentPath() +
+                 "/" + encodeURIComponent(linkName),
+            method: "PUT",
+            data: JSON.stringify(_formVals),
+            contentType: "application/json",
+            statusCode: {
+              201: function ()
+              {
+                returnValue = true;
+              },
+              400: function ()
+              {
+                errorMessage = lg.ERROR_SERVER;
+                returnValue = false;
+              },
+              401: function ()
+              {
+                errorMessage = lg.NOT_ALLOWED_SYSTEM;
+                returnValue = false;
+              },
+              403: function ()
+              {
+                errorMessage = lg.NOT_ALLOWED_SYSTEM;
+                returnValue = false;
+              },
+              409: function ()
+              {
+                errorMessage = lg.LINK_ALREADY_EXISTS.replace(/%s/g, linkName);
+                returnValue = false;
+              }
+            }
+          });
+
+        if (returnValue === null)
+        {
+          returnValue = true;
+        }
+      }
+      else
+      {
+        errorMessage = lg.INVALID_ITEM_NAME;
+        returnValue = false;
+      }
+
+      return returnValue;
+    };
+
+    $.prompt.disableStateButtons("link_creation");
+
+    var btns = [];
+    btns.push({
+                "title": lg.create_external_link,
+                "value": true,
+                "classes": "btn btn-primary"
+              });
+    btns.push({
+                "title": lg.cancel,
+                "value": false,
+                "classes": "btn btn-default"
+              });
+
+    $.prompt({
+               input: {
+                 focus: "#link_name",
+                 buttons: btns,
+                 html: msg,
+                 submit: function (e, value, message, formVals)
+                 {
+                   if (value === true)
+                   {
+                     e.preventDefault();
+                     $.prompt.nextState(function (event)
+                                        {
+                                          event.preventDefault();
+                                          var nextState = doLinkCreate(formVals)
+                                            ? "successful" : "unsuccessful";
+                                          $.prompt.goToState(nextState);
+                                          return false;
+                                        });
+                   }
+                   else
+                   {
+                     return true;
+                   }
+                 }
+               },
+               link_creation: {
+                 html: lg.creating
+               },
+               successful: {
+                 html: lg.successful_added_link,
+                 buttons: [{
+                   "title": lg.close,
+                   "value": false,
+                   "classes": "btn btn-success"
+                 }],
+                 submit: refreshPage
+               },
+               unsuccessful: {
+                 html: errorMessage ? errorMessage : lg.unsuccessful_added_link
+               }
+             });
+  };
+
+  /**
    * Prompts for confirmation, then deletes the items.
    * Called by clicking the "Delete" button after selecting items.
    *
@@ -1605,6 +1643,20 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                           });
 
                    deleteItems(paths);
+                 });
+
+  $(document).on("click", "button#download",
+                 function ()
+                 {
+                   var paths = [];
+
+                   $.each($dt.rows({selected: true}).data(),
+                          function (key, itemData)
+                          {
+                            paths.push(itemData[9]);
+                          });
+
+                   // downloadItems(paths);
                  });
 
 // Display an 'edit' link for editable files
