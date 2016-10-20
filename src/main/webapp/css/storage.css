@@ -122,6 +122,11 @@ label {
   cursor: pointer;
 }
 
+.navbar-nav > li > .dropdown-menu.download-dropdown-menu {
+  margin-top: -5px;
+  margin-left: -2px;
+}
+
 .public_link {
   font-style: italic;
 }

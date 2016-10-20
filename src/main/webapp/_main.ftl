@@ -56,8 +56,8 @@
         <nav class="navbar navbar-default">
           <div class="container-fluid">
             <div class="collapse navbar-collapse" id="navbar-functions">
-<#if !isRoot>
               <ul class="nav navbar-nav">
+<#if !isRoot>
                 <li>
                   <a id="level-up" name="level-up" href="/storage/list${folder.parentPath}" role="button" title="Up one level">
                     <span class="glyphicon glyphicon-level-up"></span>&nbsp;Up</a></li>
@@ -84,14 +84,29 @@
                       <a id="new_external_link"><span class="glyphicon glyphicon-link"></span>&nbsp;External Link</a></li>
                   </ul>
                 </li>
-              </ul>
+                <li class="disabled dropdown divider-vertical multi-select-function-container">
+                  <a disabled="disabled" class="disabled dropdown-toggle multi-select-function" id="download" name="download" type="button" aria-expanded="false" data-toggle="dropdown" title="Download selected items.">
+                    <span class="glyphicon glyphicon-cloud-download"></span>&nbsp;Download&nbsp;<span class="caret"></span></a>
+                  <ul class="dropdown-menu download-dropdown-menu">
+                    <li><a href="#">URL List</a></li>
+                    <li><a href="#">HTML List</a></li>
+                    <li><a href="#">Download Manager</a></li>
+                  </ul>
+                </li>
 </#if>
-              <div class="dataTables_filter" id="beacon_filter">
-                <form class="navbar-form navbar-left" role="search">
-                  <input id="beacon_filter" class="form-control dataTables_filter"
-                         aria-controls="beacon" placeholder="Search Name..." type="search" />
-                </form>
-              </div>
+                <li class="dataTables_filter">
+                  <form class="navbar-form navbar-left" role="search">
+                    <input id="beacon_filter" class="form-control dataTables_filter"
+                           aria-controls="beacon" placeholder="Search Name..." type="search" />
+                  </form>
+                </li>
+<#if !isRoot>
+                <#-- Disabled by default -->
+                <li class="disabled multi-select-function-container">
+                  <a disabled="disabled" class="disabled multi-select-function" id="delete" name="delete" role="button" title="Delete selected items">
+                    <span class="glyphicon glyphicon-trash"></span>&nbsp;Delete</a></li>
+</#if>
+              </ul>
             </div>
           </div>
         </nav>
