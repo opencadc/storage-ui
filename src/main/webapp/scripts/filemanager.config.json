@@ -69,6 +69,16 @@
             "rar"
         ]
     },
+    "download": {
+        "vos_prefix": "vos://cadc.nrc.ca~vospace",
+        "url": "/storage/batch-download",
+        "methods": {
+            "download-url-list": "URL List",
+            "download-zip": "ZIP",
+            "download-html-list": "HTML List",
+            "download-download-manager": "Java Webstart"
+        }
+    },
     "upload": {
         "multiple": true,
         "number": 5,

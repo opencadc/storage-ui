@@ -188,6 +188,9 @@ public class VOSpaceApplication extends Application
         router.attach("/list", MainPageServerResource.class);
         router.attach("/list/", MainPageServerResource.class);
 
+        router.attach("/batch-download", BatchDownloadResource.class);
+        router.attach("/batch-download/", BatchDownloadResource.class);
+
         // Generic endpoint for files, folders, or links.
         final TemplateRoute itemRoute =
                 router.attach("/item/{path}", StorageItemServerResource.class);

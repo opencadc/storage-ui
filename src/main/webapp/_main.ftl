@@ -85,12 +85,12 @@
                   </ul>
                 </li>
                 <li class="disabled dropdown divider-vertical multi-select-function-container">
-                  <a disabled="disabled" class="disabled dropdown-toggle multi-select-function" id="download" name="download" type="button" aria-expanded="false" data-toggle="dropdown" title="Download selected items.">
+                  <a disabled="disabled" class="disabled dropdown-toggle multi-select-function" id="download" role="button" name="download" type="button" aria-expanded="false" data-toggle="dropdown" title="Download selected items.">
                     <span class="glyphicon glyphicon-cloud-download"></span>&nbsp;Download&nbsp;<span class="caret"></span></a>
                   <ul class="dropdown-menu download-dropdown-menu">
-                    <li><a href="#">URL List</a></li>
-                    <li><a href="#">HTML List</a></li>
-                    <li><a href="#">Download Manager</a></li>
+                    <li><a class="download-url-list"><span class="glyphicon glyphicon-list"></span>&nbsp;URL List</a></li>
+                    <li><a class="download-zip"><span class="glyphicon glyphicon-compressed"></span>&nbsp;ZIP</a></li>
+                    <#--<li class="disabled"><a class="download-download-manager"><span class="glyphicon glyphicon-download-alt"></span>&nbsp;Download Manager</a></li>-->
                   </ul>
                 </li>
 </#if>

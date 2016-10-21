@@ -157,7 +157,6 @@ public class FileItemServerResource extends StorageItemServerResource
             else
             {
                 upload(fileItemIterator);
-                uploadSuccess();
             }
         }
         else
@@ -231,6 +230,9 @@ public class FileItemServerResource extends StorageItemServerResource
 
             properties.add(new NodeProperty(VOS.PROPERTY_URI_TYPE,
                                             fileItemStream.getContentType()));
+            properties.add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH,
+                                            Long.toString(
+                                                    getRequest().getEntity().getSize())));
 
             dataNode.setProperties(properties);
 
@@ -331,15 +333,21 @@ public class FileItemServerResource extends StorageItemServerResource
                                                new View(URI.create(VOS.VIEW_DEFAULT)),
                                                protocols);
 
+        transfer.version = VOS.VOSPACE_21;
+
         final ClientTransfer ct = voSpaceClient.createTransfer(transfer);
         ct.setOutputStreamWrapper(outputStreamWrapper);
 
         ct.runTransfer();
 
+        final Node uploadedNode = getNode(dataNode.getUri(),
+                                          VOS.Detail.properties);
         uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(),
-                                       dataNode);
+                                       uploadedNode);
         uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(),
-                                 dataNode);
+                                 uploadedNode);
+
+        uploadSuccess();
     }
 
     /**

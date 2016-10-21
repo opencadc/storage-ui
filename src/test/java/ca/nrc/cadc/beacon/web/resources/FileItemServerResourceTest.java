@@ -76,6 +76,7 @@ import ca.nrc.cadc.beacon.web.UploadVerifier;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.apache.commons.fileupload.FileItemStream;
+import org.restlet.Request;
 import org.restlet.Response;
 
 import java.io.ByteArrayInputStream;
@@ -91,25 +92,24 @@ import java.util.Map;
 import javax.servlet.ServletContext;
 
 import org.junit.Test;
+import org.restlet.representation.EmptyRepresentation;
 
 import static org.junit.Assert.*;
 import static org.easymock.EasyMock.*;
 
 
 public class FileItemServerResourceTest
-        extends AbstractUnitTest<FileItemServerResource>
+        extends AbstractServerResourceTest<FileItemServerResource>
 {
     @Test
     public void uploadFileItem() throws Exception
     {
-        final VOSpaceClient mockVOSpaceClient = createMock(VOSpaceClient.class);
-        final Response mockResponse = createMock(Response.class);
         final Map<String, Object> requestAttributes = new HashMap<>();
         final VOSURI parentURI = new VOSURI(URI.create(
-                "vos://ca.nrc.cadc!vospace/parent/sub"));
+                "vos://cadc.nrc.ca!vospace/parent/sub"));
         final VOSURI expectedURI =
                 new VOSURI(URI.create(
-                        "vos://ca.nrc.cadc!vospace/parent/sub/MYUPLOADFILE.txt"));
+                        "vos://cadc.nrc.ca!vospace/parent/sub/MYUPLOADFILE.txt"));
         final DataNode expectedDataNode = new DataNode(expectedURI);
         final String data = "MYUPLOADDATA";
         final byte[] dataBytes = data.getBytes();
@@ -126,8 +126,8 @@ public class FileItemServerResourceTest
 
         requestAttributes.put("path", "my/file.txt");
 
-        final ServletContext mockServletContext =
-                createMock(ServletContext.class);
+        expect(mockRequest.getEntity()).andReturn(new EmptyRepresentation())
+                .once();
 
         expect(mockServletContext.getContextPath()).andReturn("/teststorage")
                 .once();
@@ -150,6 +150,18 @@ public class FileItemServerResourceTest
                 return mockServletContext;
             }
 
+            @Override
+            public Request getRequest()
+            {
+                return mockRequest;
+            }
+
+            /**
+             * Returns the request attributes.
+             *
+             * @return The request attributes.
+             * @see Request#getAttributes()
+             */
             @Override
             public Map<String, Object> getRequestAttributes()
             {
@@ -189,13 +201,14 @@ public class FileItemServerResourceTest
         expect(mockFileItemStream.openStream()).andReturn(inputStream).once();
         expect(mockFileItemStream.getContentType()).andReturn("text/plain").once();
 
-        replay(mockVOSpaceClient, mockResponse, mockFileItemStream);
+        replay(mockVOSpaceClient, mockResponse, mockRequest,
+               mockFileItemStream);
 
         final VOSURI resultURI = testSubject.upload(mockFileItemStream);
 
         assertEquals("End URI is wrong.", expectedURI, resultURI);
 
-        verify(mockVOSpaceClient, mockResponse, mockFileItemStream,
+        verify(mockVOSpaceClient, mockResponse, mockRequest, mockFileItemStream,
                mockServletContext);
     }
 }

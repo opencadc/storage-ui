@@ -236,7 +236,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     .attr("aria-valuemin", "0").attr("aria-valuemax", _totalDataCount + "")
     .html("<span class='sr-only'>0%</span>");
 
-  var toggleMultiFunctionButtons = function(_disabledFlag)
+  var toggleMultiFunctionButtons = function (_disabledFlag)
   {
     var $multiSelectFunctionContainers = $(multiSelectSelector);
 
@@ -259,12 +259,12 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     }
   };
 
-  var enableMultiFunctionButtons = function()
+  var enableMultiFunctionButtons = function ()
   {
     toggleMultiFunctionButtons(false);
   };
 
-  var disableMultiFunctionButtons = function()
+  var disableMultiFunctionButtons = function ()
   {
     toggleMultiFunctionButtons(true);
   };
@@ -803,17 +803,24 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   /**
    * Prompt for a link name and URL, then issue a create request to the server.
    */
-  var popupCreateLink = function()
+  var popupCreateLink = function ()
   {
     var linkURLExample = 'http://example.com/path';
-    var msg = '<div class="form-group"><label for="link_name" class="hidden">' + lg.name
-              + '</label><input id="link_name" name="link_name" type="text" class="form-control" placeholder="' + lg.name + '" /></div>'
-              + '<div class="form-group"><label for="link_name" class="hidden">' + linkURLExample
-              + '</label><input id="link_url" name="link_url" type="url" class="form-control" placeholder="' + linkURLExample + '" /></div>';
+    var msg = '<div class="form-group"><label for="link_name" class="hidden">' +
+              lg.name
+              +
+              '</label><input id="link_name" name="link_name" type="text" class="form-control" placeholder="' +
+              lg.name + '" /></div>'
+              +
+              '<div class="form-group"><label for="link_name" class="hidden">' +
+              linkURLExample
+              +
+              '</label><input id="link_url" name="link_url" type="url" class="form-control" placeholder="' +
+              linkURLExample + '" /></div>';
 
     var errorMessage;
 
-    var doLinkCreate = function(_formVals)
+    var doLinkCreate = function (_formVals)
     {
       var returnValue = null;
       var linkName = _formVals["link_name"];
@@ -1305,7 +1312,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                      data['Filename'] = newName;
 
                      // Bind toolbar functions.
-                     $fileInfo.find('button#rename, button#delete, button#download').unbind();
+                     $fileInfo.find('button#rename, #delete, button#download').unbind();
                      bindToolbar(data);
 
                      if (config.options.showConfirmation)
@@ -1648,7 +1655,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     return isDeleted;
   };
 
-  $(document).on("click", "button#delete",
+  $(document).on("click", "#delete",
                  function ()
                  {
                    var paths = [];
@@ -1797,18 +1804,31 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     return isDeleted;
   };
 
-  $(document).on("click", "button#download",
+  $(document).on("click", ".download-dropdown-menu > li > a",
                  function ()
                  {
-                   var paths = [];
+                   var $thisLink = $(this);
+                   var uris = [];
 
                    $.each($dt.rows({selected: true}).data(),
                           function (key, itemData)
                           {
-                            paths.push(itemData[9]);
+                            uris.push(config.download.vos_prefix + itemData[9]);
                           });
 
-                   downloadItems(paths);
+                   $.post({
+                            url: config.download.url,
+                            data: {
+                              uris: uris,
+                              method: encodeURIComponent(
+                                config.download.methods[$thisLink.attr("class")])
+                            }
+                          }).always(function ()
+                                    {
+                                      console.log("Submitted.");
+                                    });
+
+                   return false;
                  });
 
 // Display an 'edit' link for editable files
@@ -2585,8 +2605,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                     // if config.upload.fileSizeLimit == auto
                                     // we delegate size test to connector
                                     if (typeof FileReader !== "undefined" &&
-                                        typeof config.upload.fileSizeLimit !=
-                                        "auto")
+                                        typeof config.upload.fileSizeLimit != "auto")
                                     {
                                       // Check file size using html5 FileReader
                                       // API
@@ -2617,7 +2636,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                     var data = jQuery.parseJSON($('#uploadresponse').find('textarea').text());
                                     if (data['Code'] == 0)
                                     {
-                                      addNode(data['Path'], data['Name']);
+                                      // addNode(data['Path'], data['Name']);
                                       $("#filepath, #newfile").val('');
                                       // IE can not empty input='file'. A fix
                                       // consist to replace the element (see

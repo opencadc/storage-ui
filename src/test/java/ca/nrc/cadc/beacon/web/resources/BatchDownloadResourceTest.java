@@ -68,21 +68,45 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.AbstractUnitTest;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.restlet.Request;
-import org.restlet.Response;
+
+import org.junit.Test;
 
 import javax.servlet.ServletContext;
 
-import static org.easymock.EasyMock.createMock;
+import java.io.ByteArrayOutputStream;
+import java.io.OutputStream;
+import java.net.URI;
 
-abstract class AbstractServerResourceTest<T extends SecureServerResource>
-        extends AbstractUnitTest<T>
+import static org.easymock.EasyMock.*;
+
+
+public class BatchDownloadResourceTest
+        extends AbstractServerResourceTest<BatchDownloadResource>
 {
-    final VOSpaceClient mockVOSpaceClient = createMock(VOSpaceClient.class);
-    final Response mockResponse = createMock(Response.class);
-    final Request mockRequest = createMock(Request.class);
-    final ServletContext mockServletContext =
-            createMock(ServletContext.class);
+    @Test
+    public void handleDownload() throws Exception
+    {
+        expect(mockServletContext.getContextPath()).andReturn("/teststorage")
+                .once();
+
+        replay(mockServletContext);
+
+        testSubject = new BatchDownloadResource(null, mockVOSpaceClient)
+        {
+            @Override
+            ServletContext getServletContext()
+            {
+                return mockServletContext;
+            }
+        };
+
+        final OutputStream outputStream = new ByteArrayOutputStream();
+
+//        testSubject.handleDownload(
+//                BatchDownloadResource.DownloadMethod.URL_LIST,
+//                new URI[]{URI.create("vos://mydomain.com~vospace/my/path")},
+//                outputStream);
+
+        verify(mockServletContext);
+    }
 }

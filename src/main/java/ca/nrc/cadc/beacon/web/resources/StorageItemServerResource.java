@@ -81,6 +81,7 @@ import org.restlet.resource.Delete;
 import org.restlet.resource.ResourceException;
 
 
+import java.io.FileNotFoundException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.util.List;
@@ -88,7 +89,7 @@ import java.util.List;
 
 public class StorageItemServerResource extends SecureServerResource
 {
-    static final String VOSPACE_NODE_URI_PREFIX = "vos://ca.nrc.cadc!vospace";
+    static final String VOSPACE_NODE_URI_PREFIX = "vos://cadc.nrc.ca!vospace";
 
 
     // Page size for the initial page display.
@@ -133,6 +134,11 @@ public class StorageItemServerResource extends SecureServerResource
                            VOSpaceApplication.VOSPACE_CLIENT_KEY)));
     }
 
+    <T> T getRequestAttribute(final String attributeName)
+    {
+        return (T) getRequestAttributes().get(attributeName);
+    }
+
     private void initialize(final RegistryClient registryClient,
                             final VOSpaceClient voSpaceClient)
     {
@@ -154,8 +160,8 @@ public class StorageItemServerResource extends SecureServerResource
 
     String getCurrentPath()
     {
-        final Object pathInRequest = getRequestAttributes().get("path");
-        return "/" + ((pathInRequest == null) ? "" : pathInRequest.toString());
+        final String pathInRequest = getRequestAttribute("path");
+        return "/" + ((pathInRequest == null) ? "" : pathInRequest);
     }
 
     VOSURI getCurrentItemURI()
@@ -174,8 +180,21 @@ public class StorageItemServerResource extends SecureServerResource
         return getNode(getCurrentItemURI(), detail);
     }
 
-    private <T extends Node> T getNode(final VOSURI folderURI,
-                                       final VOS.Detail detail)
+    final <T extends StorageItem> T getStorageItem(final URI uri)
+            throws FileNotFoundException
+    {
+        try
+        {
+            return (T) storageItemFactory.translate(getNode(new VOSURI(uri),
+                                                        VOS.Detail.max));
+        }
+        catch (NodeNotFoundException e)
+        {
+            throw new FileNotFoundException(e.getMessage());
+        }
+    }
+
+    <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
             throws NodeNotFoundException
     {
         final int pageSize;

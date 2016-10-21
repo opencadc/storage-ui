@@ -89,7 +89,7 @@ public class FileItem extends StorageItem
     @Override
     public String getItemIconCSS()
     {
-        return "glyphicon-" + (isReadable() ? "cloud-download" : "file");
+        return "glyphicon-file";
     }
 }
 
