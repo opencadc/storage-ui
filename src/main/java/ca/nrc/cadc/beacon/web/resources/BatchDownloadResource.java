@@ -77,7 +77,9 @@ import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.restlet.data.Form;
 import org.restlet.data.MediaType;
+import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.OutputRepresentation;
 import org.restlet.representation.Representation;
@@ -169,24 +171,24 @@ public class BatchDownloadResource extends StorageItemServerResource
     }
 
 
-    @Post("json")
-    public Representation process(final JsonRepresentation payload)
-            throws Exception
+    @Post
+    public void accept(final Representation payload) throws Exception
     {
-        final JSONObject jsonObject = payload.getJsonObject();
-        final String downloadMethodValue = jsonObject.getString("method");
-        final JSONArray uriValues = jsonObject.getJSONArray("uris");
-        final URI[] uris = new URI[uriValues.length()];
+        final Form form = new Form(payload);
+        final String downloadMethodValue = form.getFirstValue("method");
+        final String[] uriValues = form.getValuesArray("uris");
+        final URI[] uris = new URI[uriValues.length];
 
-        for (int i = 0; i < uriValues.length(); i++)
+        for (int i = 0; i < uriValues.length; i++)
         {
-            uris[i] = URI.create(uriValues.getString(i));
+            uris[i] = URI.create(uriValues[i]);
         }
 
         final DownloadMethod requestedDownloadMethod =
                 DownloadMethod.valueFromRequest(downloadMethodValue);
 
-        return handleDownload(requestedDownloadMethod, uris);
+        getResponse().setEntity(handleDownload(requestedDownloadMethod, uris));
+        getResponse().setStatus(Status.SUCCESS_OK);
     }
 
     Representation handleDownload(final DownloadMethod downloadMethod,
@@ -197,7 +199,7 @@ public class BatchDownloadResource extends StorageItemServerResource
         final Writer manifestStringWriter = new StringWriter();
         for (final URI uri : uris)
         {
-            voSpaceClient.getManifest(uri.getPath(), manifestStringWriter);
+            getManifest(uri.getPath(), manifestStringWriter);
         }
 
         switch (downloadMethod)

@@ -1808,27 +1808,45 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                  function ()
                  {
                    var $thisLink = $(this);
-                   var uris = [];
+
+                   var form = document.createElement("form");
+                   form.setAttribute("method", "POST");
+                   form.setAttribute("action", config.download.url);
+
+                   var methodHiddenField = document.createElement("input");
+                   methodHiddenField.setAttribute("type", "hidden");
+                   methodHiddenField.setAttribute("name", "method");
+                   methodHiddenField.setAttribute("value",
+                                                  config.download.methods[
+                                                    $thisLink.attr("class")]);
+
+                   form.appendChild(methodHiddenField);
+
+                   //Move the submit function to another variable
+                   //so that it doesn't get overwritten.
+                   form._submit_function_ = form.submit;
 
                    $.each($dt.rows({selected: true}).data(),
                           function (key, itemData)
                           {
-                            uris.push(config.download.vos_prefix + itemData[9]);
+                            var hiddenField = document.createElement("input");
+                            hiddenField.setAttribute("type", "hidden");
+                            hiddenField.setAttribute("name", "uris");
+                            hiddenField.setAttribute("value",
+                                                     config.download.vos_prefix
+                                                     + itemData[9]);
+
+                            form.appendChild(hiddenField);
                           });
 
-                   $.post({
-                            url: config.download.url,
-                            data: {
-                              uris: uris,
-                              method: encodeURIComponent(
-                                config.download.methods[$thisLink.attr("class")])
-                            }
-                          }).always(function ()
-                                    {
-                                      console.log("Submitted.");
-                                    });
+                   document.body.appendChild(form);
 
-                   return false;
+                   form.addEventListener("submit", function(e)
+                   {
+
+                   });
+
+                   form._submit_function_();
                  });
 
 // Display an 'edit' link for editable files
@@ -2605,7 +2623,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                     // if config.upload.fileSizeLimit == auto
                                     // we delegate size test to connector
                                     if (typeof FileReader !== "undefined" &&
-                                        typeof config.upload.fileSizeLimit != "auto")
+                                        typeof config.upload.fileSizeLimit !=
+                                        "auto")
                                     {
                                       // Check file size using html5 FileReader
                                       // API

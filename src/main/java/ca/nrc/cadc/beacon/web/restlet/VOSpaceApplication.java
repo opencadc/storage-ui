@@ -92,17 +92,18 @@ import java.util.Map;
 
 public class VOSpaceApplication extends Application
 {
+    // Public properties are made available in the Context.
     public static final String VOSPACE_CLIENT_KEY =
             "org.opencadc.vospace.client";
     public static final String REGISTRY_CLIENT_KEY =
             "org.opencadc.registry.client";
     public static final String ACCESS_CONTROL_CLIENT_KEY =
             "org.opencadc.ac.client";
+    public static final String VOSPACE_SERVICE_ID_KEY =
+            "org.opencadc.vospace.service_id";
 
     private static final String DEFAULT_SERVICE_ID =
             "ivo://cadc.nrc.ca/vospace";
-    private static final String VOSPACE_SERVICE_PROPERTY_KEY =
-            "org.opencadc.vospace.service_id";
 
     private static final String DEFAULT_GMS_SERVICE_ID =
             "ivo://cadc.nrc.ca/gms";
@@ -146,6 +147,10 @@ public class VOSpaceApplication extends Application
                                     createRegistryClient());
         context.getAttributes().put(ACCESS_CONTROL_CLIENT_KEY,
                                     createAccessControlClient());
+        context.getAttributes().put(VOSPACE_SERVICE_ID_KEY,
+                                    URI.create(configuration.getString(
+                                            VOSPACE_SERVICE_ID_KEY,
+                                            DEFAULT_SERVICE_ID)));
 
         final Router router = new Router(context)
         {
@@ -233,7 +238,7 @@ public class VOSpaceApplication extends Application
     private VOSpaceClient createVOSpaceClient()
     {
         return new VOSpaceClient(URI.create(
-                configuration.getString(VOSPACE_SERVICE_PROPERTY_KEY,
+                configuration.getString(VOSPACE_SERVICE_ID_KEY,
                                         DEFAULT_SERVICE_ID)));
     }
 

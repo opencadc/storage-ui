@@ -74,7 +74,7 @@
         "url": "/storage/batch-download",
         "methods": {
             "download-url-list": "URL List",
-            "download-zip": "ZIP",
+            "download-zip-file": "ZIP File",
             "download-html-list": "HTML List",
             "download-download-manager": "Java Webstart"
         }

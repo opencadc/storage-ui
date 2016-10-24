@@ -68,22 +68,29 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.beacon.web.StorageItemFactory;
 import ca.nrc.cadc.beacon.web.URIExtractor;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.StorageItem;
+import ca.nrc.cadc.net.HttpDownload;
+import ca.nrc.cadc.net.InputStreamWrapper;
+import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
+import ca.nrc.cadc.vos.client.VOSClientUtil;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+import org.restlet.Context;
 import org.restlet.data.Status;
 import org.restlet.resource.Delete;
 import org.restlet.resource.ResourceException;
 
 
-import java.io.FileNotFoundException;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URL;
 import java.util.List;
 
 
@@ -98,6 +105,7 @@ public class StorageItemServerResource extends SecureServerResource
 
     StorageItemFactory storageItemFactory;
     VOSpaceClient voSpaceClient;
+    RegistryClient registryClient;
 
 
     /**
@@ -128,15 +136,21 @@ public class StorageItemServerResource extends SecureServerResource
     @Override
     protected void doInit() throws ResourceException
     {
-        initialize(((RegistryClient) getContext().getAttributes().get(
+        final Context context = getContext();
+        initialize(((RegistryClient) context.getAttributes().get(
                 VOSpaceApplication.REGISTRY_CLIENT_KEY)),
-                   ((VOSpaceClient) getContext().getAttributes().get(
+                   ((VOSpaceClient) context.getAttributes().get(
                            VOSpaceApplication.VOSPACE_CLIENT_KEY)));
     }
 
     <T> T getRequestAttribute(final String attributeName)
     {
         return (T) getRequestAttributes().get(attributeName);
+    }
+
+    <T> T getContextAttribute(final String attributeName)
+    {
+        return (T) getContext().getAttributes().get(attributeName);
     }
 
     private void initialize(final RegistryClient registryClient,
@@ -155,6 +169,7 @@ public class StorageItemServerResource extends SecureServerResource
         }
 
         this.voSpaceClient = voSpaceClient;
+        this.registryClient = registryClient;
     }
 
 
@@ -271,6 +286,63 @@ public class StorageItemServerResource extends SecureServerResource
         }
 
         setNodeSecure(newNode);
+    }
+
+    /**
+     * Remove the Node associated with the given Path.
+     *
+     * It is the responsibility of the caller to handle proper closing of
+     * the writer.
+     *
+     * @param path      The path of the Node to delete.
+     * @param writer    Where to pump output to.
+     */
+    void getManifest(final String path, final Writer writer) throws IOException
+    {
+        // length 0 is root: no
+        // Path must be absolute
+        final String nodePath = (path.length() > 0 && !path.startsWith("/"))
+                                ? ("/" + path) : path;
+        try
+        {
+            final URL vospaceURL = registryClient
+                    .getServiceURL(URI.create(getContext().getAttributes().get(
+                            VOSpaceApplication.VOSPACE_SERVICE_ID_KEY)
+                                                      .toString()),
+                            Standards.VOSPACE_NODES_20,
+                                   AuthMethod.ANON);
+            final URL url = new URL(vospaceURL.toExternalForm() + nodePath
+                                    + "?view=manifest");
+
+            final HttpDownload httpDownload =
+                    new HttpDownload(url, inputStream ->
+                    {
+                        // create byte buffer
+                        final Reader reader =
+                                new InputStreamReader(inputStream, "UTF-8");
+                        char[] buffer = new char[8092];
+                        int charLength;
+
+                        while ((charLength = reader.read(buffer)) > 0)
+                        {
+                            writer.write(buffer, 0, charLength);
+                        }
+
+                        writer.flush();
+                        reader.close();
+                    });
+
+            httpDownload.run();
+            VOSClientUtil.checkFailure(httpDownload.getThrowable());
+        }
+        catch (MalformedURLException e)
+        {
+            throw new IOException(e);
+        }
+        catch (NodeNotFoundException e)
+        {
+            throw new FileNotFoundException("Item not found at " + path);
+        }
     }
 
     /**
