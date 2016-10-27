@@ -74,7 +74,9 @@ import org.junit.Test;
 import javax.servlet.ServletContext;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
+import java.io.Writer;
 import java.net.URI;
 
 import static org.easymock.EasyMock.*;
@@ -86,27 +88,46 @@ public class BatchDownloadResourceTest
     @Test
     public void handleDownload() throws Exception
     {
+        final String manifest =
+                "OK\thttp://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fa%2Fuws_output.csv&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\tTESTPLUS/a/uws_output.csv\n"
+                + "OK\thttp://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fexample%2Binput.xml&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\tTESTPLUS/example+input.xml";
+
         expect(mockServletContext.getContextPath()).andReturn("/teststorage")
                 .once();
 
-        replay(mockServletContext);
+        replay(mockServletContext, mockRegistryClient);
 
-        testSubject = new BatchDownloadResource(null, mockVOSpaceClient)
+        testSubject = new BatchDownloadResource(mockRegistryClient,
+                                                mockVOSpaceClient)
         {
             @Override
             ServletContext getServletContext()
             {
                 return mockServletContext;
             }
+
+            /**
+             * Remove the Node associated with the given Path.
+             * <p>
+             * It is the responsibility of the caller to handle proper closing of
+             * the writer.
+             *
+             * @param path   The path of the Node to delete.
+             * @param writer Where to pump output to.
+             */
+            @Override
+            void getManifest(String path, Writer writer) throws IOException
+            {
+                writer.write(manifest);
+            }
         };
 
         final OutputStream outputStream = new ByteArrayOutputStream();
 
-//        testSubject.handleDownload(
-//                BatchDownloadResource.DownloadMethod.URL_LIST,
-//                new URI[]{URI.create("vos://mydomain.com~vospace/my/path")},
-//                outputStream);
+        testSubject.handleDownload(
+                BatchDownloadResource.DownloadMethod.URL_LIST.requestPropertyValue,
+                new String[]{"vos://cadc.nrc.ca~vospace/path/1"});
 
-        verify(mockServletContext);
+        verify(mockServletContext, mockRegistryClient);
     }
 }

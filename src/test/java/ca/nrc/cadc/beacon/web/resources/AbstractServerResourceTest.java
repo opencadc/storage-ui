@@ -69,6 +69,7 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.AbstractUnitTest;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -83,6 +84,7 @@ abstract class AbstractServerResourceTest<T extends SecureServerResource>
     final VOSpaceClient mockVOSpaceClient = createMock(VOSpaceClient.class);
     final Response mockResponse = createMock(Response.class);
     final Request mockRequest = createMock(Request.class);
+    final RegistryClient mockRegistryClient = createMock(RegistryClient.class);
     final ServletContext mockServletContext =
             createMock(ServletContext.class);
 }

@@ -135,7 +135,7 @@
                       $(document).on("click", "a#logout", function ()
                       {
                         $.ajax({
-                                 url: '/storage/ac/authenticate',
+                                 url: '/storage/app/ac/authenticate',
                                  method: 'DELETE'
                                })
                             .done(function ()

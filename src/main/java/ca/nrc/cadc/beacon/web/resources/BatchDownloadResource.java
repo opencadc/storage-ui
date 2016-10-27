@@ -69,18 +69,18 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.dlm.DownloadDescriptor;
+import ca.nrc.cadc.dlm.DownloadUtil;
 import ca.nrc.cadc.dlm.client.ManifestReader;
 import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.net.InputStreamWrapper;
+import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
-import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.OutputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.representation.WriterRepresentation;
@@ -90,22 +90,30 @@ import org.restlet.resource.Post;
 import javax.security.auth.Subject;
 import java.io.*;
 import java.net.URI;
+import java.net.URL;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 
 public class BatchDownloadResource extends StorageItemServerResource
 {
+    private static final String URI_PARAMETER_KEY = "uri";
+    private static final String METHOD_PARAMETER_KEY = "method";
+
     /**
      * Represent the various download methods.
      */
     enum DownloadMethod
     {
-        URL_LIST("URL List"), ZIP_FILE("ZIP File");
+        URL_LIST("URL List"), ZIP_FILE("ZIP File"),
+        DOWNLOAD_MANAGER("Java Webstart");
 
-        private final String requestPropertyValue;
+        final String requestPropertyValue;
 
         DownloadMethod(String requestPropertyValue)
         {
@@ -154,20 +162,10 @@ public class BatchDownloadResource extends StorageItemServerResource
     @Get
     public Representation represent() throws Exception
     {
-        final String downloadMethodValue = getQueryValue("method");
-        final String[] uriValues = getQuery().getValuesArray("uris");
+        final String downloadMethodValue = getQueryValue(METHOD_PARAMETER_KEY);
+        final String[] uriValues = getQuery().getValuesArray(URI_PARAMETER_KEY);
 
-        final URI[] uris = new URI[uriValues.length];
-
-        for (int i = 0; i < uriValues.length; i++)
-        {
-            uris[i] = URI.create(uriValues[i]);
-        }
-
-        final DownloadMethod requestedDownloadMethod =
-                DownloadMethod.valueFromRequest(downloadMethodValue);
-
-        return handleDownload(requestedDownloadMethod, uris);
+        return handleDownload(downloadMethodValue, uriValues);
     }
 
 
@@ -175,26 +173,25 @@ public class BatchDownloadResource extends StorageItemServerResource
     public void accept(final Representation payload) throws Exception
     {
         final Form form = new Form(payload);
-        final String downloadMethodValue = form.getFirstValue("method");
-        final String[] uriValues = form.getValuesArray("uris");
-        final URI[] uris = new URI[uriValues.length];
+        final String downloadMethodValue =
+                form.getFirstValue(METHOD_PARAMETER_KEY);
+        final String[] uriValues = form.getValuesArray(URI_PARAMETER_KEY);
 
-        for (int i = 0; i < uriValues.length; i++)
-        {
-            uris[i] = URI.create(uriValues[i]);
-        }
-
-        final DownloadMethod requestedDownloadMethod =
-                DownloadMethod.valueFromRequest(downloadMethodValue);
-
-        getResponse().setEntity(handleDownload(requestedDownloadMethod, uris));
+        getResponse().setEntity(handleDownload(downloadMethodValue, uriValues));
         getResponse().setStatus(Status.SUCCESS_OK);
     }
 
-    Representation handleDownload(final DownloadMethod downloadMethod,
-                                  final URI[] uris) throws Exception
+    Representation handleDownload(final String downloadMethodValue,
+                                  final String[] uriValues)
+            throws Exception
     {
+        final URI[] uris = toURIArray(uriValues);
+
+        final DownloadMethod downloadMethod =
+                DownloadMethod.valueFromRequest(downloadMethodValue);
+
         final Subject currentUser = getCurrentUser();
+        final SSOCookieCredential cookieCredential = getCurrentSSOCookie();
         final Representation representation;
         final Writer manifestStringWriter = new StringWriter();
         for (final URI uri : uris)
@@ -221,7 +218,7 @@ public class BatchDownloadResource extends StorageItemServerResource
                         for (final Iterator<DownloadDescriptor> downloadDescriptorIterator =
                              manifestReader.read(
                                      manifestStringWriter.toString());
-                             downloadDescriptorIterator.hasNext();)
+                             downloadDescriptorIterator.hasNext(); )
                         {
                             final DownloadDescriptor downloadDescriptor =
                                     downloadDescriptorIterator.next();
@@ -242,7 +239,8 @@ public class BatchDownloadResource extends StorageItemServerResource
                                                     downloadDescriptor.destination));
 
                                             while ((length =
-                                                    inputStream.read(buffer)) > 0)
+                                                    inputStream
+                                                            .read(buffer)) > 0)
                                             {
                                                 zos.write(buffer, 0, length);
                                             }
@@ -308,6 +306,100 @@ public class BatchDownloadResource extends StorageItemServerResource
                 break;
             }
 
+            case DOWNLOAD_MANAGER:
+            {
+                return new WriterRepresentation(MediaType.APPLICATION_JNLP)
+                {
+                    @Override
+                    public void write(final Writer writer) throws IOException
+                    {
+                        final String ssoCookieData =
+                                (cookieCredential == null) ? ""
+                                                           : "--ssocookie="
+                                                             + cookieCredential.getSsoCookieValue().replaceAll("&", "&amp;")
+                                                             + "</argument>\n"
+                                                             + "<argument>--ssocookiedomain="
+                                                             + NetUtil.getDomainName(NetUtil.getServerName(this.getClass()));
+
+                        final String codeBase = getCodebase();
+                        final String file = "downloadmanager.jnlp";
+
+                        final ManifestReader manifestReader =
+                                new ManifestReader();
+                        final List<String> endpointURLs = new ArrayList<>();
+                        for (final Iterator<DownloadDescriptor> downloadDescriptorIterator =
+                             manifestReader.read(
+                                     manifestStringWriter.toString());
+                             downloadDescriptorIterator.hasNext(); )
+                        {
+                            endpointURLs.add(downloadDescriptorIterator.next().url.toExternalForm());
+                        }
+
+                        final HttpDownload httpDownload =
+                                new HttpDownload(new URL(codeBase + "/" + file),
+                                                 new InputStreamWrapper()
+                                                 {
+                                                     @Override
+                                                     public void read(final InputStream inputStream)
+                                                             throws IOException
+                                                     {
+                                                         final Reader reader = new InputStreamReader(inputStream);
+                                                         final BufferedReader bufferedReader = new BufferedReader(reader);
+
+                                                         String line;
+
+                                                         while ((line = bufferedReader
+                                                                 .readLine()) != null)
+                                                         {
+                                                             // Remove the href as it causes issues...
+                                                             line = line.replace("href='" + file + "'", "");
+                                                             line = line
+                                                                     .replace("$$codebase",
+                                                                              codeBase);
+                                                             line = line.replace("$$uris", DownloadUtil
+                                                                     .encodeListURI(endpointURLs));
+
+                                                             line = line.replace("$$ssocookiearguments",
+                                                                                 ssoCookieData);
+
+                                                             writer.write(line);
+                                                         }
+
+                                                         bufferedReader.close();
+                                                         writer.flush();
+                                                     }
+                                                 });
+
+                        httpDownload.setFollowRedirects(true);
+                        httpDownload.setRequestProperty("Content-Type",
+                                                        MediaType.APPLICATION_JNLP.getMainType());
+                        //
+                        // Because this anonymous execution is taken
+                        // out of context, we need to re-submit the
+                        // current user with the GET request.
+                        //
+                        try
+                        {
+                            Subject.doAs(currentUser,
+                                         new PrivilegedExceptionAction<Object>()
+                                         {
+                                             @Override
+                                             public Object run()
+                                                     throws Exception
+                                             {
+                                                 httpDownload.run();
+                                                 return null;
+                                             }
+                                         });
+                        }
+                        catch (Exception e)
+                        {
+                            throw new IOException(e);
+                        }
+                    }
+                };
+            }
+
             default:
             {
                 throw new UnsupportedOperationException("Unsupported download: "
@@ -316,5 +408,24 @@ public class BatchDownloadResource extends StorageItemServerResource
         }
 
         return representation;
+    }
+
+    private URI[] toURIArray(final String[] uriValues)
+    {
+        final URI[] uris = new URI[uriValues.length];
+
+        for (int i = 0; i < uriValues.length; i++)
+        {
+            uris[i] = URI.create(uriValues[i]);
+        }
+
+        return uris;
+    }
+
+    public String getCodebase() throws IOException
+    {
+        final URL req = getRequest().getResourceRef().toUrl();
+        return req.getProtocol() + "://" + req.getHost() + ":" + req.getPort()
+               + getServletContext().getContextPath();
     }
 }

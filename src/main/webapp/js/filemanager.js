@@ -83,7 +83,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
   var ROW_SELECT_TYPE = "row";
   var lockedIcon =
-    "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/storage/unlock\" title=\"Unlock to modify.\">Unlock</a>";
+    "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/storage/app/unlock\" title=\"Unlock to modify.\">Unlock</a>";
   var publicLink =
     "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
   var multiSelectSelector = ".multi-select-function-container";
@@ -110,10 +110,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                          persistent: false
                        });
 
-  var selectInput = _canWriteFlag ? {
+  var selectInput = {
     style: 'os',
-    selector: 'td:first-child'
-  } : false;
+    selector: 'td:first-child.select-checkbox'
+  };
 
   var $fileInfo = $("#fileInfo");
   var fileRoot;
@@ -127,7 +127,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         search: "_INPUT_",
         searchPlaceholder: "Search Name..."
       },
-      dom: "<'row beacon-info-row'<'col-sm-12'<'progress'<'beacon-progress active progress-bar progress-bar-info progress-bar-striped'>>i>>"
+      dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>>i>>"
            + "<'row'<'col-sm-12'tr>>",
       loading: true,
       processing: true,
@@ -140,18 +140,27 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         {
           "targets": 0,
           "orderable": false,
-          "className": (_canWriteFlag ? 'select-checkbox' : 'disabled'),
+          "className": 'select-checkbox',
           "searchable": false,
           "render": function (data, type, full)
           {
             var renderedValue;
 
-            if (full.length > 6)
+            if (full.length > 10)
             {
-              var lockedFlag = (full[7] === "true");
+              var canReadFlag = (full[12] === "true");
 
-              renderedValue = lockedFlag
-                ? lockedIcon : data;
+              if (canReadFlag === true)
+              {
+                var lockedFlag = (full[7] === "true");
+
+                renderedValue = lockedFlag
+                  ? lockedIcon : data;
+              }
+              else
+              {
+                renderedValue = data;
+              }
             }
             else
             {
@@ -323,7 +332,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var load = function (_callback)
   {
     getPage(requestData, _callback);
-    $("div.beacon-progress").removeClass("active");
+    $("div.progress").removeClass("active");
   };
 
   var successCallback = function (csvData)
@@ -1809,16 +1818,23 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                  {
                    var $thisLink = $(this);
 
+                   var downloadMethod =
+                     config.download.methods[$thisLink.attr("class")];
                    var form = document.createElement("form");
                    form.setAttribute("method", "POST");
-                   form.setAttribute("action", config.download.url);
+                   form.setAttribute("action", downloadMethod.url);
 
                    var methodHiddenField = document.createElement("input");
                    methodHiddenField.setAttribute("type", "hidden");
                    methodHiddenField.setAttribute("name", "method");
-                   methodHiddenField.setAttribute("value",
-                                                  config.download.methods[
-                                                    $thisLink.attr("class")]);
+                   methodHiddenField.setAttribute("value", downloadMethod.id);
+
+                   form.appendChild(methodHiddenField);
+
+                   var methodHiddenField = document.createElement("input");
+                   methodHiddenField.setAttribute("type", "hidden");
+                   methodHiddenField.setAttribute("name", "destination");
+                   methodHiddenField.setAttribute("value", getCurrentPath());
 
                    form.appendChild(methodHiddenField);
 
@@ -1831,7 +1847,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                           {
                             var hiddenField = document.createElement("input");
                             hiddenField.setAttribute("type", "hidden");
-                            hiddenField.setAttribute("name", "uris");
+                            hiddenField.setAttribute("name", "uri");
                             hiddenField.setAttribute("value",
                                                      config.download.vos_prefix
                                                      + itemData[9]);
@@ -1840,11 +1856,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                           });
 
                    document.body.appendChild(form);
-
-                   form.addEventListener("submit", function(e)
-                   {
-
-                   });
 
                    form._submit_function_();
                  });

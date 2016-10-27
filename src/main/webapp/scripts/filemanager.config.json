@@ -1,11 +1,11 @@
 {
     "_comment": "IMPORTANT : go to the wiki page to know about options configuration https://github.com/simogeo/Filemanager/wiki/Filemanager-configuration-file",
     "options": {
-        "fileConnector": "/storage/file",
-        "folderConnector": "/storage/folder",
-        "itemConnector": "/storage/item",
-        "linkConnector": "/storage/link",
-        "pageConnector": "/storage/page",
+        "fileConnector": "/storage/app/file",
+        "folderConnector": "/storage/app/folder",
+        "itemConnector": "/storage/app/item",
+        "linkConnector": "/storage/app/link",
+        "pageConnector": "/storage/app/page",
         "culture": "en",
         "lang": "php",
         "theme": "canfar",
@@ -71,12 +71,26 @@
     },
     "download": {
         "vos_prefix": "vos://cadc.nrc.ca~vospace",
-        "url": "/storage/batch-download",
         "methods": {
-            "download-url-list": "URL List",
-            "download-zip-file": "ZIP File",
-            "download-html-list": "HTML List",
-            "download-download-manager": "Java Webstart"
+            "download-url-list": {
+                "id": "URL List",
+                "url": "/storage/app/batch-download"
+            },
+            "download-zip-file":
+            {
+                "id": "ZIP File",
+                "url": "/storage/app/batch-download"
+            },
+            "download-html-list":
+            {
+                "id": "HTML List",
+                "url": "/storage/app/batch-download"
+            },
+            "download-download-manager":
+            {
+                "id": "Java Webstart",
+                "url": "/storage/app/batch-download"
+            }
         }
     },
     "upload": {

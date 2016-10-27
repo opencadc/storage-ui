@@ -69,7 +69,9 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.auth.AuthenticationUtil;
+import ca.nrc.cadc.auth.SSOCookieCredential;
 import org.restlet.Response;
+import org.restlet.data.Cookie;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
@@ -82,6 +84,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.net.URI;
 import java.util.Map;
+import java.util.Set;
 
 class SecureServerResource extends ServerResource
 {
@@ -92,6 +95,28 @@ class SecureServerResource extends ServerResource
     Subject getCurrentUser()
     {
         return AuthenticationUtil.getCurrentSubject();
+    }
+
+    SSOCookieCredential getCurrentSSOCookie()
+    {
+        final Subject subject = getCurrentUser();
+
+        if (subject == null)
+        {
+            return null;
+        }
+        else
+        {
+            final Set<SSOCookieCredential> cookieCredentials =
+                    subject.getPublicCredentials(
+                            SSOCookieCredential.class);
+
+            return cookieCredentials.isEmpty()
+                   ? null
+                   : cookieCredentials.toArray(
+                    new SSOCookieCredential[
+                            cookieCredentials.size()])[0];
+        }
     }
 
     ServletContext getServletContext()

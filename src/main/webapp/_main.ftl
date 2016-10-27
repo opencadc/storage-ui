@@ -24,7 +24,7 @@
           <input id="filepath" name="filepath" type="text" title="File path." />
           <button id="browse" name="browse" type="button" class="btn" value="Browse"></button>
         </div>
-        <input id="newfile" name="newfile" type="file" />
+        <input id="newfile" name="newfile" type="file" webkitdirectory="" directory="" mozdirectory="" />
       </div>
       <button id="upload" name="upload" type="submit" value="Upload" class="em">
         <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload</button>
@@ -59,10 +59,10 @@
               <ul class="nav navbar-nav">
 <#if !isRoot>
                 <li>
-                  <a id="level-up" name="level-up" href="/storage/list${folder.parentPath}" role="button" title="Up one level">
+                  <a id="level-up" name="level-up" href="/storage/app/list${folder.parentPath}" role="button" title="Up one level">
                     <span class="glyphicon glyphicon-level-up"></span>&nbsp;Up</a></li>
                 <li>
-                  <a id="root" name="root" type="button" title="Navigate to main root." href="/storage/list/">
+                  <a id="root" name="root" type="button" title="Navigate to main root." href="/storage/app/list/">
                     <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
                 <li class="dropdown divider-vertical <#if !folder.writable>disabled</#if>">
                   <a title="New" class="dropdown-toggle <#if !folder.writable>disabled</#if>" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
@@ -90,7 +90,7 @@
                   <ul class="dropdown-menu download-dropdown-menu">
                     <li><a class="download-url-list"><span class="glyphicon glyphicon-list"></span>&nbsp;URL List</a></li>
                     <li><a class="download-zip-file"><span class="glyphicon glyphicon-compressed"></span>&nbsp;ZIP</a></li>
-                    <#--<li class="disabled"><a class="download-download-manager"><span class="glyphicon glyphicon-download-alt"></span>&nbsp;Download Manager</a></li>-->
+                    <li><a class="download-download-manager"><span class="glyphicon glyphicon-download-alt"></span>&nbsp;Download Manager</a></li>
                   </ul>
                 </li>
 </#if>

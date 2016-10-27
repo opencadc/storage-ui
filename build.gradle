@@ -1,8 +1,16 @@
-plugins {
-    id 'java'
-    id 'maven'
-    id 'war'
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'de.gliderpilot.gradle.jnlp:gradle-jnlp-plugin:+'
+    }
 }
+
+apply plugin: 'de.gliderpilot.jnlp'
+apply plugin: 'war'
+
 
 repositories {
     jcenter()
@@ -10,6 +18,7 @@ repositories {
 }
 
 dependencies {
+//    runtime 'org.codehaus.mojo.webstart:webstart-jnlp-servlet:1.0-6.0.02_ea_b02.2'
     compile 'log4j:log4j:1.2.+'
     compile 'org.freemarker:freemarker-gae:2.3.25-incubating'
     compile 'com.opencsv:opencsv:3.+'
@@ -17,16 +26,18 @@ dependencies {
     compile 'org.restlet.jee:org.restlet.ext.servlet:2.3.+'
     compile 'org.restlet.jee:org.restlet.ext.freemarker:2.3.+'
     compile 'org.restlet.jee:org.restlet.ext.json:2.3.+'
-    
+
     compile 'org.opencadc:cadc-util:1.+'
     compile 'org.opencadc:cadc-registry:1.+'
     compile 'org.opencadc:cadc-vosi:1.+'
 
     compile 'org.opencadc:cadc-download-manager:1.+'
+    compile 'org.opencadc:cadc-download-manager-server:1.+'
+    compile 'org.opencadc:cadc-upload-manager:1.+'
     compile 'org.opencadc:cadc-vos:1.+'
 
     // Exclude the old restlet from being inserted here.
-    compile ('org.opencadc:cadc-vos-server:1.+') {
+    compile('org.opencadc:cadc-vos-server:1.+') {
         exclude group: 'org.restlet.jee'
         exclude group: 'org.restlet.jse'
     }
@@ -40,18 +51,65 @@ dependencies {
     testCompile 'org.easymock:easymock:3.+'
 }
 
+version = '100'
+
 def docker_image_name = 'opencadc/storage'
 
 war {
-    archiveName 'storage.' + extension
+    archiveName 'storage##' + project.version + '.war'
+    from createWebstartDir
 }
 
 clean {
     doFirst {
         exec {
             executable 'rm'
-            args ('-rf', './docker')
+            args('-rf', './docker')
         }
+    }
+}
+
+jnlp {
+    jnlpParams << [codebase: '$$codebase', spec: '1.0+',
+                   href: 'downloadmanager.jnlp']
+    j2seParams = [version: '7.0+', 'max-heap-size': '256m']
+    signJarAddedManifestEntries = [
+            'Permissions': 'all-permissions',
+    ]
+    useVersions = false
+    usePack200 = false
+    mainClassName = 'ca.nrc.cadc.dlm.client.Main'
+    withXml {
+        information {
+            title project.name
+            vendor project.group ?: project.name
+        }
+        security {
+            'all-permissions'()
+        }
+        resources {
+            'property'('name':'ca.nrc.cadc.auth.BasicX509TrustManager.trust',
+                       'value': 'true')
+        }
+    }
+
+    desc = {
+        'application-desc'('main-class': "${project.jnlp.mainClassName}") {
+            argument('--verbose')
+            argument('--uris=$$uris')
+            argument('$$ssocookiearguments')
+        }
+    }
+
+    signJarParams = [keystore: System.getenv("KEYSTORE_DIR") + '/cadcKeyStore',
+                     alias: 'cadc', storepass: 'cadccadc']
+}
+
+generateJnlp << {
+    jnlpFile.with {
+        text = readLines('UTF-8').findAll {
+            !it.contains('jnlp.versionEnabled') && !it.contains('jnlp.packEnabled')
+        }.join('\n')
     }
 }
 
@@ -71,3 +129,50 @@ task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
     commandLine 'docker', 'build', '-t', docker_image_name, '-f', './docker/Dockerfile', './docker/'
 }
 
+/*
+    <copy file="${lib.cadcUploadManager}" todir="${build}/tmp/"/>
+    <jar update="yes" jarfile="${build}/tmp/cadcUploadManager.jar">
+      <manifest>
+        <attribute name="Permissions" value="all-permissions"/>
+      </manifest>
+    </jar>
+    <signjar jar="${build}/tmp/cadcUploadManager.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+
+    <signjar jar="${cadcVOS}" signedjar="build/tmp/cadcVOS.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+
+    <signjar jar="${lib}/cadcUtil.jar" signedjar="${build}/tmp/cadcUtil.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+
+    <signjar jar="${cadcUWS}"
+             signedjar="${build}/tmp/cadcUWS.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+
+    <signjar jar="${jdom2}"
+             signedjar="${build}/tmp/jdom2.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+
+    <signjar jar="${cadcRegistry}"
+             signedjar="${build}/tmp/cadcRegistry.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+
+    <signjar jar="${cadcLog}"
+             signedjar="${build}/tmp/cadcLog.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+
+    <signjar jar="${ext.lib}/log4j.jar" signedjar="${build}/tmp/log4j.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+
+    <signjar jar="${ext.lib}/xerces.jar" signedjar="${build}/tmp/xerces.jar"
+             alias="cadc" storepass="cadccadc"
+             keystore="${env.A}/etc/cadcKeystore"/>
+ */
