@@ -73,13 +73,17 @@ import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.net.HttpPost;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
+import org.restlet.data.Status;
 
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.security.AccessControlException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.restlet.data.Status.SUCCESS_OK;
 
 
 public class AccessControlClient
@@ -130,17 +134,21 @@ public class AccessControlClient
         payload.put("username", username);
         payload.put("password", new String(password));
 
-        final int responseCode = post(payload, out);
+        final Status status = post(payload, out);
 
-        if (responseCode == 200)
+        if (status.equals(Status.SUCCESS_OK))
         {
             return out.toString();
+        }
+        else if (status.equals(Status.CLIENT_ERROR_UNAUTHORIZED))
+        {
+            throw new AccessControlException("Login denied");
         }
         else
         {
             throw new IllegalArgumentException(
-                    String.format("Unable to login '%s' due to Error %d.",
-                                  username, responseCode));
+                    String.format("Unable to login '%s'.\nServer error: %s.",
+                                  username, status.getReasonPhrase()));
         }
     }
 
@@ -151,12 +159,12 @@ public class AccessControlClient
      * @param out     The stream for any output.
      * @return Int response code.
      */
-    private int post(final Map<String, Object> payload, final OutputStream out)
+    private Status post(final Map<String, Object> payload, final OutputStream out)
     {
         final HttpPost post = new HttpPost(lookupLoginURL(), payload, out);
 
         post.run();
 
-        return post.getResponseCode();
+        return Status.valueOf(post.getResponseCode());
     }
 }

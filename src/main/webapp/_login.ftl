@@ -15,8 +15,10 @@
         </ul></li>
     </ul>
   <#else>
+
     <form class="navbar-form navbar-right" id="loginForm" role="form" method="post"
           action="/storage/app/ac/authenticate">
+      <span id="login_fail" class="help-block text-danger pull-left"></span>
       <div class="form-group">
         <label for="username" class="hidden" id="usernameLabel">Username</label>
         <input type="text" id="username" name="username" class="form-control" tabindex="1" required="required" placeholder="Username" />

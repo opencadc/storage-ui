@@ -212,7 +212,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             if (full.length > 9)
             {
               var publicFlag = (full[6] === "true");
-              var path = full[9];
 
               if (publicFlag === true)
               {
@@ -522,6 +521,46 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       return path;
     }
   };
+
+  var $loginForm = $("#loginForm");
+
+  var resetLoginFormErrors = function ()
+  {
+    var $loginFailContainer =
+      $loginForm.find("#login_fail");
+
+    $loginForm.removeClass("has-error");
+    $loginFailContainer.text("");
+  };
+
+  $loginForm.find("input.form-control").unbind().change(function (e)
+                                                        {
+                                                          resetLoginFormErrors();
+                                                        });
+
+  $loginForm.unbind().submit(function ()
+                             {
+                               var $thisForm = $(this);
+                               resetLoginFormErrors();
+
+                               $.post({
+                                        url: config.security.loginConnector,
+                                        data: $thisForm.serialize(),
+                                        statusCode: {
+                                          200: function ()
+                                          {
+                                            refreshPage();
+                                          },
+                                          401: function ()
+                                          {
+                                            $thisForm.find("#login_fail").text(lg.INVALID_CREDENTIALS);
+                                            $thisForm.addClass("has-error");
+                                          }
+                                        }
+                                      });
+
+                               return false;
+                             });
 
   /**
    * Obtain the path of the current folder.

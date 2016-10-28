@@ -70,12 +70,15 @@ package ca.nrc.cadc.beacon.web.resources;
 
 
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.web.AccessControlClient;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Form;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
+
+import java.security.AccessControlException;
 
 
 public class AccessControlServerResource extends SecureServerResource
@@ -88,18 +91,28 @@ public class AccessControlServerResource extends SecureServerResource
                 (AccessControlClient) getContext().getAttributes().get(
                         VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY);
 
-        final String cookieValue =
-                accessControlClient.login(form.getFirstValue("username"),
-                                          form.getFirstValue("password")
-                                                  .toCharArray());
+        final String username = form.getFirstValue("username");
+        final String passwordString = form.getFirstValue("password");
 
-        final CookieSetting cookieSetting =
-                new CookieSetting(0, "CADC_SSO", cookieValue, "/",
-                                  null, null, 60 * 60 * 24 * 2, false, false);
+        if (StringUtil.hasText(username) && StringUtil.hasText(passwordString))
+        {
+            final String cookieValue =
+                    accessControlClient.login(username,
+                                              passwordString.toCharArray());
 
-        getResponse().getCookieSettings().add(cookieSetting);
-        getResponse().redirectSeeOther("/storage/app/list"
-                                       + form.getFirstValue("redirectPath"));
+            final CookieSetting cookieSetting =
+                    new CookieSetting(0, "CADC_SSO", cookieValue, "/",
+                                      null, null, 60 * 60 * 24 * 2, false,
+                                      false);
+
+            getResponse().getCookieSettings().add(cookieSetting);
+            getResponse().redirectSeeOther(
+                    "/storage/app/list" + form.getFirstValue("redirectPath"));
+        }
+        else
+        {
+            throw new AccessControlException("Login denied");
+        }
     }
 
     @Delete
