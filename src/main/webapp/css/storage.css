@@ -195,6 +195,7 @@ input[type=url] {
  */
 div.dataTables_wrapper div.dataTables_info {
   padding-left: 20px;
+  padding-top: 30px;  /* Remove when progress bar re-instated. */
   white-space: nowrap;
   cursor: auto;
 }
