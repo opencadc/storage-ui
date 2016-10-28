@@ -101,8 +101,9 @@ jnlp {
         }
     }
 
-    signJarParams = [keystore: System.getenv("KEYSTORE_DIR") + '/cadcKeyStore',
-                     alias: 'cadc', storepass: 'cadccadc']
+    // Keystore settings in gradle.properties, or externally configured.
+    signJarParams = [keystore: keystorePath, alias: keystoreAlias,
+                     storepass: keystorePassword]
 }
 
 generateJnlp << {
@@ -128,51 +129,3 @@ task copyWAR(type: Copy, dependsOn: war) {
 task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
     commandLine 'docker', 'build', '-t', docker_image_name, '-f', './docker/Dockerfile', './docker/'
 }
-
-/*
-    <copy file="${lib.cadcUploadManager}" todir="${build}/tmp/"/>
-    <jar update="yes" jarfile="${build}/tmp/cadcUploadManager.jar">
-      <manifest>
-        <attribute name="Permissions" value="all-permissions"/>
-      </manifest>
-    </jar>
-    <signjar jar="${build}/tmp/cadcUploadManager.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
-
-    <signjar jar="${cadcVOS}" signedjar="build/tmp/cadcVOS.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
-
-    <signjar jar="${lib}/cadcUtil.jar" signedjar="${build}/tmp/cadcUtil.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
-
-    <signjar jar="${cadcUWS}"
-             signedjar="${build}/tmp/cadcUWS.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
-
-    <signjar jar="${jdom2}"
-             signedjar="${build}/tmp/jdom2.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
-
-    <signjar jar="${cadcRegistry}"
-             signedjar="${build}/tmp/cadcRegistry.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
-
-    <signjar jar="${cadcLog}"
-             signedjar="${build}/tmp/cadcLog.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
-
-    <signjar jar="${ext.lib}/log4j.jar" signedjar="${build}/tmp/log4j.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
-
-    <signjar jar="${ext.lib}/xerces.jar" signedjar="${build}/tmp/xerces.jar"
-             alias="cadc" storepass="cadccadc"
-             keystore="${env.A}/etc/cadcKeystore"/>
- */
