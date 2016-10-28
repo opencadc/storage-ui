@@ -124,12 +124,12 @@ public class StorageItemFactory
 
     private String getTarget(final ContainerNode containerNode)
     {
-        return contextPath + "/list" + containerNode.getUri().getPath();
+        return contextPath + "/app/list" + containerNode.getUri().getPath();
     }
 
     private String getTarget(final LinkNode linkNode)
     {
-        return contextPath + "/link" + linkNode.getUri().getPath();
+        return contextPath + "/app/link" + linkNode.getUri().getPath();
     }
 
     /**

@@ -330,8 +330,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
   var load = function (_callback)
   {
-    getPage(requestData, _callback);
-    $("div.progress").removeClass("active");
+    getPage(requestData, function(csvData)
+    {
+      _callback(csvData);
+      $("div.progress").removeClass("active");
+    });
   };
 
   var successCallback = function (csvData)
