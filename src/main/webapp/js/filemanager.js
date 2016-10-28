@@ -127,8 +127,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         search: "_INPUT_",
         searchPlaceholder: "Search Name..."
       },
-      dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>>i>>"
+      dom: "<'row beacon-info-row'<'col-sm-12'i>>"
            + "<'row'<'col-sm-12'tr>>",
+      // dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>>i>>"
+      //      + "<'row'<'col-sm-12'tr>>",
       loading: true,
       processing: true,
       deferRender: true,
@@ -240,9 +242,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     });
 
   // Setup the Progress Bar.
-  $("div.beacon-progress").attr("role", "progressbar").attr("aria-valuenow", "2")
-    .attr("aria-valuemin", "0").attr("aria-valuemax", _totalDataCount + "")
-    .html("<span class='sr-only'>0%</span>");
+  // $("div.beacon-progress").attr("role", "progressbar").attr("aria-valuenow", "2")
+  //   .attr("aria-valuemin", "0").attr("aria-valuemax", _totalDataCount + "")
+  //   .html("<span class='sr-only'>0%</span>");
 
   var toggleMultiFunctionButtons = function (_disabledFlag)
   {
@@ -333,16 +335,16 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     getPage(requestData, function(csvData)
     {
       _callback(csvData);
-      $("div.progress").removeClass("active");
+      // $("div.progress").removeClass("active");
     });
   };
 
   var successCallback = function (csvData)
   {
     var currentCount = $dt.rows().count();
-    var percentage = ((currentCount / _totalDataCount) * 100.0) + '%';
-    $("div.beacon-progress").css('width', percentage)
-      .attr('aria-valuenow', currentCount).find(".sr-only").text(percentage);
+    // var percentage = ((currentCount / _totalDataCount) * 100.0) + '%';
+    // $("div.beacon-progress").css('width', percentage)
+    //   .attr('aria-valuenow', currentCount).find(".sr-only").text(percentage);
 
     var data = $.csv.toArrays(csvData);
     var dl = data.length;
