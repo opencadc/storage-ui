@@ -120,10 +120,12 @@
                                 $("html").attr("lang") + '.json')
                           .done(function (json)
                                 {
+                                  // Row count is 100 by default to just show
+                                  // a moving barber pole progress.
                                   fileManager(rows, $("#beacon"),
                                               "<#if startURI??>${startURI}</#if>",
                                               "${folder.path}", ${folder.writable?c},
-                                              ${folder.childCount} , json);
+                                              100 , json);
                                 })
                           .fail(function (request, textStatus, errorThrown)
                                 {

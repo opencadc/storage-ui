@@ -127,10 +127,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         search: "_INPUT_",
         searchPlaceholder: "Search Name..."
       },
-      dom: "<'row beacon-info-row'<'col-sm-12'i>>"
+      dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>>i>>"
            + "<'row'<'col-sm-12'tr>>",
-      // dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>>i>>"
-      //      + "<'row'<'col-sm-12'tr>>",
       loading: true,
       processing: true,
       deferRender: true,
@@ -242,9 +240,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     });
 
   // Setup the Progress Bar.
-  // $("div.beacon-progress").attr("role", "progressbar").attr("aria-valuenow", "2")
-  //   .attr("aria-valuemin", "0").attr("aria-valuemax", _totalDataCount + "")
-  //   .html("<span class='sr-only'>0%</span>");
+  $("div.beacon-progress").attr("role", "progressbar")
+    .attr("aria-valuenow", _totalDataCount + "")
+    .attr("aria-valuemin", _totalDataCount + "")
+    .attr("aria-valuemax", _totalDataCount + "")
+    .text(lg.loading_data);
 
   var toggleMultiFunctionButtons = function (_disabledFlag)
   {
@@ -330,22 +330,24 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             });
   };
 
+  var loadComplete = function ()
+  {
+    $("div.progress").removeClass("active").children("div.beacon-progress")
+      .removeClass("progress-bar-striped")
+      .removeClass("progress-bar-info")
+      .addClass("progress-bar-success").empty();
+  };
+
   var load = function (_callback)
   {
-    getPage(requestData, function(csvData)
+    getPage(requestData, function (csvData)
     {
       _callback(csvData);
-      // $("div.progress").removeClass("active");
     });
   };
 
   var successCallback = function (csvData)
   {
-    var currentCount = $dt.rows().count();
-    // var percentage = ((currentCount / _totalDataCount) * 100.0) + '%';
-    // $("div.beacon-progress").css('width', percentage)
-    //   .attr('aria-valuenow', currentCount).find(".sr-only").text(percentage);
-
     var data = $.csv.toArrays(csvData);
     var dl = data.length;
 
@@ -363,6 +365,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
       requestData.startURI = _startURI;
       getPage(requestData, successCallback);
+    }
+    else
+    {
+      loadComplete();
     }
   };
 

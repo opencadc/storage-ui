@@ -78,14 +78,22 @@ ul > li.divider-vertical {
 
 div.progress
 {
-  height: 7px;
+  height: 1.5rem;
+  -webkit-border-radius: 0;
+  -moz-border-radius: 0;
+  border-radius: 0;
 }
 
 div.beacon-progress
 {
   padding-top: 0;
-  min-width: 2.0em;
-  width: 2px;
+  width: 100%;
+}
+
+div.beacon-progress.active
+{
+  line-height: 15px;
+  font-size: 90%;
 }
 
 /*
@@ -195,7 +203,7 @@ input[type=url] {
  */
 div.dataTables_wrapper div.dataTables_info {
   padding-left: 20px;
-  padding-top: 30px;  /* Remove when progress bar re-instated. */
+  padding-top: 15px;  /* Remove when progress bar re-instated. */
   white-space: nowrap;
   cursor: auto;
 }

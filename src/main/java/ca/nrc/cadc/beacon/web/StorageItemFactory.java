@@ -195,7 +195,7 @@ public class StorageItemFactory
                 node.getPropertyValue("ivo://ivoa.net/vospace/core#childCount");
         final int totalChildCount = StringUtil.hasLength(totalChildCountValue)
                                     ? Integer.parseInt(totalChildCountValue)
-                                    : 577;
+                                    : -1;
 
         if (node instanceof ContainerNode)
         {
