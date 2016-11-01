@@ -95,6 +95,7 @@
         }
     },
     "upload": {
+        "url": "/storage/app/batch-upload",
         "multiple": true,
         "number": 5,
         "overwrite": false,

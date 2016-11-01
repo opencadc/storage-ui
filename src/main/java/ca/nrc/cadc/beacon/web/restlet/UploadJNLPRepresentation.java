@@ -66,68 +66,44 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon.web.resources;
+package ca.nrc.cadc.beacon.web.restlet;
 
+import ca.nrc.cadc.auth.SSOCookieCredential;
+import ca.nrc.cadc.ulm.client.ui.Main;
+import ca.nrc.cadc.vos.VOSURI;
 
-import org.junit.Test;
-
-import javax.servlet.ServletContext;
-
-import java.io.ByteArrayOutputStream;
+import javax.security.auth.Subject;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.Writer;
-import java.net.URI;
 
-import static org.easymock.EasyMock.*;
-
-
-public class BatchDownloadResourceTest
-        extends AbstractServerResourceTest<BatchDownloadResource>
+public class UploadJNLPRepresentation extends JNLPRepresentation
 {
-    @Test
-    public void handleDownload() throws Exception
+    private final VOSURI destination;
+
+
+    public UploadJNLPRepresentation(final String codeBase,
+                                    final SSOCookieCredential cookieCredential,
+                                    final Subject currentUser,
+                                    final VOSURI destination)
     {
-        final String manifest =
-                "OK\thttp://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fa%2Fuws_output.csv&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\tTESTPLUS/a/uws_output.csv\n"
-                + "OK\thttp://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fexample%2Binput.xml&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\tTESTPLUS/example+input.xml";
+        super(codeBase, cookieCredential, currentUser);
+        this.destination = destination;
+    }
 
-        expect(mockServletContext.getContextPath()).andReturn("/teststorage")
-                .once();
+    /**
+     * Write out a line of the JNLP file.  Useful to filter downstream.
+     *
+     * @param line   The line to write.
+     * @param writer The Writer to write to.
+     * @throws IOException Any writing errors.
+     */
+    @Override
+    void writeLine(final String line, final Writer writer) throws IOException
+    {
+        String uploadLine = line.replace("$$mainclass", Main.class.getName());
+        uploadLine = uploadLine.replace("$$destination",
+                                        destination.toString());
 
-        replay(mockServletContext, mockRegistryClient);
-
-        testSubject = new BatchDownloadResource(mockRegistryClient,
-                                                mockVOSpaceClient)
-        {
-            @Override
-            ServletContext getServletContext()
-            {
-                return mockServletContext;
-            }
-
-            /**
-             * Remove the Node associated with the given Path.
-             * <p>
-             * It is the responsibility of the caller to handle proper closing of
-             * the writer.
-             *
-             * @param path   The path of the Node to delete.
-             * @param writer Where to pump output to.
-             */
-            @Override
-            void getManifest(String path, Writer writer) throws IOException
-            {
-                writer.write(manifest);
-            }
-        };
-
-        final OutputStream outputStream = new ByteArrayOutputStream();
-
-        testSubject.handleDownload(
-                BatchDownloadResource.DownloadMethod.URL_LIST.requestPropertyValue,
-                new String[]{"vos://cadc.nrc.ca~vospace/path/1"});
-
-        verify(mockServletContext, mockRegistryClient);
+        writer.write(uploadLine);
     }
 }

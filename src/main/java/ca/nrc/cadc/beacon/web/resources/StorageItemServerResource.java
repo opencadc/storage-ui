@@ -446,6 +446,13 @@ public class StorageItemServerResource extends SecureServerResource
         return new ContainerNode(getCurrentItemURI());
     }
 
+    String getCodebase() throws IOException
+    {
+        final URL req = getRequest().getResourceRef().toUrl();
+        return req.getProtocol() + "://" + req.getHost() + ":" + req.getPort()
+               + getServletContext().getContextPath();
+    }
+
     void createNode(final Node newNode, final boolean checkForDuplicate)
     {
         voSpaceClient.createNode(newNode, checkForDuplicate);

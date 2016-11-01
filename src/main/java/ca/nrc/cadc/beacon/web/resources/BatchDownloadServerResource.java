@@ -69,7 +69,7 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
-import ca.nrc.cadc.beacon.web.restlet.JNLPRepresentation;
+import ca.nrc.cadc.beacon.web.restlet.DownloadJNLPRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.ZIPFileRepresentation;
 import ca.nrc.cadc.dlm.client.ManifestReader;
 import ca.nrc.cadc.reg.client.RegistryClient;
@@ -85,10 +85,9 @@ import org.restlet.resource.Post;
 import javax.security.auth.Subject;
 import java.io.*;
 import java.net.URI;
-import java.net.URL;
 
 
-public class BatchDownloadResource extends StorageItemServerResource
+public class BatchDownloadServerResource extends StorageItemServerResource
 {
     private static final String URI_PARAMETER_KEY = "uri";
     private static final String METHOD_PARAMETER_KEY = "method";
@@ -130,7 +129,7 @@ public class BatchDownloadResource extends StorageItemServerResource
     /**
      * Empty constructor needed for Restlet to manage it.  Needs to be public.
      */
-    public BatchDownloadResource()
+    public BatchDownloadServerResource()
     {
     }
 
@@ -140,8 +139,8 @@ public class BatchDownloadResource extends StorageItemServerResource
      * @param registryClient The Registry client to use.
      * @param voSpaceClient  The VOSpace Client to use.
      */
-    BatchDownloadResource(final RegistryClient registryClient,
-                          final VOSpaceClient voSpaceClient)
+    BatchDownloadServerResource(final RegistryClient registryClient,
+                                final VOSpaceClient voSpaceClient)
     {
         super(registryClient, voSpaceClient);
     }
@@ -220,12 +219,12 @@ public class BatchDownloadResource extends StorageItemServerResource
             case DOWNLOAD_MANAGER:
             {
                 representation =
-                        new JNLPRepresentation(getCodebase(),
-                                               getCurrentSSOCookie(),
-                                               manifestReader.read(
+                        new DownloadJNLPRepresentation(getCodebase(),
+                                                       getCurrentSSOCookie(),
+                                                       manifestReader.read(
                                                        manifestStringWriter
                                                                .toString()),
-                                               currentUser);
+                                                       currentUser);
 
                 break;
             }
@@ -250,12 +249,5 @@ public class BatchDownloadResource extends StorageItemServerResource
         }
 
         return uris;
-    }
-
-    String getCodebase() throws IOException
-    {
-        final URL req = getRequest().getResourceRef().toUrl();
-        return req.getProtocol() + "://" + req.getHost() + ":" + req.getPort()
-               + getServletContext().getContextPath();
     }
 }

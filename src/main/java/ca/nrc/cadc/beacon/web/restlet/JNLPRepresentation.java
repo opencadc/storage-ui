@@ -69,8 +69,6 @@
 package ca.nrc.cadc.beacon.web.restlet;
 
 import ca.nrc.cadc.auth.SSOCookieCredential;
-import ca.nrc.cadc.dlm.DownloadDescriptor;
-import ca.nrc.cadc.dlm.DownloadUtil;
 import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.net.InputStreamWrapper;
 import ca.nrc.cadc.net.NetUtil;
@@ -81,14 +79,10 @@ import javax.security.auth.Subject;
 import java.io.*;
 import java.net.URL;
 import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 
-public class JNLPRepresentation extends WriterRepresentation
+public abstract class JNLPRepresentation extends WriterRepresentation
 {
-    private final Iterator<DownloadDescriptor> downloadDescriptorIterator;
     private final Subject currentUser;
     private final SSOCookieCredential cookieCredential;
     private final String codeBase;
@@ -98,16 +92,23 @@ public class JNLPRepresentation extends WriterRepresentation
      */
     public JNLPRepresentation(final String codeBase,
                               final SSOCookieCredential cookieCredential,
-                              final Iterator<DownloadDescriptor> downloadDescriptorIterator,
                               final Subject currentUser)
     {
         super(MediaType.APPLICATION_JNLP);
 
         this.codeBase = codeBase;
         this.cookieCredential = cookieCredential;
-        this.downloadDescriptorIterator = downloadDescriptorIterator;
         this.currentUser = currentUser;
     }
+
+    /**
+     * Write out a line of the JNLP file.  Useful to filter downstream.
+     * @param line              The line to write.
+     * @param writer            The Writer to write to.
+     * @throws IOException      Any writing errors.
+     */
+    abstract void writeLine(final String line, final Writer writer)
+            throws IOException;
 
     /**
      * Writes the representation to a characters writer. This method is ensured
@@ -132,15 +133,9 @@ public class JNLPRepresentation extends WriterRepresentation
                                                .replaceAll("&", "&amp;")
                                        + "</argument>\n"
                                        + "<argument>--ssocookiedomain="
-                                       + NetUtil.getDomainName(NetUtil.getServerName(this.getClass()));
+                                       + cookieCredential.getDomain();
 
-        final String file = "downloadmanager.jnlp";
-        final List<String> endpointURLs = new ArrayList<>();
-        while (downloadDescriptorIterator.hasNext())
-        {
-            endpointURLs.add(downloadDescriptorIterator.next().url
-                                     .toExternalForm());
-        }
+        final String file = "launcher.jnlp";
 
         final HttpDownload httpDownload =
                 new HttpDownload(new URL(codeBase + "/" + file),
@@ -165,14 +160,10 @@ public class JNLPRepresentation extends WriterRepresentation
                                                      .replace("$$codebase",
                                                               codeBase);
                                              line = line
-                                                     .replace("$$uris", DownloadUtil
-                                                             .encodeListURI(endpointURLs));
-
-                                             line = line
                                                      .replace("$$ssocookiearguments",
                                                               ssoCookieData);
 
-                                             writer.write(line);
+                                             writeLine(line, writer);
                                          }
 
                                          bufferedReader.close();

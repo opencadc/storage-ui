@@ -544,34 +544,34 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $loginFailContainer.text("");
   };
 
-  $loginForm.find("input.form-control").unbind().change(function (e)
-                                                        {
-                                                          resetLoginFormErrors();
-                                                        });
+  $loginForm.find("input.form-control").off().change(function (e)
+                                                     {
+                                                       resetLoginFormErrors();
+                                                     });
 
-  $loginForm.unbind().submit(function ()
-                             {
-                               var $thisForm = $(this);
-                               resetLoginFormErrors();
+  $loginForm.off().submit(function ()
+                          {
+                            var $thisForm = $(this);
+                            resetLoginFormErrors();
 
-                               $.post({
-                                        url: config.security.loginConnector,
-                                        data: $thisForm.serialize(),
-                                        statusCode: {
-                                          200: function ()
-                                          {
-                                            refreshPage();
-                                          },
-                                          401: function ()
-                                          {
-                                            $thisForm.find("#login_fail").text(lg.INVALID_CREDENTIALS);
-                                            $thisForm.addClass("has-error");
-                                          }
-                                        }
-                                      });
+                            $.post({
+                                     url: config.security.loginConnector,
+                                     data: $thisForm.serialize(),
+                                     statusCode: {
+                                       200: function ()
+                                       {
+                                         refreshPage();
+                                       },
+                                       401: function ()
+                                       {
+                                         $thisForm.find("#login_fail").text(lg.INVALID_CREDENTIALS);
+                                         $thisForm.addClass("has-error");
+                                       }
+                                     }
+                                   });
 
-                               return false;
-                             });
+                            return false;
+                          });
 
   /**
    * Obtain the path of the current folder.
@@ -998,90 +998,111 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 // whenever a new directory is selected.
   var setUploader = function ()
   {
-    $("#new_external_link").unbind().click(function ()
-                                           {
-                                             popupCreateLink();
-                                           });
+    $("#new_external_link").off().click(function ()
+                                        {
+                                          popupCreateLink();
+                                        });
 
-    $('#newfolder').unbind().click(function ()
+    $('#uploadfolder').off().click(function ()
                                    {
-                                     var buttonAction = function (event, value,
-                                                                  message,
-                                                                  formVals)
-                                     {
-                                       if (value === true)
-                                       {
-                                         var fname = formVals['fname'];
+                                     var form = document.createElement("form");
+                                     form.setAttribute("method", "POST");
+                                     form.setAttribute("action",
+                                                       config.upload.url
+                                                       + "/"
+                                                       + getCurrentPath());
 
-                                         if (validFilename(fname))
-                                         {
-                                           $.ajax(
-                                             {
-                                               url: config.options.folderConnector
-                                                    + getCurrentPath() + "/"
-                                                    + encodeURIComponent(fname),
-                                               method: "PUT",
-                                               contentType: "application/json",
-                                               statusCode: {
-                                                 201: function ()
-                                                 {
-                                                   $.prompt(lg.successful_added_folder,
-                                                            {
-                                                              submit: refreshPage
-                                                            });
-                                                 },
-                                                 400: function ()
-                                                 {
+                                     // Move the submit function to another
+                                     // variable so that it doesn't get
+                                     // overwritten.
+                                     form._submit_function_ = form.submit;
 
-                                                 },
-                                                 401: function ()
-                                                 {
-                                                   $.prompt(lg.NOT_ALLOWED_SYSTEM);
-                                                 },
-                                                 403: function ()
-                                                 {
-                                                   $.prompt(lg.NOT_ALLOWED_SYSTEM);
-                                                 },
-                                                 409: function ()
-                                                 {
-                                                   $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
-                                                 }
-                                               }
-                                             });
-                                         }
-                                         else
-                                         {
-                                           $.prompt(lg.INVALID_ITEM_NAME);
-                                         }
-                                       }
-                                       else
-                                       {
-                                         return true;
-                                       }
-                                     };
+                                     document.body.appendChild(form);
 
-                                     var msg = '<input id="fname" name="fname" type="text" class="form-control" placeholder="' +
-                                               lg.prompt_foldername +
-                                               '" value="" />';
+                                     form._submit_function_();
 
-                                     var btns = [];
-                                     btns.push({
-                                                 "title": lg.create_folder,
-                                                 "value": true,
-                                                 "classes": "btn btn-primary"
-                                               });
-                                     btns.push({
-                                                 "title": lg.cancel,
-                                                 "value": false,
-                                                 "classes": "btn btn-default"
-                                               });
-                                     $.prompt(msg,
-                                              {
-                                                submit: buttonAction,
-                                                focus: "#fname",
-                                                buttons: btns
-                                              });
+                                     return false;
                                    });
+
+    $('#newfolder').off().click(function ()
+                                {
+                                  var buttonAction = function (event, value,
+                                                               message,
+                                                               formVals)
+                                  {
+                                    if (value === true)
+                                    {
+                                      var fname = formVals['fname'];
+
+                                      if (validFilename(fname))
+                                      {
+                                        $.ajax(
+                                          {
+                                            url: config.options.folderConnector
+                                                 + getCurrentPath() + "/"
+                                                 + encodeURIComponent(fname),
+                                            method: "PUT",
+                                            contentType: "application/json",
+                                            statusCode: {
+                                              201: function ()
+                                              {
+                                                $.prompt(lg.successful_added_folder,
+                                                         {
+                                                           submit: refreshPage
+                                                         });
+                                              },
+                                              400: function ()
+                                              {
+
+                                              },
+                                              401: function ()
+                                              {
+                                                $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                                              },
+                                              403: function ()
+                                              {
+                                                $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                                              },
+                                              409: function ()
+                                              {
+                                                $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
+                                              }
+                                            }
+                                          });
+                                      }
+                                      else
+                                      {
+                                        $.prompt(lg.INVALID_ITEM_NAME);
+                                      }
+                                    }
+                                    else
+                                    {
+                                      return true;
+                                    }
+                                  };
+
+                                  var msg = '<input id="fname" name="fname" type="text" class="form-control" placeholder="' +
+                                            lg.prompt_foldername +
+                                            '" value="" />';
+
+                                  var btns = [];
+                                  btns.push({
+                                              "title": lg.create_folder,
+                                              "value": true,
+                                              "classes": "btn btn-primary"
+                                            });
+                                  btns.push({
+                                              "title": lg.cancel,
+                                              "value": false,
+                                              "classes": "btn btn-default"
+                                            });
+                                  $.prompt(msg,
+                                           {
+                                             submit: buttonAction,
+                                             focus: "#fname",
+                                             buttons: btns
+                                           });
+                                });
   };
 
 // Binds specific actions to the toolbar in detail views.
@@ -1371,7 +1392,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                      data['Filename'] = newName;
 
                      // Bind toolbar functions.
-                     $fileInfo.find('button#rename, #delete, button#download').unbind();
+                     $fileInfo.find('button#rename, #delete, button#download').off();
                      bindToolbar(data);
 
                      if (config.options.showConfirmation)
@@ -1407,7 +1428,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var replaceItem = function (data)
   {
     // we auto-submit form when user filled it up
-    $('#fileR').bind('change', function ()
+    $('#fileR').on('change', function ()
     {
       $(this).closest("form#toolbar").submit();
     });
@@ -1878,13 +1899,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                    methodHiddenField.setAttribute("type", "hidden");
                    methodHiddenField.setAttribute("name", "method");
                    methodHiddenField.setAttribute("value", downloadMethod.id);
-
-                   form.appendChild(methodHiddenField);
-
-                   var methodHiddenField = document.createElement("input");
-                   methodHiddenField.setAttribute("type", "hidden");
-                   methodHiddenField.setAttribute("name", "destination");
-                   methodHiddenField.setAttribute("value", getCurrentPath());
 
                    form.appendChild(methodHiddenField);
 
@@ -2478,144 +2492,144 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         // http://stackoverflow.com/questions/1544317/change-type-of-input-field-with-jquery
         $('#upload').remove();
 
-        $('#upload').unbind().click(function ()
-                                    {
-                                      // we create prompt
-                                      var msg = '<div id="dropzone-container"><h2>' +
-                                                lg.current_folder +
-                                                $('#uploader h1').attr('title') +
-                                                '</h2><div id="multiple-uploads" class="dropzone"></div>';
-                                      msg +=
-                                        '<div id="total-progress"><div data-dz-uploadprogress="" style="width:0;" class="progress-bar"></div></div>';
-                                      msg += '<div class="prompt-info">' +
-                                             lg.dz_dictMaxFilesExceeded.replace('%s', config.upload.number) +
-                                             lg.file_size_limit +
-                                             config.upload.fileSizeLimit + ' ' +
-                                             lg.mb + '.</div>';
-                                      msg += '<button id="process-upload">' +
-                                             lg.upload + '</button></div>';
+        $('#upload').off().click(function ()
+                                 {
+                                   // we create prompt
+                                   var msg = '<div id="dropzone-container"><h2>' +
+                                             lg.current_folder +
+                                             $('#uploader h1').attr('title') +
+                                             '</h2><div id="multiple-uploads" class="dropzone"></div>';
+                                   msg +=
+                                     '<div id="total-progress"><div data-dz-uploadprogress="" style="width:0;" class="progress-bar"></div></div>';
+                                   msg += '<div class="prompt-info">' +
+                                          lg.dz_dictMaxFilesExceeded.replace('%s', config.upload.number) +
+                                          lg.file_size_limit +
+                                          config.upload.fileSizeLimit + ' ' +
+                                          lg.mb + '.</div>';
+                                   msg += '<button id="process-upload">' +
+                                          lg.upload + '</button></div>';
 
-                                      var error_flag = false;
-                                      var path = getCurrentPath();
+                                   var error_flag = false;
+                                   var path = getCurrentPath();
 
-                                      var btns = {};
-                                      btns[lg.close] = false;
-                                      $.prompt(msg, {
-                                        buttons: btns
-                                      });
+                                   var btns = {};
+                                   btns[lg.close] = false;
+                                   $.prompt(msg, {
+                                     buttons: btns
+                                   });
 
-                                      var $progressBar =
-                                        $("#total-progress").find(".progress-bar");
-                                      var $uploadResponse = $("#uploadresponse");
+                                   var $progressBar =
+                                     $("#total-progress").find(".progress-bar");
+                                   var $uploadResponse = $("#uploadresponse");
 
-                                      $("div#multiple-uploads").dropzone({
-                                                                           paramName: "upload",
-                                                                           url: config.options.fileConnector +
-                                                                                path,
-                                                                           method: 'put',
-                                                                           maxFilesize: config.upload.fileSizeLimit,  // 10GB max.
-                                                                           maxFiles: config.upload.number,
-                                                                           addRemoveLinks: true,
-                                                                           parallelUploads: config.upload.number,
-                                                                           dictCancelUpload: lg.cancel,
-                                                                           dictRemoveFile: lg.del,
-                                                                           dictMaxFilesExceeded: lg.dz_dictMaxFilesExceeded.replace("%s", config.upload.number),
-                                                                           dictDefaultMessage: lg.dz_dictDefaultMessage,
-                                                                           acceptedFiles: null,
-                                                                           autoProcessQueue: false,
-                                                                           init: function ()
-                                                                           {
-                                                                             // for
-                                                                             // accessing
-                                                                             // dropzone
-                                                                             // :
-                                                                             // https://github.com/enyo/dropzone/issues/180
-                                                                             var dropzone = this;
-                                                                             $("#process-upload").click(function ()
-                                                                                                        {
-                                                                                                          // To proceed full queue parallelUploads must be equal or > to maxFileSize. https://github.com/enyo/dropzone/issues/462
-                                                                                                          dropzone.processQueue();
-                                                                                                        });
-                                                                           },
-                                                                           totaluploadprogress: function (progress)
-                                                                           {
-                                                                             $progressBar.css('width', progress +
-                                                                                                       "%");
-                                                                           },
-                                                                           sending: function (file, xhr, formData)
-                                                                           {
-                                                                             formData.append("mode", "add");
-                                                                             formData.append("currentpath", path);
-                                                                           },
-                                                                           error: function ()
-                                                                           {
-                                                                             error_flag =
-                                                                               true;
-                                                                           },
-                                                                           success: function (file, jsonResponse)
-                                                                           {
-                                                                             $uploadResponse.empty().text(jsonResponse);
+                                   $("div#multiple-uploads").dropzone({
+                                                                        paramName: "upload",
+                                                                        url: config.options.fileConnector +
+                                                                             path,
+                                                                        method: 'put',
+                                                                        maxFilesize: config.upload.fileSizeLimit,  // 10GB max.
+                                                                        maxFiles: config.upload.number,
+                                                                        addRemoveLinks: true,
+                                                                        parallelUploads: config.upload.number,
+                                                                        dictCancelUpload: lg.cancel,
+                                                                        dictRemoveFile: lg.del,
+                                                                        dictMaxFilesExceeded: lg.dz_dictMaxFilesExceeded.replace("%s", config.upload.number),
+                                                                        dictDefaultMessage: lg.dz_dictDefaultMessage,
+                                                                        acceptedFiles: null,
+                                                                        autoProcessQueue: false,
+                                                                        init: function ()
+                                                                        {
+                                                                          // for
+                                                                          // accessing
+                                                                          // dropzone
+                                                                          // :
+                                                                          // https://github.com/enyo/dropzone/issues/180
+                                                                          var dropzone = this;
+                                                                          $("#process-upload").click(function ()
+                                                                                                     {
+                                                                                                       // To proceed full queue parallelUploads must be equal or > to maxFileSize. https://github.com/enyo/dropzone/issues/462
+                                                                                                       dropzone.processQueue();
+                                                                                                     });
+                                                                        },
+                                                                        totaluploadprogress: function (progress)
+                                                                        {
+                                                                          $progressBar.css('width', progress +
+                                                                                                    "%");
+                                                                        },
+                                                                        sending: function (file, xhr, formData)
+                                                                        {
+                                                                          formData.append("mode", "add");
+                                                                          formData.append("currentpath", path);
+                                                                        },
+                                                                        error: function ()
+                                                                        {
+                                                                          error_flag =
+                                                                            true;
+                                                                        },
+                                                                        success: function (file, jsonResponse)
+                                                                        {
+                                                                          $uploadResponse.empty().text(jsonResponse);
 
-                                                                             if (jsonResponse.code ==
-                                                                                 0)
-                                                                             {
-                                                                               this.removeFile(file);
-                                                                             }
-                                                                             else
-                                                                             {
-                                                                               getFolderInfo(path);
-                                                                               $.prompt(jsonResponse.error);
-                                                                               error_flag =
-                                                                                 true;
-                                                                             }
-                                                                           },
-                                                                           complete: function ()
-                                                                           {
-                                                                             if ((this.getUploadingFiles().length ===
-                                                                                  0)
-                                                                                 &&
-                                                                                 (this.getQueuedFiles().length ===
-                                                                                  0))
-                                                                             {
-                                                                               $progressBar.css('width', '0%');
+                                                                          if (jsonResponse.code ==
+                                                                              0)
+                                                                          {
+                                                                            this.removeFile(file);
+                                                                          }
+                                                                          else
+                                                                          {
+                                                                            getFolderInfo(path);
+                                                                            $.prompt(jsonResponse.error);
+                                                                            error_flag =
+                                                                              true;
+                                                                          }
+                                                                        },
+                                                                        complete: function ()
+                                                                        {
+                                                                          if ((this.getUploadingFiles().length ===
+                                                                               0)
+                                                                              &&
+                                                                              (this.getQueuedFiles().length ===
+                                                                               0))
+                                                                          {
+                                                                            $progressBar.css('width', '0%');
 
-                                                                               if (error_flag ===
-                                                                                   true)
-                                                                               {
-                                                                                 var rejects = this.getRejectedFiles();
+                                                                            if (error_flag ===
+                                                                                true)
+                                                                            {
+                                                                              var rejects = this.getRejectedFiles();
 
-                                                                                 for (var rfi = 0, rfl = rejects.length;
-                                                                                      rfi <
-                                                                                      rfl;
-                                                                                      rfi++)
-                                                                                 {
+                                                                              for (var rfi = 0, rfl = rejects.length;
+                                                                                   rfi <
+                                                                                   rfl;
+                                                                                   rfi++)
+                                                                              {
 
-                                                                                 }
+                                                                              }
 
-                                                                                 $.prompt(lg.unsuccessful_added_file);
-                                                                               }
-                                                                               else if (config.options.showConfirmation)
-                                                                               {
-                                                                                 $.prompt(lg.successful_added_file, {
-                                                                                   submit: function ()
-                                                                                   {
-                                                                                     refreshPage();
-                                                                                   }
-                                                                                 });
-                                                                               }
-                                                                               else
-                                                                               {
-                                                                                 refreshPage();
-                                                                               }
-                                                                             }
+                                                                              $.prompt(lg.unsuccessful_added_file);
+                                                                            }
+                                                                            else if (config.options.showConfirmation)
+                                                                            {
+                                                                              $.prompt(lg.successful_added_file, {
+                                                                                submit: function ()
+                                                                                {
+                                                                                  refreshPage();
+                                                                                }
+                                                                              });
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                              refreshPage();
+                                                                            }
+                                                                          }
 
-                                                                             // Reset.
-                                                                             error_flag =
-                                                                               false;
-                                                                           }
-                                                                         });
+                                                                          // Reset.
+                                                                          error_flag =
+                                                                            false;
+                                                                        }
+                                                                      });
 
-                                    });
+                                 });
 
         // Simple Upload
       }

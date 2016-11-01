@@ -193,8 +193,12 @@ public class VOSpaceApplication extends Application
         router.attach("/list", MainPageServerResource.class);
         router.attach("/list/", MainPageServerResource.class);
 
-        router.attach("/batch-download", BatchDownloadResource.class);
-        router.attach("/batch-download/", BatchDownloadResource.class);
+        router.attach("/batch-download", BatchDownloadServerResource.class);
+        router.attach("/batch-download/", BatchDownloadServerResource.class);
+
+        final TemplateRoute bachUploadRoute =
+                router.attach("/batch-upload/{path}",
+                              BatchUploadServerResource.class);
 
         // Generic endpoint for files, folders, or links.
         final TemplateRoute itemRoute =
@@ -213,6 +217,7 @@ public class VOSpaceApplication extends Application
         final Map<String, Variable> routeVariables = new HashMap<>();
         routeVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
 
+        bachUploadRoute.getTemplate().getVariables().putAll(routeVariables);
         itemRoute.getTemplate().getVariables().putAll(routeVariables);
         folderRoute.getTemplate().getVariables().putAll(routeVariables);
         linkRoute.getTemplate().getVariables().putAll(routeVariables);

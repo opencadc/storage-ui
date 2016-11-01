@@ -73,11 +73,14 @@
                         <span class="glyphicon glyphicon-folder-open"></span>&nbsp;Folder</a></li>
                     <li>
                       <a id="upload">
-                        <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;File</a>
+                        <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload File</a>
                       <form id="uploader" method="post" class="hidden">
                         <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
                       </form>
                     </li>
+                    <li>
+                      <a id="uploadfolder">
+                        <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload Folder</a></li>
                     <li class="disabled">
                       <a id="new_vospace_link" class="disabled"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
                     <li>

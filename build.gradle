@@ -71,14 +71,14 @@ clean {
 
 jnlp {
     jnlpParams << [codebase: '$$codebase', spec: '1.0+',
-                   href: 'downloadmanager.jnlp']
+                   href    : 'launcher.jnlp']
     j2seParams = [version: '7.0+', 'max-heap-size': '256m']
     signJarAddedManifestEntries = [
             'Permissions': 'all-permissions',
     ]
     useVersions = false
     usePack200 = false
-    mainClassName = 'ca.nrc.cadc.dlm.client.Main'
+    mainClassName = '$$mainclass'
     withXml {
         information {
             title project.name
@@ -88,8 +88,10 @@ jnlp {
             'all-permissions'()
         }
         resources {
-            'property'('name':'ca.nrc.cadc.auth.BasicX509TrustManager.trust',
-                       'value': 'true')
+            'property'('name': 'ca.nrc.cadc.auth.BasicX509TrustManager.trust',
+                    'value': 'true')
+            'property'('name': 'ca.nrc.cadc.reg.client.RegistryClient.host',
+                    'value': 'jenkinsd.cadc.dao.nrc.ca')
         }
     }
 
@@ -97,19 +99,24 @@ jnlp {
         'application-desc'('main-class': "${project.jnlp.mainClassName}") {
             argument('--verbose')
             argument('--uris=$$uris')
+            argument('--dest=$$destination')
             argument('$$ssocookiearguments')
         }
     }
 
     // Keystore settings in gradle.properties, or externally configured.
-    signJarParams = [keystore: keystorePath, alias: keystoreAlias,
+    signJarParams = [keystore : keystorePath, alias: keystoreAlias,
                      storepass: keystorePassword]
 }
+
+def jnlpLib = ['cadc-download-manager', 'cadc-dali', 'cadc-util',
+               'cadc-registry', 'cadc-log', 'cadc-vos', 'log4j', 'jdom2',
+               'xerces', 'cadc-upload-manager', 'cadc-uws'];
 
 generateJnlp << {
     jnlpFile.with {
         text = readLines('UTF-8').findAll {
-            !it.contains('jnlp.versionEnabled') && !it.contains('jnlp.packEnabled')
+            (!it.contains('jnlp.versionEnabled') && !it.contains('jnlp.packEnabled'));
         }.join('\n')
     }
 }
