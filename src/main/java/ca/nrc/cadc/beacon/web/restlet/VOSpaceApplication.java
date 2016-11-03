@@ -78,12 +78,15 @@ import ca.nrc.cadc.web.AccessControlClient;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.SystemConfiguration;
 import org.restlet.*;
+import org.restlet.data.Protocol;
+import org.restlet.resource.Directory;
 import org.restlet.routing.Route;
 import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
 import java.net.URI;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
@@ -101,6 +104,11 @@ public class VOSpaceApplication extends Application
             "org.opencadc.ac.client";
     public static final String VOSPACE_SERVICE_ID_KEY =
             "org.opencadc.vospace.service_id";
+
+    public static final String SERVLET_CONTEXT_ATTRIBUTE_KEY =
+            "org.restlet.ext.servlet.ServletContext";
+
+    public static final String DEFAULT_CONTEXT_PATH = "/storage/";
 
     private static final String DEFAULT_SERVICE_ID =
             "ivo://cadc.nrc.ca/vospace";
@@ -152,6 +160,13 @@ public class VOSpaceApplication extends Application
                                             VOSPACE_SERVICE_ID_KEY,
                                             DEFAULT_SERVICE_ID)));
 
+        final ServletContext servletContext =
+                (ServletContext) context.getAttributes().get(
+                        SERVLET_CONTEXT_ATTRIBUTE_KEY);
+
+        final String contextPath = (servletContext == null)
+                                   ? DEFAULT_CONTEXT_PATH : "/";
+
         final Router router = new Router(context)
         {
             private final SubjectGenerator subjectGenerator =
@@ -183,36 +198,37 @@ public class VOSpaceApplication extends Application
             }
         };
 
-        router.attach("/ac/authenticate", AccessControlServerResource.class);
+        router.attach(contextPath + "ac/authenticate",
+                      AccessControlServerResource.class);
 
-        router.attach("/page", PageServerResource.class);
+        router.attach(contextPath + "page", PageServerResource.class);
         final TemplateRoute pageRoute =
-                router.attach("/page/{path}", PageServerResource.class);
+                router.attach(contextPath + "page/{path}", PageServerResource.class);
 
         // Allow for an empty path to be the root.
-        router.attach("/list", MainPageServerResource.class);
-        router.attach("/list/", MainPageServerResource.class);
+        router.attach(contextPath + "list", MainPageServerResource.class);
+        router.attach(contextPath + "list/", MainPageServerResource.class);
 
-        router.attach("/batch-download", BatchDownloadServerResource.class);
-        router.attach("/batch-download/", BatchDownloadServerResource.class);
+        router.attach(contextPath + "batch-download", BatchDownloadServerResource.class);
+        router.attach(contextPath + "batch-download/", BatchDownloadServerResource.class);
 
         final TemplateRoute bachUploadRoute =
-                router.attach("/batch-upload/{path}",
+                router.attach(contextPath + "batch-upload/{path}",
                               BatchUploadServerResource.class);
 
         // Generic endpoint for files, folders, or links.
         final TemplateRoute itemRoute =
-                router.attach("/item/{path}", StorageItemServerResource.class);
+                router.attach(contextPath + "item/{path}", StorageItemServerResource.class);
         final TemplateRoute folderRoute =
-                router.attach("/folder/{path}", FolderItemServerResource.class);
+                router.attach(contextPath + "folder/{path}", FolderItemServerResource.class);
         final TemplateRoute fileRoute =
-                router.attach("/file/{path}", FileItemServerResource.class);
+                router.attach(contextPath + "file/{path}", FileItemServerResource.class);
         final TemplateRoute linkRoute =
-                router.attach("/link/{path}", LinkItemServerResource.class);
+                router.attach(contextPath + "link/{path}", LinkItemServerResource.class);
         final TemplateRoute listRoute =
-                router.attach("/list/{path}", MainPageServerResource.class);
+                router.attach(contextPath + "list/{path}", MainPageServerResource.class);
         final TemplateRoute rawRoute =
-                router.attach("/raw/{path}", MainPageServerResource.class);
+                router.attach(contextPath + "raw/{path}", MainPageServerResource.class);
 
         final Map<String, Variable> routeVariables = new HashMap<>();
         routeVariables.put("path", new Variable(Variable.TYPE_URI_PATH));
@@ -258,5 +274,47 @@ public class VOSpaceApplication extends Application
                 configuration.getString(
                         VOSpaceApplication.GMS_SERVICE_PROPERTY_KEY,
                         VOSpaceApplication.DEFAULT_GMS_SERVICE_ID)));
+    }
+
+
+    public static void main(final String[] args) throws Exception
+    {
+        final Component component = new Component();
+        final Application application = new VOSpaceApplication(null)
+        {
+            /**
+             * Creates a inbound root Restlet that will receive all incoming calls. In
+             * general, instances of Router, Filter or Finder classes will be used as
+             * initial application Restlet. The default implementation returns null by
+             * default. This method is intended to be overridden by subclasses.
+             *
+             * @return The inbound root Restlet.
+             */
+            @Override
+            public Restlet createInboundRoot()
+            {
+                final Context context = getContext();
+                final Router router = (Router) super.createInboundRoot();
+                final String[] staticDirs = {"js", "css", "scripts", "fonts",
+                                             "themes"};
+
+                for (final String dir : staticDirs)
+                {
+                    router.attach(DEFAULT_CONTEXT_PATH + dir + "/",
+                                  new Directory(context,
+                                                "file://"
+                                                + System.getProperty("user.dir")
+                                                + "/src/main/webapp/" + dir));
+                }
+
+                return router;
+            }
+        };
+
+        component.getServers().add(Protocol.HTTP, 8080);
+        component.getClients().add(Protocol.FILE);
+
+        component.getDefaultHost().attach(application);
+        component.start();
     }
 }

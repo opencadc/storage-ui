@@ -11,7 +11,7 @@
 
     <ul class="nav nav-sidebar">
       <li><a class="github-link social-link" href="http://www.github.com/opencadc/vosui"><span>GitHub</span></a></li>
-      <li><a class="docker-link social-link" href="https://hub.docker.com/r/canfar/storage/"><span>Docker</span></a></li>
+      <li><a class="docker-link social-link" href="https://hub.docker.com/r/opencadc/storage/"><span>Docker</span></a></li>
     </ul>
 
     <form id="uploader" method="post" class="hidden">
@@ -59,10 +59,10 @@
               <ul class="nav navbar-nav">
 <#if !isRoot>
                 <li>
-                  <a id="level-up" name="level-up" href="/storage/app/list${folder.parentPath}" role="button" title="Up one level">
+                  <a id="level-up" name="level-up" href="${contextPath}list${folder.parentPath}" role="button" title="Up one level">
                     <span class="glyphicon glyphicon-level-up"></span>&nbsp;Up</a></li>
                 <li>
-                  <a id="root" name="root" type="button" title="Navigate to main root." href="/storage/app/list/">
+                  <a id="root" name="root" type="button" title="Navigate to main root." href="${contextPath}list/">
                     <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
                 <li class="dropdown divider-vertical <#if !folder.writable>disabled</#if>">
                   <a title="New" class="dropdown-toggle <#if !folder.writable>disabled</#if>" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">

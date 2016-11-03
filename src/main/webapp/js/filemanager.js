@@ -10,7 +10,7 @@
  */
 
 function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
-                     _canWriteFlag, _totalDataCount, lg)
+                     _canWriteFlag, _totalDataCount, lg, contextPath)
 {
 // function to retrieve GET params
   $.urlParam = function (name)
@@ -36,18 +36,18 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     {
       if ($.urlParam('config') != 0)
       {
-        url = '/storage/scripts/' + $.urlParam('config');
+        url = contextPath + 'scripts/' + $.urlParam('config');
         userconfig = $.urlParam('config');
       }
       else
       {
-        url = '/storage/scripts/filemanager.config.json';
+        url = contextPath + 'scripts/filemanager.config.json';
         userconfig = 'filemanager.config.json';
       }
     }
     else
     {
-      url = '/storage/scripts/filemanager.config.default.json';
+      url = contextPath + 'scripts/filemanager.config.default.json';
     }
 
     $.ajax({
@@ -83,13 +83,13 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
   var ROW_SELECT_TYPE = "row";
   var lockedIcon =
-    "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"/storage/app/unlock\" title=\"Unlock to modify.\">Unlock</a>";
+    "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"" + contextPath + "unlock\" title=\"Unlock to modify.\">Unlock</a>";
   var publicLink =
     "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
   var multiSelectSelector = ".multi-select-function-container";
 
   var stringUtil = new org.opencadc.StringUtil();
-  var url = config.options.pageConnector + _folderPath;
+  var url = contextPath + config.options.pageConnector + _folderPath;
   var defaultPageSize = 400;
 
   var requestData = {};
@@ -456,7 +456,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   };
 
 // Sets paths to connectors based on language selection.
-  var fileConnector = config.options.fileConnector ||
+  var fileConnector = contextPath + config.options.fileConnector ||
                       'connectors/' + config.options.lang + '/filemanager.' +
                       config.options.lang;
 
@@ -470,7 +470,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 // through culture var or from URL
   if ($.urlParam('langCode') != 0)
   {
-    if (file_exists('/storage/scripts/languages/' + $.urlParam('langCode')
+    if (file_exists(contextPath + 'scripts/languages/' + $.urlParam('langCode')
                     + '.js'))
     {
       config.options.culture = $.urlParam('langCode');
@@ -479,7 +479,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     {
       var urlLang = $.urlParam('langCode').substring(0, 2);
 
-      if (file_exists('/storage/scripts/languages/' + urlLang + '.js'))
+      if (file_exists(contextPath + 'scripts/languages/' + urlLang + '.js'))
       {
         config.options.culture = urlLang;
       }
@@ -555,7 +555,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                             resetLoginFormErrors();
 
                             $.post({
-                                     url: config.security.loginConnector,
+                                     url: contextPath + config.security.loginConnector,
                                      data: $thisForm.serialize(),
                                      statusCode: {
                                        200: function ()
@@ -888,7 +888,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       {
         $.ajax(
           {
-            url: config.options.linkConnector
+            url: contextPath + config.options.linkConnector
                  + getCurrentPath() +
                  "/" + encodeURIComponent(linkName),
             method: "PUT",
@@ -1038,7 +1038,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                       {
                                         $.ajax(
                                           {
-                                            url: config.options.folderConnector
+                                            url: contextPath + config.options.folderConnector
                                                  + getCurrentPath() + "/"
                                                  + encodeURIComponent(fname),
                                             method: "PUT",
@@ -1624,7 +1624,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
         $.ajax({
                  type: 'DELETE',
-                 url: config.options.itemConnector + path,
+                 url: contextPath + config.options.itemConnector + path,
                  async: false,
                  statusCode: {
                    200: function ()
@@ -1773,7 +1773,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
         $.ajax({
                  type: 'DELETE',
-                 url: config.options.itemConnector + path,
+                 url: contextPath + config.options.itemConnector + path,
                  async: false,
                  statusCode: {
                    200: function ()
@@ -1893,7 +1893,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                      config.download.methods[$thisLink.attr("class")];
                    var form = document.createElement("form");
                    form.setAttribute("method", "POST");
-                   form.setAttribute("action", downloadMethod.url);
+                   form.setAttribute("action", contextPath
+                                               + config.download.connector);
 
                    var methodHiddenField = document.createElement("input");
                    methodHiddenField.setAttribute("type", "hidden");
@@ -2243,7 +2244,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                                        '</span></a>');
                     // loading zeroClipboard code
 
-                    loadJS('/storage/scripts/zeroclipboard/copy.js?d' +
+                    loadJS(contextPath + 'scripts/zeroclipboard/copy.js?d' +
                            d.getMilliseconds());
                     $('#copy-button').click(function ()
                                             {
@@ -2338,10 +2339,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       $('div.version').html(config.version);
 
       // Loading theme
-      loadCSS('/storage/themes/' + config.options.theme +
+      loadCSS(contextPath + 'themes/' + config.options.theme +
               '/styles/filemanager.css');
       $.ajax({
-               url: '/storage/themes/' + config.options.theme +
+               url: contextPath + 'themes/' + config.options.theme +
                     '/styles/ie.css',
                async: false,
                success: function (data)
@@ -2351,19 +2352,19 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
              });
 
       // loading zeroClipboard
-      loadJS('/storage/scripts/zeroclipboard/dist/ZeroClipboard.js');
+      loadJS(contextPath + 'scripts/zeroclipboard/dist/ZeroClipboard.js');
 
       // Loading CodeMirror if enabled for online edition
       if (config.edit.enabled)
       {
-        loadCSS('/storage/scripts/CodeMirror/lib/codemirror.css');
-        loadCSS('/storage/scripts/CodeMirror/theme/' + config.edit.theme +
+        loadCSS(contextPath + 'scripts/CodeMirror/lib/codemirror.css');
+        loadCSS(contextPath + 'scripts/CodeMirror/theme/' + config.edit.theme +
                 '.css');
-        loadJS('/storage/scripts/CodeMirror/lib/codemirror.js');
-        loadJS('/storage/scripts/CodeMirror/addon/selection/active-line.js');
-        loadCSS('/storage/scripts/CodeMirror/addon/display/fullscreen.css');
-        loadJS('/storage/scripts/CodeMirror/addon/display/fullscreen.js');
-        loadJS('/storage/scripts/CodeMirror/dynamic-mode.js');
+        loadJS(contextPath + 'scripts/CodeMirror/lib/codemirror.js');
+        loadJS(contextPath + 'scripts/CodeMirror/addon/selection/active-line.js');
+        loadCSS(contextPath + 'scripts/CodeMirror/addon/display/fullscreen.css');
+        loadJS(contextPath + 'scripts/CodeMirror/addon/display/fullscreen.js');
+        loadJS(contextPath + 'scripts/CodeMirror/dynamic-mode.js');
       }
 
       if (!config.options.fileRoot)
@@ -2457,7 +2458,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       /** load searchbox */
       if (config.options.searchBox === true)
       {
-        loadJS("/storage/scripts/filemanager.liveSearch.js");
+        loadJS(contextPath + 'scripts/filemanager.liveSearch.js');
       }
       else
       {
@@ -2477,8 +2478,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       {
 
         // we load dropzone library
-        loadCSS('/storage/scripts/dropzone/downloads/css/dropzone.css');
-        loadJS('/storage/scripts/dropzone/downloads/dropzone.js');
+        loadCSS(contextPath + 'scripts/dropzone/downloads/css/dropzone.css');
+        loadJS(contextPath + 'scripts/dropzone/downloads/dropzone.js');
         Dropzone.autoDiscover = false;
 
         // we remove simple file upload element
@@ -2524,7 +2525,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
                                    $("div#multiple-uploads").dropzone({
                                                                         paramName: "upload",
-                                                                        url: config.options.fileConnector +
+                                                                        url: contextPath + config.options.fileConnector +
                                                                              path,
                                                                         method: 'put',
                                                                         maxFilesize: config.upload.fileSizeLimit,  // 10GB max.
@@ -2756,8 +2757,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       // to prevent bug
       if (config.customScrollbar.enabled)
       {
-        loadCSS('/storage/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.min.css');
-        loadJS('/storage/scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js');
+        loadCSS(contextPath + 'scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.min.css');
+        loadJS(contextPath + 'scripts/custom-scrollbar-plugin/jquery.mCustomScrollbar.concat.min.js');
 
         var csTheme = config.customScrollbar.theme != undefined ?
                       config.customScrollbar.theme : 'inset-2-dark';

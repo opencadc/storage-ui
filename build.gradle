@@ -10,7 +10,7 @@ buildscript {
 
 apply plugin: 'de.gliderpilot.jnlp'
 apply plugin: 'war'
-
+apply plugin: 'application'
 
 repositories {
     jcenter()
@@ -135,6 +135,12 @@ task copyWAR(type: Copy, dependsOn: war) {
 
 task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
     commandLine 'docker', 'build', '-t', docker_image_name, '-f', './docker/Dockerfile', './docker/'
+}
+
+mainClassName = 'ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication'
+
+sourceSets {
+    intTest
 }
 
 ['firefox', 'chrome'].each { driver ->

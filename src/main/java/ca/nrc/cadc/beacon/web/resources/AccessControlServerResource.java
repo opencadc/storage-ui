@@ -107,7 +107,8 @@ public class AccessControlServerResource extends SecureServerResource
 
             getResponse().getCookieSettings().add(cookieSetting);
             getResponse().redirectSeeOther(
-                    "/storage/app/list" + form.getFirstValue("redirectPath"));
+                    getContextPath() + "list"
+                    + form.getFirstValue("redirectPath"));
         }
         else
         {

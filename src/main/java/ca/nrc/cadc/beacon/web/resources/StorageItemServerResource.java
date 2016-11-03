@@ -160,8 +160,9 @@ public class StorageItemServerResource extends SecureServerResource
         {
             this.storageItemFactory =
                     new StorageItemFactory(URI_EXTRACTOR, registryClient,
-                                           getServletContext()
-                                                   .getContextPath());
+                                           (getServletContext() == null)
+                                           ? ""
+                                           : getServletContext().getContextPath());
         }
         catch (MalformedURLException e)
         {

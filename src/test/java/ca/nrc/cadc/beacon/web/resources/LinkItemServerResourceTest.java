@@ -174,7 +174,7 @@ public class LinkItemServerResourceTest
                 new ContainerNode(new VOSURI(target));
 
         mockResponse.redirectTemporary(
-                "/servletpath/app/list/other/dir/my/dir");
+                "/servletpath/list/other/dir/my/dir");
         expectLastCall().once();
 
         expect(mockVOSpaceClient.getNode("/curr/dir/MY_LINK",

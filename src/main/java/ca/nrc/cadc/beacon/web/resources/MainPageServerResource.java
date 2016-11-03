@@ -73,10 +73,13 @@ import ca.nrc.cadc.auth.HttpPrincipal;
 import ca.nrc.cadc.auth.SSOCookieManager;
 import ca.nrc.cadc.beacon.StorageItemCSVWriter;
 import ca.nrc.cadc.beacon.StorageItemWriter;
+import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.vos.*;
+import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
+import freemarker.template.TemplateModelException;
 import org.restlet.data.MediaType;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -84,6 +87,9 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
+import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.*;
@@ -104,8 +110,33 @@ public class MainPageServerResource extends StorageItemServerResource
         super.doInit();
 
         freemarkerConfiguration.setLocalizedLookup(false);
-        freemarkerConfiguration.setTemplateLoader(
-                new WebappTemplateLoader(getServletContext()));
+
+        final ServletContext servletContext = getServletContext();
+
+        try
+        {
+            if (servletContext == null)
+            {
+                freemarkerConfiguration.setSharedVariable(
+                        "contextPath", VOSpaceApplication.DEFAULT_CONTEXT_PATH);
+                freemarkerConfiguration.setTemplateLoader(
+                        new FileTemplateLoader(new File("src/main/webapp")));
+            }
+            else
+            {
+                final String servletPath = servletContext.getContextPath();
+
+                freemarkerConfiguration.setSharedVariable(
+                        "contextPath",
+                        servletPath + (servletPath.endsWith("/") ? "" : "/"));
+                freemarkerConfiguration.setTemplateLoader(
+                        new WebappTemplateLoader(servletContext));
+            }
+        }
+        catch (IOException | TemplateModelException e)
+        {
+            throw new ResourceException(e);
+        }
     }
 
     @Get

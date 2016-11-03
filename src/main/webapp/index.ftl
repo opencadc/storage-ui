@@ -16,8 +16,8 @@
   <title>User Storage</title>
 
   <!-- Bootstrap core CSS -->
-  <link href="/storage/css/bootstrap.min.css" rel="stylesheet">
-  <link href="/storage/css/bootstrap-theme.min.css" rel="stylesheet">
+  <link href="${contextPath}css/bootstrap.min.css" rel="stylesheet">
+  <link href="${contextPath}css/bootstrap-theme.min.css" rel="stylesheet">
 
   <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <#--<link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">-->
@@ -29,8 +29,8 @@
   <![endif]-->
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="/storage/css/datatables.min.css"/>
-  <link rel="stylesheet" href="/storage/css/storage.css"/>
+  <link rel="stylesheet" href="${contextPath}css/datatables.min.css"/>
+  <link rel="stylesheet" href="${contextPath}css/storage.css"/>
 </head>
 
 <body>
@@ -39,7 +39,7 @@
 <#assign isRoot = folder.root>
 
 <#if username??>
-  <#assign homeURL = '/storage/list/${username}'>
+  <#assign homeURL = '${contextPath}list/${username}'>
 </#if>
 
 <#include "_top_nav.ftl">
@@ -54,24 +54,24 @@
 <!-- Bootstrap core JavaScript
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
-<script src="/storage/js/jquery.min.js"></script>
+<script src="${contextPath}js/jquery.min.js"></script>
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-<#--<script src="/storage/js/ie10-viewport-bug-workaround.js"></script>-->
+<#--<script src="${contextPath}js/ie10-viewport-bug-workaround.js"></script>-->
 
-<script type="text/javascript" src="/storage/js/org.opencadc.js"></script>
-<script type="text/javascript" src="/storage/js/datatables.min.js"></script>
-<script type="text/javascript" src="/storage/js/file-size.js"></script>
+<script type="text/javascript" src="${contextPath}js/org.opencadc.js"></script>
+<script type="text/javascript" src="${contextPath}js/datatables.min.js"></script>
+<script type="text/javascript" src="${contextPath}js/file-size.js"></script>
 <script type="text/javascript"
-        src="/storage/js/jquery.csv-0.71.min.js"></script>
-<script type="text/javascript" src="/storage/js/jquery-browser.js"></script>
-<script type="text/javascript" src="/storage/js/jquery.form-3.24.js"></script>
+        src="${contextPath}js/jquery.csv-0.71.min.js"></script>
+<script type="text/javascript" src="${contextPath}js/jquery-browser.js"></script>
+<script type="text/javascript" src="${contextPath}js/jquery.form-3.24.js"></script>
 <script type="text/javascript"
-        src="/storage/js/jquery.contextmenu/jquery.contextMenu-1.01.js"></script>
+        src="${contextPath}js/jquery.contextmenu/jquery.contextMenu-1.01.js"></script>
 <script type="text/javascript"
-        src="/storage/js/jquery.tablesorter-2.7.2.min.js"></script>
+        src="${contextPath}js/jquery.tablesorter-2.7.2.min.js"></script>
 <script type="text/javascript"
-        src="/storage/js/jquery-impromptu.min.js"></script>
-<script type="text/javascript" src="/storage/js/filemanager.js"></script>
+        src="${contextPath}js/jquery-impromptu.min.js"></script>
+<script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
 
 <!--
  AWAYS ensure the bootstrap.min.js comes last!
@@ -79,7 +79,7 @@
 
  jenkinsd 2016.06.24
 -->
-<script src="/storage/js/bootstrap.min.js"></script>
+<script src="${contextPath}js/bootstrap.min.js"></script>
 
 <script type="text/javascript">
 
@@ -116,7 +116,7 @@
                       rows.push([${row}]);
                     </#list>
 
-                      $.getJSON('/storage/scripts/languages/' +
+                      $.getJSON('${contextPath}scripts/languages/' +
                                 $("html").attr("lang") + '.json')
                           .done(function (json)
                                 {
@@ -125,7 +125,7 @@
                                   fileManager(rows, $("#beacon"),
                                               "<#if startURI??>${startURI}</#if>",
                                               "${folder.path}", ${folder.writable?c},
-                                              100 , json);
+                                              100 , json, "${contextPath}");
                                 })
                           .fail(function (request, textStatus, errorThrown)
                                 {
@@ -137,7 +137,7 @@
                       $(document).on("click", "a#logout", function ()
                       {
                         $.ajax({
-                                 url: '/storage/app/ac/authenticate',
+                                 url: '${contextPath}ac/authenticate',
                                  method: 'DELETE'
                                })
                             .done(function ()

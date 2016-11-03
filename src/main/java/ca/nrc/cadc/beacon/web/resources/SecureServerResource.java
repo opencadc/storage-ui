@@ -70,6 +70,7 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.SSOCookieCredential;
+import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.MediaType;
@@ -88,10 +89,6 @@ import java.util.Set;
 
 class SecureServerResource extends ServerResource
 {
-    private static final String SERVLET_CONTEXT_ATTRIBUTE_KEY =
-            "org.restlet.ext.servlet.ServletContext";
-
-
     Subject getCurrentUser()
     {
         return AuthenticationUtil.getCurrentSubject();
@@ -124,7 +121,22 @@ class SecureServerResource extends ServerResource
         final Map<String, Object> attributes =
                 getApplication().getContext().getAttributes();
 
-        return (ServletContext) attributes.get(SERVLET_CONTEXT_ATTRIBUTE_KEY);
+        return (ServletContext) attributes.get(
+                VOSpaceApplication.SERVLET_CONTEXT_ATTRIBUTE_KEY);
+    }
+
+    String getContextPath()
+    {
+        final ServletContext servletContext = getServletContext();
+
+        if (servletContext == null)
+        {
+            return "/";
+        }
+        else
+        {
+            return servletContext.getContextPath();
+        }
     }
 
     protected String getPath()

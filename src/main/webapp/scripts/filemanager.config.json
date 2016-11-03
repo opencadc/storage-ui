@@ -1,11 +1,11 @@
 {
     "_comment": "IMPORTANT : go to the wiki page to know about options configuration https://github.com/simogeo/Filemanager/wiki/Filemanager-configuration-file",
     "options": {
-        "fileConnector": "/storage/app/file",
-        "folderConnector": "/storage/app/folder",
-        "itemConnector": "/storage/app/item",
-        "linkConnector": "/storage/app/link",
-        "pageConnector": "/storage/app/page",
+        "fileConnector": "file",
+        "folderConnector": "folder",
+        "itemConnector": "item",
+        "linkConnector": "link",
+        "pageConnector": "page",
         "culture": "en",
         "lang": "php",
         "theme": "canfar",
@@ -34,7 +34,7 @@
         "plugins": []
     },
     "security": {
-        "loginConnector": "/storage/app/ac/authenticate",
+        "loginConnector": "ac/authenticate",
         "allowFolderDownload": false,
         "allowChangeExtensions": false,
         "allowNoExtension": false,
@@ -72,30 +72,27 @@
     },
     "download": {
         "vos_prefix": "vos://cadc.nrc.ca~vospace",
+        "connector": "batch-download",
         "methods": {
             "download-url-list": {
-                "id": "URL List",
-                "url": "/storage/app/batch-download"
+                "id": "URL List"
             },
             "download-zip-file":
             {
-                "id": "ZIP File",
-                "url": "/storage/app/batch-download"
+                "id": "ZIP File"
             },
             "download-html-list":
             {
-                "id": "HTML List",
-                "url": "/storage/app/batch-download"
+                "id": "HTML List"
             },
             "download-download-manager":
             {
-                "id": "Java Webstart",
-                "url": "/storage/app/batch-download"
+                "id": "Java Webstart"
             }
         }
     },
     "upload": {
-        "url": "/storage/app/batch-upload",
+        "url": "batch-upload",
         "multiple": true,
         "number": 5,
         "overwrite": false,
