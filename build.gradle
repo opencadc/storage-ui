@@ -15,6 +15,11 @@ apply plugin: 'application'
 repositories {
     jcenter()
     mavenLocal()
+
+    // Local repository for CADC private code
+    maven {
+        url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
+    }
 }
 
 dependencies {
@@ -158,7 +163,7 @@ sourceSets {
         dependencies {
             intTestCompile 'junit:junit:4.+'
             intTestCompile 'ca.nrc.cadc:web-test:1.+'
-            intTestCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
+            intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
         }
 
         systemProperty "driver", "${driver}"
