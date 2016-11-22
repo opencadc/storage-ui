@@ -71,7 +71,7 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.web.restlet.DownloadJNLPRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.ZIPFileRepresentation;
-import ca.nrc.cadc.dlm.client.ManifestReader;
+import ca.nrc.cadc.dlm.ManifestReader;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.data.Form;

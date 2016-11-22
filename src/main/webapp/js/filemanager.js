@@ -83,7 +83,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
   var ROW_SELECT_TYPE = "row";
   var lockedIcon =
-    "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"" + contextPath + "unlock\" title=\"Unlock to modify.\">Unlock</a>";
+    "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"" + contextPath
+    + "unlock\" title=\"Unlock to modify.\">Unlock</a>";
   var publicLink =
     "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
   var multiSelectSelector = ".multi-select-function-container";
@@ -211,16 +212,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
             if (full.length > 9)
             {
-              var publicFlag = (full[6] === "true");
-
-              if (publicFlag === true)
-              {
-                renderedValue = stringUtil.format(publicLink, [lg.public]);
-              }
-              else
-              {
-                renderedValue = data;
-              }
+              // Column [6] is the public flag.
+              renderedValue = (full[6] === "true")
+                ? stringUtil.format(publicLink, [lg.public]) : data;
             }
             else
             {
