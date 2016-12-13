@@ -68,86 +68,52 @@
 
 package ca.nrc.cadc.beacon.web.restlet;
 
-import ca.nrc.cadc.dlm.DownloadDescriptor;
-import ca.nrc.cadc.net.HttpDownload;
-import ca.nrc.cadc.net.InputStreamWrapper;
 import org.restlet.data.MediaType;
+import org.restlet.representation.OutputRepresentation;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.util.Iterator;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
+import java.security.PrivilegedExceptionAction;
 
-
-public class ZIPFileRepresentation extends AbstractAuthOutputRepresentation
+public abstract class AbstractAuthOutputRepresentation
+        extends OutputRepresentation
 {
-    private final Iterator<DownloadDescriptor> downloadDescriptorIterator;
-    private final Subject currentUser;
-
     /**
      * Constructor.
+     *
+     * @param mediaType The representation's mediaType.
      */
-    public ZIPFileRepresentation(final Subject currentUser,
-                                 final Iterator<DownloadDescriptor> downloadDescriptorIterator)
+    AbstractAuthOutputRepresentation(MediaType mediaType)
     {
-        super(MediaType.APPLICATION_ZIP);
-
-        this.currentUser = currentUser;
-        this.downloadDescriptorIterator = downloadDescriptorIterator;
+        super(mediaType);
     }
 
 
-    @Override
-    public void write(final OutputStream outputStream) throws IOException
+    void downloadAs(final Subject subject, final Runnable action)
+            throws IOException
     {
-        final ZipOutputStream zos =
-                new ZipOutputStream(outputStream);
-
-        while ( downloadDescriptorIterator.hasNext() )
+        //
+        // Because this anonymous execution is taken
+        // out of context, we need to re-submit the
+        // current user with the GET request.
+        //
+        try
         {
-            final DownloadDescriptor downloadDescriptor =
-                    downloadDescriptorIterator.next();
-            if (downloadDescriptor.url != null)
-            {
-                final InputStreamWrapper inputStreamWrapper =
-                        inputStream ->
-                        {
-                            int length;
-
-                            // create byte buffer
-                            byte[] buffer = new byte[1024];
-
-                            // Begin writing a new ZIP entry, positions
-                            // the stream to the start of the entry
-                            // data.
-                            zos.putNextEntry(new ZipEntry(
-                                    downloadDescriptor.destination));
-
-                            while ((length =
-                                    inputStream
-                                            .read(buffer)) > 0)
-                            {
-                                zos.write(buffer, 0, length);
-                            }
-
-                            zos.closeEntry();
-
-                            inputStream.close();
-                        };
-
-                final HttpDownload httpDownload =
-                        new HttpDownload(downloadDescriptor.url,
-                                         inputStreamWrapper);
-
-                httpDownload.setFollowRedirects(true);
-
-                downloadAs(currentUser, httpDownload);
-            }
+            Subject.doAs(subject,
+                         new PrivilegedExceptionAction<Object>()
+                         {
+                             @Override
+                             public Object run()
+                                     throws Exception
+                             {
+                                 action.run();
+                                 return null;
+                             }
+                         });
         }
-
-        // close the ZipOutputStream
-        zos.close();
+        catch (Exception e)
+        {
+            throw new IOException(e);
+        }
     }
 }

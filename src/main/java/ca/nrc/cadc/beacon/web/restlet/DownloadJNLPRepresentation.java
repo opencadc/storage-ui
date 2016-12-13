@@ -75,6 +75,7 @@ import ca.nrc.cadc.dlm.client.Main;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -101,18 +102,20 @@ public class DownloadJNLPRepresentation extends JNLPRepresentation
 
     /**
      * Write out a line of the JNLP file.  Useful to filter downstream.
-     * @param line              The line to write.
-     * @param writer            The Writer to write to.
-     * @throws IOException      Any writing errors.
+     *
+     * @param line         The line to write.
+     * @param outputStream The OutputStream to write to.
+     * @throws IOException Any writing errors.
      */
     @Override
-    void writeLine(final String line, final Writer writer) throws IOException
+    void writeLine(final String line, final OutputStream outputStream)
+            throws IOException
     {
         String downloadLine =
                 line.replace("$$uris",
                              DownloadUtil.encodeListURI(endpointURLs));
         downloadLine = downloadLine.replace("$$mainclass",
                                             Main.class.getName());
-        writer.write(downloadLine);
+        outputStream.write(downloadLine.getBytes());
     }
 }

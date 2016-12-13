@@ -69,23 +69,26 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
-import org.junit.Test;
+import org.restlet.data.MediaType;
+import org.restlet.representation.Representation;
 
 import javax.servlet.ServletContext;
 
-import java.io.ByteArrayOutputStream;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.StringReader;
 import java.io.Writer;
 
+import org.junit.Test;
 import static org.easymock.EasyMock.*;
+import static org.junit.Assert.*;
 
 
 public class BatchDownloadServerResourceTest
         extends AbstractServerResourceTest<BatchDownloadServerResource>
 {
     @Test
-    public void handleDownload() throws Exception
+    public void handleURLList() throws Exception
     {
         final String manifest =
                 "OK\thttp://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fa%2Fuws_output.csv&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\tTESTPLUS/a/uws_output.csv\n"
@@ -121,11 +124,92 @@ public class BatchDownloadServerResourceTest
             }
         };
 
-        final OutputStream outputStream = new ByteArrayOutputStream();
 
-        testSubject.handleDownload(
+        final Representation rep = testSubject.handleDownload(
                 BatchDownloadServerResource.DownloadMethod.URL_LIST.requestPropertyValue,
                 new String[]{"vos://cadc.nrc.ca~vospace/path/1"});
+
+        assertEquals("Wrong content type.", MediaType.TEXT_URI_LIST,
+                     rep.getMediaType());
+        assertEquals("Wrong text.", manifest, rep.getText());
+
+        verify(mockServletContext, mockRegistryClient);
+    }
+
+    @Test
+    public void handleHTMLList() throws Exception
+    {
+        final String templateHTML = "<!DOCTYPE html>\n"
+                                + "<html lang=\"en\">\n"
+                                + "<head>\n"
+                                + "  <meta charset=\"UTF-8\">\n"
+                                + "  <title>Download stuff</title>\n"
+                                + "</head>\n"
+                                + "<body>\n"
+                                + "%%LIST%%\n"
+                                + "</body>\n"
+                                + "</html>";
+
+        final String manifest =
+                "OK\thttp://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fa%2Fuws_output.csv&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\tTESTPLUS/a/uws_output.csv\n"
+                + "OK\thttp://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fexample%2Binput.xml&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\tTESTPLUS/example+input.xml";
+
+        final String expectedHTML =
+                "<!DOCTYPE html>\n"
+                + "<html lang=\"en\">\n"
+                + "<head>\n"
+                + "  <meta charset=\"UTF-8\">\n"
+                + "  <title>Download stuff</title>\n"
+                + "</head>\n"
+                + "<body>\n"
+                + "  <p><a href=\"http://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fa%2Fuws_output.csv&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\">http://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fa%2Fuws_output.csv&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget</a></p>\n"
+                + "  <p><a href=\"http://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fexample%2Binput.xml&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget\">http://jenkinsd.cadc.dao.nrc.ca/vospace/synctrans?TARGET=vos%3A%2F%2Fcadc.nrc.ca%21vospace%2FCADCtest%2FTESTPLUS%2Fexample%2Binput.xml&DIRECTION=pullFromVoSpace&PROTOCOL=ivo%3A%2F%2Fivoa.net%2Fvospace%2Fcore%23httpget</a></p>\n"
+                + "</body>\n"
+                + "</html>\n";
+
+        expect(mockServletContext.getContextPath()).andReturn("/storage-ui/go")
+                .once();
+
+        replay(mockServletContext, mockRegistryClient);
+
+        testSubject = new BatchDownloadServerResource(mockRegistryClient,
+                                                      mockVOSpaceClient)
+        {
+            @Override
+            ServletContext getServletContext()
+            {
+                return mockServletContext;
+            }
+
+            /**
+             * Remove the Node associated with the given Path.
+             * <p>
+             * It is the responsibility of the caller to handle proper closing of
+             * the writer.
+             *
+             * @param path   The path of the Node to delete.
+             * @param writer Where to pump output to.
+             */
+            @Override
+            void getManifest(String path, Writer writer) throws IOException
+            {
+                writer.write(manifest);
+            }
+
+            @Override
+            BufferedReader loadTemplateHTML()
+            {
+                return new BufferedReader(new StringReader(templateHTML));
+            }
+        };
+
+        final Representation rep = testSubject.handleDownload(
+                BatchDownloadServerResource.DownloadMethod.HTML_LIST.requestPropertyValue,
+                new String[]{"vos://cadc.nrc.ca~vospace/path/1"});
+
+        assertEquals("Wrong content type.", MediaType.TEXT_HTML,
+                     rep.getMediaType());
+        assertEquals("Wrong text.", expectedHTML.trim(), rep.getText().trim());
 
         verify(mockServletContext, mockRegistryClient);
     }

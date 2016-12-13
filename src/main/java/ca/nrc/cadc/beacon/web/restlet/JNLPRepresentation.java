@@ -70,18 +70,15 @@ package ca.nrc.cadc.beacon.web.restlet;
 
 import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.net.HttpDownload;
-import ca.nrc.cadc.net.InputStreamWrapper;
-import ca.nrc.cadc.net.NetUtil;
 import org.restlet.data.MediaType;
-import org.restlet.representation.WriterRepresentation;
 
 import javax.security.auth.Subject;
 import java.io.*;
 import java.net.URL;
-import java.security.PrivilegedExceptionAction;
 
 
-public abstract class JNLPRepresentation extends WriterRepresentation
+public abstract class JNLPRepresentation
+        extends AbstractAuthOutputRepresentation
 {
     private final Subject currentUser;
     private final SSOCookieCredential cookieCredential;
@@ -104,26 +101,26 @@ public abstract class JNLPRepresentation extends WriterRepresentation
     /**
      * Write out a line of the JNLP file.  Useful to filter downstream.
      * @param line              The line to write.
-     * @param writer            The Writer to write to.
+     * @param outputStream            The OutputStream to write to.
      * @throws IOException      Any writing errors.
      */
-    abstract void writeLine(final String line, final Writer writer)
+    abstract void writeLine(final String line, final OutputStream outputStream)
             throws IOException;
 
     /**
-     * Writes the representation to a characters writer. This method is ensured
-     * to write the full content for each invocation unless it is a transient
+     * Writes the representation to a byte stream. This method is ensured to
+     * write the full content for each invocation unless it is a transient
      * representation, in which case an exception is thrown.<br>
      * <br>
      * Note that the class implementing this method shouldn't flush or close the
-     * given {@link Writer} after writing to it as this will be handled
-     * by the Restlet connectors automatically.
+     * given {@link OutputStream} after writing to it as this will be handled by
+     * the Restlet connectors automatically.
      *
-     * @param writer The characters writer.
-     * @throws IOException
+     * @param outputStream The output stream.
+     * @throws IOException  Any errors writing to the stream.
      */
     @Override
-    public void write(final Writer writer) throws IOException
+    public void write(final OutputStream outputStream) throws IOException
     {
         final String ssoCookieData = (cookieCredential == null)
                                      ? ""
@@ -139,64 +136,39 @@ public abstract class JNLPRepresentation extends WriterRepresentation
 
         final HttpDownload httpDownload =
                 new HttpDownload(new URL(codeBase + "/" + file),
-                                 new InputStreamWrapper()
+                                 inputStream ->
                                  {
-                                     @Override
-                                     public void read(final InputStream inputStream)
-                                             throws IOException
+                                     final Reader reader =
+                                             new InputStreamReader(inputStream);
+                                     final BufferedReader bufferedReader =
+                                             new BufferedReader(reader);
+
+                                     String line;
+
+                                     while ((line = bufferedReader
+                                             .readLine()) != null)
                                      {
-                                         final Reader reader = new InputStreamReader(inputStream);
-                                         final BufferedReader bufferedReader = new BufferedReader(reader);
+                                         // Remove the href as it causes issues...
+                                         line = line
+                                                 .replace("href='" + file + "'", "");
+                                         line = line
+                                                 .replace("$$codebase",
+                                                          codeBase);
+                                         line = line
+                                                 .replace("$$ssocookiearguments",
+                                                          ssoCookieData);
 
-                                         String line;
-
-                                         while ((line = bufferedReader
-                                                 .readLine()) != null)
-                                         {
-                                             // Remove the href as it causes issues...
-                                             line = line
-                                                     .replace("href='" + file + "'", "");
-                                             line = line
-                                                     .replace("$$codebase",
-                                                              codeBase);
-                                             line = line
-                                                     .replace("$$ssocookiearguments",
-                                                              ssoCookieData);
-
-                                             writeLine(line, writer);
-                                         }
-
-                                         bufferedReader.close();
-                                         writer.flush();
+                                         writeLine(line, outputStream);
                                      }
+
+                                     bufferedReader.close();
+                                     outputStream.flush();
                                  });
 
         httpDownload.setFollowRedirects(true);
         httpDownload.setRequestProperty("Content-Type",
                                         MediaType.APPLICATION_JNLP
                                                 .getMainType());
-        //
-        // Because this anonymous execution is taken
-        // out of context, we need to re-submit the
-        // current user with the GET request.
-        //
-        try
-        {
-            Subject.doAs(currentUser,
-                         new PrivilegedExceptionAction<Object>()
-                         {
-                             @Override
-                             public Object run()
-                                     throws Exception
-                             {
-                                 httpDownload.run();
-                                 return null;
-                             }
-                         });
-        }
-        catch (Exception e)
-        {
-            throw new IOException(e);
-        }
+        downloadAs(currentUser, httpDownload);
     }
 }

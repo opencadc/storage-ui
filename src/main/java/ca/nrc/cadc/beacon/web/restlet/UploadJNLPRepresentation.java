@@ -74,7 +74,8 @@ import ca.nrc.cadc.vos.VOSURI;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
-import java.io.Writer;
+import java.io.OutputStream;
+
 
 public class UploadJNLPRepresentation extends JNLPRepresentation
 {
@@ -93,17 +94,18 @@ public class UploadJNLPRepresentation extends JNLPRepresentation
     /**
      * Write out a line of the JNLP file.  Useful to filter downstream.
      *
-     * @param line   The line to write.
-     * @param writer The Writer to write to.
+     * @param line         The line to write.
+     * @param outputStream The OutputStream to write to.
      * @throws IOException Any writing errors.
      */
     @Override
-    void writeLine(final String line, final Writer writer) throws IOException
+    void writeLine(final String line, final OutputStream outputStream)
+            throws IOException
     {
         String uploadLine = line.replace("$$mainclass", Main.class.getName());
         uploadLine = uploadLine.replace("$$destination",
                                         destination.toString());
 
-        writer.write(uploadLine);
+        outputStream.write(uploadLine.getBytes());
     }
 }

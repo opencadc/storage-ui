@@ -1,11 +1,29 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+
+    dependencies {
+        classpath 'de.gliderpilot.gradle.jnlp:gradle-jnlp-plugin:+'
+    }
+}
+
+apply plugin: 'de.gliderpilot.jnlp'
 apply plugin: 'war'
+apply plugin: 'application'
 
 repositories {
     jcenter()
     mavenLocal()
+
+    // Local repository for CADC private code
+    maven {
+        url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
+    }
 }
 
 dependencies {
+//    runtime 'org.codehaus.mojo.webstart:webstart-jnlp-servlet:1.0-6.0.02_ea_b02.2'
     compile 'log4j:log4j:1.2.+'
     compile 'org.freemarker:freemarker-gae:2.3.25-incubating'
     compile 'com.opencsv:opencsv:3.+'
@@ -44,6 +62,7 @@ def docker_image_name = 'opencadc/storage'
 
 war {
     archiveName 'storage##' + project.version + '.war'
+    from createWebstartDir
 }
 
 clean {
@@ -52,6 +71,58 @@ clean {
             executable 'rm'
             args('-rf', './docker')
         }
+    }
+}
+
+jnlp {
+    jnlpParams << [codebase: '$$codebase', spec: '1.0+',
+                   href    : 'launcher.jnlp']
+    j2seParams = [version: '7.0+', 'max-heap-size': '256m']
+    signJarAddedManifestEntries = [
+            'Permissions': 'all-permissions',
+    ]
+    useVersions = false
+    usePack200 = false
+    mainClassName = '$$mainclass'
+    withXml {
+        information {
+            title project.name
+            vendor project.group ?: project.name
+        }
+        security {
+            'all-permissions'()
+        }
+        resources {
+            'property'('name': 'ca.nrc.cadc.auth.BasicX509TrustManager.trust',
+                    'value': 'true')
+            'property'('name': 'ca.nrc.cadc.reg.client.RegistryClient.host',
+                    'value': 'jenkinsd.cadc.dao.nrc.ca')
+        }
+    }
+
+    desc = {
+        'application-desc'('main-class': "${project.jnlp.mainClassName}") {
+            argument('--verbose')
+            argument('--uris=$$uris')
+            argument('--dest=$$destination')
+            argument('$$ssocookiearguments')
+        }
+    }
+
+    // Keystore settings in gradle.properties, or externally configured.
+    signJarParams = [keystore : keystorePath, alias: keystoreAlias,
+                     storepass: keystorePassword]
+}
+
+def jnlpLib = ['cadc-download-manager', 'cadc-dali', 'cadc-util',
+               'cadc-registry', 'cadc-log', 'cadc-vos', 'log4j', 'jdom2',
+               'xerces', 'cadc-upload-manager', 'cadc-uws'];
+
+generateJnlp << {
+    jnlpFile.with {
+        text = readLines('UTF-8').findAll {
+            (!it.contains('jnlp.versionEnabled') && !it.contains('jnlp.packEnabled'));
+        }.join('\n')
     }
 }
 
@@ -70,6 +141,8 @@ task copyWAR(type: Copy, dependsOn: war) {
 task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
     commandLine 'docker', 'build', '-t', docker_image_name, '-f', './docker/Dockerfile', './docker/'
 }
+
+mainClassName = 'ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication'
 
 ext {
     // Change this value to test other locations, such as Production or RC.
@@ -90,7 +163,7 @@ sourceSets {
         dependencies {
             intTestCompile 'junit:junit:4.+'
             intTestCompile 'ca.nrc.cadc:web-test:1.+'
-            intTestCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
+            intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
         }
 
         systemProperty "driver", "${driver}"

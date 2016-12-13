@@ -71,6 +71,7 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.web.restlet.DownloadJNLPRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.ZIPFileRepresentation;
+import ca.nrc.cadc.dlm.DownloadDescriptor;
 import ca.nrc.cadc.dlm.ManifestReader;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
@@ -85,19 +86,24 @@ import org.restlet.resource.Post;
 import javax.security.auth.Subject;
 import java.io.*;
 import java.net.URI;
+import java.net.URL;
+import java.util.Iterator;
 
 
 public class BatchDownloadServerResource extends StorageItemServerResource
 {
     private static final String URI_PARAMETER_KEY = "uri";
     private static final String METHOD_PARAMETER_KEY = "method";
+    private static final String HTML_FILE_NAME = "/download_links.html";
+    private static final String REPLACE_TOKEN = "%%LIST%%";
+
 
     /**
      * Represent the various download methods.
      */
     enum DownloadMethod
     {
-        URL_LIST("URL List"), ZIP_FILE("ZIP File"),
+        URL_LIST("URL List"), HTML_LIST("HTML List"), ZIP_FILE("ZIP File"),
         DOWNLOAD_MANAGER("Java Webstart");
 
         final String requestPropertyValue;
@@ -201,6 +207,53 @@ public class BatchDownloadServerResource extends StorageItemServerResource
                 break;
             }
 
+            case HTML_LIST:
+            {
+                representation = new WriterRepresentation(
+                        MediaType.TEXT_HTML)
+                {
+                    @Override
+                    public void write(final Writer writer) throws IOException
+                    {
+                        final BufferedReader bufferedReader =
+                                loadTemplateHTML();
+                        String line;
+
+                        while ((line = bufferedReader.readLine()) != null)
+                        {
+                            String nextWriteLine;
+
+                            if (line.trim().startsWith(REPLACE_TOKEN))
+                            {
+                                nextWriteLine = line.replace(REPLACE_TOKEN, "");
+                                for (final Iterator<DownloadDescriptor> downloadDescriptorIterator =
+                                     manifestReader.read(
+                                        manifestStringWriter.toString());
+                                     downloadDescriptorIterator.hasNext();)
+                                {
+                                    final URL downloadURL =
+                                            downloadDescriptorIterator.next().url;
+                                    final String downloadURLString =
+                                            downloadURL.toString().trim();
+                                    nextWriteLine +=
+                                            "  <p><a href=\"" + downloadURLString
+                                            + "\">" + downloadURLString
+                                            + "</a></p>\n";
+                                }
+                            }
+                            else
+                            {
+                                nextWriteLine = line + "\n";
+                            }
+
+                            writer.write(nextWriteLine);
+                        }
+                    }
+                };
+
+                break;
+            }
+
             case URL_LIST:
             {
                 representation = new WriterRepresentation(
@@ -237,6 +290,14 @@ public class BatchDownloadServerResource extends StorageItemServerResource
         }
 
         return representation;
+    }
+
+    BufferedReader loadTemplateHTML()
+    {
+        final InputStream inputStream =
+                getClass().getResourceAsStream(HTML_FILE_NAME);
+        final Reader inputStreamReader = new InputStreamReader(inputStream);
+        return new BufferedReader(inputStreamReader);
     }
 
     private URI[] toURIArray(final String[] uriValues)
