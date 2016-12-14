@@ -15,10 +15,6 @@
 
   <title>User Storage</title>
 
-  <!-- Bootstrap core CSS -->
-  <link href="${contextPath}css/bootstrap.min.css" rel="stylesheet">
-  <link href="${contextPath}css/bootstrap-theme.min.css" rel="stylesheet">
-
   <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <#--<link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">-->
 
@@ -29,8 +25,16 @@
   <![endif]-->
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="${contextPath}css/datatables.min.css"/>
-  <link rel="stylesheet" href="${contextPath}css/storage.css"/>
+  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/canfar.css" media="screen"/>
+  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/github-dark.css" media="screen"/>
+  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/print.css" media="print"/>
+
+  <!-- Bootstrap core CSS -->
+  <link href="${contextPath}css/bootstrap.min.css" rel="stylesheet" media="screen">
+  <link href="${contextPath}css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
+
+  <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
+  <link rel="stylesheet" href="${contextPath}css/storage.css" media="screen"/>
 </head>
 
 <body>

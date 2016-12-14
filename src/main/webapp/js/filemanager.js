@@ -85,6 +85,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var lockedIcon =
     "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"" + contextPath
     + "unlock\" title=\"Unlock to modify.\">Unlock</a>";
+  var publicHTML = "<div class=\"input-group-addon\">\n"
+                   + "<input id=\"public_toggle\" type=\"checkbox\" checked=\"checked\" data-toggle=\"toggle\" data-size=\"small\" data-on=\"Public\" data-off=\"Group name\" />\n"
+                   + "</div>";
   var publicLink =
     "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
   var multiSelectSelector = ".multi-select-function-container";
@@ -133,7 +136,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       loading: true,
       processing: true,
       deferRender: true,
-      scrollY: "75vh",
+      scrollY: "74vh",
       lengthChange: false,
       scrollCollapse: true,
       scroller: true,
@@ -237,8 +240,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   $("div.beacon-progress").attr("role", "progressbar")
     .attr("aria-valuenow", _totalDataCount + "")
     .attr("aria-valuemin", _totalDataCount + "")
-    .attr("aria-valuemax", _totalDataCount + "")
-    .text(lg.loading_data);
+    .attr("aria-valuemax", _totalDataCount + "");
+    // .text(lg.loading_data);
 
   var toggleMultiFunctionButtons = function (_disabledFlag)
   {
