@@ -34,7 +34,7 @@
             <li><a href="http://www.canfar.net/beta-canfar.github.io/en/resources/services" class="resources.services menu-item-indent-1 ">Services </a></li>
             <li><a href="http://www.canfar.phys.uvic.ca/processing/vmod/" rel="external" class="resources.services.cloud_portal menu-item-indent-2 ">Cloud Portal </a></li>
             <li><a href="http://www.canfar.net/beta-canfar.github.io/en/resources/services/digital-object-identifiers" class="resources.services.digital_object_identifiers menu-item-indent-2 ">Digital Object Identifiers </a></li>
-            <li><a href="http://www.canfar.phys.uvic.ca/vosui" rel="external" class="resources.services.storage menu-item-indent-2 ">Storage </a></li>
+            <li><a href="http://apps.canfar.net/storage-beta/list/" rel="external" class="resources.services.storage menu-item-indent-2 ">Storage </a></li>
             <li><a href="http://www.canfar.phys.uvic.ca/processing/batchjobs" rel="external" class="resources.services.batch_processing menu-item-indent-2 ">Batch Processing </a></li>
             <li><a href="http://www.canfar.phys.uvic.ca/canfar/groups" rel="external" class="resources.services.group_management menu-item-indent-2 ">Group Management </a></li>
             <li><a href="http://www.canfar.net/beta-canfar.github.io/en/resources/hardware" class="resources.hardware menu-item-indent-1 ">Hardware </a></li>
