@@ -46,6 +46,10 @@
   <#assign homeURL = '${contextPath}list/${username}'>
 </#if>
 
+
+<#-- To use the default header, simply change this line to:
+  <#include "defaults/_top_nav.ftl">
+-->
 <#include "_top_nav.ftl">
 
 <div class="container-fluid">
