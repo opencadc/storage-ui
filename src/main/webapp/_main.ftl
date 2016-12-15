@@ -2,11 +2,6 @@
   <div role="navigation" class="col-sm-3 col-md-2 sidebar">
     <ul class="nav nav-sidebar">
       <li><a href="http://www.canfar.phys.uvic.ca/canfar/groups">&nbsp;Manage Groups</a></li>
-      <li><a href="#" title="Space allocations.">&nbsp;Manage Allocations</a></li>
-    </ul>
-
-    <ul class="nav nav-sidebar">
-      <li><a href="http://www.canfar.net/docs/vospace/">&nbsp;Web Service Documentation</a></li>
     </ul>
 
     <ul class="nav nav-sidebar">

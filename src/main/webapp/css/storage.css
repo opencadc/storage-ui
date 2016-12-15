@@ -2,12 +2,8 @@
  * Sidebar
  */
 
-/* Hide for mobile, show later */
-.sidebar {
-  display: none;
-}
-
-@media (min-width: 1002px) {
+/* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
+@media only screen and (min-width: 768px) {
   body {
     padding-top: 85px;
   }
@@ -22,50 +18,14 @@
     padding: 20px;
     overflow-x: hidden;
     overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
-    background-color: #f5f5f5;.prog
-    border-right: 1px solid #eee;
-  }
-}
-
-/* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
-@media only screen and (min-width: 480px) and (max-width: 1001px) {
-  body {
-    padding-top: 100px;
-  }
-
-  .sidebar {
-    position: fixed;
-    top: 165px;
-    bottom: 0;
-    left: 0;
-    z-index: 1000;
-    display: block;
-    padding: 20px;
-    overflow-x: hidden;
-    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
     background-color: #f5f5f5;
     border-right: 1px solid #eee;
   }
 }
 
-/* Mobile Portrait Size to Mobile Landscape Size (devices and browsers) */
-@media only screen and (max-width: 479px) {
+@media only screen and (max-width: 767px) {
   body {
-    padding-top: 100px;
-  }
-
-  .sidebar {
-    position: fixed;
-    top: 100px;
-    bottom: 0;
-    left: 0;
-    z-index: 1000;
-    display: block;
-    padding: 20px;
-    overflow-x: hidden;
-    overflow-y: auto; /* Scrollable contents if viewport is shorter than content. */
-    background-color: #f5f5f5;
-    border-right: 1px solid #eee;
+    padding-top: 85px;
   }
 }
 
