@@ -57,14 +57,9 @@
           </ul>
         </li>
 
+        <li class="dropdown">
         <#include "_login.ftl">
-
-        <#--<li class="dropdown">-->
-          <#--<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Login <span class="caret"></span></a>-->
-          <#--<ul class="dropdown-menu list-unstyled">-->
-            <#--<li><#include "_login.ftl"></li>-->
-          <#--</ul>-->
-        <#--</li>-->
+        </li>
       </ul>
     </div> <!-- end .navbar-collapse -->
   </div> <!-- end .conatiner -->
