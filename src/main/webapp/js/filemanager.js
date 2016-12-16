@@ -89,7 +89,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                    + "<input id=\"public_toggle\" type=\"checkbox\" checked=\"checked\" data-toggle=\"toggle\" data-size=\"small\" data-on=\"Public\" data-off=\"Group name\" />\n"
                    + "</div>";
   var publicLink =
-    "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
+    "<span title=\"Change group read access.\">{1}</span>";
   var multiSelectSelector = ".multi-select-function-container";
 
   var stringUtil = new org.opencadc.StringUtil();
@@ -136,13 +136,15 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       loading: true,
       processing: true,
       deferRender: true,
-      scrollY: "74vh",
+      scrollY: "72vh",
+      autoWidth: false,
       lengthChange: false,
       scrollCollapse: true,
       scroller: true,
       columnDefs: [
         {
           "targets": 0,
+          "width": "3%",
           "orderable": false,
           "className": 'select-checkbox',
           "searchable": false,
@@ -175,12 +177,16 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           }
         },
         {
+          // Name
           "targets": 1,
+          "width": "47%",
           "render": function (data, type, full)
           {
             if (full.length > 10)
             {
               var itemNameDisplay =
+                "<div class=\"truncate\">";
+              itemNameDisplay +=
                 '<span class="glyphicon ' + full[8] + '"></span>&nbsp;&nbsp;';
 
               if (full[12] === "true")
@@ -193,6 +199,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                 itemNameDisplay += data;
               }
 
+              itemNameDisplay += "</div>";
               return itemNameDisplay;
             }
             else
@@ -202,34 +209,50 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           }
         },
         {
+          // Size
           "targets": 2,
           "type": "file-size",
-          "searchable": false
+          "searchable": false,
+          "width": "8%"
         },
         {
-          "targets": 5,
+          // Last modified date
+          "targets": 3,
           "searchable": false,
+          "width": "18%"
+        },
+        {
+          // Read/Write group.
+          "targets": 4,
+          "searchable": false,
+          "width": "12%",
           "render": function (data, type, full)
           {
-            var renderedValue;
+            return "<span class=\"truncate\">" + data + "</span>";
+          }
+        },
+        {
+          // Read group.
+          "targets": 5,
+          "searchable": false,
+          "width": "12%",
+          "render": function (data, type, full)
+          {
+            var renderedValue = "<span class=\"truncate\">";
 
             if (full.length > 9)
             {
               // Column [6] is the public flag.
-              renderedValue = (full[6] === "true")
+              renderedValue += (full[6] === "true")
                 ? stringUtil.format(publicLink, [lg.public]) : data;
             }
             else
             {
-              renderedValue = data;
+              renderedValue += data;
             }
 
-            return renderedValue;
+            return renderedValue + "</span>";
           }
-        },
-        {
-          "targets": [3, 4],
-          "searchable": false
         }
       ],
       select: selectInput,

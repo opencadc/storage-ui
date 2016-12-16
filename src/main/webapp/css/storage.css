@@ -50,6 +50,25 @@
   cursor: auto;
 }
 
+.truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/*
+  Necessary to have DataTables adjust the width!
+  jenkinsd 2016.12.16
+*/
+table.dataTable {
+  margin: 0 auto;
+  width: 100%;
+  clear: both;
+  border-collapse: collapse;
+  table-layout: fixed;
+  word-wrap:break-word;
+}
+
 /*
  * End Sidebar
  */
