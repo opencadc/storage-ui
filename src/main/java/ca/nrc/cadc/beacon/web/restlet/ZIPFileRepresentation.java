@@ -105,8 +105,6 @@ public class ZIPFileRepresentation extends AbstractAuthOutputRepresentation
     {
         final ZipOutputStream zos =
                 new ZipOutputStream(outputStream);
-        zos.setMethod(ZipOutputStream.STORED);
-        zos.setLevel(Deflater.NO_COMPRESSION);
 
         while ( downloadDescriptorIterator.hasNext() )
         {
