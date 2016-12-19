@@ -4,7 +4,7 @@
     <ul class="dropdown-menu list-unstyled">
       <li class="disabled" disabled="disabled">
         <a title="Update profile." href="#" class="disabled" disabled="disabled">My profile</a></li>
-      <li>
+      <li class="disabled" disabled="disabled">
         <a title="Change password." href="#" class="disabled" disabled="disabled">Change password</a></li>
       <li>
         <a id="logout" title="Logout."><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
