@@ -1,7 +1,7 @@
 ---
 ---
 
-#### User Storage User Interface 0.8
+#### User Storage User Interface 0.9 for CANFAR
 
 By default, this uses the CANFAR (CADC) VOSpace located at:
 
@@ -9,6 +9,7 @@ By default, this uses the CANFAR (CADC) VOSpace located at:
 
 <a href="https://travis-ci.org/opencadc/vosui"><img src="https://travis-ci.org/opencadc/vosui.svg?branch=master" /></a>
 
+This implementation has a side navigation bar and header specifically for CANFAR.
 
 ### Building
 
