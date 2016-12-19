@@ -72,6 +72,7 @@ package ca.nrc.cadc.beacon.web.resources;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.web.AccessControlClient;
+import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Form;
 import org.restlet.representation.Representation;
@@ -119,10 +120,14 @@ public class AccessControlServerResource extends SecureServerResource
     @Delete
     public void logout() throws Exception
     {
-        getRequest().getCookies().stream()
-                .filter(cookie -> cookie.getName().equals("CADC_SSO"))
-                .forEach(cookie -> getResponse().getCookieSettings().add(
+        for (final Cookie cookie : getRequest().getCookies())
+        {
+            if ("CADC_SSO".equals(cookie.getName()))
+            {
+                getResponse().getCookieSettings().add(
                         new CookieSetting(0, "CADC_SSO", null, "/", null,
-                                          null, 0, false, false)));
+                                          null, 0, false, false));
+            }
+        }
     }
 }

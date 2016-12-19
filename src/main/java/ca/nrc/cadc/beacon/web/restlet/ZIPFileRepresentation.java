@@ -75,6 +75,7 @@ import org.restlet.data.MediaType;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
 import java.util.zip.Deflater;
@@ -113,33 +114,38 @@ public class ZIPFileRepresentation extends AbstractAuthOutputRepresentation
             if (downloadDescriptor.url != null)
             {
                 final InputStreamWrapper inputStreamWrapper =
-                        inputStream ->
+                        new InputStreamWrapper()
                         {
-                            int length;
-
-                            // create byte buffer
-                            byte[] buffer = new byte[1024];
-
-                            // Begin writing a new ZIP entry, positions
-                            // the stream to the start of the entry
-                            // data.
-                            final ZipEntry zipEntry =
-                                    new ZipEntry(
-                                            downloadDescriptor.destination);
-
-                            zos.putNextEntry(zipEntry);
-
-                            while ((length =
-                                    inputStream
-                                            .read(buffer)) > 0)
+                            @Override
+                            public void read(InputStream inputStream)
+                                    throws IOException
                             {
-                                zos.write(buffer, 0, length);
-                                zos.flush();
+                                int length;
+
+                                // create byte buffer
+                                byte[] buffer = new byte[1024];
+
+                                // Begin writing a new ZIP entry, positions
+                                // the stream to the start of the entry
+                                // data.
+                                final ZipEntry zipEntry =
+                                        new ZipEntry(
+                                                downloadDescriptor.destination);
+
+                                zos.putNextEntry(zipEntry);
+
+                                while ((length =
+                                        inputStream
+                                                .read(buffer)) > 0)
+                                {
+                                    zos.write(buffer, 0, length);
+                                    zos.flush();
+                                }
+
+                                zos.closeEntry();
+
+                                inputStream.close();
                             }
-
-                            zos.closeEntry();
-
-                            inputStream.close();
                         };
 
                 final HttpDownload httpDownload =

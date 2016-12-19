@@ -119,9 +119,15 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
     private List<Node> nextPage() throws Exception
     {
         final List<Node> nodes =
-                Subject.doAs(user, (PrivilegedExceptionAction<List<Node>>) () ->
-                        ((ContainerNode) voSpaceClient.getNode(
-                                folderURI.getPath(), getQuery())).getNodes());
+                Subject.doAs(user, new PrivilegedExceptionAction<List<Node>>()
+                {
+                    @Override
+                    public List<Node> run() throws Exception
+                    {
+                        return ((ContainerNode) voSpaceClient.getNode(
+                                folderURI.getPath(), getQuery())).getNodes();
+                    }
+                });
 
         return (current == null) ? nodes : (nodes.size() > 1)
                                            ? nodes.subList(1, nodes.size())

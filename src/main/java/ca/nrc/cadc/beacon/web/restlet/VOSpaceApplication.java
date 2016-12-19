@@ -190,10 +190,14 @@ public class VOSpaceApplication extends Application
                 final Subject subject =
                         subjectGenerator.generate(principalExtractor);
 
-                Subject.doAs(subject, (PrivilegedAction<Void>) () ->
+                Subject.doAs(subject, new PrivilegedAction<Void>()
                 {
-                    next.handle(request, response);
-                    return null;
+                    @Override
+                    public Void run()
+                    {
+                        next.handle(request, response);
+                        return null;
+                    }
                 });
             }
         };

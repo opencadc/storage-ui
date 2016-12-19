@@ -70,6 +70,7 @@ package ca.nrc.cadc.beacon.web.restlet;
 
 import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.net.HttpDownload;
+import ca.nrc.cadc.net.InputStreamWrapper;
 import org.restlet.data.MediaType;
 
 import javax.security.auth.Subject;
@@ -100,9 +101,10 @@ public abstract class JNLPRepresentation
 
     /**
      * Write out a line of the JNLP file.  Useful to filter downstream.
-     * @param line              The line to write.
-     * @param outputStream            The OutputStream to write to.
-     * @throws IOException      Any writing errors.
+     *
+     * @param line         The line to write.
+     * @param outputStream The OutputStream to write to.
+     * @throws IOException Any writing errors.
      */
     abstract void writeLine(final String line, final OutputStream outputStream)
             throws IOException;
@@ -117,7 +119,7 @@ public abstract class JNLPRepresentation
      * the Restlet connectors automatically.
      *
      * @param outputStream The output stream.
-     * @throws IOException  Any errors writing to the stream.
+     * @throws IOException Any errors writing to the stream.
      */
     @Override
     public void write(final OutputStream outputStream) throws IOException
@@ -136,33 +138,40 @@ public abstract class JNLPRepresentation
 
         final HttpDownload httpDownload =
                 new HttpDownload(new URL(codeBase + "/" + file),
-                                 inputStream ->
+                                 new InputStreamWrapper()
                                  {
-                                     final Reader reader =
-                                             new InputStreamReader(inputStream);
-                                     final BufferedReader bufferedReader =
-                                             new BufferedReader(reader);
-
-                                     String line;
-
-                                     while ((line = bufferedReader
-                                             .readLine()) != null)
+                                     @Override
+                                     public void read(InputStream inputStream)
+                                             throws IOException
                                      {
-                                         // Remove the href as it causes issues...
-                                         line = line
-                                                 .replace("href='" + file + "'", "");
-                                         line = line
-                                                 .replace("$$codebase",
-                                                          codeBase);
-                                         line = line
-                                                 .replace("$$ssocookiearguments",
-                                                          ssoCookieData);
+                                         final Reader reader =
+                                                 new InputStreamReader(inputStream);
+                                         final BufferedReader bufferedReader =
+                                                 new BufferedReader(reader);
 
-                                         writeLine(line, outputStream);
+                                         String line;
+
+                                         while ((line =
+                                                 bufferedReader.readLine())
+                                                != null)
+                                         {
+                                             // Remove the href as it causes issues...
+                                             line = line
+                                                     .replace("href='" + file + "'", "");
+                                             line = line
+                                                     .replace("$$codebase",
+                                                              codeBase);
+                                             line = line
+                                                     .replace("$$ssocookiearguments",
+                                                              ssoCookieData);
+
+                                             JNLPRepresentation.this
+                                                     .writeLine(line, outputStream);
+                                         }
+
+                                         bufferedReader.close();
+                                         outputStream.flush();
                                      }
-
-                                     bufferedReader.close();
-                                     outputStream.flush();
                                  });
 
         httpDownload.setFollowRedirects(true);
