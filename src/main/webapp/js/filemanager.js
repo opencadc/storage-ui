@@ -135,9 +135,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
            + "<'row'<'col-sm-12'tr>>",
       loading: true,
       processing: true,
+      responsive: false,
       deferRender: true,
-      scrollY: "72vh",
-      autoWidth: false,
+      scrollY: "65vh",
+      autoWidth: true,
       lengthChange: false,
       scrollCollapse: true,
       scroller: true,
@@ -510,7 +511,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 // Called on initial page load and on resize.
   var setDimensions = function ()
   {
-    var bheight = 53,
+    var bheight = 85,
       $uploader = $('#uploader');
 
     if ($.urlParam('CKEditorCleanUpFuncNum'))
