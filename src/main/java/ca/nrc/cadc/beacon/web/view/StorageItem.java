@@ -187,15 +187,14 @@ public abstract class StorageItem
 
     private String getURINames(final URI[] uris)
     {
-        final String[] names = new String[uris.length];
-        final int urisLength = uris.length;
+        final StringBuilder uriNames = new StringBuilder();
 
-        for (int i = 0; i < urisLength; i++)
+        for (final URI uri : uris)
         {
-            names[i] = uris[i].getFragment();
+            uriNames.append(uri.getFragment()).append(" ");
         }
 
-        return String.join(" ", names);
+        return uriNames.toString().trim();
     }
 
     public abstract String getItemIconCSS();
