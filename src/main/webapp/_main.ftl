@@ -51,8 +51,8 @@
                         <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
                       </form>
                     </li>
-                    <li>
-                      <a id="uploadfolder">
+                    <li disabled="disabled" class="disabled">
+                      <a id="uploadfolder" disabled="disabled" class="disabled">
                         <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload Folder</a></li>
                     <li class="disabled">
                       <a id="new_vospace_link" class="disabled"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>

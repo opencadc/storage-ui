@@ -77,6 +77,7 @@ import javax.security.auth.Subject;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Iterator;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -104,6 +105,8 @@ public class ZIPFileRepresentation extends AbstractAuthOutputRepresentation
     {
         final ZipOutputStream zos =
                 new ZipOutputStream(outputStream);
+        zos.setMethod(ZipOutputStream.STORED);
+        zos.setLevel(Deflater.NO_COMPRESSION);
 
         while ( downloadDescriptorIterator.hasNext() )
         {
@@ -122,14 +125,18 @@ public class ZIPFileRepresentation extends AbstractAuthOutputRepresentation
                             // Begin writing a new ZIP entry, positions
                             // the stream to the start of the entry
                             // data.
-                            zos.putNextEntry(new ZipEntry(
-                                    downloadDescriptor.destination));
+                            final ZipEntry zipEntry =
+                                    new ZipEntry(
+                                            downloadDescriptor.destination);
+
+                            zos.putNextEntry(zipEntry);
 
                             while ((length =
                                     inputStream
                                             .read(buffer)) > 0)
                             {
                                 zos.write(buffer, 0, length);
+                                zos.flush();
                             }
 
                             zos.closeEntry();

@@ -185,7 +185,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             if (full.length > 10)
             {
               var itemNameDisplay =
-                "<div class=\"truncate\">";
+                "<div class=\"truncate\" title=\"" + data + "\">";
               itemNameDisplay +=
                 '<span class="glyphicon ' + full[8] + '"></span>&nbsp;&nbsp;';
 
@@ -228,7 +228,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           "width": "12%",
           "render": function (data, type, full)
           {
-            return "<span class=\"truncate\">" + data + "</span>";
+            return "<div class=\"truncate\" title=\"" + data + "\">" + data + "</div>";
           }
         },
         {
@@ -238,7 +238,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           "width": "12%",
           "render": function (data, type, full)
           {
-            var renderedValue = "<span class=\"truncate\">";
+            var renderedValue = "<div class=\"truncate\" title=\"" + data + "\">";
 
             if (full.length > 9)
             {
