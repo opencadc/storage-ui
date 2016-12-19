@@ -38,6 +38,7 @@ dependencies {
     testCompile 'org.easymock:easymock:3.+'
 }
 
+sourceCompatibility = '1.7'
 version = '100'
 
 def docker_image_name = 'opencadc/storage'
