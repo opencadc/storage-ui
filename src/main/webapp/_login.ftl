@@ -2,10 +2,10 @@
     <a title="User actions." class="dropdown-toggle" role="button" aria-haspopup="true" aria-expanded="false" data-toggle="dropdown">
       ${username} <span class="caret"></span></a>
     <ul class="dropdown-menu list-unstyled">
+      <li class="disabled" disabled="disabled">
+        <a title="Update profile." href="#" class="disabled" disabled="disabled">My profile</a></li>
       <li>
-        <a title="Update profile." href="#">My profile</a></li>
-      <li>
-        <a title="Change password." href="#">Change password</a></li>
+        <a title="Change password." href="#" class="disabled" disabled="disabled">Change password</a></li>
       <li>
         <a id="logout" title="Logout."><span class="glyphicon glyphicon-log-out"></span> Logout</a></li>
     </ul>
