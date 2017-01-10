@@ -1,6 +1,6 @@
 <div role="navigation" class="col-sm-3 col-md-2 sidebar">
   <ul class="nav nav-sidebar">
-    <li><a href="http://www.canfar.phys.uvic.ca/canfar/groups">&nbsp;Manage Groups</a></li>
+    <li><a href="http://apps.canfar.net/canfar/groups">&nbsp;Manage Groups</a></li>
   </ul>
 
   <ul class="nav nav-sidebar">

@@ -565,7 +565,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $loginFailContainer.text("");
   };
 
-  $loginForm.find("input.form-control").off().change(function (e)
+  $loginForm.find("input.form-control").off().change(function ()
                                                      {
                                                        resetLoginFormErrors();
                                                      });
