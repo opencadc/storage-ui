@@ -27,16 +27,15 @@
         <li class="dropdown">
           <a href="${baseURL}/en/resources" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Resources <span class="caret"></span></a>
           <ul class="dropdown-menu list-unstyled">
+            <li><a href="${baseURL}/en/resources/user-guide" class="resources.user_guide menu-item-indent-1 ">User Guide </a></li>
             <li><a href="${baseURL}/en/resources/expertise" class="resources.expertise menu-item-indent-1 ">Expertise </a></li>
             <li><a href="${baseURL}/en/resources/expertise/cadc" class="resources.expertise.cadc menu-item-indent-2 ">@CADC </a></li>
             <li><a href="${baseURL}/en/resources/expertise/uvic" class="resources.expertise.uvic menu-item-indent-2 ">@UVic </a></li>
-            <li><a href="http://www.canfar.net/docs/home/" rel="external" class="resources.documentation menu-item-indent-1 ">Documentation </a></li>
-            <li><a href="http://www.canfar.net/docs/tutorial/" rel="external" class="resources.documentation.tutorial menu-item-indent-2 ">Tutorial </a></li>
-            <li><a href="http://www.canfar.net/docs/api/" rel="external" class="resources.documentation.api menu-item-indent-2 ">API </a></li>
             <li><a href="${baseURL}/en/resources/services" class="resources.services menu-item-indent-1 ">Services </a></li>
             <li><a href="http://apps.canfar.net/processing/vmod/" rel="external" class="resources.services.cloud_portal menu-item-indent-2 ">Cloud Portal </a></li>
             <li><a href="${baseURL}/en/resources/services/digital-object-identifiers" class="resources.services.digital_object_identifiers menu-item-indent-2 ">Digital Object Identifiers </a></li>
-            <li><a href="http://apps.canfar.net/storage-beta/list/" rel="external" class="resources.services.storage menu-item-indent-2 ">Storage </a></li>
+            <li><a href="http://apps.canfar.net/vosui/" rel="external" class="resources.services.storage menu-item-indent-2 ">Storage </a></li>
+            <li><a href="http://apps.canfar.net/storage-beta/list/" rel="external" class="resources.services.storage_beta menu-item-indent-2 ">Storage (Beta) </a></li>
             <li><a href="http://apps.canfar.net/processing/batchjobs" rel="external" class="resources.services.batch_processing menu-item-indent-2 ">Batch Processing </a></li>
             <li><a href="http://apps.canfar.net/canfar/groups" rel="external" class="resources.services.group_management menu-item-indent-2 ">Group Management </a></li>
             <li><a href="${baseURL}/en/resources/hardware" class="resources.hardware menu-item-indent-1 ">Hardware </a></li>
