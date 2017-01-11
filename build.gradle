@@ -30,7 +30,6 @@ dependencies {
     }
 
     compile 'org.opencadc:cadc-access-control:1.+'
-    compile 'org.opencadc:cadc-access-control-identity:1.+'
     compile 'org.apache.commons:commons-configuration2:2.+'
     compile 'javax.websocket:javax.websocket-api:1.+'
 
@@ -39,7 +38,7 @@ dependencies {
 }
 
 sourceCompatibility = '1.7'
-version = '1001'
+version = '1002'
 
 def docker_image_name = 'opencadc/storage'
 

@@ -68,6 +68,7 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.CookiePrincipal;
 import ca.nrc.cadc.auth.HttpPrincipal;
 import ca.nrc.cadc.auth.SSOCookieManager;
@@ -76,6 +77,7 @@ import ca.nrc.cadc.beacon.StorageItemWriter;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.vos.*;
+import ca.nrc.cadc.web.AccessControlClient;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
@@ -92,6 +94,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.security.Principal;
 import java.util.*;
 
 
@@ -100,6 +103,7 @@ public class MainPageServerResource extends StorageItemServerResource
     private final Configuration freemarkerConfiguration =
             new Configuration(Configuration.VERSION_2_3_25);
 
+    public AccessControlClient accessControlClient;
 
     /**
      * Set-up method that can be overridden in order to initialize the state of
@@ -226,7 +230,9 @@ public class MainPageServerResource extends StorageItemServerResource
             throws Exception
     {
         final Map<String, Object> dataModel = new HashMap<>();
-
+        accessControlClient =
+                (AccessControlClient) getContext().getAttributes().get(
+                        VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY);
 
         dataModel.put("initialRows", initialRows);
         dataModel.put("folder", folderItem);
@@ -235,16 +241,12 @@ public class MainPageServerResource extends StorageItemServerResource
             dataModel.put("startURI", startNextPageURI.toString());
         }
 
-        final Set<CookiePrincipal> cookiePrincipals =
-                currentUser.getPrincipals(CookiePrincipal.class);
+        // HttpPrincipal username will be pulled from current user
+        Subject s = getCurrentUser();
+        String httpUsername = accessControlClient.getCurrentHttpPrincipalUsername(s);
 
-        if (!cookiePrincipals.isEmpty())
-        {
-            final SSOCookieManager cookieManager = new SSOCookieManager();
-            final HttpPrincipal httpPrincipal =
-                    cookieManager.parse(cookiePrincipals.toArray(
-                    new CookiePrincipal[cookiePrincipals.size()])[0].getName());
-            dataModel.put("username", httpPrincipal.getName());
+        if (httpUsername != null) {
+            dataModel.put("username", httpUsername);
         }
 
         return new TemplateRepresentation("index.ftl", freemarkerConfiguration, dataModel,

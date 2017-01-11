@@ -68,11 +68,13 @@
 
 package ca.nrc.cadc.beacon.web.restlet;
 
+import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.PrincipalExtractor;
 import ca.nrc.cadc.beacon.web.CookiePrincipalExtractorImpl;
 import ca.nrc.cadc.beacon.web.SubjectGenerator;
 import ca.nrc.cadc.beacon.web.resources.*;
 import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.web.RestletPrincipalExtractor;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import ca.nrc.cadc.web.AccessControlClient;
 import org.apache.commons.configuration2.Configuration;
@@ -164,6 +166,8 @@ public class VOSpaceApplication extends Application
                 (ServletContext) context.getAttributes().get(
                         SERVLET_CONTEXT_ATTRIBUTE_KEY);
 
+
+
         final String contextPath = (servletContext == null)
                                    ? DEFAULT_CONTEXT_PATH : "/";
 
@@ -171,35 +175,6 @@ public class VOSpaceApplication extends Application
         {
             private final SubjectGenerator subjectGenerator =
                     createSubjectGenerator();
-
-            /**
-             * Effectively handles the call using the selected next {@link Restlet},
-             * typically the selected {@link Route}. By default, it just invokes the
-             * next Restlet.
-             *
-             * @param next     The next Restlet to invoke.
-             * @param request  The request.
-             * @param response The response.
-             */
-            @Override
-            protected void doHandle(final Restlet next, final Request request,
-                                    final Response response)
-            {
-                final PrincipalExtractor principalExtractor =
-                        new CookiePrincipalExtractorImpl(request);
-                final Subject subject =
-                        subjectGenerator.generate(principalExtractor);
-
-                Subject.doAs(subject, new PrivilegedAction<Void>()
-                {
-                    @Override
-                    public Void run()
-                    {
-                        next.handle(request, response);
-                        return null;
-                    }
-                });
-            }
         };
 
         router.attach(contextPath + "ac/authenticate",
