@@ -70,18 +70,23 @@ package ca.nrc.cadc.web;
 
 
 import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.auth.AuthenticationUtil;
+import ca.nrc.cadc.auth.HttpPrincipal;
 import ca.nrc.cadc.net.HttpPost;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import org.restlet.data.Status;
 
+import javax.security.auth.Subject;
 import java.io.ByteArrayOutputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.security.AccessControlException;
+import java.security.Principal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import static org.restlet.data.Status.SUCCESS_OK;
 
@@ -167,4 +172,38 @@ public class AccessControlClient
 
         return Status.valueOf(post.getResponseCode());
     }
+
+    /**
+     * Return username from HttpPrincipal for currently logged in user.
+     * If user is not logged in, return null.
+     *
+     * @return Principal
+     */
+    public String getCurrentHttpPrincipalUsername(Subject subject)
+    {
+        // TODO: consider what happens if a different site didn't have an HTTP identity
+        // consider a fall-through as to what username to return if there isn't
+        // an HTTP principal - could return the 'next' one but not the CADC/numeric one
+        // may be an order of priority.
+
+        AuthMethod authMethods = AuthenticationUtil.getAuthMethod(subject);
+
+        if (authMethods != null) {
+
+            Set<Principal> curPrincipals = subject.getPrincipals();
+            if (curPrincipals != null && !curPrincipals.isEmpty())
+            {
+                for (Principal p: curPrincipals) {
+                    if (p instanceof HttpPrincipal)
+                    {
+                        return p.getName();
+                    }
+                }
+            }
+        }
+
+        // User isn't logged in so there's no username to return
+        return null;
+    }
+
 }

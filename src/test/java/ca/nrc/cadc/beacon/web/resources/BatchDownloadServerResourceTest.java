@@ -72,6 +72,7 @@ package ca.nrc.cadc.beacon.web.resources;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 
+import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 
 import java.io.BufferedReader;
@@ -121,6 +122,11 @@ public class BatchDownloadServerResourceTest
             void getManifest(String path, Writer writer) throws IOException
             {
                 writer.write(manifest);
+            }
+
+            @Override
+            Subject getCurrentUser() {
+                return new Subject();
             }
         };
 
@@ -200,6 +206,11 @@ public class BatchDownloadServerResourceTest
             BufferedReader loadTemplateHTML()
             {
                 return new BufferedReader(new StringReader(templateHTML));
+            }
+
+            @Override
+            Subject getCurrentUser() {
+                return new Subject();
             }
         };
 

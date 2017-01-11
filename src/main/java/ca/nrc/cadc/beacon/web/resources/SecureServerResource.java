@@ -71,6 +71,8 @@ package ca.nrc.cadc.beacon.web.resources;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
+import ca.nrc.cadc.web.RestletPrincipalExtractor;
+import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.MediaType;
@@ -91,7 +93,8 @@ class SecureServerResource extends ServerResource
 {
     Subject getCurrentUser()
     {
-        return AuthenticationUtil.getCurrentSubject();
+        Request request = getRequest();
+        return AuthenticationUtil.getSubject(new RestletPrincipalExtractor(request));
     }
 
     SSOCookieCredential getCurrentSSOCookie()
