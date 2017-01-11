@@ -1,4 +1,4 @@
-<#assign baseURL = 'http://www.canfar.net/beta-canfar.github.io'>
+<#assign baseURL = 'http://www.canfar.net'>
 
 <nav id="top_nav" class="navbar navbar-default navbar-fixed-top">
   <div class="container">
