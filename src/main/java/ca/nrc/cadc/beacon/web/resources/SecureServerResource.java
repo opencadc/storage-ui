@@ -72,29 +72,23 @@ import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.web.RestletPrincipalExtractor;
-import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.Cookie;
-import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
-import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.ServerResource;
 
 import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
-import java.io.IOException;
-import java.io.Writer;
-import java.net.URI;
 import java.util.Map;
 import java.util.Set;
+
 
 class SecureServerResource extends ServerResource
 {
     Subject getCurrentUser()
     {
-        Request request = getRequest();
-        return AuthenticationUtil.getSubject(new RestletPrincipalExtractor(request));
+        return AuthenticationUtil.getSubject(
+                new RestletPrincipalExtractor(getRequest()));
     }
 
     SSOCookieCredential getCurrentSSOCookie()

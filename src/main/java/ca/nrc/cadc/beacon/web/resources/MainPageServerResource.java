@@ -68,15 +68,14 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.CookiePrincipal;
-import ca.nrc.cadc.auth.HttpPrincipal;
-import ca.nrc.cadc.auth.SSOCookieManager;
 import ca.nrc.cadc.beacon.StorageItemCSVWriter;
 import ca.nrc.cadc.beacon.StorageItemWriter;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
+import ca.nrc.cadc.reg.client.RegistryClient;
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
 import ca.nrc.cadc.web.AccessControlClient;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.WebappTemplateLoader;
@@ -88,13 +87,11 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
-import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.security.Principal;
 import java.util.*;
 
 
@@ -102,8 +99,30 @@ public class MainPageServerResource extends StorageItemServerResource
 {
     private final Configuration freemarkerConfiguration =
             new Configuration(Configuration.VERSION_2_3_25);
+    private AccessControlClient accessControlClient;
 
-    public AccessControlClient accessControlClient;
+
+    /**
+     * Empty constructor needed for Restlet to manage it.  Needs to be public.
+     */
+    public MainPageServerResource()
+    {
+        super();
+    }
+
+    /**
+     * Complete constructor for testing.
+     *
+     * @param registryClient The Registry client to use.
+     * @param voSpaceClient  The VOSpace Client to use.
+     */
+    MainPageServerResource(final RegistryClient registryClient,
+                           final VOSpaceClient voSpaceClient,
+                           final AccessControlClient accessControlClient)
+    {
+        super(registryClient, voSpaceClient);
+        this.accessControlClient = accessControlClient;
+    }
 
     /**
      * Set-up method that can be overridden in order to initialize the state of
@@ -142,20 +161,21 @@ public class MainPageServerResource extends StorageItemServerResource
         {
             throw new ResourceException(e);
         }
+
+        this.accessControlClient = (AccessControlClient)
+                getContext().getAttributes().get(
+                        VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY);
     }
 
     @Get
     public Representation represent() throws Exception
     {
-        final Subject currentUser = getCurrentUser();
         final ContainerNode containerNode = getCurrentNode();
-
-        return representContainerNode(containerNode, currentUser);
+        return representContainerNode(containerNode);
     }
 
     private Representation representContainerNode(
-            final ContainerNode containerNode, final Subject currentUser)
-            throws Exception
+            final ContainerNode containerNode) throws Exception
     {
         final List<Node> childNodes = containerNode.getNodes();
         final Iterator<String> initialRows = new Iterator<String>()
@@ -219,20 +239,15 @@ public class MainPageServerResource extends StorageItemServerResource
         final FolderItem folderItem =
                 storageItemFactory.getFolderItemView(containerNode);
 
-        return representFolderItem(folderItem, initialRows, currentUser,
-                                   startNextPageURI);
+        return representFolderItem(folderItem, initialRows, startNextPageURI);
     }
 
     Representation representFolderItem(final FolderItem folderItem,
                                        final Iterator<String> initialRows,
-                                       final Subject currentUser,
                                        final VOSURI startNextPageURI)
             throws Exception
     {
         final Map<String, Object> dataModel = new HashMap<>();
-        accessControlClient =
-                (AccessControlClient) getContext().getAttributes().get(
-                        VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY);
 
         dataModel.put("initialRows", initialRows);
         dataModel.put("folder", folderItem);
@@ -242,10 +257,12 @@ public class MainPageServerResource extends StorageItemServerResource
         }
 
         // HttpPrincipal username will be pulled from current user
-        Subject s = getCurrentUser();
-        String httpUsername = accessControlClient.getCurrentHttpPrincipalUsername(s);
+        final String httpUsername =
+                accessControlClient.getCurrentHttpPrincipalUsername(
+                        getCurrentUser());
 
-        if (httpUsername != null) {
+        if (StringUtil.hasText(httpUsername))
+        {
             dataModel.put("username", httpUsername);
         }
 

@@ -105,7 +105,7 @@ public class StorageItemServerResource extends SecureServerResource
 
     StorageItemFactory storageItemFactory;
     VOSpaceClient voSpaceClient;
-    RegistryClient registryClient;
+    private RegistryClient registryClient;
 
 
     /**

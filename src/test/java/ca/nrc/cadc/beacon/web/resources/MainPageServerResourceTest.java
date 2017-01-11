@@ -68,8 +68,6 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.auth.HttpPrincipal;
-import ca.nrc.cadc.beacon.AbstractUnitTest;
 
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
@@ -85,7 +83,6 @@ import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 
 import java.net.URI;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -115,29 +112,35 @@ public class MainPageServerResourceTest
 
         AccessControlClient mockAccessControlClient = createMock(AccessControlClient.class);
 
-        expect(mockAccessControlClient.getCurrentHttpPrincipalUsername(subject)).andReturn("CADCtest");
+        expect(mockAccessControlClient.getCurrentHttpPrincipalUsername(subject))
+                .andReturn("CADCtest");
         replay(mockAccessControlClient);
 
         // Taken from VOSpaceApplication - they are private there, so
         // just pilfering the values here for the test
-        final String DEFAULT_GMS_SERVICE_ID =
-                "ivo://cadc.nrc.ca/gms";
-        final String GMS_SERVICE_PROPERTY_KEY =
-                "org.opencadc.gms.service_id";
+        final String DEFAULT_GMS_SERVICE_ID = "ivo://cadc.nrc.ca/gms";
+        final String GMS_SERVICE_PROPERTY_KEY = "org.opencadc.gms.service_id";
 
         Configuration configuration = new SystemConfiguration();
-        ConcurrentHashMap<String,Object> mockContextAttributes = new ConcurrentHashMap<String,Object>();
+        ConcurrentHashMap<String,Object> mockContextAttributes =
+                new ConcurrentHashMap<>();
         AccessControlClient acc = new AccessControlClient(URI.create(
                 configuration.getString(DEFAULT_GMS_SERVICE_ID,
                         GMS_SERVICE_PROPERTY_KEY)));
-        mockContextAttributes.put(VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY, acc);
+        mockContextAttributes.put(VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY,
+                                  acc);
+
+        expect(mockServletContext.getContextPath()).andReturn("/mycontext")
+                .once();
 
         expect(mockContext.getAttributes()).andReturn(mockContextAttributes).anyTimes();
 
         replay(mockServletContext, mockRegistryClient, mockContext);
 
 
-        testSubject = new MainPageServerResource()
+        testSubject = new MainPageServerResource(mockRegistryClient,
+                                                 mockVOSpaceClient,
+                                                 mockAccessControlClient)
         {
             @Override
             Subject getCurrentUser()
@@ -158,14 +161,13 @@ public class MainPageServerResourceTest
 
 
         };
-        testSubject.accessControlClient = mockAccessControlClient;
 
         replay(mockFolderItem);
 
         final Representation representation =
                 testSubject.representFolderItem(mockFolderItem,
                                                 initialRowData.iterator(),
-                                                subject, startURI);
+                                                startURI);
 
         final TemplateRepresentation templateRepresentation =
                 (TemplateRepresentation) representation;

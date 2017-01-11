@@ -68,13 +68,9 @@
 
 package ca.nrc.cadc.beacon.web.restlet;
 
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.PrincipalExtractor;
-import ca.nrc.cadc.beacon.web.CookiePrincipalExtractorImpl;
-import ca.nrc.cadc.beacon.web.SubjectGenerator;
+
 import ca.nrc.cadc.beacon.web.resources.*;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.web.RestletPrincipalExtractor;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import ca.nrc.cadc.web.AccessControlClient;
 import org.apache.commons.configuration2.Configuration;
@@ -82,15 +78,12 @@ import org.apache.commons.configuration2.SystemConfiguration;
 import org.restlet.*;
 import org.restlet.data.Protocol;
 import org.restlet.resource.Directory;
-import org.restlet.routing.Route;
 import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
 
-import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.net.URI;
-import java.security.PrivilegedAction;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -171,11 +164,7 @@ public class VOSpaceApplication extends Application
         final String contextPath = (servletContext == null)
                                    ? DEFAULT_CONTEXT_PATH : "/";
 
-        final Router router = new Router(context)
-        {
-            private final SubjectGenerator subjectGenerator =
-                    createSubjectGenerator();
-        };
+        final Router router = new Router(context);
 
         router.attach(contextPath + "ac/authenticate",
                       AccessControlServerResource.class);
@@ -223,16 +212,6 @@ public class VOSpaceApplication extends Application
 
         router.setContext(getContext());
         return router;
-    }
-
-    /**
-     * Override at will.
-     *
-     * @return SubjectGenerator implementation.
-     */
-    private SubjectGenerator createSubjectGenerator()
-    {
-        return new SubjectGenerator();
     }
 
     private VOSpaceClient createVOSpaceClient()

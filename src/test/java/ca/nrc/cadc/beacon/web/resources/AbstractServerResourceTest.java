@@ -75,10 +75,10 @@ import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 
-import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 
 import static org.easymock.EasyMock.createMock;
+
 
 abstract class AbstractServerResourceTest<T extends SecureServerResource>
         extends AbstractUnitTest<T>
