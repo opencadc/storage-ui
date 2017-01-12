@@ -93,8 +93,9 @@ class SecureServerResource extends ServerResource
 {
     Subject getCurrentUser()
     {
-        Request request = getRequest();
-        return AuthenticationUtil.getSubject(new RestletPrincipalExtractor(request));
+        final Request request = getRequest();
+        return AuthenticationUtil.getSubject(
+                new RestletPrincipalExtractor(request));
     }
 
     SSOCookieCredential getCurrentSSOCookie()
