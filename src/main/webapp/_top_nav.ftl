@@ -7,7 +7,7 @@
       <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#canfar_navbar_collapse" aria-expanded="false">
         <span class="sr-only">Toggle navigation</span>
       </button>
-      <a class="navbar-brand" href="${baseURL}/en"><img src="${baseURL}/css/images/logo.png" /></a>
+      <a class="navbar-brand" href="${baseURL}"><img src="${baseURL}/css/images/logo.png" /></a>
     </div>
 
     <div id="canfar_navbar_collapse" class="collapse navbar-collapse">
