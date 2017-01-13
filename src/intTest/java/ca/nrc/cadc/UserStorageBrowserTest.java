@@ -54,98 +54,111 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 
 		String testFolderName = "CADCtest";
 
-    	// First landing:
-    	// expected number of entries?
-    	// check basic elements are on page
-    	// check login/not logged in state
+    	// TODO: First landing -  check:
+    	// - basic elements are on page
+		// - not logged in
+    	// - Name is primary sort
+
 
     	// Scenario 1:
-    	// enter search value
+    	// enter search(filter) value
     	// check that rows of table are shorted correctly
     	// verify entry is correct
 
     	// Should short to one entry, verify the name and quit.
-
     	userStoragePage.enterSearch(testFolderName);
-    	
-    	// find that entry and click on Name/link
-    	int rowCount = userStoragePage.getTableRowCount();
 
-    	System.out.println("Rowcount: " + rowCount);
+		// Verify filter worked correctly
+    	int rowCount = userStoragePage.getTableRowCount();
+//    	System.out.println("Rowcount: " + rowCount);
     	verifyTrue(rowCount < 3);
-    	String folderName = userStoragePage.getFolderName(rowCount-1);
-    	
     	verifyTrue(userStoragePage.verifyFolderName(rowCount-1, testFolderName));
 
 		// Next tests to run after this (as part of page clickthrough test)
 		// click on the row entry
 
 		// click through to CADCtest folder
-		userStoragePage.selectFolder(testFolderName);
-		// check h2 with property 'name' matches folder name
-		// (although there's alot of whitespace in there!
-		verifyTrue(userStoragePage.getHeaderText().contains(testFolderName));
-		verifyTrue(userStoragePage.inSubFolderMode());
+		userStoragePage.clickFolder(testFolderName);
+		// Verify sub folder page state
+		verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
-		// look for Up and Root buttons?
-		// Will only be present in sub folders?
-
-
-
-		// Check access to page
-		// Check status of other buttons (depending on whether you have write access to the page or not
-		// determine write access via the 'more_details' button (if present)
+		// Check permissions on page
 		// TODO: best way to determine write access is???
-		verifyTrue(userStoragePage.inReadAccessMode());
-    	
-    	// Scenario 2:
-		// login test - credentials should be in the gradle build file.
+		verifyTrue(userStoragePage.isReadAccess());
+
+
+
+    	// Scenario 2: Login test - credentials should be in the gradle build file.
 		userStoragePage.doLogin("CADCtest","sywymUL4");
-		verifyTrue(userStoragePage.inLoggedInMode());
+		verifyTrue(userStoragePage.isLoggedIn());
 		System.out.println("logged in");
 
-		// search should be removed after login (page is reset to default, although
-		// you would remain in the same subdirectory)
 		rowCount = userStoragePage.getTableRowCount();
 
 		System.out.println("Rowcount: " + rowCount);
 		verifyTrue(rowCount > 2);
 
 		// Check access to page
-		verifyTrue(userStoragePage.inReadAccessMode());
+		verifyTrue(userStoragePage.isReadAccess());
+
 
 
 		// Scenario 3: Test navigation buttons
-
-		// Navigate back up to root
-		userStoragePage.navToRoot();
-		// Verify header
-		verifyTrue(userStoragePage.getHeaderText().contains("ROOT"));
-
-		// click through to CADCtest folder again
-		userStoragePage.selectFolder(testFolderName);
-		// check h2 with property 'name' matches folder name
-		// (although there's alot of whitespace in there!
-		verifyTrue(userStoragePage.getHeaderText().contains(testFolderName));
-
-		// Navigate up one level (should be back to root)
-		userStoragePage.navUpLevel();
-		// Verify header
-		verifyTrue(userStoragePage.getHeaderText().contains("ROOT"));
-
 		// TODO: better test here is to have two levels to navigate through,
-		// make sure root goes to root, up level goes up one only.
+
+		// Test state is currently in a subfolder: Start at Root
+		userStoragePage.navToRoot();
+		// Verify in Root Folder
+		verifyTrue(userStoragePage.isRootFolder());
+
+		int rowNum = 1;
+		// click through to first folder
+		String subFolder1 = userStoragePage.getFolderName(rowNum);
+		userStoragePage.clickFolderForRow(rowNum);
+		verifyTrue(userStoragePage.isSubFolder(subFolder1));
+
+		// Go down one more level
+		String subFolder2 = userStoragePage.getFolderName(rowNum);
+		userStoragePage.clickFolderForRow(rowNum);
+		verifyTrue(userStoragePage.isSubFolder(subFolder2));
+
+		// Navigate up one level (should be up one level)
+		userStoragePage.navUpLevel();
+		verifyTrue(userStoragePage.isSubFolder(subFolder1));
+
+		// Go back down one folder
+		userStoragePage.clickFolderForRow(rowNum);
+		verifyTrue(userStoragePage.isSubFolder(subFolder2));
+
+		// Go up to root
+		userStoragePage.navToRoot();
+		// Verify in Root Folder
+		verifyTrue(userStoragePage.isRootFolder());
+
+
+
+		// Scenario 4: test selecting a file
+		userStoragePage.clickFolderForRow(rowNum);
+		userStoragePage.clickCheckboxForRow(rowNum);
+		verifyTrue(userStoragePage.isFileSelectedMode(rowNum));
+
+		userStoragePage.clickCheckboxForRow(rowNum);
+		verifyFalse(userStoragePage.isFileSelectedMode(rowNum));
 
 
 
 		// Scenario 4: logout
 		userStoragePage.doLogout();
-		verifyFalse(userStoragePage.inLoggedInMode());
+		verifyFalse(userStoragePage.isLoggedIn());
 
 
     	
-    	// Scenario X:
-    	// downloading a file?
+    	// Scenario TODO:
+    	// downloading a file
+		// create new folder/resource
+		// delete folder/resource
+		// check permissions on folder/resource
+		// toggle Public attribute of folder/resource
 
    
     	System.out.println("UserStorageBrowserTest completed");

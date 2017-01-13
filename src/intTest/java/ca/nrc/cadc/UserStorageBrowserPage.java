@@ -85,6 +85,7 @@ import java.util.List;
 
 public class UserStorageBrowserPage extends AbstractTestWebPage
 {
+    private static final String ROOT_FOLDER_NAME = "ROOT";
     // Define in here what elements are mode indicators
 
     // Elements always on the page
@@ -105,6 +106,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     @FindBy(xpath="//h2[@property='name']")
     private WebElement folderNameHeader;
 
+    @FindBy(xpath="//*[@id=\"navbar-functions\"]/ul")
+    private WebElement navbarButtonList;
+
+    @FindBy(xpath="//*[@id=\"beacon\"]/tbody/tr[1]")
+    private WebElement firstTableRow;
 
     // Elements present once user has navigated away from ROOT folder
     // Toobar buttons
@@ -159,9 +165,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         wait.until(ExpectedConditions.textToBe(By.className("beacon-progress"), ""));
 
         PageFactory.initElements(driver, this);
-
-        // Don't think this is the best way to do it but it'll work for now.
-//        loginForm = new LoginFormPageObject(driver);
     }
 
 
@@ -181,14 +184,29 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         click(logoutButton);
     }
 
-    public void selectFolder(String folderName)
+    public void clickFolder(String folderName)
     {
         //*[@id="beacon"]/tbody/tr[17]/td[2]/a
-        WebElement folder = beaconTable.findElement(By.xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName  + "')]]"));
+        WebElement folder = beaconTable.findElement(
+                By.xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName  + "')]]"));
         System.out.println("Folder to be clicked: " + folder.getText());
         folder.click();
     }
 
+    public void clickFolderForRow(int rowNum) throws Exception
+    {
+        WebElement firstCheckbox = beaconTable.findElement(
+                By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a"));
+        click(firstCheckbox);
+    }
+
+    public void clickCheckboxForRow(int rowNum) throws Exception
+    {
+        //*[@id="beacon"]/tbody/tr[9]/td[1]
+        WebElement firstCheckbox = beaconTable.findElement(
+                By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[1]"));
+        click(firstCheckbox);
+    }
 
     public void navToRoot() throws Exception {
         click(rootButton);
@@ -238,12 +256,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return folderNameHeader.getText();
     }
 
-//    boolean isLoggedIn(String username) throws Exception
-//    {
-//        return loginForm.isLoggedIn();
-//    }
-
-    boolean inLoggedInMode() {
+    boolean isLoggedIn() {
         try {
             logoutButton.isDisplayed();
             return true;
@@ -252,35 +265,94 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
     }
 
-    boolean inReadAccessMode() {
+    private boolean isDisabled(WebElement webEl) {
+        return webEl.getAttribute("class").contains("disabled");
+    }
+
+    public boolean isReadAccess() {
         // id = download, , newdropdown, delete are disabled
         // id = search, level-up, root are enabled
 
         // need to check class of these buttons, look for 'disabled' in there
-        if (downloadButton.getAttribute("class").contains("disabled") &&
-                newdropdownButton.getAttribute("class").contains("disabled") &&
-                deleteButton.getAttribute("class").contains("disabled") &&
-                !searchFilter.getAttribute("class").contains("disabled") &&
-                !leveUpButton.getAttribute("class").contains("disabled") &&
-                !rootButton.getAttribute("class").contains("disabled")) {
+        if (isDisabled(downloadButton) &&
+                isDisabled(newdropdownButton) &&
+                !isDisabled(searchFilter) &&
+                !isDisabled(leveUpButton) &&
+                !isDisabled(rootButton)) {
             return true;
         } else {
             return false;
         }
     }
 
-    boolean inSubFolderMode() {
-        // navigation buttons displayed
+    public boolean isSubFolder(String folderName) throws Exception {
+
+        // Verify folder name
+        if (!(getHeaderText().contains(folderName)) ){
+                return false;
+        }
+
+        // Check number of elements in button bar
+        if (navbarButtonList.findElements(By.xpath("//*[@id=\"navbar-functions\"]/ul")).size() == 6 ) {
+            return true;
+        }
+        // Check state of buttons
         if (leveUpButton.isDisplayed() &&
                 deleteButton.isDisplayed() &&
                 rootButton.isDisplayed() &&
-                newdropdownButton.isDisplayed()) {
+                newdropdownButton.isDisplayed() &&
+                moredetailsButton.isDisplayed()) {
             return true;
         }
         else {
             return false;
         }
-
     }
+
+    public boolean isRootFolder() throws Exception {
+
+        // Verify folder name
+        if (!(getHeaderText().contains(ROOT_FOLDER_NAME)) ){
+            return false;
+        }
+        // navigation buttons are NOT displayed in root
+        // folder. This will change as functionality is added
+        // Currently the navbar only has one child, and it's ID is
+
+        if (navbarButtonList.findElements(By.xpath("//*[@id=\"navbar-functions\"]/ul")).size() == 1) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isFileSelectedMode(int rowNumber) {
+        // Class of selected row is different:
+        // visually it will be different, but for now the change
+        // in css class is enough to check
+        //*[@id="beacon"]/tbody/tr[1]
+        WebElement selectedRow = beaconTable.findElement(
+                By.xpath("//*[@id=\"beacon\"]/tbody/tr["+rowNumber+"]"));
+
+        if (!selectedRow.getAttribute("class").contains("selected")) {
+            return false;
+        }
+
+        // Behaviour is different if person is logged in or not
+        if (isLoggedIn()) {
+            if ( ! (isDisabled(deleteButton) && isDisabled(downloadButton)) ) {
+                return true;
+            }
+        } else {
+            // There will need to be a check for publicly available for download or not?
+            if (isDisabled(deleteButton) && !isDisabled(downloadButton)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+
+
 
 }
