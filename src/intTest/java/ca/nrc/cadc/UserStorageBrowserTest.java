@@ -80,20 +80,28 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		// Next tests to run after this (as part of page clickthrough test)
 		// click on the row entry
 
+		// click through to CADCtest folder
 		userStoragePage.selectFolder(testFolderName);
+		// check h2 with property 'name' matches folder name
+		// (although there's alot of whitespace in there!
 		verifyTrue(userStoragePage.getHeaderText().contains(testFolderName));
-		// click through to CADCtest page
-		// check h2 with property 'name' matches folder name (although there's alot of whitespace in there!
+		verifyTrue(userStoragePage.inSubFolderMode());
 
 		// look for Up and Root buttons?
+		// Will only be present in sub folders?
+
+
+
+		// Check access to page
 		// Check status of other buttons (depending on whether you have write access to the page or not
 		// determine write access via the 'more_details' button (if present)
-
+		// TODO: best way to determine write access is???
+		verifyTrue(userStoragePage.inReadAccessMode());
     	
     	// Scenario 2:
 		// login test - credentials should be in the gradle build file.
 		userStoragePage.doLogin("CADCtest","sywymUL4");
-		verifyTrue(userStoragePage.isLoggedIn());
+		verifyTrue(userStoragePage.inLoggedInMode());
 		System.out.println("logged in");
 
 		// search should be removed after login (page is reset to default, although
@@ -103,13 +111,40 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		System.out.println("Rowcount: " + rowCount);
 		verifyTrue(rowCount > 2);
 
-		// Scenario 3: logout
+		// Check access to page
+		verifyTrue(userStoragePage.inReadAccessMode());
+
+
+		// Scenario 3: Test navigation buttons
+
+		// Navigate back up to root
+		userStoragePage.navToRoot();
+		// Verify header
+		verifyTrue(userStoragePage.getHeaderText().contains("ROOT"));
+
+		// click through to CADCtest folder again
+		userStoragePage.selectFolder(testFolderName);
+		// check h2 with property 'name' matches folder name
+		// (although there's alot of whitespace in there!
+		verifyTrue(userStoragePage.getHeaderText().contains(testFolderName));
+
+		// Navigate up one level (should be back to root)
+		userStoragePage.navUpLevel();
+		// Verify header
+		verifyTrue(userStoragePage.getHeaderText().contains("ROOT"));
+
+		// TODO: better test here is to have two levels to navigate through,
+		// make sure root goes to root, up level goes up one only.
+
+
+
+		// Scenario 4: logout
 		userStoragePage.doLogout();
-		verifyFalse(userStoragePage.isLoggedIn());
+		verifyFalse(userStoragePage.inLoggedInMode());
 
 
     	
-    	// Scenario 4: 
+    	// Scenario X:
     	// downloading a file?
 
    

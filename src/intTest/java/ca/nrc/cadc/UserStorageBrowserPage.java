@@ -188,11 +188,21 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         System.out.println("Folder to be clicked: " + folder.getText());
         folder.click();
     }
+
+
+    public void navToRoot() throws Exception {
+        click(rootButton);
+    }
+
+    public void navUpLevel() throws Exception {
+        click(leveUpButton);
+    }
     
 
 
     // Inspection functions
-    public WebElement getProgressBar() throws Exception {
+    public WebElement getProgressBar() throws Exception
+    {
         System.out.println(progressBar.getText());
         return progressBar;
     }
@@ -233,13 +243,44 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 //        return loginForm.isLoggedIn();
 //    }
 
-    boolean isLoggedIn() {
+    boolean inLoggedInMode() {
         try {
             logoutButton.isDisplayed();
             return true;
         } catch (NoSuchElementException e) {
             return false;
         }
+    }
+
+    boolean inReadAccessMode() {
+        // id = download, , newdropdown, delete are disabled
+        // id = search, level-up, root are enabled
+
+        // need to check class of these buttons, look for 'disabled' in there
+        if (downloadButton.getAttribute("class").contains("disabled") &&
+                newdropdownButton.getAttribute("class").contains("disabled") &&
+                deleteButton.getAttribute("class").contains("disabled") &&
+                !searchFilter.getAttribute("class").contains("disabled") &&
+                !leveUpButton.getAttribute("class").contains("disabled") &&
+                !rootButton.getAttribute("class").contains("disabled")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    boolean inSubFolderMode() {
+        // navigation buttons displayed
+        if (leveUpButton.isDisplayed() &&
+                deleteButton.isDisplayed() &&
+                rootButton.isDisplayed() &&
+                newdropdownButton.isDisplayed()) {
+            return true;
+        }
+        else {
+            return false;
+        }
+
     }
 
 }
