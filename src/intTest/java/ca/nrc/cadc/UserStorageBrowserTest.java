@@ -58,6 +58,8 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
     	// - basic elements are on page
 		// - not logged in
     	// - Name is primary sort
+		// Test default sort on Name column
+		verifyTrue(userStoragePage.isDefaultSort());
 
 
     	// Scenario 1:
@@ -111,15 +113,19 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		// Verify in Root Folder
 		verifyTrue(userStoragePage.isRootFolder());
 
-		int rowNum = 1;
+		int startRow = 1;
+
+		System.out.println("Starting navigation tests");
 		// click through to first folder
-		String subFolder1 = userStoragePage.getFolderName(rowNum);
-		userStoragePage.clickFolderForRow(rowNum);
+		int firstPageRowClicked = userStoragePage.getNextAvailabileFolderRow(startRow);
+		String subFolder1 = userStoragePage.getFolderName(firstPageRowClicked);
+		userStoragePage.clickFolderForRow(firstPageRowClicked);
 		verifyTrue(userStoragePage.isSubFolder(subFolder1));
 
 		// Go down one more level
-		String subFolder2 = userStoragePage.getFolderName(rowNum);
-		userStoragePage.clickFolderForRow(rowNum);
+		int secondPageRowCilcked = userStoragePage.getNextAvailabileFolderRow(startRow);
+		String subFolder2 = userStoragePage.getFolderName(secondPageRowCilcked);
+		userStoragePage.clickFolderForRow(secondPageRowCilcked);
 		verifyTrue(userStoragePage.isSubFolder(subFolder2));
 
 		// Navigate up one level (should be up one level)
@@ -127,7 +133,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyTrue(userStoragePage.isSubFolder(subFolder1));
 
 		// Go back down one folder
-		userStoragePage.clickFolderForRow(rowNum);
+		userStoragePage.clickFolderForRow(secondPageRowCilcked);
 		verifyTrue(userStoragePage.isSubFolder(subFolder2));
 
 		// Go up to root
@@ -136,17 +142,19 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyTrue(userStoragePage.isRootFolder());
 
 
+		System.out.println("testing file actions");
 
 		// Scenario 4: test selecting a file
-		userStoragePage.clickFolderForRow(rowNum);
-		userStoragePage.clickCheckboxForRow(rowNum);
-		verifyTrue(userStoragePage.isFileSelectedMode(rowNum));
+		userStoragePage.clickFolderForRow(firstPageRowClicked);
+		userStoragePage.clickCheckboxForRow(startRow);
+		verifyTrue(userStoragePage.isFileSelectedMode(startRow));
 
-		userStoragePage.clickCheckboxForRow(rowNum);
-		verifyFalse(userStoragePage.isFileSelectedMode(rowNum));
+		userStoragePage.clickCheckboxForRow(startRow);
+		verifyFalse(userStoragePage.isFileSelectedMode(startRow));
 
 
 
+		System.out.println("Test logout");
 		// Scenario 4: logout
 		userStoragePage.doLogout();
 		verifyFalse(userStoragePage.isLoggedIn());

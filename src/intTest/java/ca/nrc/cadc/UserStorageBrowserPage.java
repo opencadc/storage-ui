@@ -152,10 +152,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private WebElement logoutButton;
 
 
+    private WebDriver driver = null;
+
 
     public UserStorageBrowserPage(final WebDriver driver) throws Exception
     {
         super(driver);
+        this.driver = driver;
 
         // The beacon-progress bar displays "Transferring Data" while it's loading
         // the page. Firefox doesn't display whole list until the bar is green, and
@@ -186,7 +189,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public void clickFolder(String folderName)
     {
-        //*[@id="beacon"]/tbody/tr[17]/td[2]/a
         WebElement folder = beaconTable.findElement(
                 By.xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName  + "')]]"));
         System.out.println("Folder to be clicked: " + folder.getText());
@@ -195,16 +197,38 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public void clickFolderForRow(int rowNum) throws Exception
     {
-        WebElement firstCheckbox = beaconTable.findElement(
-                By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a"));
+        WebElement firstCheckbox  = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a")));
         click(firstCheckbox);
+    }
+
+    public int getNextAvailabileFolderRow(int startRow) throws Exception {
+        //   not all folders are clickable, go down the rows to find one
+        boolean found = false;
+        int rowNum = startRow;
+        WebElement firstCheckbox = null;
+
+        while (!found) {
+            // This method throws an exception if the element is not found
+            try {
+                firstCheckbox = beaconTable.findElement(
+                        By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a"));
+            } catch (Exception e) {
+                rowNum++;
+                continue;
+            }
+            found = true;
+        }
+        return rowNum;
     }
 
     public void clickCheckboxForRow(int rowNum) throws Exception
     {
-        //*[@id="beacon"]/tbody/tr[9]/td[1]
-        WebElement firstCheckbox = beaconTable.findElement(
-                By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[1]"));
+
+        WebElement firstCheckbox  = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[1]")));
         click(firstCheckbox);
     }
 
@@ -353,6 +377,18 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
+    public boolean isDefaultSort() {
+        // Name column asc is default sort when page loads
+        WebElement nameColHeader = beaconTable.findElement(
+                By.xpath("//*[@id=\"beacon_wrapper\"]/div[2]/div/div[1]/div[1]/div/table/thead/tr/th[2]")
+        );
+
+        if (nameColHeader.getAttribute("class").equals("sorting_asc")) {
+            return true;
+        }
+
+        return false;
+    }
 
 
 }
