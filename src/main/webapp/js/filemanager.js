@@ -233,7 +233,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         }
       ],
       select: selectInput,
-      order: [[3, 'desc']]
+      order: [[1, 'asc']]
     });
 
   // Setup the Progress Bar.
