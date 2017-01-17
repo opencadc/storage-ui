@@ -243,37 +243,83 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     .attr("aria-valuemax", _totalDataCount + "");
     // .text(lg.loading_data);
 
-  var toggleMultiFunctionButtons = function (_disabledFlag)
+
+  var getPermissionsForResource = function(username) {
+    // Placeholder function, for now it will only check to see if the
+    // current user is logged in.
+    var permissions = "RO";
+    if ($("#logout").length == 1) {
+      // Logout button is displayed, person is currently logged in
+      permissions = "RO";
+    }
+    return permissions;
+  }
+
+
+  var toggleButtonsWithPermissions = function (_disabledFlag)
   {
+    // This function needs to be aware of logged in status
+    // Download button is always enabled even though it is multi-select-function
+    // Delete button is aware of logged in status.
     var $multiSelectFunctionContainers = $(multiSelectSelector);
 
-    $multiSelectFunctionContainers.prop("disabled", _disabledFlag);
-    $multiSelectFunctionContainers.find(".multi-select-function")
-      .prop("disabled", _disabledFlag);
+    var $deleteButton = $multiSelectFunctionContainers.find("#delete");
+    var $downloadButton = $multiSelectFunctionContainers.find("#download");
 
-    var $multiFunctions =
-      $multiSelectFunctionContainers.find(".multi-select-function");
 
-    if (_disabledFlag === true)
-    {
-      $multiSelectFunctionContainers.addClass("disabled");
-      $multiFunctions.addClass("disabled");
-    }
-    else
-    {
-      $multiSelectFunctionContainers.removeClass("disabled");
-      $multiFunctions.removeClass("disabled");
+    var permissions = getPermissionsForResource("");
+    if (permissions === "RO" ) {
+      if (_disabledFlag === true) {
+        $downloadButton.addClass("disabled");
+        $downloadButton.parent().addClass("disabled");
+      } else {
+        $downloadButton.removeClass("disabled");
+        $downloadButton.parent().removeClass("disabled");
+      }
     }
   };
 
+
+  // TODO: retain this until new function is determined to be ok:
+  // function toggleButtonsWithPermissions();
+
+  // var toggleMultiFunctionButtons = function (_disabledFlag)
+  // {
+  //
+  //   var $multiSelectFunctionContainers = $(multiSelectSelector);
+  //
+  //   var $deleteButton = $multiSelectFunctionContainers.find("#delete");
+  //   var $downloadButton = $multiSelectFunctionContainers.find("#download");
+  //
+  //   $multiSelectFunctionContainers.prop("disabled", _disabledFlag);
+  //   $multiSelectFunctionContainers.find(".multi-select-function")
+  //     .prop("disabled", _disabledFlag);
+  //
+  //   var $multiFunctions =
+  //     $multiSelectFunctionContainers.find(".multi-select-function");
+  //
+  //   if (_disabledFlag === true)
+  //   {
+  //     $multiSelectFunctionContainers.addClass("disabled");
+  //     $multiFunctions.addClass("disabled");
+  //   }
+  //   else
+  //   {
+  //     $multiSelectFunctionContainers.removeClass("disabled");
+  //     $multiFunctions.removeClass("disabled");
+  //   }
+  // };
+
   var enableMultiFunctionButtons = function ()
   {
-    toggleMultiFunctionButtons(false);
+    toggleButtonsWithPermissions(false);
+    // toggleMultiFunctionButtons(false);
   };
 
   var disableMultiFunctionButtons = function ()
   {
-    toggleMultiFunctionButtons(true);
+    toggleButtonsWithPermissions(true);
+    // toggleMultiFunctionButtons(true);
   };
 
   $dt.on("select", function (event, dataTablesAPI, type)

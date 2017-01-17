@@ -142,9 +142,15 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyTrue(userStoragePage.isRootFolder());
 
 
+		System.out.println("Test logout");
+		// Scenario 4: logout
+		userStoragePage.doLogout();
+		verifyFalse(userStoragePage.isLoggedIn());
+
+
 		System.out.println("testing file actions");
 
-		// Scenario 4: test selecting a file
+		// Scenario 5: test selecting a file
 		userStoragePage.clickFolderForRow(firstPageRowClicked);
 		userStoragePage.clickCheckboxForRow(startRow);
 		verifyTrue(userStoragePage.isFileSelectedMode(startRow));
@@ -152,12 +158,6 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		userStoragePage.clickCheckboxForRow(startRow);
 		verifyFalse(userStoragePage.isFileSelectedMode(startRow));
 
-
-
-		System.out.println("Test logout");
-		// Scenario 4: logout
-		userStoragePage.doLogout();
-		verifyFalse(userStoragePage.isLoggedIn());
 
 
     	
