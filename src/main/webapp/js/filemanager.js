@@ -90,7 +90,12 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                    + "</div>";
   var publicLink =
     "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
+
+  // Used for controlling button bar function
   var multiSelectSelector = ".multi-select-function-container";
+  var multiSelectWritableSelector = ".multi-select-function-container-writable";
+  var multiSelectClass = ".multi-select-function";
+  var multiSelectWritableClass = ".multi-select-function-writable";
 
   var stringUtil = new org.opencadc.StringUtil();
   var url = contextPath + config.options.pageConnector + _folderPath;
@@ -244,82 +249,50 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     // .text(lg.loading_data);
 
 
-  var getPermissionsForResource = function(username) {
-    // Placeholder function, for now it will only check to see if the
-    // current user is logged in.
-    var permissions = "RO";
-    if ($("#logout").length == 1) {
-      // Logout button is displayed, person is currently logged in
-      permissions = "RO";
+  // TODO: pull in writable flag from the server (StorageItem.java reference)
+  // treat similar to readable flag currently (is part of Data Table but is hidden)
+  // pass in to toggleMultiFunctionButtons function (or rename this one,) so
+  // buttons can be sanely toggled.
+  // add a class to the buttons that are permissions aware so they can be
+  // toggled using the same manner (won't need code to look for them specifically)
+  // as the existing function.Storage
+
+
+  var toggleButtonSet = function(_disabledFlag, selector, selectClass) {
+    var $selectorContainers = $(selector);
+
+    // These elements will toggle regardless of permissions
+    var $selectorFunctions =
+        $selectorContainers.find(selectClass);
+
+    if (_disabledFlag === true) {
+      $selectorContainers.addClass("disabled");
+      $selectorFunctions.addClass("disabled");
     }
-    return permissions;
-  }
+    else {
+      $selectorContainers.removeClass("disabled");
+      $selectorFunctions.removeClass("disabled");
+    }
 
+  };
 
-  var toggleButtonsWithPermissions = function (_disabledFlag)
-  {
-    // This function needs to be aware of logged in status
-    // Download button is always enabled even though it is multi-select-function
-    // Delete button is aware of logged in status.
-    var $multiSelectFunctionContainers = $(multiSelectSelector);
-
-    var $deleteButton = $multiSelectFunctionContainers.find("#delete");
-    var $downloadButton = $multiSelectFunctionContainers.find("#download");
-
-
-    var permissions = getPermissionsForResource("");
-    if (permissions === "RO" ) {
-      if (_disabledFlag === true) {
-        $downloadButton.addClass("disabled");
-        $downloadButton.parent().addClass("disabled");
-      } else {
-        $downloadButton.removeClass("disabled");
-        $downloadButton.parent().removeClass("disabled");
-      }
+  var toggleMultiFunctionButtons = function (_disabledFlag, writable) {
+    toggleButtonSet(_disabledFlag, multiSelectSelector, multiSelectClass);
+    if (writable === true) {
+      toggleButtonSet(_disabledFlag, multiSelectWritableSelector, multiSelectWritableClass);
     }
   };
 
-
-  // TODO: retain this until new function is determined to be ok:
-  // function toggleButtonsWithPermissions();
-
-  // var toggleMultiFunctionButtons = function (_disabledFlag)
-  // {
-  //
-  //   var $multiSelectFunctionContainers = $(multiSelectSelector);
-  //
-  //   var $deleteButton = $multiSelectFunctionContainers.find("#delete");
-  //   var $downloadButton = $multiSelectFunctionContainers.find("#download");
-  //
-  //   $multiSelectFunctionContainers.prop("disabled", _disabledFlag);
-  //   $multiSelectFunctionContainers.find(".multi-select-function")
-  //     .prop("disabled", _disabledFlag);
-  //
-  //   var $multiFunctions =
-  //     $multiSelectFunctionContainers.find(".multi-select-function");
-  //
-  //   if (_disabledFlag === true)
-  //   {
-  //     $multiSelectFunctionContainers.addClass("disabled");
-  //     $multiFunctions.addClass("disabled");
-  //   }
-  //   else
-  //   {
-  //     $multiSelectFunctionContainers.removeClass("disabled");
-  //     $multiFunctions.removeClass("disabled");
-  //   }
-  // };
-
   var enableMultiFunctionButtons = function ()
   {
-    toggleButtonsWithPermissions(false);
-    // toggleMultiFunctionButtons(false);
+    // toggleButtonsWithPermissions(false);
+    toggleMultiFunctionButtons(false);
   };
 
   var disableMultiFunctionButtons = function ()
   {
-    toggleButtonsWithPermissions(true);
-    // toggleMultiFunctionButtons(true);
+    // toggleButtonsWithPermissions(true);
+    toggleMultiFunctionButtons(true);
   };
 
   $dt.on("select", function (event, dataTablesAPI, type)

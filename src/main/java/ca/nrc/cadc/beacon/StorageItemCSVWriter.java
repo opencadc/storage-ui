@@ -141,6 +141,9 @@ public class StorageItemCSVWriter implements StorageItemWriter
         // Readable flag.  [12]
         row.add(Boolean.toString(storageItem.isReadable()));
 
+        // Writable flag.  [13]
+        row.add(Boolean.toString(storageItem.isWritable()));
+
         csvWriter.writeNext(row.toArray(new String[row.size()]));
     }
 }
