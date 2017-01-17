@@ -189,6 +189,11 @@ public class StorageItemFactory
         final boolean readableFlag = StringUtil.hasLength(readableFlagValue)
                                      && Boolean.parseBoolean(readableFlagValue);
 
+        final String writableFlagValue =
+                node.getPropertyValue(VOS.PROPERTY_URI_WRITABLE);
+        final boolean writableFlag = StringUtil.hasLength(writableFlagValue)
+                && Boolean.parseBoolean(writableFlagValue);
+
         final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
 
         final String totalChildCountValue =
@@ -199,11 +204,6 @@ public class StorageItemFactory
 
         if (node instanceof ContainerNode)
         {
-            final String writableFlagValue =
-                    node.getPropertyValue(VOS.PROPERTY_URI_WRITABLE);
-            final boolean writableFlag =
-                    StringUtil.hasLength(writableFlagValue)
-                    && Boolean.parseBoolean(writableFlagValue);
 
             final ContainerNode containerNode = (ContainerNode) node;
             nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
@@ -216,7 +216,7 @@ public class StorageItemFactory
         {
             nextItem = new LinkItem(nodeURI, -1L, lastModifiedDate, publicFlag,
                                     lockedFlag, writeGroupURIs, readGroupURIs,
-                                    owner, readableFlag,
+                                    owner, readableFlag, writableFlag,
                                     getTarget((LinkNode) node));
         }
         else
@@ -229,7 +229,7 @@ public class StorageItemFactory
                                     lastModifiedDate, publicFlag,
                                     lockedFlag, writeGroupURIs,
                                     readGroupURIs, owner, readableFlag,
-                                    getTarget((DataNode) node));
+                                    writableFlag, getTarget((DataNode) node));
         }
 
         return nextItem;

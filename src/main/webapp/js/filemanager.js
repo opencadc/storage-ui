@@ -90,7 +90,12 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                    + "</div>";
   var publicLink =
     "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
+
+  // Used for controlling button bar function
   var multiSelectSelector = ".multi-select-function-container";
+  var multiSelectWritableSelector = ".multi-select-function-container-writable";
+  var multiSelectClass = ".multi-select-function";
+  var multiSelectWritableClass = ".multi-select-function-writable";
 
   var stringUtil = new org.opencadc.StringUtil();
   var url = contextPath + config.options.pageConnector + _folderPath;
@@ -165,6 +170,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               {
                 renderedValue = data;
               }
+
             }
             else
             {
@@ -192,6 +198,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               {
                 itemNameDisplay += data;
               }
+
+              // Add code here to add the 'edit' glyphicon if
+              // the item is writable
+              var canWriteFlag = (full[13] === "true");
+
 
               return itemNameDisplay;
             }
@@ -233,7 +244,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         }
       ],
       select: selectInput,
-      order: [[3, 'desc']]
+      order: [[1, 'asc']]
     });
 
   // Setup the Progress Bar.
@@ -243,36 +254,50 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     .attr("aria-valuemax", _totalDataCount + "");
     // .text(lg.loading_data);
 
-  var toggleMultiFunctionButtons = function (_disabledFlag)
-  {
-    var $multiSelectFunctionContainers = $(multiSelectSelector);
 
-    $multiSelectFunctionContainers.prop("disabled", _disabledFlag);
-    $multiSelectFunctionContainers.find(".multi-select-function")
-      .prop("disabled", _disabledFlag);
+  // TODO: pull in writable flag from the server (StorageItem.java reference)
+  // treat similar to readable flag currently (is part of Data Table but is hidden)
+  // pass in to toggleMultiFunctionButtons function (or rename this one,) so
+  // buttons can be sanely toggled.
+  // add a class to the buttons that are permissions aware so they can be
+  // toggled using the same manner (won't need code to look for them specifically)
+  // as the existing function.Storage
 
-    var $multiFunctions =
-      $multiSelectFunctionContainers.find(".multi-select-function");
 
-    if (_disabledFlag === true)
-    {
-      $multiSelectFunctionContainers.addClass("disabled");
-      $multiFunctions.addClass("disabled");
+  var toggleButtonSet = function(_disabledFlag, selector, selectClass) {
+    var $selectorContainers = $(selector);
+
+    // These elements will toggle regardless of permissions
+    var $selectorFunctions =
+        $selectorContainers.find(selectClass);
+
+    if (_disabledFlag === true) {
+      $selectorContainers.addClass("disabled");
+      $selectorFunctions.addClass("disabled");
     }
-    else
-    {
-      $multiSelectFunctionContainers.removeClass("disabled");
-      $multiFunctions.removeClass("disabled");
+    else {
+      $selectorContainers.removeClass("disabled");
+      $selectorFunctions.removeClass("disabled");
+    }
+
+  };
+
+  var toggleMultiFunctionButtons = function (_disabledFlag, writable) {
+    toggleButtonSet(_disabledFlag, multiSelectSelector, multiSelectClass);
+    if (writable === true) {
+      toggleButtonSet(_disabledFlag, multiSelectWritableSelector, multiSelectWritableClass);
     }
   };
 
   var enableMultiFunctionButtons = function ()
   {
+    // toggleButtonsWithPermissions(false);
     toggleMultiFunctionButtons(false);
   };
 
   var disableMultiFunctionButtons = function ()
   {
+    // toggleButtonsWithPermissions(true);
     toggleMultiFunctionButtons(true);
   };
 

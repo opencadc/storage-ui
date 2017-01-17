@@ -14,10 +14,10 @@ public class LinkItem extends StorageItem
     public LinkItem(VOSURI uri, long sizeInBytes, Date lastModified,
                     boolean publicFlag, boolean lockedFlag,
                     URI[] writeGroupURIs, URI[] readGroupURIs,
-                    String owner, boolean readableFlag, String targetURL)
+                    String owner, boolean readableFlag, boolean writableFlag, String targetURL)
     {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-                writeGroupURIs, readGroupURIs, owner, readableFlag, targetURL);
+                writeGroupURIs, readGroupURIs, owner, readableFlag, writableFlag, targetURL);
     }
 
 

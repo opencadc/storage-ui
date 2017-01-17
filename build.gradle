@@ -3,6 +3,9 @@ apply plugin: 'war'
 repositories {
     jcenter()
     mavenLocal()
+    maven {
+        url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
+    }
 }
 
 dependencies {
@@ -73,7 +76,7 @@ task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
 
 ext {
     // Change this value to test other locations, such as Production or RC.
-    intTest_web_app_url = 'http://mach319.cadc.dao.nrc.ca:8080/'
+    intTest_web_app_url = 'http://132.246.194.31:8080/'
 }
 
 sourceSets {
