@@ -170,6 +170,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               {
                 renderedValue = data;
               }
+
             }
             else
             {
@@ -197,6 +198,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               {
                 itemNameDisplay += data;
               }
+
+              // Add code here to add the 'edit' glyphicon if
+              // the item is writable
+              var canWriteFlag = (full[13] === "true");
+
 
               return itemNameDisplay;
             }
