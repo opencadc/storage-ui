@@ -256,15 +256,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     // .text(lg.loading_data);
 
 
-  // TODO: pull in writable flag from the server (StorageItem.java reference)
-  // treat similar to readable flag currently (is part of Data Table but is hidden)
-  // pass in to toggleMultiFunctionButtons function (or rename this one,) so
-  // buttons can be sanely toggled.
-  // add a class to the buttons that are permissions aware so they can be
-  // toggled using the same manner (won't need code to look for them specifically)
-  // as the existing function.Storage
-
-
   var toggleButtonSet = function(_disabledFlag, selector, selectClass) {
     var $selectorContainers = $(selector);
 
@@ -323,8 +314,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     {
       var selectedRows = $dt.rows({selected: true});
       enableMultiFunctionButtons(isSelectionWritable(selectedRows));
-
-      // enableMultiFunctionButtons();
     }
   });
 
