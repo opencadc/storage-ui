@@ -96,6 +96,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var multiSelectWritableSelector = ".multi-select-function-container-writable";
   var multiSelectClass = ".multi-select-function";
   var multiSelectWritableClass = ".multi-select-function-writable";
+  var isWritableFlagIndex = 13;
 
   var stringUtil = new org.opencadc.StringUtil();
   var url = contextPath + config.options.pageConnector + _folderPath;
@@ -201,7 +202,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
               // Add code here to add the 'edit' glyphicon if
               // the item is writable
-              var canWriteFlag = (full[13] === "true");
+              var canWriteFlag = (full[isWritableFlagIndex] === "true");
 
 
               return itemNameDisplay;
@@ -289,33 +290,49 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     }
   };
 
-  var enableMultiFunctionButtons = function ()
+  var enableMultiFunctionButtons = function (writable)
   {
-    // toggleButtonsWithPermissions(false);
-    toggleMultiFunctionButtons(false);
+    toggleMultiFunctionButtons(false, writable);
   };
 
   var disableMultiFunctionButtons = function ()
   {
-    // toggleButtonsWithPermissions(true);
-    toggleMultiFunctionButtons(true);
+    // Passing in 'true' to writable bit here because
+    // it doesn't matter when it comes to disabling the buttons: off is off!
+    toggleMultiFunctionButtons(true, true);
+  };
+
+
+  var isSelectionWritable = function(tableRows) {
+    if (tableRows.count() > 0) {
+      // check isWritable for all selected rows
+      var writable = true;
+      for (var i = 0; i < tableRows.count(); i++) {
+        if (tableRows.data()[i][isWritableFlagIndex] === "false") {
+          writable = false;
+          break;
+        }
+      }
+      return writable;
+    }
   };
 
   $dt.on("select", function (event, dataTablesAPI, type)
   {
     if (type === ROW_SELECT_TYPE)
     {
-      enableMultiFunctionButtons();
+      var selectedRows = $dt.rows({selected: true});
+      enableMultiFunctionButtons(isSelectionWritable(selectedRows));
+
+      // enableMultiFunctionButtons();
     }
   });
 
   $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt info.dt",
          function ()
          {
-           if ($dt.rows({selected: true}).count() > 0)
-           {
-             enableMultiFunctionButtons();
-           }
+           var selectedRows = $dt.rows({selected: true});
+           enableMultiFunctionButtons(isSelectionWritable(selectedRows));
          });
 
   $dt.on("deselect", function (event, dataTablesAPI, type)
