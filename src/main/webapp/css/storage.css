@@ -159,7 +159,13 @@ button#more_details {
 }
 
 .glyphicon-edit {
-  float:right;
+  float: right;
+  opacity: 0.5;
+}
+
+.glyphicon-edit:hover {
+  float: right;
+  opacity: 1.0;
 }
 
 @-webkit-keyframes glyphicon-spin-r {

@@ -203,16 +203,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                 itemNameDisplay += data;
               }
 
-              // Add code here to add the 'edit' glyphicon if
-              // the item is writable
-              if (full[13] === "false") {
-                // TODO: value should be "true" but for initially
-                // placing the icon, setting it to "false" so will be placed
-                // for each line
-
+              // if isWritable bit is true, provide
+              // edit icon
+              if (full[13] === "true") {
                 itemNameDisplay += editIcon;
               }
-
 
               return itemNameDisplay;
             }
@@ -326,12 +321,19 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     }
   });
 
-  $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt info.dt",
+  $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt",
          function ()
          {
            var selectedRows = $dt.rows({selected: true});
            enableMultiFunctionButtons(isSelectionWritable(selectedRows));
          });
+
+  $dt.on("info.dt",
+      function ()
+      {
+        disableMultiFunctionButtons();
+      });
+
 
   $dt.on("deselect", function (event, dataTablesAPI, type)
   {
