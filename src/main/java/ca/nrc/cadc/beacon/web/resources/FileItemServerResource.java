@@ -259,7 +259,7 @@ public class FileItemServerResource extends StorageItemServerResource
      */
     protected void upload(final InputStream inputStream,
                           final DataNode dataNode)
-            throws NodeAlreadyExistsException
+            throws NodeAlreadyExistsException, IOException
     {
         final String path = dataNode.getUri().getPath();
 

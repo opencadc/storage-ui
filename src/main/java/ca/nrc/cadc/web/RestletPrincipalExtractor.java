@@ -10,8 +10,6 @@ import org.restlet.util.Series;
 
 import java.io.IOException;
 import java.security.Principal;
-import java.security.cert.X509Certificate;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -26,8 +24,7 @@ public class RestletPrincipalExtractor implements PrincipalExtractor
             Logger.getLogger(RestletPrincipalExtractor.class);
 
     private final Request request;
-    private X509CertificateChain chain;
-    private DelegationToken token;
+    private boolean initialized = false;
 
     private SSOCookieCredential cookieCredential;
     private Principal cookiePrincipal; // principal extracted from cookie
@@ -52,121 +49,80 @@ public class RestletPrincipalExtractor implements PrincipalExtractor
 
     private void init()
     {
-        if (chain == null)
+        if (!initialized)
         {
-            final Collection<X509Certificate> requestCertificates =
-                    (Collection<X509Certificate>) getRequest().getAttributes()
-                            .get(
-                                    "org.restlet.https.clientCertificates");
-            if ((requestCertificates != null) && (!requestCertificates
-                    .isEmpty()))
+            final Series<Cookie> requestCookies = getRequest().getCookies();
+            final Series<Cookie> cookies = new Series<>(Cookie.class);
+
+            if (requestCookies != null)
             {
-                this.chain = new X509CertificateChain(requestCertificates);
+                cookies.addAll(requestCookies);
+            }
+
+            for (final Cookie ssoCookie : cookies)
+            {
+                if (SSOCookieManager.DEFAULT_SSO_COOKIE_NAME.equals(
+                        ssoCookie.getName())
+                    && StringUtil.hasText(ssoCookie.getValue()))
+                {
+                    final SSOCookieManager ssoCookieManager =
+                            new SSOCookieManager();
+
+                    try
+                    {
+                        cookiePrincipal = ssoCookieManager.parse(
+                                ssoCookie.getValue());
+                        cookieCredential = new
+                                SSOCookieCredential(ssoCookie.getValue(),
+                                                    NetUtil.getDomainName(
+                                                            getRequest()
+                                                                    .getResourceRef()
+                                                                    .toUrl()));
+                    }
+                    catch (IOException | InvalidDelegationTokenException e)
+                    {
+                        log.info("Cannot use SSO Cookie. Reason: "
+                                 + e.getMessage());
+                    }
+
+                }
             }
         }
 
-        // s2005: commented out for this class branch. It's not clear
-        // whether it will be used again, although it's unlikely the
-        // ui will send a token. :/
-        // Form cast breaks with Restlet 2.3.9.
-//            if (token == null)
-//            {
-//                Form headers = (Form) getRequest().getAttributes().get("org.restlet.http.headers");
-//                String tokenValue = headers.getFirstValue(AuthenticationUtil.AUTH_HEADER);
-//                if ( StringUtil.hasText(tokenValue) )
-//                {
-//                    try
-//                    {
-//                        this.token = DelegationToken.parse(tokenValue, request.getResourceRef().getPath());
-//                    }
-//                    catch (InvalidDelegationTokenException ex)
-//                    {
-//                        log.debug("invalid DelegationToken: " + tokenValue, ex);
-//                        throw new AccessControlException("invalid delegation token");
-//                    }
-//                    catch(RuntimeException ex)
-//                    {
-//                        log.debug("invalid DelegationToken: " + tokenValue, ex);
-//                        throw new AccessControlException("invalid delegation token");
-//                    }
-//                    finally { }
-//                }
-//            }
-
-        Series<Cookie> cookies = getRequest().getCookies();
-        if (cookies == null || (cookies.size() == 0))
-        {
-            return;
-        }
-
-        for (Cookie ssoCookie : cookies)
-        {
-            if (SSOCookieManager.DEFAULT_SSO_COOKIE_NAME.equals(
-                    ssoCookie.getName())
-                && StringUtil.hasText(ssoCookie.getValue()))
-            {
-                SSOCookieManager ssoCookieManager = new SSOCookieManager();
-                try
-                {
-                    cookiePrincipal = ssoCookieManager.parse(
-                            ssoCookie.getValue());
-                    cookieCredential = new
-                            SSOCookieCredential(ssoCookie.getValue(),
-                                                NetUtil.getDomainName(
-                                                        getRequest()
-                                                                .getResourceRef()
-                                                                .toUrl()));
-                }
-                catch (IOException e)
-                {
-                    log.info("Cannot use SSO Cookie. Reason: "
-                             + e.getMessage());
-                }
-                catch (InvalidDelegationTokenException e)
-                {
-                    log.info("Cannot use SSO Cookie. Reason: "
-                             + e.getMessage());
-                }
-
-            }
-        }
+        initialized = true;
     }
 
+    @Override
     public X509CertificateChain getCertificateChain()
     {
-        init();
-        return chain;
+        return null;
     }
 
+    @Override
     public Set<Principal> getPrincipals()
     {
         init();
-        Set<Principal> principals = new HashSet<Principal>();
-        addPrincipals(principals);
+
+        final Set<Principal> principals = new HashSet<>();
+
+        addHTTPPrincipal(principals);
+
         return principals;
     }
 
+    @Override
     public DelegationToken getDelegationToken()
     {
-        init();
-        return token;
-    }
-
-
-    /**
-     * Add known principals.
-     */
-    protected void addPrincipals(Set<Principal> principals)
-    {
-        addHTTPPrincipal(principals);
-        addX500Principal(principals);
+        return null;
     }
 
     /**
      * Add the HTTP Principal, if it exists.
      */
-    protected void addHTTPPrincipal(Set<Principal> principals)
+    private void addHTTPPrincipal(final Set<Principal> principals)
     {
+        init();
+
         final String httpUser = getAuthenticatedUsername();
 
         // only add one HttpPrincipal, precedence order
@@ -174,25 +130,10 @@ public class RestletPrincipalExtractor implements PrincipalExtractor
         {
             principals.add(new HttpPrincipal(httpUser));
         }
-        else if (cookiePrincipal != null) // user from cookie
+
+        if (cookiePrincipal != null) // user from cookie
         {
             principals.add(cookiePrincipal);
-        }
-        else if (token != null) // user from token
-        {
-            principals.add(token.getUser());
-        }
-    }
-
-    /**
-     * Add the X500 Principal, if it exists.
-     */
-    protected void addX500Principal(Set<Principal> principals)
-    {
-        init();
-        if (chain != null)
-        {
-            principals.add(chain.getPrincipal());
         }
     }
 
@@ -233,8 +174,7 @@ public class RestletPrincipalExtractor implements PrincipalExtractor
     @Override
     public SSOCookieCredential getSSOCookieCredential()
     {
+        init();
         return cookieCredential;
     }
-
-
 }

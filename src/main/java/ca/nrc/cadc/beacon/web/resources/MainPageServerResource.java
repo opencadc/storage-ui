@@ -68,16 +68,12 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.auth.AuthenticationUtil;
-import ca.nrc.cadc.auth.CookiePrincipal;
-import ca.nrc.cadc.auth.HttpPrincipal;
-import ca.nrc.cadc.auth.SSOCookieManager;
 import ca.nrc.cadc.beacon.StorageItemCSVWriter;
 import ca.nrc.cadc.beacon.StorageItemWriter;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.vos.*;
-import ca.nrc.cadc.web.AccessControlClient;
+import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
@@ -94,7 +90,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.security.Principal;
 import java.util.*;
 
 
@@ -103,7 +98,6 @@ public class MainPageServerResource extends StorageItemServerResource
     private final Configuration freemarkerConfiguration =
             new Configuration(Configuration.VERSION_2_3_25);
 
-    public AccessControlClient accessControlClient;
 
     /**
      * Set-up method that can be overridden in order to initialize the state of
@@ -147,15 +141,13 @@ public class MainPageServerResource extends StorageItemServerResource
     @Get
     public Representation represent() throws Exception
     {
-        final Subject currentUser = getCurrentUser();
         final ContainerNode containerNode = getCurrentNode();
 
-        return representContainerNode(containerNode, currentUser);
+        return representContainerNode(containerNode);
     }
 
     private Representation representContainerNode(
-            final ContainerNode containerNode, final Subject currentUser)
-            throws Exception
+            final ContainerNode containerNode) throws Exception
     {
         final List<Node> childNodes = containerNode.getNodes();
         final Iterator<String> initialRows = new Iterator<String>()
@@ -187,6 +179,29 @@ public class MainPageServerResource extends StorageItemServerResource
 
                 return writer.toString();
             }
+
+            /**
+             * Removes from the underlying collection the last element returned
+             * by this iterator (optional operation).  This method can be called
+             * only once per call to {@link #next}.  The behavior of an iterator
+             * is unspecified if the underlying collection is modified while the
+             * iteration is in progress in any way other than by calling this
+             * method.
+             *
+             * @throws UnsupportedOperationException if the {@code remove}
+             *                                       operation is not supported by this iterator
+             * @throws IllegalStateException         if the {@code next} method has not
+             *                                       yet been called, or the {@code remove} method has already
+             *                                       been called after the last call to the {@code next}
+             *                                       method
+             * @implSpec The default implementation throws an instance of
+             * {@link UnsupportedOperationException} and performs no other action.
+             */
+            @Override
+            public void remove()
+            {
+                childNodeIterator.remove();
+            }
         };
 
         final VOSURI startNextPageURI =
@@ -196,18 +211,16 @@ public class MainPageServerResource extends StorageItemServerResource
         final FolderItem folderItem =
                 storageItemFactory.getFolderItemView(containerNode);
 
-        return representFolderItem(folderItem, initialRows, currentUser,
-                                   startNextPageURI);
+        return representFolderItem(folderItem, initialRows, startNextPageURI);
     }
 
     Representation representFolderItem(final FolderItem folderItem,
                                        final Iterator<String> initialRows,
-                                       final Subject currentUser,
                                        final VOSURI startNextPageURI)
             throws Exception
     {
         final Map<String, Object> dataModel = new HashMap<>();
-        accessControlClient =
+        final AccessControlClient accessControlClient =
                 (AccessControlClient) getContext().getAttributes().get(
                         VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY);
 
@@ -220,7 +233,8 @@ public class MainPageServerResource extends StorageItemServerResource
 
         // HttpPrincipal username will be pulled from current user
         Subject s = getCurrentUser();
-        String httpUsername = accessControlClient.getCurrentHttpPrincipalUsername(s);
+        String httpUsername = accessControlClient
+                .getCurrentHttpPrincipalUsername(s);
 
         if (httpUsername != null) {
             dataModel.put("username", httpUsername);

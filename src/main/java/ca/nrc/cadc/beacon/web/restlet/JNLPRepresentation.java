@@ -70,6 +70,7 @@ package ca.nrc.cadc.beacon.web.restlet;
 
 import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.net.HttpDownload;
+import ca.nrc.cadc.net.InputStreamWrapper;
 import org.restlet.data.MediaType;
 
 import javax.security.auth.Subject;
@@ -136,33 +137,38 @@ public abstract class JNLPRepresentation
 
         final HttpDownload httpDownload =
                 new HttpDownload(new URL(codeBase + "/" + file),
-                                 inputStream ->
+                                 new InputStreamWrapper()
                                  {
-                                     final Reader reader =
-                                             new InputStreamReader(inputStream);
-                                     final BufferedReader bufferedReader =
-                                             new BufferedReader(reader);
-
-                                     String line;
-
-                                     while ((line = bufferedReader
-                                             .readLine()) != null)
+                                     @Override
+                                     public void read(InputStream inputStream) throws
+                                                                               IOException
                                      {
-                                         // Remove the href as it causes issues...
-                                         line = line
-                                                 .replace("href='" + file + "'", "");
-                                         line = line
-                                                 .replace("$$codebase",
-                                                          codeBase);
-                                         line = line
-                                                 .replace("$$ssocookiearguments",
-                                                          ssoCookieData);
+                                         final Reader reader =
+                                                 new InputStreamReader(inputStream);
+                                         final BufferedReader bufferedReader =
+                                                 new BufferedReader(reader);
 
-                                         writeLine(line, outputStream);
+                                         String line;
+
+                                         while ((line = bufferedReader
+                                                 .readLine()) != null)
+                                         {
+                                             // Remove the href as it causes issues...
+                                             line = line
+                                                     .replace("href='" + file + "'", "");
+                                             line = line
+                                                     .replace("$$codebase",
+                                                              codeBase);
+                                             line = line
+                                                     .replace("$$ssocookiearguments",
+                                                              ssoCookieData);
+
+                                             writeLine(line, outputStream);
+                                         }
+
+                                         bufferedReader.close();
+                                         outputStream.flush();
                                      }
-
-                                     bufferedReader.close();
-                                     outputStream.flush();
                                  });
 
         httpDownload.setFollowRedirects(true);

@@ -68,15 +68,11 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.auth.HttpPrincipal;
-import ca.nrc.cadc.beacon.AbstractUnitTest;
 
+import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.web.AccessControlClient;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.SystemConfiguration;
 import org.restlet.Context;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -85,13 +81,14 @@ import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 
 import java.net.URI;
-import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 import static org.easymock.EasyMock.*;
 
@@ -113,26 +110,22 @@ public class MainPageServerResourceTest
         initialRowData.add("child2");
         initialRowData.add("child3");
 
-        AccessControlClient mockAccessControlClient = createMock(AccessControlClient.class);
+        final AccessControlClient mockAccessControlClient =
+                createMock(AccessControlClient.class);
 
-        expect(mockAccessControlClient.getCurrentHttpPrincipalUsername(subject)).andReturn("CADCtest");
+        expect(mockAccessControlClient.getCurrentHttpPrincipalUsername(subject))
+                .andReturn("CADCtest");
         replay(mockAccessControlClient);
 
-        // Taken from VOSpaceApplication - they are private there, so
-        // just pilfering the values here for the test
-        final String DEFAULT_GMS_SERVICE_ID =
-                "ivo://cadc.nrc.ca/gms";
-        final String GMS_SERVICE_PROPERTY_KEY =
-                "org.opencadc.gms.service_id";
+        final ConcurrentMap<String, Object> mockContextAttributes =
+                new ConcurrentHashMap<>();
 
-        Configuration configuration = new SystemConfiguration();
-        ConcurrentHashMap<String,Object> mockContextAttributes = new ConcurrentHashMap<String,Object>();
-        AccessControlClient acc = new AccessControlClient(URI.create(
-                configuration.getString(DEFAULT_GMS_SERVICE_ID,
-                        GMS_SERVICE_PROPERTY_KEY)));
-        mockContextAttributes.put(VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY, acc);
+        mockContextAttributes
+                .put(VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY,
+                     mockAccessControlClient);
 
-        expect(mockContext.getAttributes()).andReturn(mockContextAttributes).anyTimes();
+        expect(mockContext.getAttributes()).andReturn(mockContextAttributes)
+                .once();
 
         replay(mockServletContext, mockRegistryClient, mockContext);
 
@@ -152,20 +145,18 @@ public class MainPageServerResourceTest
             }
 
             @Override
-            public Context getContext() {
+            public Context getContext()
+            {
                 return mockContext;
             }
-
-
         };
-        testSubject.accessControlClient = mockAccessControlClient;
 
         replay(mockFolderItem);
 
         final Representation representation =
                 testSubject.representFolderItem(mockFolderItem,
                                                 initialRowData.iterator(),
-                                                subject, startURI);
+                                                startURI);
 
         final TemplateRepresentation templateRepresentation =
                 (TemplateRepresentation) representation;
@@ -173,7 +164,8 @@ public class MainPageServerResourceTest
         final Map<String, Object> dataModel =
                 (Map<String, Object>) templateRepresentation.getDataModel();
 
-        assertTrue("Should be a folder.", dataModel.containsKey("folder"));
+        assertTrue("Should be a folder.",
+                   dataModel.containsKey("folder"));
         assertEquals("Should have URI for next page.",
                      startURI.getURI().toString(), dataModel.get("startURI"));
         assertTrue("Should contain initialRows",

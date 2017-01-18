@@ -68,22 +68,22 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.beacon.AbstractUnitTest;
 
 import ca.nrc.cadc.beacon.web.FileValidator;
 import ca.nrc.cadc.beacon.web.UploadOutputStreamWrapper;
 import ca.nrc.cadc.beacon.web.UploadVerifier;
 import ca.nrc.cadc.vos.*;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.apache.commons.fileupload.FileItemStream;
 import org.restlet.Request;
 import org.restlet.Response;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 
 import java.security.MessageDigest;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -187,6 +187,20 @@ public class FileItemServerResourceTest
                         DataNode dataNode) throws Exception
             {
                 // Do nothing.
+            }
+
+            @Override
+            <T> T executeSecurely(PrivilegedExceptionAction<T> runnable)
+                    throws IOException
+            {
+                try
+                {
+                    return runnable.run();
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e);
+                }
             }
         };
 

@@ -75,6 +75,7 @@ import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.StorageItem;
 import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.net.InputStreamWrapper;
+import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
@@ -87,10 +88,15 @@ import org.restlet.resource.Delete;
 import org.restlet.resource.ResourceException;
 
 
+import javax.security.auth.Subject;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
 
@@ -105,7 +111,7 @@ public class StorageItemServerResource extends SecureServerResource
 
     StorageItemFactory storageItemFactory;
     VOSpaceClient voSpaceClient;
-    RegistryClient registryClient;
+    private RegistryClient registryClient;
 
 
     /**
@@ -117,8 +123,9 @@ public class StorageItemServerResource extends SecureServerResource
 
     /**
      * Complete constructor for testing.
-     * @param registryClient        The Registry client to use.
-     * @param voSpaceClient         The VOSpace Client to use.
+     *
+     * @param registryClient The Registry client to use.
+     * @param voSpaceClient  The VOSpace Client to use.
      */
     StorageItemServerResource(final RegistryClient registryClient,
                               final VOSpaceClient voSpaceClient)
@@ -130,7 +137,7 @@ public class StorageItemServerResource extends SecureServerResource
     /**
      * Set-up method.  This ensures there is a context first before pulling
      * out some necessary objects for further work.
-     *
+     * <p>
      * Tester
      */
     @Override
@@ -162,7 +169,8 @@ public class StorageItemServerResource extends SecureServerResource
                     new StorageItemFactory(URI_EXTRACTOR, registryClient,
                                            (getServletContext() == null)
                                            ? ""
-                                           : getServletContext().getContextPath());
+                                           : getServletContext()
+                                                   .getContextPath());
         }
         catch (MalformedURLException e)
         {
@@ -185,24 +193,25 @@ public class StorageItemServerResource extends SecureServerResource
         return toURI(getCurrentPath());
     }
 
-    final <T extends Node> T getCurrentNode() throws NodeNotFoundException
+    final <T extends Node> T getCurrentNode()
+            throws NodeNotFoundException, IOException
     {
         return getCurrentNode(VOS.Detail.max);
     }
 
     final <T extends Node> T getCurrentNode(final VOS.Detail detail)
-            throws NodeNotFoundException
+            throws NodeNotFoundException, IOException
     {
         return getNode(getCurrentItemURI(), detail);
     }
 
     final <T extends StorageItem> T getStorageItem(final URI uri)
-            throws FileNotFoundException
+            throws IOException
     {
         try
         {
             return (T) storageItemFactory.translate(getNode(new VOSURI(uri),
-                                                        VOS.Detail.max));
+                                                            VOS.Detail.max));
         }
         catch (NodeNotFoundException e)
         {
@@ -211,7 +220,7 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
-            throws NodeNotFoundException
+            throws NodeNotFoundException, IOException
     {
         final int pageSize;
 
@@ -233,7 +242,28 @@ public class StorageItemServerResource extends SecureServerResource
                                                     : "&detail="
                                                       + detail.name());
 
-        return (T) voSpaceClient.getNode(folderURI.getPath(), query);
+        return executeSecurely(new PrivilegedExceptionAction<T>()
+        {
+            /**
+             * Performs the computation.  This method will be called by
+             * {@code AccessController.doPrivileged} after enabling privileges.
+             *
+             * @return a class-dependent value that may represent the results of the
+             * computation.  Each class that implements
+             * {@code PrivilegedExceptionAction} should document what
+             * (if anything) this value represents.
+             * @throws Exception an exceptional condition has occurred.  Each class
+             *                   that implements {@code PrivilegedExceptionAction} should
+             *                   document the exceptions that its run method can throw.
+             * @see AccessController#doPrivileged(PrivilegedExceptionAction)
+             * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
+             */
+            @Override
+            public T run() throws Exception
+            {
+                return (T) voSpaceClient.getNode(folderURI.getPath(), query);
+            }
+        });
     }
 
     VOSURI toURI(final String path)
@@ -242,7 +272,7 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     void setInheritedPermissions(final VOSURI newNodeURI)
-            throws NodeNotFoundException
+            throws NodeNotFoundException, IOException
     {
         final ContainerNode parentNode = getCurrentNode();
         final Node newNode = getNode(newNodeURI, null);
@@ -291,12 +321,12 @@ public class StorageItemServerResource extends SecureServerResource
 
     /**
      * Remove the Node associated with the given Path.
-     *
+     * <p>
      * It is the responsibility of the caller to handle proper closing of
      * the writer.
      *
-     * @param path      The path of the Node to delete.
-     * @param writer    Where to pump output to.
+     * @param path   The path of the Node to delete.
+     * @param writer Where to pump output to.
      */
     void getManifest(final String path, final Writer writer) throws IOException
     {
@@ -310,27 +340,32 @@ public class StorageItemServerResource extends SecureServerResource
                     .getServiceURL(URI.create(getContext().getAttributes().get(
                             VOSpaceApplication.VOSPACE_SERVICE_ID_KEY)
                                                       .toString()),
-                            Standards.VOSPACE_NODES_20,
+                                   Standards.VOSPACE_NODES_20,
                                    AuthMethod.ANON);
             final URL url = new URL(vospaceURL.toExternalForm() + nodePath
                                     + "?view=manifest");
 
             final HttpDownload httpDownload =
-                    new HttpDownload(url, inputStream ->
+                    new HttpDownload(url, new InputStreamWrapper()
                     {
-                        // create byte buffer
-                        final Reader reader =
-                                new InputStreamReader(inputStream, "UTF-8");
-                        char[] buffer = new char[8092];
-                        int charLength;
-
-                        while ((charLength = reader.read(buffer)) > 0)
+                        @Override
+                        public void read(InputStream inputStream) throws
+                                                                  IOException
                         {
-                            writer.write(buffer, 0, charLength);
-                        }
+                            // create byte buffer
+                            final Reader reader =
+                                    new InputStreamReader(inputStream, "UTF-8");
+                            char[] buffer = new char[8092];
+                            int charLength;
 
-                        writer.flush();
-                        reader.close();
+                            while ((charLength = reader.read(buffer)) > 0)
+                            {
+                                writer.write(buffer, 0, charLength);
+                            }
+
+                            writer.flush();
+                            reader.close();
+                        }
                     });
 
             httpDownload.run();
@@ -350,25 +385,27 @@ public class StorageItemServerResource extends SecureServerResource
      * Resolve this link Node's target to its final destination.  This method
      * will follow the target of the provided LinkNode, and continue to do so
      * until an external URL is found, or Node that is not a Link Node.
-     *
+     * <p>
      * Finally, this method will redirect to the appropriate endpoint.
      *
-     * @throws  Exception       For any parsing errors.
+     * @throws Exception For any parsing errors.
      */
     void resolveLink() throws Exception
     {
-        final URI resolvedURI = resolveLink(getCurrentNode(null));
+        final LinkNode linkNode = getCurrentNode(null);
+        final URI resolvedURI = resolveLink(linkNode);
         getResponse().redirectTemporary(resolvedURI.toString());
     }
 
     /**
      * Resolve the given LinkNode's target URI and return it.
-     * @param linkNode                  The LinkNode to resolve.
-     * @return                          URI of the target.
-     * @throws NodeNotFoundException    If the target is not found.
+     *
+     * @param linkNode The LinkNode to resolve.
+     * @return URI of the target.
+     * @throws NodeNotFoundException If the target is not found.
      */
     private URI resolveLink(final LinkNode linkNode)
-            throws NodeNotFoundException, MalformedURLException
+            throws NodeNotFoundException, IOException
     {
         final URI endPoint;
         final URI targetURI = linkNode.getTarget();
@@ -421,12 +458,20 @@ public class StorageItemServerResource extends SecureServerResource
      *
      * @param newNode The newly created Node.
      */
-    private void setNodeSecure(final Node newNode)
+    private void setNodeSecure(final Node newNode) throws IOException
     {
-        voSpaceClient.setNode(newNode);
+        executeSecurely(new PrivilegedExceptionAction<Void>()
+        {
+            @Override
+            public Void run() throws Exception
+            {
+                voSpaceClient.setNode(newNode);
+                return null;
+            }
+        });
     }
 
-    void createLink(final URI target)
+    void createLink(final URI target) throws IOException
     {
         createNode(toLinkNode(target), false);
     }
@@ -437,7 +482,7 @@ public class StorageItemServerResource extends SecureServerResource
         return new LinkNode(linkNodeURI, target);
     }
 
-    void createFolder()
+    void createFolder() throws IOException
     {
         createNode(toContainerNode(), false);
     }
@@ -455,13 +500,49 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     void createNode(final Node newNode, final boolean checkForDuplicate)
+            throws IOException
     {
-        voSpaceClient.createNode(newNode, checkForDuplicate);
+        executeSecurely(new PrivilegedExceptionAction<Void>()
+        {
+            @Override
+            public Void run() throws Exception
+            {
+                voSpaceClient.createNode(newNode, checkForDuplicate);
+                return null;
+            }
+        });
     }
 
     @Delete
-    public void deleteNode()
+    public void deleteNode() throws IOException
     {
-        voSpaceClient.deleteNode(getCurrentPath());
+        executeSecurely(new PrivilegedExceptionAction<Void>()
+        {
+            @Override
+            public Void run() throws Exception
+            {
+                voSpaceClient.deleteNode(getCurrentPath());
+                return null;
+            }
+        });
+    }
+
+    <T> T executeSecurely(final PrivilegedExceptionAction<T> runnable) throws
+                                                                       IOException
+    {
+        final URI serviceID =
+                getContextAttribute(VOSpaceApplication.VOSPACE_SERVICE_ID_KEY);
+        final URL serviceURL = registryClient.getServiceURL(
+                serviceID, Standards.VOSPACE_NODES_20, AuthMethod.COOKIE);
+
+        try
+        {
+            return Subject.doAs(generateVOSpaceUser(
+                    NetUtil.getDomainName(serviceURL)), runnable);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw new IOException(e);
+        }
     }
 }

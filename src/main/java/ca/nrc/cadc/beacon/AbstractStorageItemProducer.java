@@ -76,6 +76,7 @@ import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import javax.security.auth.Subject;
+import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
@@ -119,9 +120,28 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
     private List<Node> nextPage() throws Exception
     {
         final List<Node> nodes =
-                Subject.doAs(user, (PrivilegedExceptionAction<List<Node>>) () ->
-                        ((ContainerNode) voSpaceClient.getNode(
-                                folderURI.getPath(), getQuery())).getNodes());
+                Subject.doAs(user, new PrivilegedExceptionAction<List<Node>>()
+                {
+                    /**
+                     * Performs the computation.  This method will be called by
+                     * {@code AccessController.doPrivileged} after enabling privileges.
+                     *
+                     * @return a class-dependent value that may represent the results of the
+                     * computation.  Each class that implements
+                     * {@code PrivilegedExceptionAction} should document what
+                     * (if anything) this value represents.
+                     * @throws Exception an exceptional condition has occurred.  Each class
+                     *                   that implements {@code PrivilegedExceptionAction} should
+                     *                   document the exceptions that its run method can throw.
+                     * @see AccessController#doPrivileged(PrivilegedExceptionAction)
+                     */
+                    @Override
+                    public List<Node> run() throws Exception
+                    {
+                        return ((ContainerNode) voSpaceClient.getNode(
+                                folderURI.getPath(), getQuery())).getNodes();
+                    }
+                });
 
         return (current == null) ? nodes : (nodes.size() > 1)
                                            ? nodes.subList(1, nodes.size())
