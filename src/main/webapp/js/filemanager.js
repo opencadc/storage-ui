@@ -85,6 +85,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var lockedIcon =
     "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"" + contextPath
     + "unlock\" title=\"Unlock to modify.\">Unlock</a>";
+  var editIcon =
+      "<span class=\"glyphicon glyphicon-edit\"></span> <a href=\"" + contextPath
+      + "unlock\" title=\"Edit permissions.\"></a>";
   var publicHTML = "<div class=\"input-group-addon\">\n"
                    + "<input id=\"public_toggle\" type=\"checkbox\" checked=\"checked\" data-toggle=\"toggle\" data-size=\"small\" data-on=\"Public\" data-off=\"Group name\" />\n"
                    + "</div>";
@@ -202,7 +205,13 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
               // Add code here to add the 'edit' glyphicon if
               // the item is writable
-              var canWriteFlag = (full[isWritableFlagIndex] === "true");
+              if (full[13] === "false") {
+                // TODO: value should be "true" but for initially
+                // placing the icon, setting it to "false" so will be placed
+                // for each line
+
+                itemNameDisplay += editIcon;
+              }
 
 
               return itemNameDisplay;

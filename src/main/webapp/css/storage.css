@@ -158,6 +158,10 @@ button#more_details {
   animation: glyphicon-spin-r 1s infinite linear;
 }
 
+.glyphicon-edit {
+  float:right;
+}
+
 @-webkit-keyframes glyphicon-spin-r {
   0% {
     -webkit-transform: rotate(0deg);
