@@ -213,3 +213,28 @@ div.dataTables_wrapper div.dataTables_info {
 .popover {
   max-width: 500px;
 }
+
+
+/* CSS for prompts */
+.prompt-label-shaded {
+  opacity: 0.5;
+}
+
+.prompt-label {
+  font-size: 12pt;
+  font-weight: 500;
+}
+
+.prompt-checkbox {
+  float: right;
+  height: 16px;
+  width: 16px;
+}
+
+.prompt-h3 {
+  margin-top: 0px;
+}
+
+
+
+

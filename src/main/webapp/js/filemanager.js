@@ -85,9 +85,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var lockedIcon =
     "<span class=\"glyphicon glyphicon-lock\"></span> <a href=\"" + contextPath
     + "unlock\" title=\"Unlock to modify.\">Unlock</a>";
-  var editIcon =
-      "<span class=\"glyphicon glyphicon-edit\"></span> <a href=\"" + contextPath
-      + "unlock\" title=\"Edit permissions.\"></a>";
   var publicHTML = "<div class=\"input-group-addon\">\n"
                    + "<input id=\"public_toggle\" type=\"checkbox\" checked=\"checked\" data-toggle=\"toggle\" data-size=\"small\" data-on=\"Public\" data-off=\"Group name\" />\n"
                    + "</div>";
@@ -203,9 +200,13 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                 itemNameDisplay += data;
               }
 
-              // if isWritable bit is true, provide
-              // edit icon
+              // if isWritable bit is true, provide edit icon
               if (full[13] === "true") {
+                // Add data references to icon so they can be used to populate the edit prompt
+                var editIcon = '<span class="glyphicon glyphicon-edit"><a href="' + contextPath +
+                    'update" title="Edit permissions." ' +
+                    'readable="' + full[6] +
+                    '" path="' + full[9] + '" ></a></span>';
                 itemNameDisplay += editIcon;
               }
 
@@ -993,7 +994,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                input: {
                  focus: "#link_name",
                  buttons: btns,
-                 html: msg,
+                 html:  f,
                  submit: function (e, value, message, formVals)
                  {
                    if (value === true)
@@ -1227,6 +1228,110 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                              }).show();
     }
   };
+
+  // Needs to be done after data load
+  var bindEditFunction = function() {
+      $('.glyphicon-edit').off().click(function (event) {
+
+        var handleEditPermissions = function (event, value,
+                                              message,
+                                              formVals)
+        {
+          if (value === true)
+          {
+            var publicCheckbox = formVals['publicPermission'];
+            var itemPath = formVals['itemPath'];
+
+            var url = contextPath + config.options.itemConnector + itemPath;
+
+            var dataStr = JSON.stringify(formVals);
+
+            $.ajax(
+                  {
+                    url: url,
+                    method: "POST",
+                    contentType: "application/json",
+                    data: dataStr,
+                    statusCode: {
+                      201: function ()
+                      {
+                        $.prompt(lg.successful_edit,
+                            {
+                              submit: refreshPage
+                            });
+                      },
+                      204: function ()
+                      {
+                        $.prompt(lg.successful_edit,
+                            {
+                              submit: refreshPage
+                            });
+                      },
+                      400: function ()
+                      {
+
+                      },
+                      401: function ()
+                      {
+                        $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                      },
+                      403: function ()
+                      {
+                        $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                      },
+                      409: function ()
+                      {
+                        $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
+                      }
+                    }
+                  });
+
+          }
+          else
+          {
+            return true;
+          }
+        };
+
+        var iconAnchor = $(event.currentTarget).find("a")[0];
+
+        var checkboxState = "";
+        if (iconAnchor.getAttribute("readable") === "true") {
+          checkboxState = "checked";
+        }
+
+        // Add form body
+        var msg =  '<label class="prompt-label custom-control custom-checkbox">' +
+           '<span class="custom-control-indicator"></span>' +
+           '<span class="custom-control-description">Public read permission</span>' +
+           '</label>' +
+           '<input type="checkbox" class="form-control prompt-checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + ' >' +
+           '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") +
+            '">';
+
+        var btns = [];
+        btns.push({
+          "title": lg.save,
+          "value": true,
+          "classes": "btn btn-primary"
+        });
+        btns.push({
+          "title": lg.cancel,
+          "value": false,
+          "classes": "btn btn-default"
+        });
+
+
+        $.prompt(msg, {
+            title: '<h3 class="prompt-h3">' +iconAnchor.getAttribute("path") + '</h3>',
+            submit: handleEditPermissions,
+            focus: "#publicPermission",
+            buttons: btns
+        });
+      });
+
+  };
+
 
 
   /*---------------------------------------------------------
@@ -2838,6 +2943,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         $('.contextMenu .replace').remove();
         $('.contextMenu .delete').remove();
       }
+
+      // Bind edit functions.
+      bindEditFunction();
 
       // Adjust layout.
       setDimensions();

@@ -82,9 +82,14 @@ import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.VOSClientUtil;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+import org.json.JSONObject;
 import org.restlet.Context;
+import org.restlet.data.Form;
 import org.restlet.data.Status;
+import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
+import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
 
@@ -234,7 +239,7 @@ public class StorageItemServerResource extends SecureServerResource
         }
         else
         {
-            pageSize = 1;
+            pageSize = 0;
         }
 
         final String query = "limit=" + pageSize + ((detail == null)
@@ -544,5 +549,35 @@ public class StorageItemServerResource extends SecureServerResource
         {
             throw new IOException(e);
         }
+    }
+
+    @Post("json")
+    public void update(final JsonRepresentation payload) throws Exception
+    {
+        final JSONObject jsonObject = payload.getJsonObject();
+        ContainerNode currentNode = null;
+        try {
+            // limit=0, detail=min so should only get the current node
+            currentNode = getCurrentNode(VOS.Detail.properties);
+            final List<NodeProperty> nodeProperties = currentNode.getProperties();
+
+            nodeProperties.remove(
+                    new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, ""));
+            String isPublic = "false";
+
+            if (jsonObject.keySet().contains("publicPermission")) {
+                if (jsonObject.get("publicPermission").equals("on")) {
+                    isPublic = "true";
+                }
+            }
+
+            nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, isPublic));
+
+            setNodeSecure(currentNode);
+
+        } catch (NodeNotFoundException ne) {
+            throw new Exception(ne);
+        }
+
     }
 }
