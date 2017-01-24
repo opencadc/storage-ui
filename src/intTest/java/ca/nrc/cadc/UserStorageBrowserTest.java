@@ -100,8 +100,8 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		System.out.println("Rowcount: " + rowCount);
 		verifyTrue(rowCount > 2);
 
-		// Check access to page
-		verifyTrue(userStoragePage.isReadAccess());
+		// Check access to page: should be write accessible
+		verifyFalse(userStoragePage.isReadAccess());
 
 
 
@@ -109,6 +109,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		// TODO: better test here is to have two levels to navigate through,
 
 		// Test state is currently in a subfolder: Start at Root
+		System.out.println("navigating to root...");
 		userStoragePage.navToRoot();
 		// Verify in Root Folder
 		verifyTrue(userStoragePage.isRootFolder());
@@ -159,14 +160,32 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyFalse(userStoragePage.isFileSelectedMode(startRow));
 
 
+		// create new folder/resource *
+		// go into CADCtest folder
+		// select New dropdown, Folder element
+		// type in 'automated_test' for folder name
+		// create
+		// filter after page reloads & make sure it exists
 
-    	
-    	// Scenario TODO:
-    	// downloading a file
-		// create new folder/resource
-		// delete folder/resource
-		// check permissions on folder/resource
-		// toggle Public attribute of folder/resource
+		// toggle Public attribute of folder/resource *
+		// verify what current public bit value is
+
+		// select glyphicon-edit for the 'automated_test' folder row
+		// validate edit form:
+			// verify header is correct
+			// verify checkbox is on or off as per what current setting is
+		// toggle checkbox
+		// submit prompt
+		// on page reload refilter for 'automated_test' and make sure value is as expected
+
+		// delete folder/resource *
+		// select 'automated_test' folder after filter finds it
+		// select 'delete' button
+
+
+		// Scenario TODO:
+		// downloading a file
+
 
    
     	System.out.println("UserStorageBrowserTest completed");

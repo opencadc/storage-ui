@@ -68,16 +68,13 @@
 
 package ca.nrc.cadc;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.Select;
 import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
-import org.openqa.selenium.NoSuchElementException;
 
 
 import java.util.List;
@@ -123,6 +120,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // class has 'disabled' in it for base case.
     @FindBy(id="newdropdown")
     private WebElement newdropdownButton;
+
+//    // element of the list under newdropdown
+//    @FindBy(id="newfolder")
+//    private WebElement newFolder;
 
     @FindBy(id="download")
     private WebElement downloadButton;
@@ -225,7 +226,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public void clickCheckboxForRow(int rowNum) throws Exception
     {
-
         WebElement firstCheckbox  = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
                 By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[1]")));
@@ -233,14 +233,19 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
     public void navToRoot() throws Exception {
-        click(rootButton);
+        // opting for sendKeys because chromedriver
+        // doesn't work for click() function for some reason. :( 
+//        click(rootButton);
+        rootButton.sendKeys(Keys.ENTER);
     }
 
     public void navUpLevel() throws Exception {
         click(leveUpButton);
     }
     
+    public void clickNewfolder() throws Exception {
 
+}
 
     // Inspection functions
     public WebElement getProgressBar() throws Exception
