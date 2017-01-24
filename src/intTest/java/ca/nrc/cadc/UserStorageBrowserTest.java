@@ -182,16 +182,16 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 
 		// Create test folder
 		String tempTestFolder = "vosui_automated_test";
-//		userStoragePage.createNewFolder(tempTestFolder);
+		userStoragePage.createNewFolder(tempTestFolder);
 
 		userStoragePage.enterSearch(tempTestFolder);
 
-//		userStoragePage.clickCheckboxForRow(1);
-
-		// Works, with timing issues
-//		userStoragePage.deleteFolder(tempTestFolder);
-
+		// Change Public attribute
 		userStoragePage.togglePublicAttributeForRow(1);
+
+		userStoragePage.clickCheckboxForRow(1);
+		// Works, with timing issues
+		userStoragePage.deleteFolder(tempTestFolder);
 
 
 		// filter after page reloads & make sure it exists

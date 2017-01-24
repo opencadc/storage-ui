@@ -215,8 +215,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Folder Related
     public void clickFolder(String folderName)
     {
-        WebElement folder = driver.findElement(
-                By.xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName  + "')]]"));
+        WebElement folder = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                        By.xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName  + "')]]")));
+
+//        driver.findElement(
+//                By.xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName  + "')]]"));
         System.out.println("Folder to be clicked: " + folder.getText());
         folder.click();
     }
@@ -254,7 +258,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public void createNewFolder(String foldername) throws Exception {
         newdropdownButton.click();
         newFolder.click();
-        WebElement newfolderInput = driver.findElement(By.id("fname"));
+        WebElement newfolderInput =
+                (new WebDriverWait(driver, 10))
+                        .until(ExpectedConditions.elementToBeClickable(
+                                By.id("fname")));
+
+//                driver.findElement(By.id("fname"));
         sendKeys(newfolderInput, foldername);
 
         WebElement createFolderButton = driver.findElement(By.xpath("//button[contains(text(),\"Create Folder\")]"));
@@ -299,7 +308,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         String currentPermission = "";
         WebElement editIcon = driver.findElement(By.xpath("//span[contains(@class, 'glyphicon-edit')]"));
         editIcon.click();
-        WebElement permissionCheckbox = driver.findElement(By.id("publicPermission"));
+        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                        By.id("publicPermission")));
+
+//                driver.findElement(By.id("publicPermission"));
         currentPermission = permissionCheckbox.getAttribute("checked");
         click(permissionCheckbox);
         clickButton(SAVE);
