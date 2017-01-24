@@ -95,77 +95,112 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyTrue(userStoragePage.isLoggedIn());
 		System.out.println("logged in");
 
-		rowCount = userStoragePage.getTableRowCount();
+		// TODO: this is commented out until editing public tests are finished
+		// just takes too long to go through the whole body of the test, so
+		// testing turnaround is too long!!!
 
-		System.out.println("Rowcount: " + rowCount);
-		verifyTrue(rowCount > 2);
+//		rowCount = userStoragePage.getTableRowCount();
+//
+//		System.out.println("Rowcount: " + rowCount);
+//		verifyTrue(rowCount > 2);
+//
+//		// Check access to page: should be write accessible
+//		verifyFalse(userStoragePage.isReadAccess());
+//
+//
+//
+//		// Scenario 3: Test navigation buttons
+//		// TODO: better test here is to have two levels to navigate through,
+//
+//		// Test state is currently in a subfolder: Start at Root
+//		System.out.println("navigating to root...");
+//		userStoragePage.navToRoot();
+//		// Verify in Root Folder
+//		verifyTrue(userStoragePage.isRootFolder());
+//
+//		int startRow = 1;
+//
+//		System.out.println("Starting navigation tests");
+//		// click through to first folder
+//		int firstPageRowClicked = userStoragePage.getNextAvailabileFolderRow(startRow);
+//		String subFolder1 = userStoragePage.getFolderName(firstPageRowClicked);
+//		userStoragePage.clickFolderForRow(firstPageRowClicked);
+//		verifyTrue(userStoragePage.isSubFolder(subFolder1));
+//
+//		// Go down one more level
+//		int secondPageRowCilcked = userStoragePage.getNextAvailabileFolderRow(startRow);
+//		String subFolder2 = userStoragePage.getFolderName(secondPageRowCilcked);
+//		userStoragePage.clickFolderForRow(secondPageRowCilcked);
+//		verifyTrue(userStoragePage.isSubFolder(subFolder2));
+//
+//		// Navigate up one level (should be up one level)
+//		userStoragePage.navUpLevel();
+//		verifyTrue(userStoragePage.isSubFolder(subFolder1));
+//
+//		// Go back down one folder
+//		userStoragePage.clickFolderForRow(secondPageRowCilcked);
+//		verifyTrue(userStoragePage.isSubFolder(subFolder2));
+//
+//		// Go up to root
+//		userStoragePage.navToRoot();
+//		// Verify in Root Folder
+//		verifyTrue(userStoragePage.isRootFolder());
+//
+//
+//
+//
+//
+//		System.out.println("testing file actions");
+//
+//		// Scenario 5: test selecting a file
+//		userStoragePage.clickFolderForRow(firstPageRowClicked);
+//		userStoragePage.clickCheckboxForRow(startRow);
+//		verifyTrue(userStoragePage.isFileSelectedMode(startRow));
+//
+//		userStoragePage.clickCheckboxForRow(startRow);
+//		verifyFalse(userStoragePage.isFileSelectedMode(startRow));
+//
+//
+//		// create new folder/resource *
+//
+//		// Go up to root
+//		userStoragePage.navToRoot();
+//		// Verify in Root Folder
+//		verifyTrue(userStoragePage.isRootFolder());
+//		// click through to CADCtest folder
+//		userStoragePage.clickFolder(testFolderName);
+//		// Verify sub folder page state
+//		verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
-		// Check access to page: should be write accessible
-		verifyFalse(userStoragePage.isReadAccess());
+		// navigate to automated test folder
+		// TODO: test if it exists first. If not, create it
+		// TODO: this section has timing issues. STepping through the
+		// tests works, so there are elements that aren't being
+		// waited for, or don't load fast enough, or...
+		String testFolder = "automated_test";
+		userStoragePage.clickFolder(testFolder);
+
+		// Create test folder
+		String tempTestFolder = "vosui_automated_test";
+//		userStoragePage.createNewFolder(tempTestFolder);
+
+		userStoragePage.enterSearch(tempTestFolder);
+
+//		userStoragePage.clickCheckboxForRow(1);
+
+		// Works, with timing issues
+//		userStoragePage.deleteFolder(tempTestFolder);
+
+		userStoragePage.togglePublicAttributeForRow(1);
 
 
-
-		// Scenario 3: Test navigation buttons
-		// TODO: better test here is to have two levels to navigate through,
-
-		// Test state is currently in a subfolder: Start at Root
-		System.out.println("navigating to root...");
-		userStoragePage.navToRoot();
-		// Verify in Root Folder
-		verifyTrue(userStoragePage.isRootFolder());
-
-		int startRow = 1;
-
-		System.out.println("Starting navigation tests");
-		// click through to first folder
-		int firstPageRowClicked = userStoragePage.getNextAvailabileFolderRow(startRow);
-		String subFolder1 = userStoragePage.getFolderName(firstPageRowClicked);
-		userStoragePage.clickFolderForRow(firstPageRowClicked);
-		verifyTrue(userStoragePage.isSubFolder(subFolder1));
-
-		// Go down one more level
-		int secondPageRowCilcked = userStoragePage.getNextAvailabileFolderRow(startRow);
-		String subFolder2 = userStoragePage.getFolderName(secondPageRowCilcked);
-		userStoragePage.clickFolderForRow(secondPageRowCilcked);
-		verifyTrue(userStoragePage.isSubFolder(subFolder2));
-
-		// Navigate up one level (should be up one level)
-		userStoragePage.navUpLevel();
-		verifyTrue(userStoragePage.isSubFolder(subFolder1));
-
-		// Go back down one folder
-		userStoragePage.clickFolderForRow(secondPageRowCilcked);
-		verifyTrue(userStoragePage.isSubFolder(subFolder2));
-
-		// Go up to root
-		userStoragePage.navToRoot();
-		// Verify in Root Folder
-		verifyTrue(userStoragePage.isRootFolder());
-
-
-		System.out.println("Test logout");
-		// Scenario 4: logout
-		userStoragePage.doLogout();
-		verifyFalse(userStoragePage.isLoggedIn());
-
-
-		System.out.println("testing file actions");
-
-		// Scenario 5: test selecting a file
-		userStoragePage.clickFolderForRow(firstPageRowClicked);
-		userStoragePage.clickCheckboxForRow(startRow);
-		verifyTrue(userStoragePage.isFileSelectedMode(startRow));
-
-		userStoragePage.clickCheckboxForRow(startRow);
-		verifyFalse(userStoragePage.isFileSelectedMode(startRow));
-
-
-		// create new folder/resource *
-		// go into CADCtest folder
-		// select New dropdown, Folder element
-		// type in 'automated_test' for folder name
-		// create
 		// filter after page reloads & make sure it exists
+		// TODO: known bug here where newly created folders are not writable
+		// case: /CADCtest directory, make a new folder - isn't.
+		// in /CADCtest/bla a new folder IS public. - inherited permissions maybe
+		// aren't working quite right?
+
+		// test for now can create automated_test, nav into it, then automated_test_2, edit permissions on that one.
 
 		// toggle Public attribute of folder/resource *
 		// verify what current public bit value is
@@ -187,6 +222,11 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		// downloading a file
 
 
+
+		System.out.println("Test logout");
+		// Scenario 4: logout
+		userStoragePage.doLogout();
+		verifyFalse(userStoragePage.isLoggedIn());
    
     	System.out.println("UserStorageBrowserTest completed");
     	

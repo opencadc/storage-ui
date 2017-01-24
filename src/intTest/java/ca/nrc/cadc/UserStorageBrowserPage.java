@@ -83,6 +83,16 @@ import java.util.List;
 public class UserStorageBrowserPage extends AbstractTestWebPage
 {
     private static final String ROOT_FOLDER_NAME = "ROOT";
+
+    // Strings for matching against prompt messages and buttons
+    private static final String DELETE_CONFIRMATION_TEXT = "Are you sure you wish to delete the selected items?";
+    private static final String SUCCESSFUL = "successful";
+    private static final String ALREADY_EXISTS = "already exists";
+    private static final String CONFIRMATION_MSG = "New folder added successfully";
+    private static final String OK = "Ok";
+    private static final String YES = "Yes";
+    private static final String CLOSE = "Close";
+    private static final String SAVE = "Save";
     // Define in here what elements are mode indicators
 
     // Elements always on the page
@@ -122,8 +132,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private WebElement newdropdownButton;
 
 //    // element of the list under newdropdown
-//    @FindBy(id="newfolder")
-//    private WebElement newFolder;
+    @FindBy(id="newfolder")
+    private WebElement newFolder;
+
 
     @FindBy(id="download")
     private WebElement downloadButton;
@@ -133,6 +144,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     @FindBy(id="more_details")
     private WebElement moredetailsButton;
+
 
 
     // Login form elements
@@ -173,6 +185,16 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
 
     // Transition functions
+    public void clickButton(String promptText) throws Exception {
+        WebElement button = driver.findElement(By.xpath("//button[contains(text(),\"" + promptText + "\")]"));
+        button.click();
+    }
+
+    public void clickButtonWithClass(String promptText, String className) throws Exception {
+        WebElement button = driver.findElement(By.xpath("//button[contains(@class, '" + className + "') and contains(text(),'" + promptText + "')]"));       button.click();
+    }
+
+
     public void enterSearch(final String searchString) throws Exception {
     	sendKeys(searchFilter, searchString);
     }
@@ -188,9 +210,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         click(logoutButton);
     }
 
+
+
+    // Folder Related
     public void clickFolder(String folderName)
     {
-        WebElement folder = beaconTable.findElement(
+        WebElement folder = driver.findElement(
                 By.xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName  + "')]]"));
         System.out.println("Folder to be clicked: " + folder.getText());
         folder.click();
@@ -203,6 +228,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                         By.xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a")));
         click(firstCheckbox);
     }
+
 
     public int getNextAvailabileFolderRow(int startRow) throws Exception {
         //   not all folders are clickable, go down the rows to find one
@@ -224,6 +250,101 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return rowNum;
     }
 
+    // CRUD for folders
+    public void createNewFolder(String foldername) throws Exception {
+        newdropdownButton.click();
+        newFolder.click();
+        WebElement newfolderInput = driver.findElement(By.id("fname"));
+        sendKeys(newfolderInput, foldername);
+
+        WebElement createFolderButton = driver.findElement(By.xpath("//button[contains(text(),\"Create Folder\")]"));
+        createFolderButton.click();
+
+        if (isJqiMsgShowing(CONFIRMATION_MSG)) {
+            clickButton(OK);
+        } else {
+            throw new Exception("Could not create folder " + foldername);
+        }
+    }
+
+    public void deleteFolder(String foldername) throws Exception {
+        if (!isDisabled(deleteButton)) {
+            deleteButton.click();
+        }
+
+        // locate folder, select checkbox, select delete button
+        if (isJqiMsgShowing(DELETE_CONFIRMATION_TEXT)) {
+            clickButtonWithClass(YES, "btn-danger");
+        } else {
+            throw new Exception("Could not delete folder " + foldername);
+        }
+
+        // confirm folder delete
+        if (isJqiColourMsgShowing(SUCCESSFUL)) {
+            clickButton(CLOSE);
+        } else {
+            throw new Exception("Folder delete not successful: " + foldername);
+        }
+    }
+
+
+    public void clickEditIconForRow(int rowNum) throws Exception
+    {
+        WebElement editIcon = driver.findElement(By.xpath("//span[contains(@class, 'glyphicon-edit')]"));
+        editIcon.click();
+    }
+
+    public String togglePublicAttributeForRow(int rowNum) throws Exception
+    {
+        String currentPermission = "";
+        WebElement editIcon = driver.findElement(By.xpath("//span[contains(@class, 'glyphicon-edit')]"));
+        editIcon.click();
+        WebElement permissionCheckbox = driver.findElement(By.id("publicPermission"));
+        currentPermission = permissionCheckbox.getAttribute("checked");
+        click(permissionCheckbox);
+        clickButton(SAVE);
+
+        // confirm folder delete
+        if (isJqiMsgShowing(SUCCESSFUL)) {
+            clickButton(OK);
+        } else {
+            throw new Exception("Permissions editing not successful for row : " + rowNum);
+        }
+
+        return currentPermission;
+
+    }
+    /**
+     * Gets row number for next row that has an edit icon after the row passed in.
+     * Using this kind of function instead of a specific row tends to leave the
+     * functions working even when the underlying data changes.
+     *
+     * @param startRow
+     * @return int: row of first edit icon
+     * @throws Exception
+     */
+    public int getNextAvailableEditIconRow(int startRow) throws Exception {
+        //   not all folders have editable data for currently logged in user
+        boolean found = false;
+        int rowNum = startRow;
+        WebElement firstEditIcon = null;
+
+        while (!found) {
+            // This method throws an exception if the element is not found
+            try {
+                firstEditIcon = beaconTable.findElement(
+                        By.xpath("//*[@id='beacon']/tbody/tr[" + rowNum + "]/td[2]/span[contains(@class, 'glyphicon-edit']"));
+
+            } catch (Exception e) {
+                rowNum++;
+                continue;
+            }
+            found = true;
+        }
+        return rowNum;
+    }
+
+    // Checkbox related
     public void clickCheckboxForRow(int rowNum) throws Exception
     {
         WebElement firstCheckbox  = (new WebDriverWait(driver, 10))
@@ -232,9 +353,21 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         click(firstCheckbox);
     }
 
+    public void clickCheckboxForFolder(String folderName) throws Exception {
+        WebElement folder = driver.findElement(
+                By.xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[contains(text()," + folderName  + ")]"));
+        WebElement folderParent = folder.findElement(By.xpath(".."));
+        WebElement folderCheckbox = folderParent.findElement(By.xpath("//div[contains(@class=\"select-checkbox\")]"));
+        folderCheckbox.click();
+    }
+
+
+
+    // Navigation functions
+
     public void navToRoot() throws Exception {
         // opting for sendKeys because chromedriver
-        // doesn't work for click() function for some reason. :( 
+        // doesn't work for click() function for some reason. :(
 //        click(rootButton);
         rootButton.sendKeys(Keys.ENTER);
     }
@@ -243,9 +376,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         click(leveUpButton);
     }
     
-    public void clickNewfolder() throws Exception {
 
-}
 
     // Inspection functions
     public WebElement getProgressBar() throws Exception
@@ -393,6 +524,32 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
 
         return false;
+    }
+
+
+    // Impromptu convenience functions
+    public boolean isJqiMsgShowing(String message) {
+        try {
+            WebElement jqiMsg = (new WebDriverWait(driver, 10))
+                    .until(ExpectedConditions.elementToBeClickable(
+                            By.xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
+                                    + message + "\")]")));
+//            WebElement jqiMsg = driver.findElement(
+//                        By.xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
+//                                + message + "\")]"));
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public boolean isJqiColourMsgShowing(String message) {
+        try {
+            WebElement jqiMsg = driver.findElement(
+                    By.xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"+ message +"')]"));            return true;
+        } catch ( Exception e ) {
+            return false;
+        }
     }
 
 
