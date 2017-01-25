@@ -558,8 +558,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public boolean isJqiColourMsgShowing(String message) {
         try {
-            WebElement jqiMsg = driver.findElement(
-                    By.xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"+ message +"')]"));            return true;
+            WebElement jqiMsg = (new WebDriverWait(driver, 10))
+                    .until(ExpectedConditions.elementToBeClickable(
+                            By.xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
+                                    + message +"')]")));
+//                    driver.findElement(
+//                    By.xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"+ message +"')]"));
+            return true;
         } catch ( Exception e ) {
             return false;
         }
