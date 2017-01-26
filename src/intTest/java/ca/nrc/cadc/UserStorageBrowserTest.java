@@ -67,27 +67,21 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
     	// check that rows of table are shorted correctly
     	// verify entry is correct
 
-    	// Should short to one entry, verify the name and quit.
     	userStoragePage.enterSearch(testFolderName);
-
-		// Verify filter worked correctly
     	int rowCount = userStoragePage.getTableRowCount();
 //    	System.out.println("Rowcount: " + rowCount);
     	verifyTrue(rowCount < 3);
     	verifyTrue(userStoragePage.verifyFolderName(rowCount-1, testFolderName));
 
-		// Next tests to run after this (as part of page clickthrough test)
-		// click on the row entry
 
+		// Verify page permissions prior to logging in
 		// click through to CADCtest folder
 		userStoragePage.clickFolder(testFolderName);
 		// Verify sub folder page state
 		verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
 		// Check permissions on page
-		// TODO: best way to determine write access is???
 		verifyTrue(userStoragePage.isReadAccess());
-
 
 
     	// Scenario 2: Login test - credentials should be in the gradle build file.
@@ -100,15 +94,13 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		System.out.println("Rowcount: " + rowCount);
 		verifyTrue(rowCount > 2);
 
-		// Check access to page
-		verifyTrue(userStoragePage.isReadAccess());
-
+		// Check access to page: should be write accessible
+		verifyFalse(userStoragePage.isReadAccess());
 
 
 		// Scenario 3: Test navigation buttons
-		// TODO: better test here is to have two levels to navigate through,
-
 		// Test state is currently in a subfolder: Start at Root
+		System.out.println("navigating to root...");
 		userStoragePage.navToRoot();
 		// Verify in Root Folder
 		verifyTrue(userStoragePage.isRootFolder());
@@ -142,15 +134,8 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyTrue(userStoragePage.isRootFolder());
 
 
-		System.out.println("Test logout");
-		// Scenario 4: logout
-		userStoragePage.doLogout();
-		verifyFalse(userStoragePage.isLoggedIn());
-
-
+		// Scenario 4: test file actions
 		System.out.println("testing file actions");
-
-		// Scenario 5: test selecting a file
 		userStoragePage.clickFolderForRow(firstPageRowClicked);
 		userStoragePage.clickCheckboxForRow(startRow);
 		verifyTrue(userStoragePage.isFileSelectedMode(startRow));
@@ -158,18 +143,54 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		userStoragePage.clickCheckboxForRow(startRow);
 		verifyFalse(userStoragePage.isFileSelectedMode(startRow));
 
+		// Go up to root
+		userStoragePage.navToRoot();
+		verifyTrue(userStoragePage.isRootFolder());
+		// click through to CADCtest folder
+		userStoragePage.clickFolder(testFolderName);
+		// Verify sub folder page state
+		verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
+		// navigate to automated test folder
+		String testFolder = "automated_test";
+		userStoragePage.clickFolder(testFolder);
 
-    	
-    	// Scenario TODO:
-    	// downloading a file
-		// create new folder/resource
-		// delete folder/resource
-		// check permissions on folder/resource
-		// toggle Public attribute of folder/resource
+		// Create second test folder
+		String tempTestFolder = "vosui_automated_test";
+		userStoragePage.createNewFolder(tempTestFolder);
 
+		userStoragePage.enterSearch(tempTestFolder);
+
+		// Change Public attribute
+		String publicValue = userStoragePage.getValueForRowCol(1,6);
+		System.out.println("public permission: " + publicValue);
+		userStoragePage.togglePublicAttributeForRow(1);
+
+		// short list displayed in page again
+		userStoragePage.enterSearch(tempTestFolder);
+		String publicValue2 = userStoragePage.getValueForRowCol(1,6);
+		// verify that value has changed
+		System.out.println("public permission: " + publicValue2);
+
+		verifyFalse(publicValue2.equals(publicValue));
+
+		// Delete folder just created
+		userStoragePage.clickCheckboxForRow(1);
+		userStoragePage.deleteFolder(tempTestFolder);
+
+		// verify the folder is no longer there
+		userStoragePage.enterSearch(tempTestFolder);
+		verifyTrue(userStoragePage.isTableEmpty());
+
+		// Scenario 5: logout
+		System.out.println("Test logout");
+		userStoragePage.doLogout();
+		verifyFalse(userStoragePage.isLoggedIn());
    
     	System.out.println("UserStorageBrowserTest completed");
+
+		// Scenario TODO:
+		// downloading a file
     	
     }
 }
