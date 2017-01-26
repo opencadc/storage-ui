@@ -201,7 +201,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               }
 
               // if isWritable bit is true, provide edit icon
-              if (full[13] === "true") {
+              if (full[13] === "true")
+              {
                 // Add data references to icon so they can be used to populate the edit prompt
                 var editIcon = '<span class="glyphicon glyphicon-edit"><a href="' + contextPath +
                     'update" title="Edit permissions." ' +
@@ -279,9 +280,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
   };
 
-  var toggleMultiFunctionButtons = function (_disabledFlag, writable) {
+  var toggleMultiFunctionButtons = function (_disabledFlag, writable)
+  {
     toggleButtonSet(_disabledFlag, multiSelectSelector, multiSelectClass);
-    if (writable === true) {
+    if (writable === true)
+    {
       toggleButtonSet(_disabledFlag, multiSelectWritableSelector, multiSelectWritableClass);
     }
   };
@@ -299,12 +302,15 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   };
 
 
-  var isSelectionWritable = function(tableRows) {
+  var isSelectionWritable = function(tableRows)
+  {
     if (tableRows.count() > 0) {
       // check isWritable for all selected rows
       var writable = true;
-      for (var i = 0; i < tableRows.count(); i++) {
-        if (tableRows.data()[i][isWritableFlagIndex] === "false") {
+      for (var i = 0; i < tableRows.count(); i++)
+      {
+        if (tableRows.data()[i][isWritableFlagIndex] === "false")
+        {
           writable = false;
           break;
         }
@@ -1230,7 +1236,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   };
 
 
-  $(document).on('click', '.glyphicon-edit', function (event) {
+  $(document).on('click', '.glyphicon-edit', function (event)
+      {
 
         var handleEditPermissions = function (event, value,
                                               message,
@@ -1294,7 +1301,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         var iconAnchor = $(event.currentTarget).find("a")[0];
 
         var checkboxState = "";
-        if (iconAnchor.getAttribute("readable") === "true") {
+        if (iconAnchor.getAttribute("readable") === "true")
+        {
           checkboxState = "checked";
         }
 
@@ -1308,25 +1316,30 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             '">';
 
         var btns = [];
-        btns.push({
+        btns.push
+        ({
           "title": lg.save,
           "value": true,
           "classes": "btn btn-primary"
         });
-        btns.push({
-          "title": lg.cancel,
-          "value": false,
-          "classes": "btn btn-default"
+        btns.push
+        ({
+            "title": lg.cancel,
+            "value": false,
+            "classes": "btn btn-default"
         });
 
 
-        $.prompt(msg, {
-            title: '<h3 class="prompt-h3">' +iconAnchor.getAttribute("path") + '</h3>',
-            submit: handleEditPermissions,
-            focus: "#publicPermission",
-            buttons: btns
-        });
-      });
+        $.prompt(msg,
+            {
+              title: '<h3 class="prompt-h3">' + iconAnchor.getAttribute("path") + '</h3>',
+              submit: handleEditPermissions,
+              focus: "#publicPermission",
+              buttons: btns
+            }
+        );
+      }
+  );
 
 
 

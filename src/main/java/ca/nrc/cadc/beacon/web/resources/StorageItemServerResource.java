@@ -539,28 +539,26 @@ public class StorageItemServerResource extends SecureServerResource
     {
         final JSONObject jsonObject = payload.getJsonObject();
         ContainerNode currentNode = null;
-        try {
-            // limit=0, detail=min so should only get the current node
-            currentNode = getCurrentNode(VOS.Detail.properties);
-            final List<NodeProperty> nodeProperties = currentNode.getProperties();
 
-            nodeProperties.remove(
-                    new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, ""));
-            String isPublic = "false";
+        // limit=0, detail=min so should only get the current node
+        currentNode = getCurrentNode(VOS.Detail.properties);
+        final List<NodeProperty> nodeProperties = currentNode.getProperties();
 
-            if (jsonObject.keySet().contains("publicPermission")) {
-                if (jsonObject.get("publicPermission").equals("on")) {
-                    isPublic = "true";
-                }
+        nodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, ""));
+
+        String isPublic = "false";
+
+        if (jsonObject.keySet().contains("publicPermission"))
+        {
+            if (jsonObject.get("publicPermission").equals("on"))
+            {
+                isPublic = "true";
             }
-
-            nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, isPublic));
-
-            setNodeSecure(currentNode);
-
-        } catch (NodeNotFoundException ne) {
-            throw new Exception(ne);
         }
+
+        nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, isPublic));
+
+        setNodeSecure(currentNode);
 
     }
 }
