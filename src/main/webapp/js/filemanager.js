@@ -1229,9 +1229,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     }
   };
 
-  // Needs to be done after data load
-  var bindEditFunction = function() {
-      $('.glyphicon-edit').off().click(function (event) {
+
+  $(document).on('click', '.glyphicon-edit', function (event) {
 
         var handleEditPermissions = function (event, value,
                                               message,
@@ -1246,8 +1245,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
             var dataStr = JSON.stringify(formVals);
 
-            $.ajax(
-                  {
+            $.ajax({
                     url: url,
                     method: "POST",
                     contentType: "application/json",
@@ -1284,7 +1282,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                         $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
                       }
                     }
-                  });
+            });
 
           }
           else
@@ -1329,8 +1327,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             buttons: btns
         });
       });
-
-  };
 
 
 
@@ -2943,9 +2939,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         $('.contextMenu .replace').remove();
         $('.contextMenu .delete').remove();
       }
-
-      // Bind edit functions.
-      bindEditFunction();
 
       // Adjust layout.
       setDimensions();

@@ -67,37 +67,27 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
     	// check that rows of table are shorted correctly
     	// verify entry is correct
 
-    	// Should short to one entry, verify the name and quit.
     	userStoragePage.enterSearch(testFolderName);
-
-		// Verify filter worked correctly
     	int rowCount = userStoragePage.getTableRowCount();
 //    	System.out.println("Rowcount: " + rowCount);
     	verifyTrue(rowCount < 3);
     	verifyTrue(userStoragePage.verifyFolderName(rowCount-1, testFolderName));
 
-		// Next tests to run after this (as part of page clickthrough test)
-		// click on the row entry
 
+		// Verify page permissions prior to logging in
 		// click through to CADCtest folder
 		userStoragePage.clickFolder(testFolderName);
 		// Verify sub folder page state
 		verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
 		// Check permissions on page
-		// TODO: best way to determine write access is???
 		verifyTrue(userStoragePage.isReadAccess());
-
 
 
     	// Scenario 2: Login test - credentials should be in the gradle build file.
 		userStoragePage.doLogin("CADCtest","sywymUL4");
 		verifyTrue(userStoragePage.isLoggedIn());
 		System.out.println("logged in");
-
-		// TODO: this is commented out until editing public tests are finished
-		// just takes too long to go through the whole body of the test, so
-		// testing turnaround is too long!!!
 
 		rowCount = userStoragePage.getTableRowCount();
 
@@ -108,10 +98,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyFalse(userStoragePage.isReadAccess());
 
 
-
 		// Scenario 3: Test navigation buttons
-		// TODO: better test here is to have two levels to navigate through,
-
 		// Test state is currently in a subfolder: Start at Root
 		System.out.println("navigating to root...");
 		userStoragePage.navToRoot();
@@ -147,12 +134,8 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyTrue(userStoragePage.isRootFolder());
 
 
-
-
-
+		// Scenario 4: test file actions
 		System.out.println("testing file actions");
-
-		// Scenario 5: test selecting a file
 		userStoragePage.clickFolderForRow(firstPageRowClicked);
 		userStoragePage.clickCheckboxForRow(startRow);
 		verifyTrue(userStoragePage.isFileSelectedMode(startRow));
@@ -160,12 +143,8 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		userStoragePage.clickCheckboxForRow(startRow);
 		verifyFalse(userStoragePage.isFileSelectedMode(startRow));
 
-
-		// create new folder/resource *
-
 		// Go up to root
 		userStoragePage.navToRoot();
-		// Verify in Root Folder
 		verifyTrue(userStoragePage.isRootFolder());
 		// click through to CADCtest folder
 		userStoragePage.clickFolder(testFolderName);
@@ -173,64 +152,45 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
 		// navigate to automated test folder
-		// TODO: test if it exists first. If not, create it
-		// TODO: this section has timing issues. STepping through the
-		// tests works, so there are elements that aren't being
-		// waited for, or don't load fast enough, or...
 		String testFolder = "automated_test";
 		userStoragePage.clickFolder(testFolder);
 
-		// Create test folder
+		// Create second test folder
 		String tempTestFolder = "vosui_automated_test";
 		userStoragePage.createNewFolder(tempTestFolder);
 
 		userStoragePage.enterSearch(tempTestFolder);
 
 		// Change Public attribute
+		String publicValue = userStoragePage.getValueForRowCol(1,6);
+		System.out.println("public permission: " + publicValue);
 		userStoragePage.togglePublicAttributeForRow(1);
 
 		// short list displayed in page again
 		userStoragePage.enterSearch(tempTestFolder);
+		String publicValue2 = userStoragePage.getValueForRowCol(1,6);
+		// verify that value has changed
+		System.out.println("public permission: " + publicValue2);
+
+		verifyFalse(publicValue2.equals(publicValue));
+
+		// Delete folder just created
 		userStoragePage.clickCheckboxForRow(1);
-		// Works, with timing issues
 		userStoragePage.deleteFolder(tempTestFolder);
 
+		// verify the folder is no longer there
+		userStoragePage.enterSearch(tempTestFolder);
+		verifyTrue(userStoragePage.isTableEmpty());
 
-		// filter after page reloads & make sure it exists
-		// TODO: known bug here where newly created folders are not writable
-		// case: /CADCtest directory, make a new folder - isn't.
-		// in /CADCtest/bla a new folder IS public. - inherited permissions maybe
-		// aren't working quite right?
-
-		// test for now can create automated_test, nav into it, then automated_test_2, edit permissions on that one.
-
-		// toggle Public attribute of folder/resource *
-		// verify what current public bit value is
-
-		// select glyphicon-edit for the 'automated_test' folder row
-		// validate edit form:
-			// verify header is correct
-			// verify checkbox is on or off as per what current setting is
-		// toggle checkbox
-		// submit prompt
-		// on page reload refilter for 'automated_test' and make sure value is as expected
-
-		// delete folder/resource *
-		// select 'automated_test' folder after filter finds it
-		// select 'delete' button
-
-
-		// Scenario TODO:
-		// downloading a file
-
-
-
+		// Scenario 5: logout
 		System.out.println("Test logout");
-		// Scenario 4: logout
 		userStoragePage.doLogout();
 		verifyFalse(userStoragePage.isLoggedIn());
    
     	System.out.println("UserStorageBrowserTest completed");
+
+		// Scenario TODO:
+		// downloading a file
     	
     }
 }

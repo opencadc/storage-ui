@@ -400,6 +400,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     int getTableRowCount() throws Exception
     {
+
+        //*[@id="beacon"]/tbody/tr/td
         List<WebElement> tableRows = beaconTable.findElements(By.tagName("tr"));
         return tableRows.size();
     }
@@ -414,7 +416,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     }
 
-    String getFolderName(int rowNum) throws Exception
+    public String getFolderName(int rowNum) throws Exception
     {
         List<WebElement> tableRows = beaconTable.findElements(By.tagName("tr"));
         WebElement selectedRow = tableRows.get(rowNum);
@@ -423,10 +425,22 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return namecolumn.getText();
     }
 
-    String getHeaderText() throws Exception
+    public String getHeaderText() throws Exception
     {
         System.out.println("Header text: " + folderNameHeader.getText());
         return folderNameHeader.getText();
+    }
+
+    public String getValueForRowCol(int rowNum, int colNum) {
+        String val = "";
+        try {
+            WebElement el = driver.findElement(By.xpath("//*[@id='beacon']/tbody/tr[" + rowNum + "]/td[" + colNum + "]/a"));
+             val = el.getText();
+        } catch (Exception e) {
+            // element not found, return empty string
+            val = "";
+        }
+        return val;
     }
 
     boolean isLoggedIn() {
@@ -547,9 +561,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                     .until(ExpectedConditions.elementToBeClickable(
                             By.xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
                                     + message + "\")]")));
-//            WebElement jqiMsg = driver.findElement(
-//                        By.xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
-//                                + message + "\")]"));
             return true;
         } catch (Exception e) {
             return false;
@@ -562,12 +573,26 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                     .until(ExpectedConditions.elementToBeClickable(
                             By.xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
                                     + message +"')]")));
-//                    driver.findElement(
-//                    By.xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"+ message +"')]"));
             return true;
         } catch ( Exception e ) {
             return false;
         }
+    }
+
+
+    public boolean isTableEmpty() {
+        boolean isEmpty = false;
+        try {
+            List<WebElement> columnList = driver.findElements(By.xpath("//td[contains(@class,'dataTables_empty')]"));
+            if (columnList.size() > 1) {
+                isEmpty = false;
+            } else {
+                isEmpty = true;
+            }
+        } catch (Exception e) {
+            isEmpty = false;
+        }
+        return isEmpty;
     }
 
 

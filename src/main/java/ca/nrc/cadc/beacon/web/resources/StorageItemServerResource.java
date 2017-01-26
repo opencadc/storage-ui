@@ -116,7 +116,6 @@ public class StorageItemServerResource extends SecureServerResource
 
     StorageItemFactory storageItemFactory;
     VOSpaceClient voSpaceClient;
-    private RegistryClient registryClient;
 
 
     /**
@@ -153,16 +152,6 @@ public class StorageItemServerResource extends SecureServerResource
                 VOSpaceApplication.REGISTRY_CLIENT_KEY)),
                    ((VOSpaceClient) context.getAttributes().get(
                            VOSpaceApplication.VOSPACE_CLIENT_KEY)));
-    }
-
-    <T> T getRequestAttribute(final String attributeName)
-    {
-        return (T) getRequestAttributes().get(attributeName);
-    }
-
-    <T> T getContextAttribute(final String attributeName)
-    {
-        return (T) getContext().getAttributes().get(attributeName);
     }
 
     private void initialize(final RegistryClient registryClient,
@@ -535,15 +524,9 @@ public class StorageItemServerResource extends SecureServerResource
     <T> T executeSecurely(final PrivilegedExceptionAction<T> runnable) throws
                                                                        IOException
     {
-        final URI serviceID =
-                getContextAttribute(VOSpaceApplication.VOSPACE_SERVICE_ID_KEY);
-        final URL serviceURL = registryClient.getServiceURL(
-                serviceID, Standards.VOSPACE_NODES_20, AuthMethod.COOKIE);
-
         try
         {
-            return Subject.doAs(generateVOSpaceUser(
-                    NetUtil.getDomainName(serviceURL)), runnable);
+            return Subject.doAs(generateVOSpaceUser(), runnable);
         }
         catch (PrivilegedActionException e)
         {
