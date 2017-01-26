@@ -72,11 +72,9 @@ import ca.nrc.cadc.beacon.StorageItemCSVWriter;
 import ca.nrc.cadc.beacon.StorageItemWriter;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-import ca.nrc.cadc.web.AccessControlClient;
+import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
@@ -87,6 +85,7 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
+import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.File;
 import java.io.IOException;
@@ -99,30 +98,7 @@ public class MainPageServerResource extends StorageItemServerResource
 {
     private final Configuration freemarkerConfiguration =
             new Configuration(Configuration.VERSION_2_3_25);
-    private AccessControlClient accessControlClient;
 
-
-    /**
-     * Empty constructor needed for Restlet to manage it.  Needs to be public.
-     */
-    public MainPageServerResource()
-    {
-        super();
-    }
-
-    /**
-     * Complete constructor for testing.
-     *
-     * @param registryClient The Registry client to use.
-     * @param voSpaceClient  The VOSpace Client to use.
-     */
-    MainPageServerResource(final RegistryClient registryClient,
-                           final VOSpaceClient voSpaceClient,
-                           final AccessControlClient accessControlClient)
-    {
-        super(registryClient, voSpaceClient);
-        this.accessControlClient = accessControlClient;
-    }
 
     /**
      * Set-up method that can be overridden in order to initialize the state of
@@ -161,10 +137,6 @@ public class MainPageServerResource extends StorageItemServerResource
         {
             throw new ResourceException(e);
         }
-
-        this.accessControlClient = (AccessControlClient)
-                getContext().getAttributes().get(
-                        VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY);
     }
 
     @Get
@@ -248,6 +220,9 @@ public class MainPageServerResource extends StorageItemServerResource
             throws Exception
     {
         final Map<String, Object> dataModel = new HashMap<>();
+        final AccessControlClient accessControlClient =
+                (AccessControlClient) getContext().getAttributes().get(
+                        VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY);
 
         dataModel.put("initialRows", initialRows);
         dataModel.put("folder", folderItem);
@@ -257,9 +232,9 @@ public class MainPageServerResource extends StorageItemServerResource
         }
 
         // HttpPrincipal username will be pulled from current user
-        final String httpUsername =
-                accessControlClient.getCurrentHttpPrincipalUsername(
-                        getCurrentUser());
+        Subject s = getCurrentUser();
+        String httpUsername = accessControlClient
+                .getCurrentHttpPrincipalUsername(s);
 
         if (StringUtil.hasText(httpUsername))
         {

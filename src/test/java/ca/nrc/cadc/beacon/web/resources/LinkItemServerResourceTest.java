@@ -68,20 +68,26 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.vos.ContainerNode;
 import ca.nrc.cadc.vos.LinkNode;
 import ca.nrc.cadc.vos.VOSURI;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 
 import javax.servlet.ServletContext;
+import java.io.IOException;
 import java.net.URI;
+import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import static org.easymock.EasyMock.*;
 
@@ -145,6 +151,20 @@ public class LinkItemServerResourceTest
             public Response getResponse()
             {
                 return mockResponse;
+            }
+
+            @Override
+            <T> T executeSecurely(PrivilegedExceptionAction<T> runnable)
+                    throws IOException
+            {
+                try
+                {
+                    return runnable.run();
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e);
+                }
             }
         };
 
@@ -216,6 +236,20 @@ public class LinkItemServerResourceTest
             public Response getResponse()
             {
                 return mockResponse;
+            }
+
+            @Override
+            <T> T executeSecurely(PrivilegedExceptionAction<T> runnable)
+                    throws IOException
+            {
+                try
+                {
+                    return runnable.run();
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e);
+                }
             }
         };
 

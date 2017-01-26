@@ -75,6 +75,7 @@ import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.StorageItem;
 import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.net.InputStreamWrapper;
+import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
@@ -87,10 +88,15 @@ import org.restlet.resource.Delete;
 import org.restlet.resource.ResourceException;
 
 
+import javax.security.auth.Subject;
 import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
 
@@ -187,19 +193,20 @@ public class StorageItemServerResource extends SecureServerResource
         return toURI(getCurrentPath());
     }
 
-    final <T extends Node> T getCurrentNode() throws NodeNotFoundException
+    final <T extends Node> T getCurrentNode()
+            throws NodeNotFoundException, IOException
     {
         return getCurrentNode(VOS.Detail.max);
     }
 
     final <T extends Node> T getCurrentNode(final VOS.Detail detail)
-            throws NodeNotFoundException
+            throws NodeNotFoundException, IOException
     {
         return getNode(getCurrentItemURI(), detail);
     }
 
     final <T extends StorageItem> T getStorageItem(final URI uri)
-            throws FileNotFoundException
+            throws IOException
     {
         try
         {
@@ -213,7 +220,7 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
-            throws NodeNotFoundException
+            throws NodeNotFoundException, IOException
     {
         final int pageSize;
 
@@ -235,7 +242,28 @@ public class StorageItemServerResource extends SecureServerResource
                                                     : "&detail="
                                                       + detail.name());
 
-        return (T) voSpaceClient.getNode(folderURI.getPath(), query);
+        return executeSecurely(new PrivilegedExceptionAction<T>()
+        {
+            /**
+             * Performs the computation.  This method will be called by
+             * {@code AccessController.doPrivileged} after enabling privileges.
+             *
+             * @return a class-dependent value that may represent the results of the
+             * computation.  Each class that implements
+             * {@code PrivilegedExceptionAction} should document what
+             * (if anything) this value represents.
+             * @throws Exception an exceptional condition has occurred.  Each class
+             *                   that implements {@code PrivilegedExceptionAction} should
+             *                   document the exceptions that its run method can throw.
+             * @see AccessController#doPrivileged(PrivilegedExceptionAction)
+             * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
+             */
+            @Override
+            public T run() throws Exception
+            {
+                return (T) voSpaceClient.getNode(folderURI.getPath(), query);
+            }
+        });
     }
 
     VOSURI toURI(final String path)
@@ -244,7 +272,7 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     void setInheritedPermissions(final VOSURI newNodeURI)
-            throws NodeNotFoundException
+            throws NodeNotFoundException, IOException
     {
         final ContainerNode parentNode = getCurrentNode();
         final Node newNode = getNode(newNodeURI, null);
@@ -321,8 +349,8 @@ public class StorageItemServerResource extends SecureServerResource
                     new HttpDownload(url, new InputStreamWrapper()
                     {
                         @Override
-                        public void read(InputStream inputStream)
-                                throws IOException
+                        public void read(InputStream inputStream) throws
+                                                                  IOException
                         {
                             // create byte buffer
                             final Reader reader =
@@ -377,7 +405,7 @@ public class StorageItemServerResource extends SecureServerResource
      * @throws NodeNotFoundException If the target is not found.
      */
     private URI resolveLink(final LinkNode linkNode)
-            throws NodeNotFoundException, MalformedURLException
+            throws NodeNotFoundException, IOException
     {
         final URI endPoint;
         final URI targetURI = linkNode.getTarget();
@@ -430,14 +458,22 @@ public class StorageItemServerResource extends SecureServerResource
      *
      * @param newNode The newly created Node.
      */
-    private void setNodeSecure(final Node newNode)
+    private void setNodeSecure(final Node newNode) throws IOException
     {
-        voSpaceClient.setNode(newNode);
+        executeSecurely(new PrivilegedExceptionAction<Void>()
+        {
+            @Override
+            public Void run() throws Exception
+            {
+                voSpaceClient.setNode(newNode);
+                return null;
+            }
+        });
     }
 
-    void createLink(final URI target)
+    void createLink(final URI target) throws IOException
     {
-        createNode(toLinkNode(target), false);
+        createNode(toLinkNode(target));
     }
 
     private LinkNode toLinkNode(final URI target)
@@ -446,9 +482,9 @@ public class StorageItemServerResource extends SecureServerResource
         return new LinkNode(linkNodeURI, target);
     }
 
-    void createFolder()
+    void createFolder() throws IOException
     {
-        createNode(toContainerNode(), false);
+        createNode(toContainerNode());
     }
 
     private ContainerNode toContainerNode()
@@ -463,14 +499,49 @@ public class StorageItemServerResource extends SecureServerResource
                + getServletContext().getContextPath();
     }
 
-    void createNode(final Node newNode, final boolean checkForDuplicate)
+    void createNode(final Node newNode) throws IOException
     {
-        voSpaceClient.createNode(newNode, checkForDuplicate);
+        executeSecurely(new PrivilegedExceptionAction<Void>()
+        {
+            @Override
+            public Void run() throws Exception
+            {
+                voSpaceClient.createNode(newNode, false);
+                return null;
+            }
+        });
     }
 
     @Delete
-    public void deleteNode()
+    public void deleteNode() throws IOException
     {
-        voSpaceClient.deleteNode(getCurrentPath());
+        executeSecurely(new PrivilegedExceptionAction<Void>()
+        {
+            @Override
+            public Void run() throws Exception
+            {
+                voSpaceClient.deleteNode(getCurrentPath());
+                return null;
+            }
+        });
+    }
+
+    <T> T executeSecurely(final PrivilegedExceptionAction<T> runnable) throws
+                                                                       IOException
+    {
+        final URI serviceID =
+                getContextAttribute(VOSpaceApplication.VOSPACE_SERVICE_ID_KEY);
+        final URL serviceURL = registryClient.getServiceURL(
+                serviceID, Standards.VOSPACE_NODES_20, AuthMethod.COOKIE);
+
+        try
+        {
+            return Subject.doAs(generateVOSpaceUser(
+                    NetUtil.getDomainName(serviceURL)), runnable);
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw new IOException(e);
+        }
     }
 }

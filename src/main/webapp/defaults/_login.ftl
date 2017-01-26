@@ -27,6 +27,6 @@
     <input type="password" id="password" name="password" class="form-control" tabindex="2" required="required" placeholder="Password" />
   </div>
   <input type="hidden" id="redirectPath" name="redirectPath" value="${folder.path}" />
-  <button type="submit" class="btn btn-success">Login</button>
+  <button type="submit" id="submitLogin" class="btn btn-success">Login</button>
 </form>
 </#if>

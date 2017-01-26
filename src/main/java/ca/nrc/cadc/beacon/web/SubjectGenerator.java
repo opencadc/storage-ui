@@ -71,11 +71,13 @@ package ca.nrc.cadc.beacon.web;
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.PrincipalExtractor;
 import ca.nrc.cadc.auth.SSOCookieCredential;
+import ca.nrc.cadc.util.StringUtil;
 
 
 import javax.security.auth.Subject;
 import java.util.HashSet;
 import java.util.Set;
+
 
 public class SubjectGenerator
 {
@@ -93,5 +95,23 @@ public class SubjectGenerator
 
         return new Subject(false, principalExtractor.getPrincipals(),
                             publicCred, new HashSet<>());
+    }
+
+    public final Subject generate(final PrincipalExtractor principalExtractor,
+                                  final String domain)
+    {
+        final Set<Object> publicCred = new HashSet<>();
+        final SSOCookieCredential userCookieCredential =
+                principalExtractor.getSSOCookieCredential();
+
+        if (StringUtil.hasText(domain) && (userCookieCredential != null))
+        {
+            publicCred.add(new SSOCookieCredential(
+                    userCookieCredential.getSsoCookieValue(), domain));
+            publicCred.add(AuthMethod.COOKIE);
+        }
+
+        return new Subject(false, principalExtractor.getPrincipals(),
+                           publicCred, new HashSet<>());
     }
 }

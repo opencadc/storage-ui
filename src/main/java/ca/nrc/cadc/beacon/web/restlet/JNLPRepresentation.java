@@ -151,9 +151,8 @@ public abstract class JNLPRepresentation
 
                                          String line;
 
-                                         while ((line =
-                                                 bufferedReader.readLine())
-                                                != null)
+                                         while ((line = bufferedReader
+                                                 .readLine()) != null)
                                          {
                                              // Remove the href as it causes issues...
                                              line = line
@@ -165,8 +164,7 @@ public abstract class JNLPRepresentation
                                                      .replace("$$ssocookiearguments",
                                                               ssoCookieData);
 
-                                             JNLPRepresentation.this
-                                                     .writeLine(line, outputStream);
+                                             writeLine(line, outputStream);
                                          }
 
                                          bufferedReader.close();

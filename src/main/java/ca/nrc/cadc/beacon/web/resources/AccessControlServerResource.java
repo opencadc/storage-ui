@@ -69,9 +69,10 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.accesscontrol.AccessControlClient;
+import ca.nrc.cadc.accesscontrol.AccessControlUtil;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.web.AccessControlClient;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Form;
@@ -122,11 +123,14 @@ public class AccessControlServerResource extends SecureServerResource
     {
         for (final Cookie cookie : getRequest().getCookies())
         {
-            if ("CADC_SSO".equals(cookie.getName()))
+            if (cookie.getName().equals(AccessControlUtil.SSO_COOKIE_NAME))
             {
                 getResponse().getCookieSettings().add(
-                        new CookieSetting(0, "CADC_SSO", null, "/", null,
-                                          null, 0, false, false));
+                        new CookieSetting(0,
+                                          AccessControlUtil.SSO_COOKIE_NAME,
+                                          null, "/",
+                                          cookie.getDomain(), null, 0,
+                                          false, false));
             }
         }
     }

@@ -76,6 +76,7 @@ import ca.nrc.cadc.vos.VOSURI;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 
 import javax.security.auth.Subject;
+import java.security.AccessController;
 import java.security.PrivilegedExceptionAction;
 import java.util.List;
 
@@ -121,6 +122,19 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
         final List<Node> nodes =
                 Subject.doAs(user, new PrivilegedExceptionAction<List<Node>>()
                 {
+                    /**
+                     * Performs the computation.  This method will be called by
+                     * {@code AccessController.doPrivileged} after enabling privileges.
+                     *
+                     * @return a class-dependent value that may represent the results of the
+                     * computation.  Each class that implements
+                     * {@code PrivilegedExceptionAction} should document what
+                     * (if anything) this value represents.
+                     * @throws Exception an exceptional condition has occurred.  Each class
+                     *                   that implements {@code PrivilegedExceptionAction} should
+                     *                   document the exceptions that its run method can throw.
+                     * @see AccessController#doPrivileged(PrivilegedExceptionAction)
+                     */
                     @Override
                     public List<Node> run() throws Exception
                     {

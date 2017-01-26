@@ -92,6 +92,7 @@ public abstract class StorageItem
     private final URI[] readGroupURIs;
     private final String owner;
     private final boolean readableFlag;
+    private final boolean writableFlag;
     private final String targetURL;
 
     final VOSURI uri;
@@ -99,11 +100,11 @@ public abstract class StorageItem
     private final boolean publicFlag;
     private final boolean lockedFlag;
 
-
     StorageItem(VOSURI uri, long sizeInBytes, Date lastModified,
                 boolean publicFlag, boolean lockedFlag,
                 URI[] writeGroupURIs, URI[] readGroupURIs,
                 final String owner, boolean readableFlag,
+                boolean writableFlag,
                 String targetURL)
     {
         this.uri = uri;
@@ -116,6 +117,7 @@ public abstract class StorageItem
         this.readGroupURIs = readGroupURIs;
         this.owner = owner;
         this.readableFlag = readableFlag;
+        this.writableFlag = writableFlag;
         this.targetURL = targetURL;
     }
 
@@ -153,6 +155,11 @@ public abstract class StorageItem
     public boolean isReadable()
     {
         return readableFlag;
+    }
+
+    public boolean isWritable()
+    {
+        return writableFlag;
     }
 
     public boolean isPublic()

@@ -69,12 +69,10 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.web.AccessControlClient;
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.SystemConfiguration;
 import org.restlet.Context;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -87,8 +85,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.junit.Test;
+
 import static org.junit.Assert.*;
 import static org.easymock.EasyMock.*;
 
@@ -110,37 +110,27 @@ public class MainPageServerResourceTest
         initialRowData.add("child2");
         initialRowData.add("child3");
 
-        AccessControlClient mockAccessControlClient = createMock(AccessControlClient.class);
+        final AccessControlClient mockAccessControlClient =
+                createMock(AccessControlClient.class);
 
         expect(mockAccessControlClient.getCurrentHttpPrincipalUsername(subject))
                 .andReturn("CADCtest");
         replay(mockAccessControlClient);
 
-        // Taken from VOSpaceApplication - they are private there, so
-        // just pilfering the values here for the test
-        final String DEFAULT_GMS_SERVICE_ID = "ivo://cadc.nrc.ca/gms";
-        final String GMS_SERVICE_PROPERTY_KEY = "org.opencadc.gms.service_id";
-
-        Configuration configuration = new SystemConfiguration();
-        ConcurrentHashMap<String,Object> mockContextAttributes =
+        final ConcurrentMap<String, Object> mockContextAttributes =
                 new ConcurrentHashMap<>();
-        AccessControlClient acc = new AccessControlClient(URI.create(
-                configuration.getString(DEFAULT_GMS_SERVICE_ID,
-                        GMS_SERVICE_PROPERTY_KEY)));
-        mockContextAttributes.put(VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY,
-                                  acc);
 
-        expect(mockServletContext.getContextPath()).andReturn("/mycontext")
+        mockContextAttributes
+                .put(VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY,
+                     mockAccessControlClient);
+
+        expect(mockContext.getAttributes()).andReturn(mockContextAttributes)
                 .once();
-
-        expect(mockContext.getAttributes()).andReturn(mockContextAttributes).anyTimes();
 
         replay(mockServletContext, mockRegistryClient, mockContext);
 
 
-        testSubject = new MainPageServerResource(mockRegistryClient,
-                                                 mockVOSpaceClient,
-                                                 mockAccessControlClient)
+        testSubject = new MainPageServerResource()
         {
             @Override
             Subject getCurrentUser()
@@ -155,11 +145,10 @@ public class MainPageServerResourceTest
             }
 
             @Override
-            public Context getContext() {
+            public Context getContext()
+            {
                 return mockContext;
             }
-
-
         };
 
         replay(mockFolderItem);
@@ -175,12 +164,13 @@ public class MainPageServerResourceTest
         final Map<String, Object> dataModel =
                 (Map<String, Object>) templateRepresentation.getDataModel();
 
-        assertTrue("Should be a folder.", dataModel.containsKey("folder"));
+        assertTrue("Should be a folder.",
+                   dataModel.containsKey("folder"));
         assertEquals("Should have URI for next page.",
                      startURI.getURI().toString(), dataModel.get("startURI"));
         assertTrue("Should contain initialRows",
                    dataModel.containsKey("initialRows"));
 
-        verify(mockFolderItem, mockServletContext);
+        verify(mockFolderItem, mockServletContext, mockContext);
     }
 }

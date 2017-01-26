@@ -69,10 +69,10 @@
 package ca.nrc.cadc.beacon.web.restlet;
 
 
+import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.beacon.web.resources.*;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
-import ca.nrc.cadc.web.AccessControlClient;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.SystemConfiguration;
 import org.restlet.*;

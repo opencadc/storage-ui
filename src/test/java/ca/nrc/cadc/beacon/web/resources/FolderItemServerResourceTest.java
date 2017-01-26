@@ -74,7 +74,9 @@ import ca.nrc.cadc.vos.VOSURI;
 
 import org.restlet.Response;
 
+import java.io.IOException;
 import java.net.URI;
+import java.security.PrivilegedExceptionAction;
 
 import org.restlet.data.Status;
 
@@ -123,6 +125,20 @@ public class FolderItemServerResourceTest
             ServletContext getServletContext()
             {
                 return mockServletContext;
+            }
+
+            @Override
+            <T> T executeSecurely(PrivilegedExceptionAction<T> runnable)
+                    throws IOException
+            {
+                try
+                {
+                    return runnable.run();
+                }
+                catch (Exception e)
+                {
+                    throw new RuntimeException(e);
+                }
             }
         };
 

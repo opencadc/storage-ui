@@ -259,7 +259,7 @@ public class FileItemServerResource extends StorageItemServerResource
      */
     protected void upload(final InputStream inputStream,
                           final DataNode dataNode)
-            throws NodeAlreadyExistsException
+            throws NodeAlreadyExistsException, IOException
     {
         final String path = dataNode.getUri().getPath();
 
@@ -281,7 +281,7 @@ public class FileItemServerResource extends StorageItemServerResource
         }
         catch (NodeNotFoundException e)
         {
-            createNode(dataNode, false);
+            createNode(dataNode);
         }
 
         try

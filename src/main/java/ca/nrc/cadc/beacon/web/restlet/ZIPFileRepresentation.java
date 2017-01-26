@@ -78,7 +78,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Iterator;
-import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -117,7 +116,7 @@ public class ZIPFileRepresentation extends AbstractAuthOutputRepresentation
                         new InputStreamWrapper()
                         {
                             @Override
-                            public void read(InputStream inputStream)
+                            public void read(final InputStream inputStream)
                                     throws IOException
                             {
                                 int length;
@@ -128,22 +127,17 @@ public class ZIPFileRepresentation extends AbstractAuthOutputRepresentation
                                 // Begin writing a new ZIP entry, positions
                                 // the stream to the start of the entry
                                 // data.
-                                final ZipEntry zipEntry =
-                                        new ZipEntry(
-                                                downloadDescriptor.destination);
-
-                                zos.putNextEntry(zipEntry);
+                                zos.putNextEntry(new ZipEntry(
+                                        downloadDescriptor.destination));
 
                                 while ((length =
                                         inputStream
                                                 .read(buffer)) > 0)
                                 {
                                     zos.write(buffer, 0, length);
-                                    zos.flush();
                                 }
 
                                 zos.closeEntry();
-
                                 inputStream.close();
                             }
                         };
