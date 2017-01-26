@@ -189,6 +189,16 @@ button#more_details {
   animation: glyphicon-spin-r 1s infinite linear;
 }
 
+.glyphicon-edit {
+  float: right;
+  opacity: 0.5;
+}
+
+.glyphicon-edit:hover {
+  float: right;
+  opacity: 1.0;
+}
+
 @-webkit-keyframes glyphicon-spin-r {
   0% {
     -webkit-transform: rotate(0deg);
@@ -234,3 +244,32 @@ div.dataTables_wrapper div.dataTables_info {
 .popover {
   max-width: 500px;
 }
+
+
+/* CSS for prompts */
+.prompt-label-shaded {
+  opacity: 0.5;
+}
+
+.prompt-label {
+  font-size: 12pt;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.prompt-checkbox {
+  float: right;
+  height: 16px;
+  width: 16px;
+}
+
+.prompt-h3 {
+  margin-top: 0px;
+  border-bottom: 1px solid #ccc;
+}
+
+
+
+
+
+

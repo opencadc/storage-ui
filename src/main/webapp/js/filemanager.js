@@ -95,6 +95,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var multiSelectWritableSelector = ".multi-select-function-container-writable";
   var multiSelectClass = ".multi-select-function";
   var multiSelectWritableClass = ".multi-select-function-writable";
+  var isWritableFlagIndex = 13;
 
   var stringUtil = new org.opencadc.StringUtil();
   var url = contextPath + config.options.pageConnector + _folderPath;
@@ -205,10 +206,18 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                 itemNameDisplay += data;
               }
 
+              // if isWritable bit is true, provide edit icon
+              if (full[13] === "true")
+              {
+                // Add data references to icon so they can be used to populate the edit prompt
+                var editIcon = '<span class="glyphicon glyphicon-edit"><a href="' + contextPath +
+                    'update" title="Edit permissions." ' +
+                    'readable="' + full[6] +
+                    '" path="' + full[9] + '" ></a></span>';
+                itemNameDisplay += editIcon;
+              }
+
               itemNameDisplay += "</div>";
-              // Add code here to add the 'edit' glyphicon if
-              // the item is writable
-              var canWriteFlag = (full[13] === "true");
 
               return itemNameDisplay;
             }
@@ -277,15 +286,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     // .text(lg.loading_data);
 
 
-  // TODO: pull in writable flag from the server (StorageItem.java reference)
-  // treat similar to readable flag currently (is part of Data Table but is hidden)
-  // pass in to toggleMultiFunctionButtons function (or rename this one,) so
-  // buttons can be sanely toggled.
-  // add a class to the buttons that are permissions aware so they can be
-  // toggled using the same manner (won't need code to look for them specifically)
-  // as the existing function.Storage
-
-
   var toggleButtonSet = function(_disabledFlag, selector, selectClass) {
     var $selectorContainers = $(selector);
 
@@ -304,41 +304,68 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
   };
 
-  var toggleMultiFunctionButtons = function (_disabledFlag, writable) {
+  var toggleMultiFunctionButtons = function (_disabledFlag, writable)
+  {
     toggleButtonSet(_disabledFlag, multiSelectSelector, multiSelectClass);
-    if (writable === true) {
+    if (writable === true)
+    {
       toggleButtonSet(_disabledFlag, multiSelectWritableSelector, multiSelectWritableClass);
     }
   };
 
-  var enableMultiFunctionButtons = function ()
+  var enableMultiFunctionButtons = function (writable)
   {
-    // toggleButtonsWithPermissions(false);
-    toggleMultiFunctionButtons(false);
+    toggleMultiFunctionButtons(false, writable);
   };
 
   var disableMultiFunctionButtons = function ()
   {
-    // toggleButtonsWithPermissions(true);
-    toggleMultiFunctionButtons(true);
+    // Passing in 'true' to writable bit here because
+    // it doesn't matter when it comes to disabling the buttons: off is off!
+    toggleMultiFunctionButtons(true, true);
+  };
+
+
+  var isSelectionWritable = function(tableRows)
+  {
+    if (tableRows.count() > 0)
+    {
+      // check isWritable for all selected rows
+      var writable = true;
+      for (var i = 0; i < tableRows.count(); i++)
+      {
+        if (tableRows.data()[i][isWritableFlagIndex] === "false")
+        {
+          writable = false;
+          break;
+        }
+      }
+      return writable;
+    }
   };
 
   $dt.on("select", function (event, dataTablesAPI, type)
   {
     if (type === ROW_SELECT_TYPE)
     {
-      enableMultiFunctionButtons();
+      var selectedRows = $dt.rows({selected: true});
+      enableMultiFunctionButtons(isSelectionWritable(selectedRows));
     }
   });
 
-  $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt info.dt",
+  $dt.on("draw.dtSelect.dt select.dtSelect.dt deselect.dtSelect.dt",
          function ()
          {
-           if ($dt.rows({selected: true}).count() > 0)
-           {
-             enableMultiFunctionButtons();
-           }
+           var selectedRows = $dt.rows({selected: true});
+           enableMultiFunctionButtons(isSelectionWritable(selectedRows));
          });
+
+  $dt.on("info.dt",
+      function ()
+      {
+        disableMultiFunctionButtons();
+      });
+
 
   $dt.on("deselect", function (event, dataTablesAPI, type)
   {
@@ -998,7 +1025,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                input: {
                  focus: "#link_name",
                  buttons: btns,
-                 html: msg,
+                 html:  f,
                  submit: function (e, value, message, formVals)
                  {
                    if (value === true)
@@ -1232,6 +1259,113 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                              }).show();
     }
   };
+
+
+  $(document).on('click', '.glyphicon-edit', function (event)
+      {
+
+        var handleEditPermissions = function (event, value,
+                                              message,
+                                              formVals)
+        {
+          if (value === true)
+          {
+            var publicCheckbox = formVals['publicPermission'];
+            var itemPath = formVals['itemPath'];
+
+            var url = contextPath + config.options.itemConnector + itemPath;
+
+            var dataStr = JSON.stringify(formVals);
+
+            $.ajax({
+                    url: url,
+                    method: "POST",
+                    contentType: "application/json",
+                    data: dataStr,
+                    statusCode: {
+                      201: function ()
+                      {
+                        $.prompt(lg.successful_edit,
+                            {
+                              submit: refreshPage
+                            });
+                      },
+                      204: function ()
+                      {
+                        $.prompt(lg.successful_edit,
+                            {
+                              submit: refreshPage
+                            });
+                      },
+                      400: function ()
+                      {
+
+                      },
+                      401: function ()
+                      {
+                        $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                      },
+                      403: function ()
+                      {
+                        $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                      },
+                      409: function ()
+                      {
+                        $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
+                      }
+                    }
+            });
+
+          }
+          else
+          {
+            return true;
+          }
+        };
+
+        var iconAnchor = $(event.currentTarget).find("a")[0];
+
+        var checkboxState = "";
+        if (iconAnchor.getAttribute("readable") === "true")
+        {
+          checkboxState = "checked";
+        }
+
+        // Add form body
+        var msg =  '<label class="prompt-label custom-control custom-checkbox">' +
+           '<span class="custom-control-indicator"></span>' +
+           '<span class="custom-control-description">Public read permission</span>' +
+           '</label>' +
+           '<input type="checkbox" class="form-control prompt-checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + ' >' +
+           '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") +
+            '">';
+
+        var btns = [];
+        btns.push
+        ({
+          "title": lg.save,
+          "value": true,
+          "classes": "btn btn-primary"
+        });
+        btns.push
+        ({
+            "title": lg.cancel,
+            "value": false,
+            "classes": "btn btn-default"
+        });
+
+
+        $.prompt(msg,
+            {
+              title: '<h3 class="prompt-h3">' + iconAnchor.getAttribute("path") + '</h3>',
+              submit: handleEditPermissions,
+              focus: "#publicPermission",
+              buttons: btns
+            }
+        );
+      }
+  );
+
 
 
   /*---------------------------------------------------------
