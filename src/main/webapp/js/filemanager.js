@@ -304,7 +304,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
   var isSelectionWritable = function(tableRows)
   {
-    if (tableRows.count() > 0) {
+    if (tableRows.count() > 0)
+    {
       // check isWritable for all selected rows
       var writable = true;
       for (var i = 0; i < tableRows.count(); i++)
