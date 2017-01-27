@@ -13,7 +13,11 @@
           src="${baseURL}/css/images/logo.png"/></a>
     </div>
 
+    <!-- RT 73828: temporary message for early versions -->
+    <div class="early-access">Early access with limited functionality</div>
+
     <div id="canfar_navbar_collapse" class="collapse navbar-collapse">
+
       <ul id="navbar_list" class="nav navbar-nav pull-right">
         <!-- Uncomment this to have a language switcher. -->
         <!--<li class="dropdown">-->
