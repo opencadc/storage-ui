@@ -68,6 +68,7 @@
 
 package ca.nrc.cadc.beacon.web;
 
+import ca.nrc.cadc.accesscontrol.AccessControlUtil;
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.PrincipalExtractor;
 import ca.nrc.cadc.auth.SSOCookieCredential;
@@ -81,6 +82,9 @@ import java.util.Set;
 
 public class SubjectGenerator
 {
+    private final AccessControlUtil accessControlUtil = new AccessControlUtil();
+
+
     public final Subject generate(final PrincipalExtractor principalExtractor)
     {
         final Set<Object> publicCred = new HashSet<>();
@@ -104,7 +108,9 @@ public class SubjectGenerator
         final SSOCookieCredential userCookieCredential =
                 principalExtractor.getSSOCookieCredential();
 
-        if (StringUtil.hasText(domain) && (userCookieCredential != null))
+        if (StringUtil.hasText(domain)
+            && (userCookieCredential != null)
+            && accessControlUtil.getSSOServers().contains(domain))
         {
             publicCred.add(new SSOCookieCredential(
                     userCookieCredential.getSsoCookieValue(), domain));

@@ -87,16 +87,15 @@ import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.security.PrivilegedActionException;
 import java.util.Map;
 import java.util.Set;
 
 
 class SecureServerResource extends ServerResource
 {
-    final SubjectGenerator subjectGenerator;
+    private final SubjectGenerator subjectGenerator;
+    RegistryClient registryClient;
 
-    protected RegistryClient registryClient;
 
     <T> T getRequestAttribute(final String attributeName)
     {
@@ -108,12 +107,12 @@ class SecureServerResource extends ServerResource
         return (T) getContext().getAttributes().get(attributeName);
     }
 
-    public SecureServerResource()
+    SecureServerResource()
     {
         this(new SubjectGenerator());
     }
 
-    public SecureServerResource(final SubjectGenerator subjectGenerator)
+    SecureServerResource(final SubjectGenerator subjectGenerator)
     {
         this.subjectGenerator = subjectGenerator;
     }
