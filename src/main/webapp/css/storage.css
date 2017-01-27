@@ -78,7 +78,7 @@ table.dataTable {
   clear: both;
   border-collapse: collapse;
   table-layout: fixed;
-  word-wrap:break-word;
+  word-wrap: break-word;
 }
 
 /*
@@ -103,22 +103,19 @@ ul > li.divider-vertical {
   color: #fff;
 }
 
-div.progress
-{
+div.progress {
   height: 0.8rem;
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
 }
 
-div.beacon-progress
-{
+div.beacon-progress {
   padding-top: 0;
   width: 100%;
 }
 
-div.beacon-progress.active
-{
+div.beacon-progress.active {
   line-height: 15px;
   font-size: 90%;
 }
@@ -128,8 +125,7 @@ div.beacon-progress.active
   jump down.
   jenkinsd 2016.08.10
 */
-div.beacon-info-row
-{
+div.beacon-info-row {
   height: 55px;
 }
 
@@ -236,7 +232,7 @@ input[type=url] {
  */
 div.dataTables_wrapper div.dataTables_info {
   padding-left: 20px;
-  padding-top: 15px;  /* Remove when progress bar re-instated. */
+  padding-top: 15px; /* Remove when progress bar re-instated. */
   white-space: nowrap;
   cursor: auto;
 }
@@ -244,7 +240,6 @@ div.dataTables_wrapper div.dataTables_info {
 .popover {
   max-width: 500px;
 }
-
 
 /* CSS for prompts */
 .prompt-label-shaded {
@@ -264,21 +259,15 @@ div.dataTables_wrapper div.dataTables_info {
 }
 
 .prompt-h3 {
-  margin-top: 0px;
+  margin-top: 0;
   border-bottom: 1px solid #ccc;
 }
 
-
 .early-access {
   font-style: italic;
-  color: #337ab7;
-  font-size: 12px;
+  font-size: 16px;
   position: absolute;
-  bottom: -3px;
+  left: 340px;
+  top: 40px;
 }
-
-
-
-
-
 

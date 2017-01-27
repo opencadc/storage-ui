@@ -14,7 +14,7 @@
     </div>
 
     <!-- RT 73828: temporary message for early versions -->
-    <div class="early-access">Early access with limited functionality</div>
+    <div class="early-access text-warning">Early access with limited functionality</div>
 
     <div id="canfar_navbar_collapse" class="collapse navbar-collapse">
 
