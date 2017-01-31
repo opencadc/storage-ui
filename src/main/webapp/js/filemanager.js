@@ -235,7 +235,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             {
               // Column [6] is the public flag.
               renderedValue = (full[6] === "true")
-                ? stringUtil.format(publicLink, [lg.public]) : data;
+                ? lg.public : data;
             }
             else
             {
@@ -1302,19 +1302,26 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         var iconAnchor = $(event.currentTarget).find("a")[0];
 
         var checkboxState = "";
+        var readGroupBoxDisabled = "false";
         if (iconAnchor.getAttribute("readable") === "true")
         {
           checkboxState = "checked";
+          readGroupBoxDisabled = "true"
         }
 
         // Add form body
-        var msg =  '<label class="prompt-label custom-control custom-checkbox">' +
-           '<span class="custom-control-indicator"></span>' +
-           '<span class="custom-control-description">Public read permission</span>' +
-           '</label>' +
-           '<input type="checkbox" class="form-control prompt-checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + ' >' +
-           '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") +
-            '">';
+        var msg = '<div class="form-group prompt-form-group">' +
+          ' <label for="readGroup">Read Group</label>' +
+          ' <input type="text" class="form-control" id="readGroup" name="readGroup" disabled="' + readGroupBoxDisabled + '">' +
+          '</div>' +
+          '<div class="checkbox">' +
+          '<label class="prompt-label"><input type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>Public</label>' +
+          '</div></br>' +
+          '<div class="form-group prompt-form-group">' +
+          '<label for="writeGroup">Write Group</label>' +
+          '<input type="text" class="form-control" id="writeGroup" name="writeGroup"></div>' +
+          '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") + '">';
+
 
         var btns = [];
         btns.push
@@ -1332,7 +1339,21 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
 
         $.prompt(msg,
-            {
+            { loaded: function(event)
+              {
+                $("#publicPermission").on("click", function(event)
+                {
+                  var isPublic = event.currentTarget.checked;
+                  if (isPublic === false)
+                  {
+                    $("#readGroup").removeAttr("disabled");
+                  }
+                  else
+                  {
+                    $("#readGroup").attr("disabled", "disabled");
+                  }
+                });
+              },
               title: '<h3 class="prompt-h3">' + iconAnchor.getAttribute("path") + '</h3>',
               submit: handleEditPermissions,
               focus: "#publicPermission",
