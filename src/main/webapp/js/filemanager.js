@@ -1317,9 +1317,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           '<div class="checkbox">' +
           '<label class="prompt-label"><input type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>Public</label>' +
           '</div></br>' +
-          '<div class="form-group prompt-form-group">' +
-          '<label for="writeGroup">Write Group</label>' +
-          '<input type="text" class="form-control" id="writeGroup" name="writeGroup"></div>' +
+          // '<div class="form-group prompt-form-group">' +
+          // '<label for="writeGroup">Write Group</label>' +
+          // '<input type="text" class="form-control" id="writeGroup" name="writeGroup"></div>' +
           '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") + '">';
 
 
@@ -1337,10 +1337,20 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             "classes": "btn btn-default"
         });
 
-
+        // TODO: hard coded strings here need to come from lg messaging object
         $.prompt(msg,
             { loaded: function(event)
               {
+                if ($("#publicPermission").is(":checked") === true)
+                {
+                    $("#readGroup").attr("disabled", "disabled");
+                }
+                else
+                {
+                    $("#readGroup").removeAttr("disabled");
+                    // $("#readGroup").val("group name goes here... ");
+                }
+
                 $("#publicPermission").on("click", function(event)
                 {
                   var isPublic = event.currentTarget.checked;
@@ -1350,6 +1360,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                   }
                   else
                   {
+                    $("#readGroup").val("");
                     $("#readGroup").attr("disabled", "disabled");
                   }
                 });
