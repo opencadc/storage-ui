@@ -437,6 +437,16 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     }
 
+    boolean verifyFolderSize(int rowNum) throws Exception
+    {
+        List<WebElement> tableRows = beaconTable.findElements(By.tagName("tr"));
+        WebElement selectedRow = tableRows.get(rowNum);
+        List<WebElement> columns = selectedRow.findElements(By.tagName("td"));
+        String sizeString = columns.get(2).getText();
+        System.out.println("Folder size: " + sizeString);
+        return sizeString != null;
+    }
+
     public String getFolderName(int rowNum) throws Exception
     {
         List<WebElement> tableRows = beaconTable.findElements(By.tagName("tr"));
