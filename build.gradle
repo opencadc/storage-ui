@@ -2,6 +2,9 @@ apply plugin: 'war'
 
 repositories {
     jcenter()
+    maven {
+        url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
+    }
     mavenLocal()
 }
 
@@ -35,7 +38,7 @@ dependencies {
 
 sourceCompatibility = '1.7'
 group = 'org.opencadc'
-version = '1007'
+version = '1005'
 
 def docker_image_name = 'opencadc/storage'
 

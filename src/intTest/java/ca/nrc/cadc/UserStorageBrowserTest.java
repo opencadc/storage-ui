@@ -72,7 +72,8 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 //    	System.out.println("Rowcount: " + rowCount);
     	verifyTrue(rowCount < 3);
     	verifyTrue(userStoragePage.verifyFolderName(rowCount-1, testFolderName));
-
+    	verifyTrue(userStoragePage.verifyFolderSize(rowCount-1));
+    	
 
 		// Verify page permissions prior to logging in
 		// click through to CADCtest folder
