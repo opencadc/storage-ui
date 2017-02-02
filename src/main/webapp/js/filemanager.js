@@ -207,7 +207,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                 var editIcon = '<span class="glyphicon glyphicon-edit"><a href="' + contextPath +
                     'update" title="Edit permissions." ' +
                     'readable="' + full[6] +
-                    '" path="' + full[9] + '" ></a></span>';
+                    '" path="' + full[9] +
+                    '" readgroup="' + full[5] +
+                    '" ></a></span>';
                 itemNameDisplay += editIcon;
               }
 
@@ -1236,6 +1238,16 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     }
   };
 
+  // TODO: replace this with a tomcat redirect to
+  // apps.canfar.net/ac/groups - will require user
+  // to be logged in, but they should be aleady
+  var tempAutocompleteInput = [
+    "cadcsw",
+    "CADCtest-VOS-read",
+    "CADCtest-VOS-write",
+    "CHIMPS",
+    "Test-Write"
+  ];
 
   $(document).on('click', '.glyphicon-edit', function (event)
       {
@@ -1252,6 +1264,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             var url = contextPath + config.options.itemConnector + itemPath;
 
             var dataStr = JSON.stringify(formVals);
+
+            //TODO: may have to check validity of string entered
+            // into the read & write groups form fields in order
+            // to throw a error if an entry is made that doesn't
+            // exist in the return from /ac/groups...
 
             $.ajax({
                     url: url,
@@ -1301,18 +1318,24 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
         var iconAnchor = $(event.currentTarget).find("a")[0];
 
+        // TODO: does this need to be kept in light of the 'loaded' function?
         var checkboxState = "";
         var readGroupBoxDisabled = "false";
         if (iconAnchor.getAttribute("readable") === "true")
         {
           checkboxState = "checked";
-          readGroupBoxDisabled = "true"
+          readGroupBoxDisabled = "readonly=\"readonly\"";
         }
 
+        // if (iconAnchor.getAttribute("readGroup") !== "") {
+        //   var readGroupContent = iconAnchor.getAttribute("readGroup")
+        // }
+
         // Add form body
-        var msg = '<div class="form-group prompt-form-group">' +
+        var msg = '<div class="form-group prompt-form-group ui-front"id="readGroupDiv" >' +
           ' <label for="readGroup">Read Group</label>' +
-          ' <input type="text" class="form-control" id="readGroup" name="readGroup" disabled="' + readGroupBoxDisabled + '">' +
+          // ' <input type="text" class="form-control " id="readGroup" name="readGroup" ' + readGroupBoxDisabled + '">' + readGroupContent + '</input>' +
+            ' <input type="text" class="form-control " id="readGroup" name="readGroup" ' + readGroupBoxDisabled + '">' +
           '</div>' +
           '<div class="checkbox">' +
           '<label class="prompt-label"><input type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>Public</label>' +
@@ -1341,14 +1364,23 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         $.prompt(msg,
             { loaded: function(event)
               {
+                // Set autocomplete on group input
+                $("#readGroup").autocomplete(
+                    {
+                      appendTo: '#readGroupDiv',
+                      source: tempAutocompleteInput,
+                      minLength: 2
+                    });
+
+                // Set initial form state
                 if ($("#publicPermission").is(":checked") === true)
                 {
-                    $("#readGroup").attr("disabled", "disabled");
+                    $("#readGroup").attr("readonly", "readonly");
                 }
                 else
                 {
-                    $("#readGroup").removeAttr("disabled");
-                    // $("#readGroup").val("group name goes here... ");
+                    $("#readGroup").removeAttr("readonly");
+                    $("#readGroup").val(iconAnchor.getAttribute("readGroup"));
                 }
 
                 $("#publicPermission").on("click", function(event)
@@ -1356,12 +1388,12 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                   var isPublic = event.currentTarget.checked;
                   if (isPublic === false)
                   {
-                    $("#readGroup").removeAttr("disabled");
+                    $("#readGroup").removeAttr("readonly");
                   }
                   else
                   {
                     $("#readGroup").val("");
-                    $("#readGroup").attr("disabled", "disabled");
+                    $("#readGroup").attr("readonly", "readonly");
                   }
                 });
               },

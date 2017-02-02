@@ -29,6 +29,9 @@
   <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/github-dark.css" media="screen"/>
   <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/print.css" media="print"/>
 
+  <!-- jquery ui CSS -->
+  <link href="${contextPath}css/jquery-ui.min.css" rel="stylesheet" media="screen">
+
   <!-- Bootstrap core CSS -->
   <link href="${contextPath}css/bootstrap.min.css" rel="stylesheet" media="screen">
   <link href="${contextPath}css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
@@ -76,6 +79,7 @@
         src="${contextPath}js/jquery.tablesorter-2.7.2.min.js"></script>
 <script type="text/javascript"
         src="${contextPath}js/jquery-impromptu.min.js"></script>
+<script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
 
 <!--

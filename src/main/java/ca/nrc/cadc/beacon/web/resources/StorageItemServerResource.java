@@ -108,6 +108,7 @@ import java.util.List;
 public class StorageItemServerResource extends SecureServerResource
 {
     static final String VOSPACE_NODE_URI_PREFIX = "vos://cadc.nrc.ca!vospace";
+    static final String IVO_GMS_PROPERTY_PREFIX = "ivo://cadc.nrc.ca/gms#";
 
 
     // Page size for the initial page display.
@@ -557,6 +558,17 @@ public class StorageItemServerResource extends SecureServerResource
         }
 
         nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, isPublic));
+
+        if (jsonObject.keySet().contains("readGroup"))
+        {
+            String readGroup = jsonObject.get("readGroup").toString();
+            nodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, ""));
+
+            nodeProperties.add(
+                    new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
+                            IVO_GMS_PROPERTY_PREFIX + readGroup));
+
+        }
 
         setNodeSecure(currentNode);
 
