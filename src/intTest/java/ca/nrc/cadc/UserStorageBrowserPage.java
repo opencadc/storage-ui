@@ -443,7 +443,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         WebElement selectedRow = tableRows.get(rowNum);
         List<WebElement> columns = selectedRow.findElements(By.tagName("td"));
         String sizeString = columns.get(2).getText();
-        System.out.println("Folder size: " + sizeString);
         return sizeString != null;
     }
 
