@@ -184,13 +184,18 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Transition functions
     public void clickButton(String promptText) throws Exception
     {
-        WebElement button = find(xpath("//button[contains(text(),\"" + promptText + "\")]"));
+        WebElement button = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                        xpath("//button[contains(text(),\"" + promptText + "\")]")));
         button.click();
     }
 
     public void clickButtonWithClass(String promptText, String className) throws Exception
     {
-        WebElement button = find(xpath("//button[contains(@class, '" + className + "') and contains(text(),'" + promptText + "')]"));       button.click();
+        WebElement button = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                        xpath("//button[contains(@class, '" + className + "') and contains(text(),'" + promptText + "')]")));
+        button.click();
     }
 
     public void enterSearch(final String searchString) throws Exception
@@ -257,6 +262,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return rowNum;
     }
 
+
     // CRUD for folders
     public void createNewFolder(String foldername) throws Exception
     {
@@ -272,11 +278,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         WebElement createFolderButton = find(xpath("//button[contains(text(),\"Create Folder\")]"));
         createFolderButton.click();
 
-        if (isJqiMsgShowing(CONFIRMATION_MSG))
+        try
         {
-            clickButton(OK);
+            confirmJqiMsg(CONFIRMATION_MSG);
         }
-        else
+        catch (Exception e)
         {
             throw new Exception("Could not create folder " + foldername);
         }
@@ -311,18 +317,97 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
-    public void clickEditIconForRow(int rowNum) throws Exception
+    // Permissions functions
+    public void clickEditIconForFirstRow() throws Exception
     {
         WebElement editIcon = find(xpath("//span[contains(@class, 'glyphicon-edit')]"));
         editIcon.click();
+    }
+
+    public void setReadGroup(String readGroup, boolean isPublic) throws Exception
+    {
+        String currentPermission = "";
+        clickEditIconForFirstRow();
+        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                        By.id("publicPermission")));
+
+        WebElement readGroupInput = find(By.id("readGroup"));
+
+        if (isPublic == true)
+        {
+            if (currentPermission == null)
+            {
+                // toggle checkbox
+                // read group field should clear automatically
+                click(permissionCheckbox);
+            }
+        }
+        else
+        {
+            currentPermission = permissionCheckbox.getAttribute("checked");
+            if (currentPermission != null) {
+                // clear checkbox
+                // read group field should be enabled
+                click(permissionCheckbox);
+            }
+            sendKeys(readGroupInput, readGroup);
+        }
+
+        clickButton(SAVE);
+        confirmJqiMsg(SUCCESSFUL);
+    }
+
+    /**
+     * Convenience function to click through most of the impromptu .prompt
+     * confirmation patterns.
+     * @param messageType
+     * @throws Exception
+     */
+    public void confirmJqiMsg(String messageType) throws Exception {
+        if (isJqiMsgShowing(messageType))
+        {
+            clickButton(OK);
+        }
+        else
+        {
+            throw new Exception("Could not confirm JqiMsg");
+        }
+    }
+
+    public void setReadGroupOnly(String readGroup, boolean confirm) throws Exception
+    {
+        String currentPermission = "";
+        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                        By.id("publicPermission")));
+
+        WebElement readGroupInput = find(By.id("readGroup"));
+
+        currentPermission = permissionCheckbox.getAttribute("checked");
+        if (currentPermission != null) {
+            // clear checkbox
+            // read group field should be enabled
+            click(permissionCheckbox);
+        }
+        sendKeys(readGroupInput, readGroup);
+
+        clickButton(SAVE);
+
+        // readGroupDiv should have 'has-error' class
+        // confirm here is conditional because it won't
+        // show up if an invalid group has been sent in.
+        if (confirm == true)
+        {
+            confirmJqiMsg(SUCCESSFUL);
+        }
     }
 
 
     public String togglePublicAttributeForRow(int rowNum) throws Exception
     {
         String currentPermission = "";
-        WebElement editIcon = find(xpath("//span[contains(@class, 'glyphicon-edit')]"));
-        editIcon.click();
+        clickEditIconForFirstRow();
         WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
                         By.id("publicPermission")));
@@ -331,18 +416,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         click(permissionCheckbox);
         clickButton(SAVE);
 
-        // confirm folder delete
-        if (isJqiMsgShowing(SUCCESSFUL))
-        {
-            clickButton(OK);
-        }
-        else
-        {
-            throw new Exception("Permissions editing not successful for row : " + rowNum);
-        }
+        confirmJqiMsg(SUCCESSFUL);
 
         return currentPermission;
     }
+
 
     /**
      * Gets row number for next row that has an edit icon after the row passed in.
@@ -379,7 +457,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return rowNum;
     }
 
-    // Checkbox related
+    // Row Checkbox related
     public void clickCheckboxForRow(int rowNum) throws Exception
     {
         WebElement firstCheckbox  = (new WebDriverWait(driver, 10))
@@ -446,18 +524,20 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return namecolumn.getText();
     }
 
+
     public String getHeaderText() throws Exception
     {
         System.out.println("Header text: " + folderNameHeader.getText());
         return folderNameHeader.getText();
     }
 
+
     public String getValueForRowCol(int rowNum, int colNum)
     {
         String val = "";
         try
         {
-            WebElement el = find(xpath("//*[@id='beacon']/tbody/tr[" + rowNum + "]/td[" + colNum + "]/a"));
+            WebElement el = find(xpath("//*[@id='beacon']/tbody/tr[" + rowNum + "]/td[" + colNum + "]"));
              val = el.getText();
         } catch (Exception e)
         {
@@ -503,7 +583,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public boolean isSubFolder(String folderName) throws Exception
     {
-
         // Verify folder name
         if (!(getHeaderText().contains(folderName)) )
         {
@@ -533,7 +612,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public boolean isRootFolder() throws Exception
     {
-
         // Verify folder name
         if (!(getHeaderText().contains(ROOT_FOLDER_NAME)) )
         {
@@ -648,5 +726,41 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return isEmpty;
     }
 
+    /**
+     * Verify that the given row has the values passed in
+     * @param readGroup
+     * @param isPublic
+     * @return
+     * @throws Exception
+     */
+    public boolean isPermissionDataForRow(int row, String readGroup, boolean isPublic) throws Exception
+    {
+        // readGroup is the last column (#5)
+        // isPublic defines what might be in that row: text should say 'Public' if isPublic is true
+        String rowReadGroup = getValueForRowCol(row, 6);
+        boolean isPermissionSetCorrect = false;
 
+        if (isPublic == true)
+        {
+            if (rowReadGroup.equals("Public"))
+            {
+                isPermissionSetCorrect =  true;
+            }
+        }
+        else if (rowReadGroup.equals(readGroup))
+        {
+            isPermissionSetCorrect = true;
+        }
+
+        return isPermissionSetCorrect;
+    }
+
+
+    public boolean isReadGroupError() throws Exception
+    {
+        WebElement readGroupDiv = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(By.id("readGroupDiv")));
+
+        return readGroupDiv.getAttribute("class").contains("has-error");
+    }
 }

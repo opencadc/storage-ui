@@ -146,7 +146,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		// Go up to root
 		userStoragePage.navToRoot();
 		verifyTrue(userStoragePage.isRootFolder());
-		// click through to CADCtest folder
+		//  click through to CADCtest folder
 		userStoragePage.clickFolder(testFolderName);
 		// Verify sub folder page state
 		verifyTrue(userStoragePage.isSubFolder(testFolderName));
@@ -161,20 +161,59 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 
 		userStoragePage.enterSearch(tempTestFolder);
 
-		// Change Public attribute
-		String publicValue = userStoragePage.getValueForRowCol(1,6);
-		System.out.println("public permission: " + publicValue);
-		userStoragePage.togglePublicAttributeForRow(1);
+
+		// Edit permissions on the form
+		// will work on the first row of data. Brittle, but ok to start
+
+		// 6 is the Read group column for now
+		String currentReadGroup = userStoragePage.getValueForRowCol(1,6);
+
+		// Clearly only works for English test suite. :/
+		if (currentReadGroup.equals("Public")) {
+			userStoragePage.togglePublicAttributeForRow(1);
+		}
+
+		// Should be starting with a blank column
+		verifyTrue(userStoragePage.isPermissionDataForRow(1,"", false));
+
+		// Set read group
+		userStoragePage.setReadGroup("cadcsw", false);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1,"cadcsw", false));
+
+		// Test response to invalid autocomplete selection
+		userStoragePage.clickEditIconForFirstRow();
+		// second parameter says 'don't confirm anything'
+		userStoragePage.setReadGroupOnly("invalid_group", false);
+		verifyTrue(userStoragePage.isReadGroupError());
+
+		userStoragePage.setReadGroupOnly("cadcsw", true);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1,"cadcsw", false));
+
 
 		// short list displayed in page again
 		userStoragePage.enterSearch(tempTestFolder);
-		String publicValue2 = userStoragePage.getValueForRowCol(1,6);
-		// verify that value has changed
-		System.out.println("public permission: " + publicValue2);
+		// Change read group
+		userStoragePage.setReadGroup("CADCtest-VOS-read", false);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1,"CADCtest-VOS-read", false));
 
-		verifyFalse(publicValue2.equals(publicValue));
+		// short list displayed in page again
+		userStoragePage.enterSearch(tempTestFolder);
+		// Toggle public permissions to set them
+		// note that group name should be "Public"
+		userStoragePage.togglePublicAttributeForRow(1);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1,"Public",true));
+
+		// short list displayed in page again
+		userStoragePage.enterSearch(tempTestFolder);
+		// Toggle public permission to unset
+		userStoragePage.togglePublicAttributeForRow(1);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1,"",false));
+
 
 		// Delete folder just created
+		// short list displayed in page again (this is just in case other
+		// folders have been added to automated_test folder...
+		userStoragePage.enterSearch(tempTestFolder);
 		userStoragePage.clickCheckboxForRow(1);
 		userStoragePage.deleteFolder(tempTestFolder);
 
@@ -182,15 +221,13 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		userStoragePage.enterSearch(tempTestFolder);
 		verifyTrue(userStoragePage.isTableEmpty());
 
+
 		// Scenario 5: logout
 		System.out.println("Test logout");
 		userStoragePage.doLogout();
 		verifyFalse(userStoragePage.isLoggedIn());
    
     	System.out.println("UserStorageBrowserTest completed");
-
-		// Scenario TODO:
-		// downloading a file
     	
     }
 }
