@@ -1275,8 +1275,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           {
             // Either the readGroup must be blank, or the value must
             // be in the input array to be accepted
+            // inArray returns the index, -1 if it doesn't exist
             if ((formVals["readGroup"] === "") ||
-                ($.inArray(formVals["readGroup"],tempAutocompleteInput) == 0) )
+                ($.inArray(formVals["readGroup"],tempAutocompleteInput) >= 0) )
             {
               var publicCheckbox = formVals['publicPermission'];
               var itemPath = formVals['itemPath'];
@@ -1326,7 +1327,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             else
             {
               event.preventDefault();
-              togglePromptError("#readGroupDiv","#readGroupLabel", "Read Group - please select from list", "on");
+              togglePromptError("#readGroupDiv","#readGroupLabel", lg.READ_GROUP + " - " + lg.select_from_list, "on");
             }
           }
           else
@@ -1347,7 +1348,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
         // Add form body
         var msg = '<div class="form-group prompt-form-group ui-front" id="readGroupDiv" >' +
-            ' <label for="readGroup" id="readGroupLabel">Read Group</label>' +
+            ' <label for="readGroup" id="readGroupLabel">' + lg.READ_GROUP + '</label>' +
             ' <input type="text" class="form-control " id="readGroup" name="readGroup" ' + readGroupBoxDisabled + '">' +
             '</div>' +
             '<div class="checkbox">' +
@@ -1390,7 +1391,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
                   $("#readGroup").keyup(function()
                   {
-                    togglePromptError("#readGroupDiv", "#readGroupLabel", "Read Group", "off");
+                    togglePromptError("#readGroupDiv", "#readGroupLabel", lg.READ_GROUP, "off");
                   });
 
                   // Set initial form state
@@ -1406,7 +1407,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
                   $("#publicPermission").on("click", function(event)
                   {
-                    togglePromptError("#readGroupDiv", "#readGroupLabel", "Read Group", "off");
+                    togglePromptError("#readGroupDiv", "#readGroupLabel", lg.READ_GROUP, "off");
                     var isPublic = event.currentTarget.checked;
                     if (isPublic === false)
                     {
