@@ -564,9 +564,17 @@ public class StorageItemServerResource extends SecureServerResource
             String readGroup = jsonObject.get("readGroup").toString();
             nodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, ""));
 
-            nodeProperties.add(
-                    new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
-                            IVO_GMS_PROPERTY_PREFIX + readGroup));
+            if (readGroup == null || readGroup.equals(""))
+            {
+                NodeProperty np = new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, "");
+                np.setMarkedForDeletion(true);
+                nodeProperties.add(np);
+            }
+            else
+            {
+                nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
+                        IVO_GMS_PROPERTY_PREFIX + readGroup));
+            }
 
         }
 
