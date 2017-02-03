@@ -2,6 +2,9 @@ apply plugin: 'war'
 
 repositories {
     jcenter()
+    maven {
+        url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
+    }
     mavenLocal()
 }
 

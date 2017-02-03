@@ -204,9 +204,13 @@ public class StorageItemFactory
 
         if (node instanceof ContainerNode)
         {
-
             final ContainerNode containerNode = (ContainerNode) node;
-            nextItem = new FolderItem(nodeURI, -1L, lastModifiedDate,
+        	final String sizeInString = containerNode.getPropertyValue(
+        			VOS.PROPERTY_URI_CONTENTLENGTH);
+        	final long sizeInBytes = sizeInString == null 
+        			                 ? -1L 
+        			                 : Long.parseLong(sizeInString);
+            nextItem = new FolderItem(nodeURI, sizeInBytes, lastModifiedDate,
                                       publicFlag, lockedFlag, writeGroupURIs,
                                       readGroupURIs, owner, readableFlag,
                                       writableFlag, totalChildCount,

@@ -515,6 +515,15 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     }
 
+    boolean verifyFolderSize(int rowNum) throws Exception
+    {
+        List<WebElement> tableRows = beaconTable.findElements(By.tagName("tr"));
+        WebElement selectedRow = tableRows.get(rowNum);
+        List<WebElement> columns = selectedRow.findElements(By.tagName("td"));
+        String sizeString = columns.get(2).getText();
+        return sizeString != null;
+    }
+
     public String getFolderName(int rowNum) throws Exception
     {
         List<WebElement> tableRows = beaconTable.findElements(By.tagName("tr"));
@@ -756,6 +765,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
+
     public boolean isReadGroupError() throws Exception
     {
         WebElement readGroupDiv = (new WebDriverWait(driver, 10))
@@ -764,3 +774,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return readGroupDiv.getAttribute("class").contains("has-error");
     }
 }
+
+
+
