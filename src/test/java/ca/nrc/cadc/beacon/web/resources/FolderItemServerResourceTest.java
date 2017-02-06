@@ -69,21 +69,32 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.beacon.FileSizeRepresentation;
 import ca.nrc.cadc.vos.ContainerNode;
+import ca.nrc.cadc.vos.Node;
+import ca.nrc.cadc.vos.NodeNotFoundException;
+import ca.nrc.cadc.vos.NodeProperty;
+import ca.nrc.cadc.vos.VOS;
 import ca.nrc.cadc.vos.VOSURI;
 
 import org.restlet.Response;
 
 import java.io.IOException;
+import java.io.StringWriter;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.restlet.data.Status;
+import org.restlet.representation.Representation;
 
 import javax.servlet.ServletContext;
 
+import org.junit.Assert;
 import org.junit.Test;
 import static org.easymock.EasyMock.*;
+import static org.junit.Assert.*;
 
 
 public class FolderItemServerResourceTest
@@ -153,5 +164,96 @@ public class FolderItemServerResourceTest
         testSubject.create();
 
         verify(mockVOSpaceClient, mockResponse, mockServletContext);
+    }
+    
+    @Test
+    public void retrieveQuota() throws Exception
+    {
+    	long folderSize = 123456789L;
+    	long quota = 9876543210L;
+    	String expectedFolderSize = new FileSizeRepresentation().getSizeHumanReadable(folderSize);
+    	String expectedQuota = new FileSizeRepresentation().getSizeHumanReadable(quota);
+    	
+        final VOSURI folderURI = new VOSURI(URI.create(
+                StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
+                + "/my/node"));
+        List<NodeProperty> properties = new ArrayList<NodeProperty>();
+        NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long.toString(folderSize));
+        properties.add(prop);
+        prop = new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long.toString(quota));
+        properties.add(prop);
+        
+        final ContainerNode containerNode = new ContainerNode(folderURI, properties);
+
+        expect(mockServletContext.getContextPath()).andReturn("/teststorage")
+                .once();
+
+        replay(mockServletContext);
+
+        testSubject = new FolderItemServerResource()
+        {
+            @Override
+            VOSURI getCurrentItemURI()
+            {
+                return folderURI;
+            }
+
+            /**
+             * Returns the handled response.
+             *
+             * @return The handled response.
+             */
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
+
+            @Override
+            ServletContext getServletContext()
+            {
+                return mockServletContext;
+            }
+
+            @SuppressWarnings("unchecked")
+			@Override
+            <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
+                    throws NodeNotFoundException, IOException
+            {
+                return (T) containerNode;
+            }
+        };
+
+        Representation jsonRep = testSubject.retrieveQuota();
+        StringWriter swriter = new StringWriter();
+        jsonRep.write(swriter);  
+        String[] kvps = swriter.getBuffer().toString().split(",");
+        assertTrue("Should only contain two properties", kvps.length == 2);
+        for (String kvp : kvps)
+        {
+        	String[] kv = kvp.split(":");
+        	String key = extract(kv[0]);
+        	String value = extract(kv[1]);
+        	if (key.equals("size"))
+        	{
+        		Assert.assertEquals("Folder size is incorrect", expectedFolderSize, value);
+        	}
+        	else if (key.equals("quota"))
+        	{
+        		Assert.assertEquals("Quota is incorrect", expectedQuota, value);
+        	}
+        	else
+        	{
+        		fail("Incorrect property");
+        	}
+        }
+        	
+    }
+    
+    private String extract(final String text)
+    {
+    	int beginIndex = text.indexOf('"');
+    	int endIndex = text.lastIndexOf('"');
+    	return text.substring(beginIndex + 1, endIndex);
     }
 }
