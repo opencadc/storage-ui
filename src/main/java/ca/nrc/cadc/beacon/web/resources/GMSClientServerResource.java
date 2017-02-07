@@ -91,12 +91,13 @@ import javax.security.auth.Subject;
 import java.io.IOException;
 import java.io.Writer;
 import java.security.*;
+import java.util.Collections;
 import java.util.List;
 
 /**
  * Created by hjeeves on 2017-02-06.
  */
-public class GMSControlServerResource extends SecureServerResource {
+public class GMSClientServerResource extends SecureServerResource {
 
 
     private List<String> groupNames;
@@ -111,24 +112,24 @@ public class GMSControlServerResource extends SecureServerResource {
         registryClient =  (RegistryClient) getContext().getAttributes().get(
         VOSpaceApplication.REGISTRY_CLIENT_KEY);
 
-        final List<String> groupNames = Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<List<String>>()
-        {
-            @Override
-            public List<String> run() throws Exception
-            {
-                return gmsClient.getGroupNames();
-            }
-        });
-
-
         return new WriterRepresentation(MediaType.APPLICATION_JSON)
         {
             @Override
             public void write(final Writer writer) throws IOException
             {
-
                 try
                 {
+                    final List<String> groupNames = Subject.doAs(generateVOSpaceUser(),
+                    new PrivilegedExceptionAction<List<String>>()
+                    {
+                        @Override
+                        public List<String> run() throws Exception
+                        {
+                            return gmsClient.getGroupNames();
+                        }
+                    });
+                    Collections.sort(groupNames);
+
                     writer.write(groupNames.toString());
                 }
                 catch (Exception e)

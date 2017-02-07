@@ -174,7 +174,7 @@ public class VOSpaceApplication extends Application
                       AccessControlServerResource.class);
 
         router.attach(contextPath + "groups",
-                GMSControlServerResource.class);
+                GMSClientServerResource.class);
 
         router.attach(contextPath + "page", PageServerResource.class);
         final TemplateRoute pageRoute =
