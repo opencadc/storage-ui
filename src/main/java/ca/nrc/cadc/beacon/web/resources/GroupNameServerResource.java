@@ -97,7 +97,7 @@ import java.util.List;
 /**
  * Created by hjeeves on 2017-02-06.
  */
-public class GMSClientServerResource extends SecureServerResource {
+public class GroupNameServerResource extends SecureServerResource {
 
 
     private List<String> groupNames;
@@ -108,9 +108,6 @@ public class GMSClientServerResource extends SecureServerResource {
         final GMSClient gmsClient =
                 (GMSClient) getContext().getAttributes().get(
                         VOSpaceApplication.GMS_SERVICE_PROPERTY_KEY);
-
-        registryClient =  (RegistryClient) getContext().getAttributes().get(
-        VOSpaceApplication.REGISTRY_CLIENT_KEY);
 
         return new WriterRepresentation(MediaType.APPLICATION_JSON)
         {

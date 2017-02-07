@@ -72,6 +72,7 @@ package ca.nrc.cadc.beacon.web.resources;
 import ca.nrc.cadc.beacon.web.FileValidator;
 import ca.nrc.cadc.beacon.web.UploadOutputStreamWrapper;
 import ca.nrc.cadc.beacon.web.UploadVerifier;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.*;
 import org.apache.commons.fileupload.FileItemStream;
 import org.restlet.Request;
@@ -134,7 +135,7 @@ public class FileItemServerResourceTest
 
         replay(mockServletContext);
 
-        testSubject = new FileItemServerResource(null, mockVOSpaceClient,
+        testSubject = new FileItemServerResource(mockVOSpaceClient,
                                                  new UploadVerifier(),
                                                  new FileValidator())
         {
@@ -148,6 +149,12 @@ public class FileItemServerResourceTest
             ServletContext getServletContext()
             {
                 return mockServletContext;
+            }
+
+            @Override
+            RegistryClient getRegistryClient()
+            {
+                return mockRegistryClient;
             }
 
             @Override

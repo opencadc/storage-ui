@@ -85,10 +85,9 @@ public class FolderItemServerResource extends StorageItemServerResource
     {
     }
 
-    FolderItemServerResource(final RegistryClient registryClient,
-                             final VOSpaceClient voSpaceClient)
+    FolderItemServerResource(final VOSpaceClient voSpaceClient)
     {
-        super(registryClient, voSpaceClient);
+        super(voSpaceClient);
     }
 
     @Put

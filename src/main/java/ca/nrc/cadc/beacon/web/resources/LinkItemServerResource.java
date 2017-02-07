@@ -88,10 +88,9 @@ public class LinkItemServerResource extends StorageItemServerResource
     {
     }
 
-    LinkItemServerResource(final RegistryClient registryClient,
-                           final VOSpaceClient voSpaceClient)
+    LinkItemServerResource(final VOSpaceClient voSpaceClient)
     {
-        super(registryClient, voSpaceClient);
+        super(voSpaceClient);
     }
 
     /**

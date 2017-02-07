@@ -75,19 +75,15 @@ import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.StorageItem;
 import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.net.InputStreamWrapper;
-import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.VOSClientUtil;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.json.JSONObject;
 import org.restlet.Context;
-import org.restlet.data.Form;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
-import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
@@ -129,13 +125,11 @@ public class StorageItemServerResource extends SecureServerResource
     /**
      * Complete constructor for testing.
      *
-     * @param registryClient The Registry client to use.
      * @param voSpaceClient  The VOSpace Client to use.
      */
-    StorageItemServerResource(final RegistryClient registryClient,
-                              final VOSpaceClient voSpaceClient)
+    StorageItemServerResource(final VOSpaceClient voSpaceClient)
     {
-        initialize(registryClient, voSpaceClient);
+        initialize(voSpaceClient);
     }
 
 
@@ -148,20 +142,19 @@ public class StorageItemServerResource extends SecureServerResource
     @Override
     protected void doInit() throws ResourceException
     {
+        super.doInit();
         final Context context = getContext();
-        initialize(((RegistryClient) context.getAttributes().get(
-                VOSpaceApplication.REGISTRY_CLIENT_KEY)),
-                   ((VOSpaceClient) context.getAttributes().get(
+        initialize(((VOSpaceClient) context.getAttributes().get(
                            VOSpaceApplication.VOSPACE_CLIENT_KEY)));
     }
 
-    private void initialize(final RegistryClient registryClient,
+    private void initialize(
                             final VOSpaceClient voSpaceClient)
     {
         try
         {
             this.storageItemFactory =
-                    new StorageItemFactory(URI_EXTRACTOR, registryClient,
+                    new StorageItemFactory(URI_EXTRACTOR, getRegistryClient(),
                                            (getServletContext() == null)
                                            ? ""
                                            : getServletContext()
@@ -173,7 +166,6 @@ public class StorageItemServerResource extends SecureServerResource
         }
 
         this.voSpaceClient = voSpaceClient;
-        this.registryClient = registryClient;
     }
 
 
@@ -331,7 +323,7 @@ public class StorageItemServerResource extends SecureServerResource
                                 ? ("/" + path) : path;
         try
         {
-            final URL vospaceURL = registryClient
+            final URL vospaceURL = getRegistryClient()
                     .getServiceURL(URI.create(getContext().getAttributes().get(
                             VOSpaceApplication.VOSPACE_SERVICE_ID_KEY)
                                                       .toString()),

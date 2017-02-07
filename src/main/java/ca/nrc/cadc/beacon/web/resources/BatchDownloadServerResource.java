@@ -142,13 +142,11 @@ public class BatchDownloadServerResource extends StorageItemServerResource
     /**
      * Complete constructor for testing.
      *
-     * @param registryClient The Registry client to use.
      * @param voSpaceClient  The VOSpace Client to use.
      */
-    BatchDownloadServerResource(final RegistryClient registryClient,
-                                final VOSpaceClient voSpaceClient)
+    BatchDownloadServerResource(final VOSpaceClient voSpaceClient)
     {
-        super(registryClient, voSpaceClient);
+        super(voSpaceClient);
     }
 
 

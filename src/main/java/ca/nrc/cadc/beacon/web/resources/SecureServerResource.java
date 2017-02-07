@@ -81,6 +81,7 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
+import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import javax.security.auth.Subject;
@@ -88,7 +89,6 @@ import javax.servlet.ServletContext;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
-import java.security.PrivilegedActionException;
 import java.util.Map;
 import java.util.Set;
 
@@ -97,7 +97,11 @@ class SecureServerResource extends ServerResource
 {
     final SubjectGenerator subjectGenerator;
 
-    protected RegistryClient registryClient;
+    @Override
+    protected void doInit() throws ResourceException
+    {
+
+    }
 
     <T> T getRequestAttribute(final String attributeName)
     {
@@ -119,7 +123,6 @@ class SecureServerResource extends ServerResource
         this.subjectGenerator = subjectGenerator;
     }
 
-
     Subject getCurrentUser()
     {
         final Request request = getRequest();
@@ -127,8 +130,15 @@ class SecureServerResource extends ServerResource
                 new RestletPrincipalExtractor(request));
     }
 
+    RegistryClient getRegistryClient()
+    {
+        return (RegistryClient) getContext().getAttributes().get(
+                VOSpaceApplication.REGISTRY_CLIENT_KEY);
+    }
+
     Subject generateVOSpaceUser() throws IOException
     {
+        RegistryClient registryClient = getRegistryClient();
         final URI serviceID =
                 getContextAttribute(VOSpaceApplication.VOSPACE_SERVICE_ID_KEY);
         final URL serviceURL = registryClient.getServiceURL(

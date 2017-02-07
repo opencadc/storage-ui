@@ -69,6 +69,7 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.reg.client.RegistryClient;
 import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 
@@ -98,15 +99,20 @@ public class BatchDownloadServerResourceTest
         expect(mockServletContext.getContextPath()).andReturn("/teststorage")
                 .once();
 
-        replay(mockServletContext, mockRegistryClient);
+        replay(mockServletContext);
 
-        testSubject = new BatchDownloadServerResource(mockRegistryClient,
-                                                      mockVOSpaceClient)
+        testSubject = new BatchDownloadServerResource(mockVOSpaceClient)
         {
             @Override
             ServletContext getServletContext()
             {
                 return mockServletContext;
+            }
+
+            @Override
+            RegistryClient getRegistryClient()
+            {
+                return mockRegistryClient;
             }
 
             /**
@@ -139,7 +145,7 @@ public class BatchDownloadServerResourceTest
                      rep.getMediaType());
         assertEquals("Wrong text.", manifest, rep.getText());
 
-        verify(mockServletContext, mockRegistryClient);
+        verify(mockServletContext);
     }
 
     @Test
@@ -176,15 +182,20 @@ public class BatchDownloadServerResourceTest
         expect(mockServletContext.getContextPath()).andReturn("/storage-ui/go")
                 .once();
 
-        replay(mockServletContext, mockRegistryClient);
+        replay(mockServletContext);
 
-        testSubject = new BatchDownloadServerResource(mockRegistryClient,
-                                                      mockVOSpaceClient)
+        testSubject = new BatchDownloadServerResource(mockVOSpaceClient)
         {
             @Override
             ServletContext getServletContext()
             {
                 return mockServletContext;
+            }
+
+            @Override
+            RegistryClient getRegistryClient()
+            {
+                return mockRegistryClient;
             }
 
             /**
@@ -222,6 +233,6 @@ public class BatchDownloadServerResourceTest
                      rep.getMediaType());
         assertEquals("Wrong text.", expectedHTML.trim(), rep.getText().trim());
 
-        verify(mockServletContext, mockRegistryClient);
+        verify(mockServletContext);
     }
 }
