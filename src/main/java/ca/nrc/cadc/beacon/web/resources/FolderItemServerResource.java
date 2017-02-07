@@ -112,10 +112,15 @@ public class FolderItemServerResource extends StorageItemServerResource
     public Representation retrieveQuota() throws Exception
     {
     	final Node node = getCurrentNode(Detail.properties);
-        final String folderSize = 
+        final long folderSize = 
         		getPropertyValue(node, VOS.PROPERTY_URI_CONTENTLENGTH);
-        final String quota = 
+        final long quota = 
         		getPropertyValue(node, VOS.PROPERTY_URI_QUOTA);
+        final String quotaString = new FileSizeRepresentation().getSizeHumanReadable(quota);
+        final String remainingSizeString = 
+        		(quota - folderSize) > 0
+                ? new FileSizeRepresentation().getSizeHumanReadable(quota - folderSize)
+                : new FileSizeRepresentation().getSizeHumanReadable(0);
     	
         return  new JSONRepresentation()
 				{
@@ -124,14 +129,14 @@ public class FolderItemServerResource extends StorageItemServerResource
 		                    throws JSONException
 		            {
 		                jsonWriter.object()
-		                	.key("size").value(folderSize)
-		                    .key("quota").value(quota)
+		                	.key("size").value(remainingSizeString)
+		                    .key("quota").value(quotaString)
 		                    .endObject();
 		            }	    	
 				};
     }
     
-    private String getPropertyValue(final Node node, 
+    private long getPropertyValue(final Node node, 
     		final String propertyURI) throws Exception
     {
     	final NodeProperty property = node.findProperty(propertyURI);
@@ -139,6 +144,6 @@ public class FolderItemServerResource extends StorageItemServerResource
     			? 0L
     			: Long.parseLong(property.getPropertyValue());
     	
-    	return  new FileSizeRepresentation().getSizeHumanReadable(value);
+    	return value;
     }
 }

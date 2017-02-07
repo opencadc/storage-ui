@@ -2491,6 +2491,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                                                                             config.version +
                                                                                             ']');
       $('div.version').html(config.version);
+      url1: contextPath + config.options.folderConnector + '/' + getCurrentPath().split('/')[1];
 
       // Loading theme
       loadCSS(contextPath + 'themes/' + config.options.theme +
@@ -2504,6 +2505,25 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                  $('head').append(data);
                }
              });
+      
+      // Loading quota and folder size for root folder, e.g. /CADCTest
+      if (getCurrentPath().length > 0)
+      {
+	      $.ajax({
+	          method: 'GET',
+	          url: contextPath + config.options.folderConnector + '/' + getCurrentPath().split('/')[1] ,
+	          dataType: 'json',
+	          async: false,
+	          success: function (data)
+	          {
+	        	  quota = data.quota;
+	        	  remainingSize = data.size;
+	        	  console.log("quota: " + quota);
+	        	  console.log("remaining size: " + remainingSize);
+	        	  return '<strong class="text-info">%remainingSize%</strong> remaining of <strong>%quota%</strong>';
+	          }
+	          });
+      }
 
       // loading zeroClipboard
       loadJS(contextPath + 'scripts/zeroclipboard/dist/ZeroClipboard.js');

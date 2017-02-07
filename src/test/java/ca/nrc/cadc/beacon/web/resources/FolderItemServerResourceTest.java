@@ -167,20 +167,36 @@ public class FolderItemServerResourceTest
     }
     
     @Test
-    public void retrieveQuota() throws Exception
+    public void retrieveNormalQuota() throws Exception
     {
     	long folderSize = 123456789L;
     	long quota = 9876543210L;
-    	String expectedFolderSize = new FileSizeRepresentation().getSizeHumanReadable(folderSize);
+    	String expectedRemainingSize = new FileSizeRepresentation().getSizeHumanReadable(quota - folderSize);
+        NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long.toString(folderSize));
+        this.retrieveQuota(quota, expectedRemainingSize, prop);
+    }
+    
+    @Test
+    public void retrieveNotEnoughQuota() throws Exception
+    {
+    	long folderSize = 9876543210L;
+    	long quota = 123456789L;
+    	String expectedRemainingSize = new FileSizeRepresentation().getSizeHumanReadable(0);
+        NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long.toString(folderSize));
+        this.retrieveQuota(quota, expectedRemainingSize, prop);
+    }
+    
+    public void retrieveQuota(long quota, final String expectedRemainingSize, 
+    		final NodeProperty folderSizeNodeProp) throws Exception
+    {
     	String expectedQuota = new FileSizeRepresentation().getSizeHumanReadable(quota);
     	
         final VOSURI folderURI = new VOSURI(URI.create(
                 StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
                 + "/my/node"));
         List<NodeProperty> properties = new ArrayList<NodeProperty>();
-        NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long.toString(folderSize));
-        properties.add(prop);
-        prop = new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long.toString(quota));
+        properties.add(folderSizeNodeProp);
+        NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long.toString(quota));
         properties.add(prop);
         
         final ContainerNode containerNode = new ContainerNode(folderURI, properties);
@@ -236,7 +252,7 @@ public class FolderItemServerResourceTest
         	String value = extract(kv[1]);
         	if (key.equals("size"))
         	{
-        		Assert.assertEquals("Folder size is incorrect", expectedFolderSize, value);
+        		Assert.assertEquals("Remainng size is incorrect", expectedRemainingSize, value);
         	}
         	else if (key.equals("quota"))
         	{
