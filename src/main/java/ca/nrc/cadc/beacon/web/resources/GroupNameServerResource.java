@@ -72,11 +72,14 @@ package ca.nrc.cadc.beacon.web.resources;
 import ca.nrc.cadc.ac.client.GMSClient;
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.accesscontrol.AccessControlUtil;
+import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.ContainerNode;
 import ca.nrc.cadc.vos.Node;
+import org.json.JSONException;
+import org.json.JSONWriter;
 import org.restlet.data.Cookie;
 import org.restlet.data.CookieSetting;
 import org.restlet.data.Form;
@@ -102,21 +105,23 @@ public class GroupNameServerResource extends SecureServerResource {
 
     private List<String> groupNames;
 
-    @Get
+    @Get("json")
     public Representation getGroupNames() throws Exception
     {
         final GMSClient gmsClient =
                 (GMSClient) getContext().getAttributes().get(
                         VOSpaceApplication.GMS_SERVICE_PROPERTY_KEY);
 
-        return new WriterRepresentation(MediaType.APPLICATION_JSON)
+        final Subject voSpaceUser = generateVOSpaceUser();
+
+        return new JSONRepresentation()
         {
             @Override
-            public void write(final Writer writer) throws IOException
+            public void write(final JSONWriter writer) throws JSONException
             {
                 try
                 {
-                    final List<String> groupNames = Subject.doAs(generateVOSpaceUser(),
+                    final List<String> groupNames = Subject.doAs(voSpaceUser,
                     new PrivilegedExceptionAction<List<String>>()
                     {
                         @Override
@@ -127,11 +132,17 @@ public class GroupNameServerResource extends SecureServerResource {
                     });
                     Collections.sort(groupNames);
 
-                    writer.write(groupNames.toString());
+                    writer.array();
+                    for (String s : groupNames)
+                    {
+                        writer.value(s);
+                    }
+
+                    writer.endArray();
                 }
-                catch (Exception e)
+                catch (PrivilegedActionException e)
                 {
-                    throw new IOException(e);
+                    throw new JSONException(e.getException());
                 }
             }
         };
