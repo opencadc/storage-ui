@@ -80,6 +80,12 @@ div.progress
   border-radius: 0;
 }
 
+div.quota
+{
+  padding-left: 20px;
+  font-style: italic;
+}
+
 div.beacon-progress
 {
   padding-top: 0;

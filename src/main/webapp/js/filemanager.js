@@ -137,7 +137,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         search: "_INPUT_",
         searchPlaceholder: "Search Name..."
       },
-      dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>>i>>"
+      dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>><'quota'>i>>"
            + "<'row'<'col-sm-12'tr>>",
       loading: true,
       processing: true,
@@ -2507,7 +2507,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
              });
       
       // Loading quota and folder size for root folder, e.g. /CADCTest
-      if (getCurrentPath().length > 0)
+      if (stringUtil.hasText(getCurrentPath()))
       {
 	      $.ajax({
 	          method: 'GET',
@@ -2516,11 +2516,10 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 	          async: false,
 	          success: function (data)
 	          {
-	        	  quota = data.quota;
-	        	  remainingSize = data.size;
-	        	  console.log("quota: " + quota);
-	        	  console.log("remaining size: " + remainingSize);
-	        	  return '<strong class="text-info">%remainingSize%</strong> remaining of <strong>%quota%</strong>';
+                  var htmlString = stringUtil.format(
+                		  '<strong class="text-info">{1}</strong> remaining of <strong>{2}</strong> (<a href="#" class="request-more-link">Request more</a>)', 
+                		  [data.size, data.quota]);
+	        	  $('div.quota').html(htmlString);
 	          }
 	          });
       }
