@@ -2517,7 +2517,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 	          success: function (data)
 	          {
                   var htmlString = stringUtil.format(
-                		  '<strong class="text-info">{1}</strong> remaining of <strong>{2}</strong> (<a href="#" class="request-more-link">Request more</a>)', 
+                		  '<strong class="text-info">{1}</strong> remaining of <strong>{2}</strong> (<a href="mailto:support@canfar.net" class="request-more-link">Request more</a>)', 
                 		  [data.size, data.quota]);
 	        	  $('div.quota').html(htmlString);
 	          }
