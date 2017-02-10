@@ -73,7 +73,6 @@ import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.beacon.web.SubjectGenerator;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
-import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.web.RestletPrincipalExtractor;
@@ -146,7 +145,7 @@ class SecureServerResource extends ServerResource
 
         return subjectGenerator.generate(
                 new RestletPrincipalExtractor(getRequest()),
-                NetUtil.getDomainName(serviceURL));
+                serviceURL.getHost());
     }
 
     SSOCookieCredential getCurrentSSOCookie()
