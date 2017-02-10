@@ -355,6 +355,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             sendKeys(readGroupInput, readGroup);
         }
 
+        // Wait for autocomplete to populate & be displayed or this
+        // may fail - autocomplete dropdown doesn't display consistently
+        // after sendkeys so isn't proving to be reliable to check that element
+        // is visible. :(
+        Thread.sleep(4000);
+
         clickButton(SAVE);
 
         confirmJqiMsg(SUCCESSFUL);
