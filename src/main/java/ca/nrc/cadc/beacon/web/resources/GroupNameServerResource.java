@@ -70,43 +70,24 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.ac.client.GMSClient;
-import ca.nrc.cadc.accesscontrol.AccessControlClient;
-import ca.nrc.cadc.accesscontrol.AccessControlUtil;
 import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
 import org.json.JSONException;
 import org.json.JSONWriter;
-import org.restlet.data.Cookie;
-import org.restlet.data.CookieSetting;
-import org.restlet.data.Form;
-import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
-import org.restlet.representation.WriterRepresentation;
-import org.restlet.resource.Delete;
 import org.restlet.resource.Get;
-import org.restlet.resource.Post;
 
 import javax.security.auth.Subject;
-import java.io.IOException;
-import java.io.Writer;
+
 import java.security.*;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * Created by hjeeves on 2017-02-06.
- */
+
 public class GroupNameServerResource extends SecureServerResource {
 
-
-    private List<String> groupNames;
-
     @Get("json")
-    public Representation getGroupNames() throws Exception
+     public Representation getGroupNames() throws Exception
     {
         final GMSClient gmsClient =
                 (GMSClient) getContext().getAttributes().get(
@@ -147,6 +128,4 @@ public class GroupNameServerResource extends SecureServerResource {
             }
         };
     }
-
-
 }
