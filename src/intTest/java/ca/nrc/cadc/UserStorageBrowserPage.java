@@ -80,7 +80,6 @@ import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
 
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.openqa.selenium.By.xpath;
 
