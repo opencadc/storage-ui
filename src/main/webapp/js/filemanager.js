@@ -1257,22 +1257,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     }
   };
 
-  // Manage interaction between Public checkbox and
-  // read group input box
-  var setReadGroupPublic = function (isPublic)
-  {
-      if (isPublic === false)
-      {
-        $("#readGroup").removeAttr("readonly");
-        $("#readGroup").attr("placeholder", lg.select_group_from_list);
-      }
-      else
-        {
-        $("#readGroup").val("");
-        $("#readGroup").attr("readonly", "readonly");
-        $("#readGroup").attr("placeholder", lg.PUBLIC);
-      }
-  }
 
   // Store contents of /storage/groups call so it can be
   // rendered in the read and write group dropdowns
@@ -1283,34 +1267,54 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   {
     autoCompleteList = autocompleteData;
     $("#readGroup").autocomplete(
-        {
-          appendTo: '#readGroupDiv',
-          source: function(request, response)
-          {
-            // Reduce results to 10 for display
-            var results = $.ui.autocomplete.filter(autocompleteData, request.term);
-            response(results.slice(0, 10));
-          },
-          minLength: 2
-        });
+    {
+      appendTo: '#readGroupDiv',
+      source: function(request, response)
+      {
+        // Reduce results to 10 for display
+        var results = $.ui.autocomplete.filter(autocompleteData, request.term);
+        response(results.slice(0, 10));
+      },
+      minLength: 2
+    });
 
     $("#readGroup").keyup(function ()
     {
-      togglePromptError("#readGroupDiv", "#readGroupLabel", lg.READ_GROUP, "off");
+      togglePromptError("#readGroupDiv", "#readGroupLabel",lg.allow_read_access, "off");
     });
+
+    // $("#writeGroup").autocomplete(
+    // {
+    //   appendTo: '#writeGroupDiv',
+    //   source: function(request, response)
+    //   {
+    //     // Reduce results to 10 for display
+    //     var results = $.ui.autocomplete.filter(autocompleteData, request.term);
+    //     response(results.slice(0, 10));
+    //   },
+    //   minLength: 2
+    // });
+    //
+    // $("#writeGroup").keyup(function ()
+    // {
+    //   togglePromptError("#writeGroupDiv", "#writeGroupLabel",lg.allow_read_access, "off");
+    // });
 
   };
 
   // Submit function for $.prompt instance
-  var handleEditPermissions = function (event, value,
-                                        message,
-                                        formVals)
+  var handleEditPermissions = function (event, value, message, formVals)
   {
     if (value === true)
     {
       // Either the readGroup must be blank, or the value must
       // be in the input array to be accepted
       // inArray returns the index, -1 if it doesn't exist
+      if (typeof(formVals["readGroup"]) === "undefined")
+      {
+        formVals["readGroup"] = "";
+      }
+
       if ((formVals["readGroup"] === "") ||
           ($.inArray(formVals["readGroup"], autoCompleteList) >= 0)) {
         var publicCheckbox = formVals['publicPermission'];
@@ -1361,7 +1365,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       else
       {
         event.preventDefault();
-        togglePromptError("#readGroupDiv", "#readGroupLabel", lg.READ_GROUP + " - " + lg.select_from_list, "on");
+        togglePromptError("#readGroupDiv", "#readGroupLabel", lg.allow_read_access, "on");
       }
     }
     else
@@ -1381,21 +1385,28 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       if (iconAnchor.getAttribute("readable") === "true")
       {
         checkboxState = "checked";
-        readGroupBoxDisabled = "readonly=\"readonly\"";
       }
 
-      // Add form body
-      var msg = '<div class="form-group prompt-form-group ui-front" id="readGroupDiv" >' +
-          ' <label for="readGroup" id="readGroupLabel">' + lg.READ_GROUP + '</label>' +
-          ' <input type="text" class="form-control " id="readGroup" name="readGroup" ' + readGroupBoxDisabled + ' placeholder="' + lg.select_group_from_list + '">' +
-          '</div>' +
-          '<div class="checkbox">' +
-          '<label class="prompt-label"><input type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>Public</label>' +
-          '</div></br>' +
-          // '<div class="form-group prompt-form-group">' +
-          // '<label for="writeGroup">Write Group</label>' +
-          // '<input type="text" class="form-control" id="writeGroup" name="writeGroup"></div>' +
-          '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") + '">';
+      var msg =
+      '<div class="form-group ui-front fm-prompt" id="readGroupDiv"> ' +
+        '<label for="readGroup" id="readGroupLabel" class="control-label col-sm-5">' + lg.allow_read_access + '</label>' +
+        '<div class="col-sm-7"> ' +
+          '<input type="text" class="form-control  ui-autocomplete-input" id="readGroup" name="readGroup"  ' + readGroupBoxDisabled + ' placeholder="' + lg.group_name_program_id + '">' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-group fm-prompt">' +
+        '<label for="publicPermission" class="control-label col-sm-5">' + lg.toggle_public + '</label>' +
+        '<div class="col-sm-7">' +
+          '<input style="margin: 9px 0 0;" type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>' +
+        '</div>' +
+      '</div>' +
+      // '<div class="form-group ui0front fm-prompt" id="writeGroupDiv">' +
+      //   '<label for="writeGroup" id="writeGroupLabel" class="control-label col-sm-5">' + lg.allow_write_access + '</label>' +
+      //   '<div class="col-sm-7">' +
+      //     '<input type="text" class="form-control" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
+      //   '</div>' +
+      // '</div>' +
+      '<input type="text" class="hidden" name="itemPath" id="itemPath" value="/CADCtest/automated_test/monday">';
 
       var btns = [];
       btns.push
@@ -1411,10 +1422,24 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         "classes": "btn btn-default"
       });
 
+      // 'classes' entry below is to enable bootstrap to
+      // handle styling, including form-horizontal
       $.prompt(msg, {
         title: '<h3 class="prompt-h3">' + iconAnchor.getAttribute("path") + '</h3>',
         html: msg,
         buttons: btns,
+        classes: {
+          form:'form-horizontal',
+          box: '',
+          fade: '',
+          prompt: '',
+          close: '',
+          title: 'lead',
+          message: '',
+          buttons: '',
+          button: 'btn',
+          defaultButton: 'btn-primary'
+        },
         submit: handleEditPermissions,
         loaded: function ()
         {
@@ -1435,33 +1460,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           );
 
           // Set initial form state
-          if ($("#publicPermission").is(":checked") === true)
-          {
-            setReadGroupPublic(true);
-          }
-          else
-          {
-            setReadGroupPublic(false);
-          }
-
-          $("#publicPermission").on("click", function (event)
-          {
-            togglePromptError("#readGroupDiv", "#readGroupLabel", lg.READ_GROUP, "off");
-            var isPublic = event.currentTarget.checked;
-            if (isPublic === false)
-            {
-              setReadGroupPublic(false);
-            }
-            else
-            {
-              setReadGroupPublic(true);
-            }
-          });
+          $("#readGroup").val(iconAnchor.getAttribute("readGroup"));
 
         }
       });
   });
-
 
 
   /*---------------------------------------------------------

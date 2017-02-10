@@ -217,14 +217,7 @@ div.dataTables_wrapper div.dataTables_info {
 
 
 /* CSS for prompts */
-.prompt-label-shaded {
-  opacity: 0.5;
-}
 
-.prompt-label {
-  opacity: 0.8;
-  font-weight: 700;
-}
 
 .prompt-h3 {
   margin-top: 0px;
@@ -232,14 +225,10 @@ div.dataTables_wrapper div.dataTables_info {
   font-size: 20px;
 }
 
-.prompt-input {
-  margin: 5px;
-  width: 175px;
-  display: inline;
-}
 
-.prompt-form-group {
-  margin-bottom: 0px;
+
+.fm-prompt {
+  width: 650px;
 }
 
 
