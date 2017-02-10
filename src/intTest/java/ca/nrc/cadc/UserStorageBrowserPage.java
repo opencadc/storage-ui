@@ -78,6 +78,7 @@ import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
 
 
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.openqa.selenium.By.xpath;
 
@@ -355,6 +356,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
 
         clickButton(SAVE);
+
         confirmJqiMsg(SUCCESSFUL);
     }
 
@@ -412,8 +414,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 .until(ExpectedConditions.elementToBeClickable(
                         By.id("publicPermission")));
 
-        currentPermission = permissionCheckbox.getAttribute("checked");
         click(permissionCheckbox);
+        currentPermission = permissionCheckbox.getAttribute("checked");
+
+        // This seems to be the only way to get the script to sleep long
+        // enough for the autocomplete ajax call to complete so clicking
+        // the public checkbox then save doesn't result in an error.
+        Thread.sleep(4000);
+
         clickButton(SAVE);
 
         confirmJqiMsg(SUCCESSFUL);

@@ -1390,7 +1390,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       var msg =
       '<div class="form-group ui-front fm-prompt" id="readGroupDiv"> ' +
         '<label for="readGroup" id="readGroupLabel" class="control-label col-sm-5">' + lg.allow_read_access + '</label>' +
-        '<div class="col-sm-7"> ' +
+        '<div id="readGroupInputDiv" class="col-sm-7"> ' +
           '<input type="text" class="form-control  ui-autocomplete-input" id="readGroup" name="readGroup"  ' + readGroupBoxDisabled + ' placeholder="' + lg.group_name_program_id + '">' +
         '</div>' +
       '</div>' +
@@ -1406,7 +1406,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       //     '<input type="text" class="form-control" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
       //   '</div>' +
       // '</div>' +
-      '<input type="text" class="hidden" name="itemPath" id="itemPath" value="/CADCtest/automated_test/monday">';
+      '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") + '">';
 
       var btns = [];
       btns.push
