@@ -527,6 +527,25 @@ public class StorageItemServerResource extends SecureServerResource
         }
     }
 
+    private void setNodeProperty(List<NodeProperty> nodeProperties, String propertyName, String propertyValue)
+    {
+
+        nodeProperties.remove(new NodeProperty(propertyName, ""));
+
+        if (propertyValue == null || propertyValue.equals(""))
+        {
+            NodeProperty np = new NodeProperty(propertyName, "");
+            np.setMarkedForDeletion(true);
+            nodeProperties.add(np);
+        }
+        else
+        {
+            nodeProperties.add(new NodeProperty(propertyName,
+                    IVO_GMS_PROPERTY_PREFIX + propertyValue));
+        }
+
+    }
+
     @Post("json")
     public void update(final JsonRepresentation payload) throws Exception
     {
@@ -554,20 +573,27 @@ public class StorageItemServerResource extends SecureServerResource
         if (jsonObject.keySet().contains("readGroup"))
         {
             String readGroup = jsonObject.get("readGroup").toString();
-            nodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, ""));
+            setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, readGroup);
+//            nodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, ""));
+//
+//            if (readGroup == null || readGroup.equals(""))
+//            {
+//                NodeProperty np = new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, "");
+//                np.setMarkedForDeletion(true);
+//                nodeProperties.add(np);
+//            }
+//            else
+//            {
+//                nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
+//                        IVO_GMS_PROPERTY_PREFIX + readGroup));
+//            }
 
-            if (readGroup == null || readGroup.equals(""))
-            {
-                NodeProperty np = new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, "");
-                np.setMarkedForDeletion(true);
-                nodeProperties.add(np);
-            }
-            else
-            {
-                nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
-                        IVO_GMS_PROPERTY_PREFIX + readGroup));
-            }
+        }
 
+        if (jsonObject.keySet().contains("writeGroup"))
+        {
+            String writeGroup = jsonObject.get("writeGroup").toString();
+            setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE, writeGroup);
         }
 
         setNodeSecure(currentNode);

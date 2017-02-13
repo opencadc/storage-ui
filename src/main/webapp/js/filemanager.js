@@ -208,7 +208,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                     'update" title="Edit permissions." ' +
                     'readable="' + full[6] +
                     '" path="' + full[9] +
-                    '" readgroup="' + full[5] +
+                    '" readGroup="' + full[5] +
+                    '" writeGroup="' + full[4] +
                     '" ></a></span>';
                 itemNameDisplay += editIcon;
               }
@@ -1247,7 +1248,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   {
     if (setOn === "on")
     {
-      $(fieldId).attr("class", "has-error");
+      $(fieldId).addClass("has-error");
       $(msgFieldId).text(msg);
     }
     else
@@ -1280,25 +1281,25 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
     $("#readGroup").keyup(function ()
     {
-      togglePromptError("#readGroupDiv", "#readGroupLabel",lg.allow_read_access, "off");
+      togglePromptError("#readGroupDiv", "#readGroupLabel",lg.READ_GROUP, "off");
     });
 
-    // $("#writeGroup").autocomplete(
-    // {
-    //   appendTo: '#writeGroupDiv',
-    //   source: function(request, response)
-    //   {
-    //     // Reduce results to 10 for display
-    //     var results = $.ui.autocomplete.filter(autocompleteData, request.term);
-    //     response(results.slice(0, 10));
-    //   },
-    //   minLength: 2
-    // });
-    //
-    // $("#writeGroup").keyup(function ()
-    // {
-    //   togglePromptError("#writeGroupDiv", "#writeGroupLabel",lg.allow_read_access, "off");
-    // });
+    $("#writeGroup").autocomplete(
+    {
+      appendTo: '#writeGroupDiv',
+      source: function(request, response)
+      {
+        // Reduce results to 10 for display
+        var results = $.ui.autocomplete.filter(autocompleteData, request.term);
+        response(results.slice(0, 10));
+      },
+      minLength: 2
+    });
+
+    $("#writeGroup").keyup(function ()
+    {
+      togglePromptError("#writeGroupDiv", "#writeGroupLabel",lg.WRITE_GROUP, "off");
+    });
 
   };
 
@@ -1307,17 +1308,28 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   {
     if (value === true)
     {
-      // Either the readGroup must be blank, or the value must
-      // be in the input array to be accepted
-      // inArray returns the index, -1 if it doesn't exist
-      if (typeof(formVals["readGroup"]) === "undefined")
+      var readGroupValid = false;
+      var writeGroupValid = false;
+
+      if ((typeof(formVals["readGroup"]) === "undefined") ||
+          (formVals["readGroup"] === "") ||
+          ($.inArray(formVals["readGroup"], autoCompleteList) >= 0))
       {
-        formVals["readGroup"] = "";
+        readGroupValid = true;
       }
 
-      if ((formVals["readGroup"] === "") ||
-          ($.inArray(formVals["readGroup"], autoCompleteList) >= 0)) {
-        var publicCheckbox = formVals['publicPermission'];
+
+      if ((typeof(formVals["writeGroup"]) === "undefined") ||
+          (formVals["writeGroup"] === "") ||
+          ($.inArray(formVals["writeGroup"], autoCompleteList) >= 0))
+      {
+        writeGroupValid = true;
+      }
+
+
+      if ((writeGroupValid === true) && (readGroupValid === true))
+      {
+        // var publicCheckbox = formVals['publicPermission'];
         var itemPath = formVals['itemPath'];
 
         var url = contextPath + config.options.itemConnector + itemPath;
@@ -1365,7 +1377,15 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       else
       {
         event.preventDefault();
-        togglePromptError("#readGroupDiv", "#readGroupLabel", lg.allow_read_access, "on");
+        if (readGroupValid === false)
+        {
+          togglePromptError("#readGroupDiv", "#readGroupLabel", lg.READ_GROUP, "on");
+        }
+        if (writeGroupValid === false)
+        {
+          togglePromptError("#writeGroupDiv", "#writeGroupLabel", lg.WRITE_GROUP, "on");
+        }
+
       }
     }
     else
@@ -1388,24 +1408,24 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       }
 
       var msg =
-      '<div class="form-group ui-front fm-prompt" id="readGroupDiv"> ' +
-        '<label for="readGroup" id="readGroupLabel" class="control-label col-sm-5">' + lg.allow_read_access + '</label>' +
-        '<div id="readGroupInputDiv" class="col-sm-7"> ' +
-          '<input type="text" class="form-control  ui-autocomplete-input" id="readGroup" name="readGroup"  ' + readGroupBoxDisabled + ' placeholder="' + lg.group_name_program_id + '">' +
-        '</div>' +
-      '</div>' +
       '<div class="form-group fm-prompt">' +
-        '<label for="publicPermission" class="control-label col-sm-5">' + lg.toggle_public + '</label>' +
+        '<label for="publicPermission" class="control-label col-sm-4">' + lg.public_question + '</label>' +
         '<div class="col-sm-7">' +
           '<input style="margin: 9px 0 0;" type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>' +
         '</div>' +
       '</div>' +
-      // '<div class="form-group ui0front fm-prompt" id="writeGroupDiv">' +
-      //   '<label for="writeGroup" id="writeGroupLabel" class="control-label col-sm-5">' + lg.allow_write_access + '</label>' +
-      //   '<div class="col-sm-7">' +
-      //     '<input type="text" class="form-control" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
-      //   '</div>' +
-      // '</div>' +
+      '<div class="form-group ui-front fm-prompt" id="readGroupDiv"> ' +
+        '<label for="readGroup" id="readGroupLabel" class="control-label col-sm-4">' + lg.READ_GROUP + '</label>' +
+        '<div id="readGroupInputDiv" class="col-sm-7"> ' +
+          '<input type="text" class="form-control  ui-autocomplete-input" id="readGroup" name="readGroup"  ' + readGroupBoxDisabled + ' placeholder="' + lg.group_name_program_id + '">' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-group ui0front fm-prompt" id="writeGroupDiv">' +
+        '<label for="writeGroup" id="writeGroupLabel" class="control-label col-sm-4">' + lg.WRITE_GROUP + '</label>' +
+        '<div class="col-sm-7">' +
+          '<input type="text" class="form-control" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
+        '</div>' +
+      '</div>' +
       '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") + '">';
 
       var btns = [];
@@ -1461,6 +1481,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
           // Set initial form state
           $("#readGroup").val(iconAnchor.getAttribute("readGroup"));
+          $("#writeGroup").val(iconAnchor.getAttribute("writeGroup"));
 
         }
       });

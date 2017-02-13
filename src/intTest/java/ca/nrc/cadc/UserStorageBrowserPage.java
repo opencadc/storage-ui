@@ -98,6 +98,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String SAVE = "Save";
     // Define in here what elements are mode indicators
 
+    public static final String READ_GROUP_DIV = "readGroupDiv";
+    public static final String WRITE_GROUP_DIV = "writeGroupDiv";
+    public static final String READ_GROUP_INPUT = "readGroup";
+    public static final String WRITE_GROUP_INPUT = "writeGroup";
+
     // Elements always on the page
     @FindBy(id = "beacon_filter")
     private WebElement searchFilter;
@@ -325,7 +330,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         editIcon.click();
     }
 
-    public void setReadGroup(String readGroup, boolean isPublic) throws Exception
+    public void setGroup(String idToFind, String newGroup, boolean isPublic) throws Exception
     {
         String currentPermission = "";
         clickEditIconForFirstRow();
@@ -333,7 +338,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 .until(ExpectedConditions.elementToBeClickable(
                         By.id("publicPermission")));
 
-        WebElement readGroupInput = find(By.id("readGroup"));
+        WebElement groupInput = find(By.id(idToFind));
 
         if (isPublic == true)
         {
@@ -352,7 +357,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 // read group field should be enabled
                 click(permissionCheckbox);
             }
-            sendKeys(readGroupInput, readGroup);
+            sendKeys(groupInput, newGroup);
         }
 
         // Wait for autocomplete to populate & be displayed or this
@@ -383,14 +388,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
     }
 
-    public void setReadGroupOnly(String readGroup, boolean confirm) throws Exception
+    public void setGroupOnly(String idToFind, String newGroup, boolean confirm) throws Exception
     {
         String currentPermission = "";
         WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
                         By.id("publicPermission")));
 
-        WebElement readGroupInput = find(By.id("readGroup"));
+        WebElement groupInput = find(By.id(idToFind));
 
         currentPermission = permissionCheckbox.getAttribute("checked");
         if (currentPermission != null) {
@@ -398,11 +403,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             // read group field should be enabled
             click(permissionCheckbox);
         }
-        sendKeys(readGroupInput, readGroup);
+        sendKeys(groupInput, newGroup);
 
         clickButton(SAVE);
 
-        // readGroupDiv should have 'has-error' class
+        // read/writeGroupDiv should have 'has-error' class
         // confirm here is conditional because it won't
         // show up if an invalid group has been sent in.
         if (confirm == true)
@@ -734,19 +739,25 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
     }
 
+
     public boolean isTableEmpty()
     {
-        boolean isEmpty = false;
-        try
+        //*[@id="beacon"]/tbody/tr[6]
+        List<WebElement> rowList = beaconTable.findElements(By.xpath("//*/tbody/tr"));
+
+        if (rowList.size() > 0)
         {
-            WebElement columnList = find(xpath("//td[contains(@class,'dataTables_empty')]"));
-            isEmpty = true;
+            // Value is different if the entire table is empty, as compared to a list shorted to a particular value
+            if (rowList.get(0).findElement(By.xpath("//*/td")).getAttribute("class").equals("dataTables_empty"))
+            {
+                return true;
+            }
+            return false;
         }
-        catch (Exception e)
+        else
         {
-            isEmpty = false;
+            return true;
         }
-        return isEmpty;
     }
 
     /**
@@ -756,34 +767,36 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
      * @return
      * @throws Exception
      */
-    public boolean isPermissionDataForRow(int row, String readGroup, boolean isPublic) throws Exception
+    public boolean isPermissionDataForRow(int row, String writeGroup, String readGroup, boolean isPublic) throws Exception
     {
         // readGroup is the last column (#5)
         // isPublic defines what might be in that row: text should say 'Public' if isPublic is true
         String rowReadGroup = getValueForRowCol(row, 6);
+        String rowWriteGroup = getValueForRowCol(row, 5);
         boolean isPermissionSetCorrect = false;
 
         if (isPublic == true)
         {
-            if (rowReadGroup.equals("Public"))
+            if (rowReadGroup.equals("Public") && rowWriteGroup.equals(writeGroup))
             {
                 isPermissionSetCorrect =  true;
             }
         }
-        else if (rowReadGroup.equals(readGroup))
+        else if (rowReadGroup.equals(readGroup) && rowWriteGroup.equals(writeGroup))
         {
             isPermissionSetCorrect = true;
         }
+
 
         return isPermissionSetCorrect;
     }
 
 
 
-    public boolean isReadGroupError() throws Exception
+    public boolean isGroupError(String idToFind) throws Exception
     {
         WebElement readGroupDiv = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(By.id("readGroupDiv")));
+                .until(ExpectedConditions.elementToBeClickable(By.id(idToFind)));
 
         return readGroupDiv.getAttribute("class").contains("has-error");
     }

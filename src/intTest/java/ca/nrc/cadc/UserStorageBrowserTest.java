@@ -45,6 +45,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 {
 	static final String STORAGE_ENDPOINT = "storage/list";
 
+
     @Test
     public void browseUserStorage() throws Exception
     {
@@ -53,14 +54,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
                 goTo(STORAGE_ENDPOINT, null, UserStorageBrowserPage.class);
 
 		String testFolderName = "CADCtest";
-
-    	// TODO: First landing -  check:
-    	// - basic elements are on page
-		// - not logged in
-    	// - Name is primary sort
-		// Test default sort on Name column
 		verifyTrue(userStoragePage.isDefaultSort());
-
 
     	// Scenario 1:
     	// enter search(filter) value
@@ -69,7 +63,6 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 
     	userStoragePage.enterSearch(testFolderName);
     	int rowCount = userStoragePage.getTableRowCount();
-//    	System.out.println("Rowcount: " + rowCount);
     	verifyTrue(rowCount < 3);
     	verifyTrue(userStoragePage.verifyFolderName(rowCount-1, testFolderName));
     	verifyTrue(userStoragePage.verifyFolderSize(rowCount-1));
@@ -152,74 +145,101 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		// Verify sub folder page state
 		verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
+
+
 		// navigate to automated test folder
-		String testFolder = "automated_test";
-		userStoragePage.clickFolder(testFolder);
+		String autoTestFolder = "automated_test";
+
+		// Get Write and Read group permissions for this folder
+		userStoragePage.enterSearch(autoTestFolder);
+
+		// For whatever reason the automated test folder has been deleted. Recreate it
+		if (userStoragePage.isTableEmpty() == true)
+		{
+			userStoragePage.createNewFolder(autoTestFolder);
+			userStoragePage.enterSearch(autoTestFolder);
+		}
+
+		String parentWriteGroup = userStoragePage.getValueForRowCol(1, 5);
+		String parentReadGroup = userStoragePage.getValueForRowCol(1, 6);
+		userStoragePage.clickFolder(autoTestFolder);
+
 
 		// Create second test folder
+		// This will be deleted at the end of this test suite
 		String tempTestFolder = "vosui_automated_test";
 		userStoragePage.createNewFolder(tempTestFolder);
-
 		userStoragePage.enterSearch(tempTestFolder);
 
+		boolean isPublic = false;
+		if (parentReadGroup.equals("Public"))
+		{
+			isPublic = true;
+		}
+
+		// Test that permissions are same as the parent to start
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, parentReadGroup, isPublic));
 
 		// Edit permissions on the form
-		// will work on the first row of data. Brittle, but ok to start
-
-		// 6 is the Read group column for now
 		String currentReadGroup = userStoragePage.getValueForRowCol(1,6);
 
 		// Clearly only works for English test suite. :/
-		// Set the read group to be other than 'Public' to start
+		// Toggle the Public attribute to get the underlying read group (if any)
 		if (currentReadGroup.equals("Public")) {
 			userStoragePage.togglePublicAttributeForRow(1);
+			currentReadGroup = userStoragePage.getValueForRowCol(1, 6);
 		}
 
-		// Set read group
-		userStoragePage.setReadGroup("cadcsw", false);
-		verifyTrue(userStoragePage.isPermissionDataForRow(1,"cadcsw", false));
+		String readGroupName = "cadcsw";
+		String writeGroupName = "cadc-dev";
+		String invalidGroupName = "invalid-group";
 
-		System.out.println("set read group");
+		// Set read group
+		userStoragePage.setGroup(userStoragePage.READ_GROUP_INPUT, readGroupName, false);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, readGroupName, false));
+
+		// Set write group
+		userStoragePage.setGroup(userStoragePage.WRITE_GROUP_INPUT, writeGroupName, false);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+
+		// Test response to invalid autocomplete selection
+		userStoragePage.clickEditIconForFirstRow();
+		// last parameter says 'don't confirm anything'
+		userStoragePage.setGroupOnly(userStoragePage.READ_GROUP_INPUT, invalidGroupName, false);
+		verifyTrue(userStoragePage.isGroupError(userStoragePage.READ_GROUP_DIV));
+
+		// Enter correct one in order to close the prompt
+		userStoragePage.setGroupOnly(userStoragePage.READ_GROUP_INPUT, readGroupName, true);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
 		// Test response to invalid autocomplete selection
 		userStoragePage.clickEditIconForFirstRow();
 		// second parameter says 'don't confirm anything'
-		userStoragePage.setReadGroupOnly("invalid_group", false);
-		verifyTrue(userStoragePage.isReadGroupError());
-		System.out.println("put in invalid group");
+		userStoragePage.setGroupOnly(userStoragePage.WRITE_GROUP_INPUT, invalidGroupName, false);
+		verifyTrue(userStoragePage.isGroupError(userStoragePage.WRITE_GROUP_DIV));
 
 		// Enter correct one in order to close the prompt
-		userStoragePage.setReadGroupOnly("cadcsw", true);
-		verifyTrue(userStoragePage.isPermissionDataForRow(1,"cadcsw", false));
-
-		System.out.println("changed read group");
+		userStoragePage.setGroupOnly(userStoragePage.WRITE_GROUP_INPUT, writeGroupName, true);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
 		// short list displayed in page again
 		userStoragePage.enterSearch(tempTestFolder);
+
 		// Toggle public permissions to set them
-		// note that group name should be "Public"
+		// Group name displayed in table should read "Public"
 		String currentstatus = userStoragePage.togglePublicAttributeForRow(1);
-		System.out.println("current status: " + currentstatus);
-		if (currentstatus != null) {
-			verifyTrue(userStoragePage.isPermissionDataForRow(1, "Public", true));
-			System.out.println("set to public");
-		}
-		else {
-			verifyTrue(userStoragePage.isPermissionDataForRow(1, "cadcsw", false));
-			System.out.println("set to cadcsw");
-		}
+
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, "Public", true));
+		System.out.println("Set read group to public");
 
 		// short list displayed in page again
 		userStoragePage.enterSearch(tempTestFolder);
 		// Toggle public permission to unset
 		currentstatus = userStoragePage.togglePublicAttributeForRow(1);
-		System.out.println("current status: " + currentstatus);
-		verifyTrue(userStoragePage.isPermissionDataForRow(1,"cadcsw",false));
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
 
 		// Delete folder just created
-		// short list displayed in page again (this is just in case other
-		// folders have been added to automated_test folder...
 		userStoragePage.enterSearch(tempTestFolder);
 		userStoragePage.clickCheckboxForRow(1);
 		userStoragePage.deleteFolder(tempTestFolder);
