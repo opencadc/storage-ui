@@ -204,7 +204,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               if (full[13] === "true")
               {
                 // Add data references to icon so they can be used to populate the edit prompt
-                var editIcon = '<span class="glyphicon glyphicon-edit"><a href="' + contextPath +
+                var editIcon = '<span class="glyphicon glyphicon-pencil"><a href="' + contextPath +
                     'update" title="Edit permissions." ' +
                     'readable="' + full[6] +
                     '" path="' + full[9] +
@@ -1395,7 +1395,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   }; // end handleEditPermissions
 
   // Attach $.prompt to edit icons
-  $(document).on('click', '.glyphicon-edit', function (event)
+  $(document).on('click', '.glyphicon-pencil', function (event)
   {
       // Pull attributes from edit icon
       var iconAnchor = $(event.currentTarget).find("a")[0];
@@ -1426,7 +1426,15 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           '<input type="text" class="form-control" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
         '</div>' +
       '</div>' +
-      '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") + '">';
+      '<div class="form-group fm-prompt">' +
+        '<div class="col-sm-4" >' +
+        '</div>' +
+        '<div class="col-sm-7 prompt-link">' +
+          '<a href="http://www.canfar.phys.uvic.ca/canfar/groups" target="_blank">Manage Groups</a>' +
+          '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") + '">' +
+        '</div>' +
+      '</div>';
+
 
       var btns = [];
       btns.push
@@ -3120,5 +3128,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                  {
                    setDimensions();
                  });
+
 };
 
