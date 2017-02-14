@@ -40,7 +40,7 @@ sourceCompatibility = '1.7'
 group = 'org.opencadc'
 version = '1006'
 
-def docker_image_name = 'opencadc/storage'
+def docker_image_name = 'canfar/storage'
 
 war {
     archiveName 'storage##' + project.version + '.war'
