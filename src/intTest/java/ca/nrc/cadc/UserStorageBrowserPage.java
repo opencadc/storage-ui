@@ -74,6 +74,8 @@ import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.Select;
+
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
 
 
@@ -657,5 +659,20 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return isEmpty;
     }
 
-
+    public boolean quotaIsDisplayed()
+    {
+    	boolean isDisplayed = false;
+    	
+    	try
+    	{
+    		WebElement quota = find(xpath("//div[contains(@class, 'quota')]"));
+    		isDisplayed = StringUtil.hasText(quota.getText());
+    	}
+    	catch (Exception e)
+    	{
+    		isDisplayed = false;
+    	}
+    	
+    	return isDisplayed;
+    }
 }

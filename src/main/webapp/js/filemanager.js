@@ -136,7 +136,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         search: "_INPUT_",
         searchPlaceholder: "Search Name..."
       },
-      dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>>i>>"
+      dom: "<'row beacon-info-row'<'col-sm-12'<'progress active'<'beacon-progress progress-bar progress-bar-info progress-bar-striped'>><'quota'>i>>"
            + "<'row'<'col-sm-12'tr>>",
       loading: true,
       processing: true,
@@ -2515,6 +2515,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                                                                             config.version +
                                                                                             ']');
       $('div.version').html(config.version);
+      url1: contextPath + config.options.folderConnector + '/' + getCurrentPath().split('/')[1];
 
       // Loading theme
       loadCSS(contextPath + 'themes/' + config.options.theme +
@@ -2528,6 +2529,24 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                  $('head').append(data);
                }
              });
+      
+      // Loading quota and folder size for root folder, e.g. /CADCTest
+      if (stringUtil.hasText(getCurrentPath()))
+      {
+	      $.ajax({
+	          method: 'GET',
+	          url: contextPath + config.options.folderConnector + '/' + getCurrentPath().split('/')[1] ,
+	          dataType: 'json',
+	          async: false,
+	          success: function (data)
+	          {
+                  var htmlString = stringUtil.format(
+                		  '<strong class="text-info">{1}</strong> remaining of <strong>{2}</strong> (<a href="mailto:support@canfar.net" class="request-more-link">Request more</a>)', 
+                		  [data.size, data.quota]);
+	        	  $('div.quota').html(htmlString);
+	          }
+	          });
+      }
 
       // loading zeroClipboard
       loadJS(contextPath + 'scripts/zeroclipboard/dist/ZeroClipboard.js');

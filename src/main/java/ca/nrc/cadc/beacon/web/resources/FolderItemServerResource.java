@@ -69,10 +69,20 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.beacon.FileSizeRepresentation;
+import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
 import ca.nrc.cadc.reg.client.RegistryClient;
-
+import ca.nrc.cadc.vos.Node;
+import ca.nrc.cadc.vos.NodeProperty;
+import ca.nrc.cadc.vos.VOS;
+import ca.nrc.cadc.vos.VOS.Detail;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+
+import org.json.JSONException;
+import org.json.JSONWriter;
 import org.restlet.data.Status;
+import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Put;
 
 
@@ -96,5 +106,44 @@ public class FolderItemServerResource extends StorageItemServerResource
     {
         createFolder();
         getResponse().setStatus(Status.SUCCESS_CREATED);
+    }
+    
+    @Get("json")
+    public Representation retrieveQuota() throws Exception
+    {
+    	final Node node = getCurrentNode(Detail.properties);
+        final long folderSize = 
+        		getPropertyValue(node, VOS.PROPERTY_URI_CONTENTLENGTH);
+        final long quota = 
+        		getPropertyValue(node, VOS.PROPERTY_URI_QUOTA);
+        final String quotaString = new FileSizeRepresentation().getSizeHumanReadable(quota);
+        final String remainingSizeString = 
+        		(quota - folderSize) > 0
+                ? new FileSizeRepresentation().getSizeHumanReadable(quota - folderSize)
+                : new FileSizeRepresentation().getSizeHumanReadable(0);
+    	
+        return  new JSONRepresentation()
+				{
+		            @Override
+		            public void write(final JSONWriter jsonWriter)
+		                    throws JSONException
+		            {
+		                jsonWriter.object()
+		                	.key("size").value(remainingSizeString)
+		                    .key("quota").value(quotaString)
+		                    .endObject();
+		            }	    	
+				};
+    }
+    
+    private long getPropertyValue(final Node node, 
+    		final String propertyURI) throws Exception
+    {
+    	final NodeProperty property = node.findProperty(propertyURI);
+    	final long value = property == null
+    			? 0L
+    			: Long.parseLong(property.getPropertyValue());
+    	
+    	return value;
     }
 }
