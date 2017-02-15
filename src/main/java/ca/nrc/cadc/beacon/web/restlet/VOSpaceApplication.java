@@ -68,6 +68,7 @@
 
 package ca.nrc.cadc.beacon.web.restlet;
 
+import ca.nrc.cadc.ac.client.GMSClient;
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
 
 import ca.nrc.cadc.beacon.web.resources.*;
@@ -110,7 +111,8 @@ public class VOSpaceApplication extends Application
 
     private static final String DEFAULT_GMS_SERVICE_ID =
             "ivo://cadc.nrc.ca/gms";
-    private static final String GMS_SERVICE_PROPERTY_KEY =
+
+    public static final String GMS_SERVICE_PROPERTY_KEY =
             "org.opencadc.gms.service_id";
 
 
@@ -150,6 +152,8 @@ public class VOSpaceApplication extends Application
                                     createRegistryClient());
         context.getAttributes().put(ACCESS_CONTROL_CLIENT_KEY,
                                     createAccessControlClient());
+        context.getAttributes().put(GMS_SERVICE_PROPERTY_KEY,
+                                    createGMSClient());
         context.getAttributes().put(VOSPACE_SERVICE_ID_KEY,
                                     URI.create(configuration.getString(
                                             VOSPACE_SERVICE_ID_KEY,
@@ -168,6 +172,9 @@ public class VOSpaceApplication extends Application
 
         router.attach(contextPath + "ac/authenticate",
                       AccessControlServerResource.class);
+
+        router.attach(contextPath + "groups",
+                GroupNameServerResource.class);
 
         router.attach(contextPath + "page", PageServerResource.class);
         final TemplateRoute pageRoute =
@@ -229,6 +236,14 @@ public class VOSpaceApplication extends Application
     private AccessControlClient createAccessControlClient()
     {
         return new AccessControlClient(URI.create(
+                configuration.getString(
+                        VOSpaceApplication.GMS_SERVICE_PROPERTY_KEY,
+                        VOSpaceApplication.DEFAULT_GMS_SERVICE_ID)));
+    }
+
+    private GMSClient createGMSClient()
+    {
+        return new GMSClient(URI.create(
                 configuration.getString(
                         VOSpaceApplication.GMS_SERVICE_PROPERTY_KEY,
                         VOSpaceApplication.DEFAULT_GMS_SERVICE_ID)));

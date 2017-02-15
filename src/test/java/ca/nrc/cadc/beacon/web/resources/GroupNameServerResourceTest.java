@@ -65,84 +65,102 @@
  *
  ************************************************************************
  */
-
 package ca.nrc.cadc.beacon.web.resources;
 
-
-import ca.nrc.cadc.beacon.FileSizeRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
+import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeProperty;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.VOS.Detail;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
-
-import org.json.JSONException;
+import org.json.JSONArray;
 import org.json.JSONWriter;
-import org.restlet.data.Status;
-import org.restlet.representation.Representation;
-import org.restlet.resource.Get;
-import org.restlet.resource.Put;
+import org.junit.Test;
+import static org.junit.Assert.*;
+import org.restlet.Context;
+import org.restlet.Response;
+
+import javax.security.auth.Subject;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.easymock.EasyMock.*;
 
 
-public class FolderItemServerResource extends StorageItemServerResource
-{
-    /**
-     * Empty constructor needed for Restlet to manage it.
-     */
-    public FolderItemServerResource()
-    {
-    }
 
-    FolderItemServerResource(final VOSpaceClient voSpaceClient)
-    {
-        super(voSpaceClient);
-    }
+public class GroupNameServerResourceTest
+        extends AbstractServerResourceTest<GroupNameServerResource> {
+    @Test
+    public void getGroupNames() throws Exception {
 
-    @Put
-    public void create() throws Exception
-    {
-        createFolder();
-        getResponse().setStatus(Status.SUCCESS_CREATED);
-    }
-    
-    @Get("json")
-    public Representation retrieveQuota() throws Exception
-    {
-    	final Node node = getCurrentNode(Detail.properties);
-        final long folderSize = 
-        		getPropertyValue(node, VOS.PROPERTY_URI_CONTENTLENGTH);
-        final long quota = 
-        		getPropertyValue(node, VOS.PROPERTY_URI_QUOTA);
-        final String quotaString = new FileSizeRepresentation().getSizeHumanReadable(quota);
-        final String remainingSizeString = 
-        		(quota - folderSize) > 0
-                ? new FileSizeRepresentation().getSizeHumanReadable(quota - folderSize)
-                : new FileSizeRepresentation().getSizeHumanReadable(0);
-    	
-        return  new JSONRepresentation()
-				{
-		            @Override
-		            public void write(final JSONWriter jsonWriter)
-		                    throws JSONException
-		            {
-		                jsonWriter.object()
-		                	.key("size").value(remainingSizeString)
-		                    .key("quota").value(quotaString)
-		                    .endObject();
-		            }	    	
-				};
-    }
-    
-    private long getPropertyValue(final Node node, 
-    		final String propertyURI) throws Exception
-    {
-    	final NodeProperty property = node.findProperty(propertyURI);
-    	final long value = property == null
-    			? 0L
-    			: Long.parseLong(property.getPropertyValue());
-    	
-    	return value;
-    }
+        List<String> groupList = new ArrayList<String>();
+        groupList.add("CHIMPS");
+        groupList.add("A-TEAM");
+        groupList.add("ABC");
+        groupList.add("ABCDE");
+
+        expect(mockGMSClient.getGroupNames())
+                .andReturn(groupList).once();
+
+        replay(mockGMSClient, mockServletContext);
+
+        final Map<String, Object> attributes = new HashMap<>();
+        final Context context = new Context();
+
+        attributes.put(VOSpaceApplication.GMS_SERVICE_PROPERTY_KEY, mockGMSClient);
+        context.setAttributes(attributes);
+
+
+        testSubject = new GroupNameServerResource() {
+            @Override
+            public Context getContext()
+            {
+                return context;
+            }
+
+            @Override
+            RegistryClient getRegistryClient() {
+                return mockRegistryClient;
+            }
+
+            @Override
+            Subject generateVOSpaceUser() throws IOException
+            {
+                return new Subject();
+            }
+
+            /**
+             * Returns the handled response.
+             *
+             * @return The handled response.
+             */
+            @Override
+            public Response getResponse() {
+                return mockResponse;
+            }
+
+        };
+
+
+        JSONRepresentation r = (JSONRepresentation) testSubject.getGroupNames();
+
+        StringWriter sw = new StringWriter();
+        JSONWriter jw = new JSONWriter(sw);
+        r.write(jw);
+
+        JSONArray jo = new JSONArray(sw.getBuffer().toString());
+
+        ArrayList<String> listdata = new ArrayList<String>();
+        if (jo != null) {
+            for (int i=0;i<jo.length();i++){
+                listdata.add(jo.getString(i));
+            }
+        }
+        assertEquals(listdata,groupList);
+
+        verify(mockGMSClient);
+
+    };
 }
+

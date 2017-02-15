@@ -68,6 +68,7 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
+import ca.nrc.cadc.ac.client.GMSClient;
 import ca.nrc.cadc.beacon.AbstractUnitTest;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
@@ -84,6 +85,7 @@ abstract class AbstractServerResourceTest<T extends SecureServerResource>
         extends AbstractUnitTest<T>
 {
     final VOSpaceClient mockVOSpaceClient = createMock(VOSpaceClient.class);
+    final GMSClient mockGMSClient = createMock(GMSClient.class);
     final Response mockResponse = createMock(Response.class);
     final Request mockRequest = createMock(Request.class);
     final RegistryClient mockRegistryClient = createMock(RegistryClient.class);

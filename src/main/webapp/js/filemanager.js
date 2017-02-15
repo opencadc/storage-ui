@@ -204,10 +204,13 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               if (full[13] === "true")
               {
                 // Add data references to icon so they can be used to populate the edit prompt
-                var editIcon = '<span class="glyphicon glyphicon-edit"><a href="' + contextPath +
+                var editIcon = '<span class="glyphicon glyphicon-pencil"><a href="' + contextPath +
                     'update" title="Edit permissions." ' +
                     'readable="' + full[6] +
-                    '" path="' + full[9] + '" ></a></span>';
+                    '" path="' + full[9] +
+                    '" readGroup="' + full[5] +
+                    '" writeGroup="' + full[4] +
+                    '" ></a></span>';
                 itemNameDisplay += editIcon;
               }
 
@@ -235,7 +238,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             {
               // Column [6] is the public flag.
               renderedValue = (full[6] === "true")
-                ? stringUtil.format(publicLink, [lg.public]) : data;
+                ? lg.public : data;
             }
             else
             {
@@ -1237,111 +1240,254 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   };
 
 
-  $(document).on('click', '.glyphicon-edit', function (event)
+  /*---------------------------------------------------------
+   Functions for Editing Folder Permissions
+   ---------------------------------------------------------*/
+  // Highlighting the input box if an invalid selection is entered
+  var togglePromptError = function(fieldId, msgFieldId, msg, setOn)
+  {
+    if (setOn === "on")
+    {
+      $(fieldId).addClass("has-error");
+      $(msgFieldId).text(msg);
+    }
+    else
+    {
+      $(fieldId).removeClass("has-error");
+      $(msgFieldId).text(msg);
+    }
+  };
+
+
+  // Store contents of /storage/groups call so it can be
+  // rendered in the read and write group dropdowns
+  var autoCompleteList = [];
+
+  // Callback from ajax call to /storage/groups
+  var handleLoadAutocomplete = function (autocompleteData)
+  {
+    autoCompleteList = autocompleteData;
+    $("#readGroup").autocomplete(
+    {
+      appendTo: '#readGroupDiv',
+      source: function(request, response)
       {
+        // Reduce results to 10 for display
+        var results = $.ui.autocomplete.filter(autocompleteData, request.term);
+        response(results.slice(0, 10));
+      },
+      minLength: 2
+    });
 
-        var handleEditPermissions = function (event, value,
-                                              message,
-                                              formVals)
+    $("#readGroup").keyup(function ()
+    {
+      togglePromptError("#readGroupDiv", "#readGroupLabel",lg.READ_GROUP, "off");
+    });
+
+    $("#writeGroup").autocomplete(
+    {
+      appendTo: '#writeGroupDiv',
+      source: function(request, response)
+      {
+        // Reduce results to 10 for display
+        var results = $.ui.autocomplete.filter(autocompleteData, request.term);
+        response(results.slice(0, 10));
+      },
+      minLength: 2
+    });
+
+    $("#writeGroup").keyup(function ()
+    {
+      togglePromptError("#writeGroupDiv", "#writeGroupLabel",lg.WRITE_GROUP, "off");
+    });
+
+  };
+
+  // Submit function for $.prompt instance
+  var handleEditPermissions = function (event, value, message, formVals)
+  {
+    if (value === true)
+    {
+      var readGroupValid = false;
+      var writeGroupValid = false;
+
+      if ((typeof(formVals["readGroup"]) === "undefined") ||
+          (formVals["readGroup"] === "") ||
+          ($.inArray(formVals["readGroup"], autoCompleteList) >= 0))
+      {
+        readGroupValid = true;
+      }
+
+
+      if ((typeof(formVals["writeGroup"]) === "undefined") ||
+          (formVals["writeGroup"] === "") ||
+          ($.inArray(formVals["writeGroup"], autoCompleteList) >= 0))
+      {
+        writeGroupValid = true;
+      }
+
+
+      if ((writeGroupValid === true) && (readGroupValid === true))
+      {
+        var itemPath = formVals['itemPath'];
+
+        var url = contextPath + config.options.itemConnector + itemPath;
+
+        var dataStr = JSON.stringify(formVals);
+        $.ajax(
         {
-          if (value === true)
+          url: url,
+          method: "POST",
+          contentType: "application/json",
+          data: dataStr,
+          statusCode:
           {
-            var publicCheckbox = formVals['publicPermission'];
-            var itemPath = formVals['itemPath'];
-
-            var url = contextPath + config.options.itemConnector + itemPath;
-
-            var dataStr = JSON.stringify(formVals);
-
-            $.ajax({
-                    url: url,
-                    method: "POST",
-                    contentType: "application/json",
-                    data: dataStr,
-                    statusCode: {
-                      201: function ()
-                      {
-                        $.prompt(lg.successful_edit,
-                            {
-                              submit: refreshPage
-                            });
-                      },
-                      204: function ()
-                      {
-                        $.prompt(lg.successful_edit,
-                            {
-                              submit: refreshPage
-                            });
-                      },
-                      400: function ()
-                      {
-
-                      },
-                      401: function ()
-                      {
-                        $.prompt(lg.NOT_ALLOWED_SYSTEM);
-                      },
-                      403: function ()
-                      {
-                        $.prompt(lg.NOT_ALLOWED_SYSTEM);
-                      },
-                      409: function ()
-                      {
-                        $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
-                      }
-                    }
-            });
-
+            204: function ()
+            {
+              $.prompt(lg.successful_edit,
+                  {
+                    submit: refreshPage
+                  });
+            },
+            400: function ()
+            {
+              $.prompt(lg.NOT_ALLOWED_SYSTEM);
+            },
+            401: function ()
+            {
+              $.prompt(lg.NOT_ALLOWED_SYSTEM);
+            },
+            403: function ()
+            {
+              $.prompt(lg.NOT_ALLOWED_SYSTEM);
+            },
+            409: function ()
+            {
+              $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
+            }
           }
-          else
-          {
-            return true;
-          }
-        };
-
-        var iconAnchor = $(event.currentTarget).find("a")[0];
-
-        var checkboxState = "";
-        if (iconAnchor.getAttribute("readable") === "true")
+        });
+      }
+      else
+      {
+        event.preventDefault();
+        if (readGroupValid === false)
         {
-          checkboxState = "checked";
+          togglePromptError("#readGroupDiv", "#readGroupLabel", lg.READ_GROUP, "on");
+        }
+        if (writeGroupValid === false)
+        {
+          togglePromptError("#writeGroupDiv", "#writeGroupLabel", lg.WRITE_GROUP, "on");
         }
 
-        // Add form body
-        var msg =  '<label class="prompt-label custom-control custom-checkbox">' +
-           '<span class="custom-control-indicator"></span>' +
-           '<span class="custom-control-description">Public read permission</span>' +
-           '</label>' +
-           '<input type="checkbox" class="form-control prompt-checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + ' >' +
-           '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") +
-            '">';
-
-        var btns = [];
-        btns.push
-        ({
-          "title": lg.save,
-          "value": true,
-          "classes": "btn btn-primary"
-        });
-        btns.push
-        ({
-            "title": lg.cancel,
-            "value": false,
-            "classes": "btn btn-default"
-        });
-
-
-        $.prompt(msg,
-            {
-              title: '<h3 class="prompt-h3">' + iconAnchor.getAttribute("path") + '</h3>',
-              submit: handleEditPermissions,
-              focus: "#publicPermission",
-              buttons: btns
-            }
-        );
       }
-  );
+    }
+    else
+    {
+      return true;
+    }
+  }; // end handleEditPermissions
 
+  // Attach $.prompt to edit icons
+  $(document).on('click', '.glyphicon-pencil', function (event)
+  {
+      // Pull attributes from edit icon
+      var iconAnchor = $(event.currentTarget).find("a")[0];
+
+      var checkboxState = "";
+      var readGroupBoxDisabled = "false";
+      if (iconAnchor.getAttribute("readable") === "true")
+      {
+        checkboxState = "checked";
+      }
+
+      var msg =
+      '<div class="form-group fm-prompt">' +
+        '<label for="publicPermission" class="control-label col-sm-4">' + lg.public_question + '</label>' +
+        '<div class="col-sm-7">' +
+          '<input style="margin: 9px 0 0;" type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-group ui-front fm-prompt" id="readGroupDiv"> ' +
+        '<label for="readGroup" id="readGroupLabel" class="control-label col-sm-4">' + lg.READ_GROUP + '</label>' +
+        '<div id="readGroupInputDiv" class="col-sm-7"> ' +
+          '<input type="text" class="form-control  ui-autocomplete-input" id="readGroup" name="readGroup"  ' + readGroupBoxDisabled + ' placeholder="' + lg.group_name_program_id + '">' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-group ui0front fm-prompt" id="writeGroupDiv">' +
+        '<label for="writeGroup" id="writeGroupLabel" class="control-label col-sm-4">' + lg.WRITE_GROUP + '</label>' +
+        '<div class="col-sm-7">' +
+          '<input type="text" class="form-control" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
+        '</div>' +
+      '</div>' +
+      '<div class="form-group fm-prompt">' +
+        '<div class="col-sm-4" >' +
+        '</div>' +
+        '<div class="col-sm-7 prompt-link">' +
+          '<a href="http://www.canfar.phys.uvic.ca/canfar/groups" target="_blank">Manage Groups</a>' +
+          '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' + iconAnchor.getAttribute("path") + '">' +
+        '</div>' +
+      '</div>';
+
+
+      var btns = [];
+      btns.push
+      ({
+        "title": lg.save,
+        "value": true,
+        "classes": "btn btn-primary"
+      });
+      btns.push
+      ({
+        "title": lg.cancel,
+        "value": false,
+        "classes": "btn btn-default"
+      });
+
+      // 'classes' entry below is to enable bootstrap to
+      // handle styling, including form-horizontal
+      $.prompt(msg, {
+        title: '<h3 class="prompt-h3">' + iconAnchor.getAttribute("path") + '</h3>',
+        html: msg,
+        buttons: btns,
+        classes: {
+          form:'form-horizontal',
+          box: '',
+          fade: '',
+          prompt: '',
+          close: '',
+          title: 'lead',
+          message: '',
+          buttons: '',
+          button: 'btn',
+          defaultButton: 'btn-primary'
+        },
+        submit: handleEditPermissions,
+        loaded: function ()
+        {
+          // Get the group names list for populating the dropdown first
+          $.ajax(
+              {
+                type: 'GET',
+                url: contextPath + "groups",
+                success: function (returnValue)
+                {
+                  handleLoadAutocomplete(returnValue);
+                },
+                error: function (errorValue)
+                {
+                  $.prompt(lg.ERROR_GROUPNAMES);
+                }
+              }
+          );
+
+          // Set initial form state
+          $("#readGroup").val(iconAnchor.getAttribute("readGroup"));
+          $("#writeGroup").val(iconAnchor.getAttribute("writeGroup"));
+
+        }
+      });
+  });
 
 
   /*---------------------------------------------------------
@@ -1617,7 +1763,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                           $('#replace').attr('disabled', true);
                           $('#upload span').addClass('loading').text(lg.loading_data);
 
-                          // if config.upload.fileSizeLimit == auto we
+                          // if config.upload.itimit == auto we
                           // delegate size test to connector
                           if (typeof FileReader !== "undefined" &&
                               typeof config.upload.fileSizeLimit != "auto")
@@ -1629,7 +1775,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                             {
                               $.prompt("<p>" + lg.file_too_big +
                                        "</p><p>" + lg.file_size_limit +
-                                       config.upload.fileSizeLimit + " " +
+                                        config.upload.fileSizeLimit + " " +
                                        lg.mb + ".</p>");
                               $('#upload').removeAttr('disabled').find("span").removeClass('loading').text(lg.upload);
                               return false;
@@ -2995,5 +3141,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                  {
                    setDimensions();
                  });
+
 };
 
