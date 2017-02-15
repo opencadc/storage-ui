@@ -77,6 +77,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.Select;
 import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
 
+import ca.nrc.cadc.util.StringUtil;
+
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -750,6 +752,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
     }
 
+
     /**
      * Verify that the given row has the values passed in
      * @param readGroup
@@ -792,11 +795,32 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
-    // Page state wait methods
+    public boolean quotaIsDisplayed()
+    {
+        boolean isDisplayed = false;
 
-    public void waitForAjaxFinished() {
-        new WebDriverWait(driver, 180).until(new ExpectedCondition<Boolean>() {
-            public Boolean apply(WebDriver driver) {
+        try
+        {
+            WebElement quota = find(xpath("//div[contains(@class, 'quota')]"));
+//            isDisplayed = !quota.getText().isEmpty();
+            isDisplayed = StringUtil.hasText(quota.getText());
+        }
+        catch (Exception e)
+        {
+            isDisplayed = false;
+        }
+
+        return isDisplayed;
+    }
+
+    // --------- Page state wait methods
+
+    public void waitForAjaxFinished()
+    {
+        new WebDriverWait(driver, 180).until(new ExpectedCondition<Boolean>()
+        {
+            public Boolean apply(WebDriver driver)
+            {
                 JavascriptExecutor js = (JavascriptExecutor) driver;
                 return (Boolean) js.executeScript("return jQuery.active == 0");
             }
@@ -812,10 +836,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // to have intTestFirefox not fail.
 
         WebDriverWait wait = new WebDriverWait(driver, 10);
-        wait.until(ExpectedConditions.attributeContains(By.className("beacon-progress"), "class", "progress-bar-success"));
+        wait.until(ExpectedConditions.attributeContains(
+                By.className("beacon-progress"), "class", "progress-bar-success"));
 
     }
 }
+
+
 
 
 

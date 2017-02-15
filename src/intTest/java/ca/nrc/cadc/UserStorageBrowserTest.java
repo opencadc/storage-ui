@@ -107,6 +107,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		String subFolder1 = userStoragePage.getFolderName(firstPageRowClicked);
 		userStoragePage.clickFolderForRow(firstPageRowClicked);
 		verifyTrue(userStoragePage.isSubFolder(subFolder1));
+		verifyTrue(userStoragePage.quotaIsDisplayed());
 
 		// Go down one more level
 		int secondPageRowCilcked = userStoragePage.getNextAvailabileFolderRow(startRow);
@@ -126,6 +127,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
 		userStoragePage.navToRoot();
 		// Verify in Root Folder
 		verifyTrue(userStoragePage.isRootFolder());
+		verifyFalse(userStoragePage.quotaIsDisplayed());
 
 
 		// Scenario 4: test file actions

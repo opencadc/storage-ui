@@ -532,7 +532,7 @@ public class StorageItemServerResource extends SecureServerResource
 
         nodeProperties.remove(new NodeProperty(propertyName, ""));
 
-        if (StringUtil.hasLength(propertyValue))
+        if (!StringUtil.hasLength(propertyValue))
         {
             NodeProperty np = new NodeProperty(propertyName, "");
             np.setMarkedForDeletion(true);
