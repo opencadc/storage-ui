@@ -612,7 +612,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                        {
                                          refreshPage();
                                        },
-                                       401: function ()
+                                       401: fuimnction ()
                                        {
                                          $thisForm.find("#login_fail").text(lg.INVALID_CREDENTIALS);
                                          $thisForm.addClass("has-error");
@@ -1329,7 +1329,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
       if ((writeGroupValid === true) && (readGroupValid === true))
       {
-        // var publicCheckbox = formVals['publicPermission'];
         var itemPath = formVals['itemPath'];
 
         var url = contextPath + config.options.itemConnector + itemPath;
@@ -1343,12 +1342,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           data: dataStr,
           statusCode:
           {
-            201: function () {
-              $.prompt(lg.successful_edit,
-                  {
-                    submit: refreshPage
-                  });
-            },
             204: function ()
             {
               $.prompt(lg.successful_edit,
@@ -1358,6 +1351,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
             },
             400: function ()
             {
+              $.prompt(lg.NOT_ALLOWED_SYSTEM);
             },
             401: function ()
             {
@@ -1769,7 +1763,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                           $('#replace').attr('disabled', true);
                           $('#upload span').addClass('loading').text(lg.loading_data);
 
-                          // if config.upload.fileSizeLimit == auto we
+                          // if config.upload.itimit == auto we
                           // delegate size test to connector
                           if (typeof FileReader !== "undefined" &&
                               typeof config.upload.fileSizeLimit != "auto")
@@ -1781,7 +1775,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                             {
                               $.prompt("<p>" + lg.file_too_big +
                                        "</p><p>" + lg.file_size_limit +
-                                       config.upload.fileSizeLimit + " " +
+                                        config.upload.fileSizeLimit + " " +
                                        lg.mb + ".</p>");
                               $('#upload').removeAttr('disabled').find("span").removeClass('loading').text(lg.upload);
                               return false;

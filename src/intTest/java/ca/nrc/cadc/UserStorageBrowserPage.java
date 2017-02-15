@@ -71,6 +71,7 @@ package ca.nrc.cadc;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.Select;
@@ -175,12 +176,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         super(driver);
         this.driver = driver;
 
-        // The beacon-progress bar displays "Transferring Data" while it's loading
-        // the page. Firefox doesn't display whole list until the bar is green, and
-        // that text is gone. Could be this test isn't sufficient but it works
-        // to have intTestFirefox not fail.
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        wait.until(ExpectedConditions.textToBe(By.className("beacon-progress"), ""));
+        waitForStorageLoad();
 
         PageFactory.initElements(driver, this);
     }
@@ -207,6 +203,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public void enterSearch(final String searchString) throws Exception
     {
     	sendKeys(searchFilter, searchString);
+        waitForStorageLoad();
     }
 
     public void doLogin(String username, String password) throws Exception
@@ -326,7 +323,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Permissions functions
     public void clickEditIconForFirstRow() throws Exception
     {
-        WebElement editIcon = find(xpath("//span[contains(@class, 'glyphicon-edit')]"));
+        WebElement editIcon = find(xpath("//span[contains(@class, 'glyphicon-pencil')]"));
         editIcon.click();
     }
 
@@ -360,11 +357,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             sendKeys(groupInput, newGroup);
         }
 
-        // Wait for autocomplete to populate & be displayed or this
-        // may fail - autocomplete dropdown doesn't display consistently
-        // after sendkeys so isn't proving to be reliable to check that element
-        // is visible. :(
-        Thread.sleep(4000);
+        waitForAjaxFinished();
 
         clickButton(SAVE);
 
@@ -428,10 +421,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         click(permissionCheckbox);
         currentPermission = permissionCheckbox.getAttribute("checked");
 
-        // This seems to be the only way to get the script to sleep long
-        // enough for the autocomplete ajax call to complete so clicking
-        // the public checkbox then save doesn't result in an error.
-        Thread.sleep(4000);
+        waitForAjaxFinished();
 
         clickButton(SAVE);
 
@@ -463,7 +453,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             try
             {
                 firstEditIcon = beaconTable.findElement(
-                        xpath("//*[@id='beacon']/tbody/tr[" + rowNum + "]/td[2]/span[contains(@class, 'glyphicon-edit']"));
+                        xpath("//*[@id='beacon']/tbody/tr[" + rowNum + "]/td[2]/span[contains(@class, 'glyphicon-pencil']"));
 
             }
             catch (Exception e)
@@ -799,6 +789,31 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 .until(ExpectedConditions.elementToBeClickable(By.id(idToFind)));
 
         return readGroupDiv.getAttribute("class").contains("has-error");
+    }
+
+
+    // Page state wait methods
+
+    public void waitForAjaxFinished() {
+        new WebDriverWait(driver, 180).until(new ExpectedCondition<Boolean>() {
+            public Boolean apply(WebDriver driver) {
+                JavascriptExecutor js = (JavascriptExecutor) driver;
+                return (Boolean) js.executeScript("return jQuery.active == 0");
+            }
+        });
+    }
+
+
+    public void waitForStorageLoad()
+    {
+        // The beacon-progress bar state changes while it's loading
+        // the page. Firefox doesn't display whole list until the bar is green
+        // instead of striped. Could be this test isn't sufficient but it works
+        // to have intTestFirefox not fail.
+
+        WebDriverWait wait = new WebDriverWait(driver, 10);
+        wait.until(ExpectedConditions.attributeContains(By.className("beacon-progress"), "class", "progress-bar-success"));
+
     }
 }
 

@@ -532,7 +532,7 @@ public class StorageItemServerResource extends SecureServerResource
 
         nodeProperties.remove(new NodeProperty(propertyName, ""));
 
-        if (propertyValue == null || propertyValue.equals(""))
+        if (StringUtil.hasLength(propertyValue))
         {
             NodeProperty np = new NodeProperty(propertyName, "");
             np.setMarkedForDeletion(true);
@@ -574,20 +574,6 @@ public class StorageItemServerResource extends SecureServerResource
         {
             String readGroup = jsonObject.get("readGroup").toString();
             setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, readGroup);
-//            nodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, ""));
-//
-//            if (readGroup == null || readGroup.equals(""))
-//            {
-//                NodeProperty np = new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, "");
-//                np.setMarkedForDeletion(true);
-//                nodeProperties.add(np);
-//            }
-//            else
-//            {
-//                nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
-//                        IVO_GMS_PROPERTY_PREFIX + readGroup));
-//            }
-
         }
 
         if (jsonObject.keySet().contains("writeGroup"))

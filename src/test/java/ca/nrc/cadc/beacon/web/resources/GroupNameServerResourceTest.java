@@ -94,8 +94,6 @@ public class GroupNameServerResourceTest
     @Test
     public void getGroupNames() throws Exception {
 
-        expect(mockServletContext.getContextPath()).andReturn("/teststorage").once();
-
         List<String> groupList = new ArrayList<String>();
         groupList.add("CHIMPS");
         groupList.add("A-TEAM");
@@ -160,6 +158,8 @@ public class GroupNameServerResourceTest
             }
         }
         assertEquals(listdata,groupList);
+
+        verify(mockGMSClient);
 
     };
 }
