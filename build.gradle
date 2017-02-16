@@ -80,7 +80,11 @@ ext {
 mainClassName = "ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication"
 
 run {
-    systemProperty 'SSO_SERVERS', 'apps.canfar.net jenkinsd.cadc.dao.nrc.ca www.canfar.phys.uvic.ca'
+    if ((System.getProperty("SSO_SERVERS") != null)
+            && (System.getProperty("SSO_SERVERS") != ""))
+    {
+        systemProperty 'SSO_SERVERS', System.getProperty("SSO_SERVERS")
+    }
 }
 
 sourceSets {

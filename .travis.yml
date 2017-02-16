@@ -12,6 +12,10 @@ before_install:
   - docker pull selenium/node-firefox
   - docker run -d -p 127.0.0.1:4444:4444 selenium/node-firefox
   - docker ps -a
-  - gradle -DintTest_web_app_url=http://127.0.0.1:8080
+  - gradle clean run -DSSO_SERVERS="127.0.0.1" -Dorg.gradle.project.intTest_selenium_server_url=http://127.0.0.1:4444
+  - gradle -DintTest_web_app_url=http://127.0.0.1:8080 intTestFirefox
 
 script: gradle clean dockerize
+
+after_success:
+  - docker push opencadc/storage
