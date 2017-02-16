@@ -1,10 +1,17 @@
 language: java
+
 jdk:
-- oraclejdk8
+  - oraclejdk8
+
 sudo: required
-script: gradle clean build
+
 services:
-- docker
+  - docker
+
 before_install:
-- docker pull selenium/node-firefox
-- docker pull selenium/node-chrome
+  - docker pull selenium/node-firefox
+  - docker run -d -p 127.0.0.1:4444:4444 selenium/node-firefox
+  - docker ps -a
+  - gradle -DintTest_web_app_url=http://127.0.0.1:8080
+
+script: gradle clean dockerize
