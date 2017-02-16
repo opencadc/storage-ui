@@ -10,10 +10,10 @@ services:
 
 before_install:
   - docker pull selenium/node-firefox
-  - docker run -d -p 127.0.0.1:4444:4444 selenium/node-firefox
+  - docker network create opencadc_vosui
+  - docker run -d --net opencadc_vosui -p 127.0.0.1:4444:4444 selenium/node-firefox
+  - docker run -d --net opencadc_vosui -p 127.0.0.1:8080:8080 -e CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1" opencadc/storage
   - docker ps -a
-  - gradle clean
-  - gradle run& -DSSO_SERVERS="127.0.0.1"
   - gradle -DintTest_web_app_url=http://127.0.0.1:8080 -Dorg.gradle.project.intTest_selenium_server_url=http://127.0.0.1:4444 intTestFirefox
 
 script: gradle clean dockerize
