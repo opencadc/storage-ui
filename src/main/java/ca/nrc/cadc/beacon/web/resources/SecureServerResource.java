@@ -68,14 +68,12 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.SSOCookieCredential;
-import ca.nrc.cadc.beacon.web.SubjectGenerator;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
-import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.web.RestletPrincipalExtractor;
+import ca.nrc.cadc.web.SubjectGenerator;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.Status;
@@ -86,15 +84,13 @@ import org.restlet.resource.ServerResource;
 import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 import java.util.Map;
 import java.util.Set;
 
 
 class SecureServerResource extends ServerResource
 {
-    final SubjectGenerator subjectGenerator;
+    private final SubjectGenerator subjectGenerator;
 
     @Override
     protected void doInit() throws ResourceException
@@ -137,15 +133,8 @@ class SecureServerResource extends ServerResource
 
     Subject generateVOSpaceUser() throws IOException
     {
-        RegistryClient registryClient = getRegistryClient();
-        final URI serviceID =
-                getContextAttribute(VOSpaceApplication.VOSPACE_SERVICE_ID_KEY);
-        final URL serviceURL = registryClient.getServiceURL(
-                serviceID, Standards.VOSPACE_NODES_20, AuthMethod.COOKIE);
-
         return subjectGenerator.generate(
-                new RestletPrincipalExtractor(getRequest()),
-                serviceURL.getHost());
+                new RestletPrincipalExtractor(getRequest()));
     }
 
     SSOCookieCredential getCurrentSSOCookie()

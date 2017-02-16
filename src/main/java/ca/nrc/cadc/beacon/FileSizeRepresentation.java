@@ -68,6 +68,8 @@
 
 package ca.nrc.cadc.beacon;
 
+import java.text.DecimalFormat;
+
 public class FileSizeRepresentation
 {
     private static final String[] SIZE_FORMAT_TYPES = {
@@ -97,7 +99,8 @@ public class FileSizeRepresentation
             else if (n < THRESHOLD)
             {
                 n = Math.round(n * 100.0D) / 100.0D;
-                return n + SIZE_FORMAT_TYPES[c];
+                return new DecimalFormat("#0.00")
+                        .format(n) + " " + SIZE_FORMAT_TYPES[c];
             }
             else
             {

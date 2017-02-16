@@ -110,6 +110,8 @@ public class FolderItemServerResource extends StorageItemServerResource
     @Get("json")
     public Representation retrieveQuota() throws Exception
     {
+        final FileSizeRepresentation fileSizeRepresentation =
+                new FileSizeRepresentation();
     	final Node node = getCurrentNode(Detail.properties);
         final long folderSize = 
         		getPropertyValue(node, VOS.PROPERTY_URI_CONTENTLENGTH);
@@ -117,10 +119,9 @@ public class FolderItemServerResource extends StorageItemServerResource
         		getPropertyValue(node, VOS.PROPERTY_URI_QUOTA);
         final String quotaString = new FileSizeRepresentation().getSizeHumanReadable(quota);
         final String remainingSizeString = 
-        		(quota - folderSize) > 0
-                ? new FileSizeRepresentation().getSizeHumanReadable(quota - folderSize)
-                : new FileSizeRepresentation().getSizeHumanReadable(0);
-    	
+                fileSizeRepresentation.getSizeHumanReadable(
+                        ((quota - folderSize) > 0) ? (quota - folderSize) : 0);
+
         return  new JSONRepresentation()
 				{
 		            @Override
