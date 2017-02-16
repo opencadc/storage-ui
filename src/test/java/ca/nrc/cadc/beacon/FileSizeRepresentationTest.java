@@ -80,13 +80,16 @@ public class FileSizeRepresentationTest
     {
         testSubject = new FileSizeRepresentation();
 
-        assertEquals("Wrong size.", "39.06KB",
+        assertEquals("Wrong size.", "39.06 KB",
                      testSubject.getSizeHumanReadable(40000L));
-        assertEquals("Wrong size.", "0.0B", testSubject.getSizeHumanReadable(0L));
-        assertEquals("Wrong size.", "60.54TB",
+        assertEquals("Wrong size.", "0.00 B",
+                     testSubject.getSizeHumanReadable(0L));
+        assertEquals("Wrong size.", "60.54 TB",
                      testSubject.getSizeHumanReadable(1024L * 1000L * 1000L
                                                       * 1000L * 65L));
         assertEquals("Wrong display size.", "--",
                      testSubject.getSizeHumanReadable(-986635L));
+        assertEquals("Wrong size.", "39.06 KB",
+                     testSubject.getSizeHumanReadable(39994L));
     }
 }
