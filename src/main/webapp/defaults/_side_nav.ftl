@@ -1,9 +1,5 @@
 <div role="navigation" class="col-sm-3 col-md-2 sidebar">
   <ul class="nav nav-sidebar">
-    <li><a href="http://apps.canfar.net/canfar/groups">&nbsp;Manage Groups</a></li>
-  </ul>
-
-  <ul class="nav nav-sidebar">
     <li><a class="github-link social-link" href="http://www.github.com/opencadc/vosui"><span>GitHub</span></a></li>
     <li><a class="docker-link social-link" href="https://hub.docker.com/r/opencadc/storage/"><span>Docker</span></a></li>
   </ul>

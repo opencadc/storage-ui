@@ -93,7 +93,6 @@ import java.util.Set;
 class SecureServerResource extends ServerResource
 {
     private final SubjectGenerator subjectGenerator;
-    RegistryClient registryClient;
 
 
     <T> T getRequestAttribute(final String attributeName)
@@ -116,15 +115,21 @@ class SecureServerResource extends ServerResource
         this.subjectGenerator = subjectGenerator;
     }
 
-
     Subject getCurrentUser()
     {
         return AuthenticationUtil.getSubject(
                 new RestletPrincipalExtractor(getRequest()));
     }
 
+    RegistryClient getRegistryClient()
+    {
+        return (RegistryClient) getContext().getAttributes().get(
+                VOSpaceApplication.REGISTRY_CLIENT_KEY);
+    }
+
     Subject generateVOSpaceUser() throws IOException
     {
+        RegistryClient registryClient = getRegistryClient();
         final URI serviceID =
                 getContextAttribute(VOSpaceApplication.VOSPACE_SERVICE_ID_KEY);
         final URL serviceURL = registryClient.getServiceURL(

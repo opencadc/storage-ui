@@ -69,6 +69,7 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.ContainerNode;
 import ca.nrc.cadc.vos.LinkNode;
 import ca.nrc.cadc.vos.VOSURI;
@@ -122,12 +123,18 @@ public class LinkItemServerResourceTest
 
         replay(mockVOSpaceClient, mockServletContext, mockResponse);
 
-        testSubject = new LinkItemServerResource(null, mockVOSpaceClient)
+        testSubject = new LinkItemServerResource(mockVOSpaceClient)
         {
             @Override
             ServletContext getServletContext()
             {
                 return mockServletContext;
+            }
+
+            @Override
+            RegistryClient getRegistryClient()
+            {
+                return mockRegistryClient;
             }
 
             /**
@@ -207,12 +214,18 @@ public class LinkItemServerResourceTest
 
         replay(mockVOSpaceClient, mockServletContext, mockResponse);
 
-        testSubject = new LinkItemServerResource(null, mockVOSpaceClient)
+        testSubject = new LinkItemServerResource(mockVOSpaceClient)
         {
             @Override
             ServletContext getServletContext()
             {
                 return mockServletContext;
+            }
+
+            @Override
+            RegistryClient getRegistryClient()
+            {
+                return mockRegistryClient;
             }
 
             /**

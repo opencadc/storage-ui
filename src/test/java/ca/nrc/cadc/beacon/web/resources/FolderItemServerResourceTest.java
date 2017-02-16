@@ -69,6 +69,7 @@
 package ca.nrc.cadc.beacon.web.resources;
 
 
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.beacon.FileSizeRepresentation;
 import ca.nrc.cadc.vos.ContainerNode;
 import ca.nrc.cadc.vos.Node;
@@ -113,7 +114,7 @@ public class FolderItemServerResourceTest
 
         replay(mockServletContext);
 
-        testSubject = new FolderItemServerResource(null, mockVOSpaceClient)
+        testSubject = new FolderItemServerResource(mockVOSpaceClient)
         {
             @Override
             VOSURI getCurrentItemURI()
@@ -136,6 +137,12 @@ public class FolderItemServerResourceTest
             ServletContext getServletContext()
             {
                 return mockServletContext;
+            }
+
+            @Override
+            RegistryClient getRegistryClient()
+            {
+                return mockRegistryClient;
             }
 
             @Override

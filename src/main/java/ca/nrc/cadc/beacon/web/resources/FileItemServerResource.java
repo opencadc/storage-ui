@@ -109,12 +109,11 @@ public class FileItemServerResource extends StorageItemServerResource
     private final FileValidator fileValidator;
 
 
-    FileItemServerResource(final RegistryClient registryClient,
-                           final VOSpaceClient voSpaceClient,
+    FileItemServerResource(final VOSpaceClient voSpaceClient,
                            final UploadVerifier uploadVerifier,
                            final FileValidator fileValidator)
     {
-        super(registryClient, voSpaceClient);
+        super(voSpaceClient);
         this.uploadVerifier = uploadVerifier;
         this.fileValidator = fileValidator;
     }

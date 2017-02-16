@@ -94,7 +94,7 @@ public class BatchUploadServerResource extends StorageItemServerResource
     BatchUploadServerResource(final RegistryClient registryClient,
                               final VOSpaceClient voSpaceClient)
     {
-        super(registryClient, voSpaceClient);
+        super(voSpaceClient);
     }
 
 
