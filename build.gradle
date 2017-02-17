@@ -117,7 +117,7 @@ sourceSets {
 
         if (project.hasProperty('intTest_web_app_url')) {
             systemProperty 'web.app.url', project.intTest_web_app_url
-            logger.info('Running browser tests on ' + project.intTest_web_app_url)
+            logger.info('Running app ' + project.intTest_web_app_url)
         }
 
         if (project.hasProperty('intTest_user_name')) {
