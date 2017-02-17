@@ -18,9 +18,9 @@ before_install:
   - sudo mv docker-compose /usr/local/bin
   - sudo docker-compose up -d
   - sudo docker ps -a
-  - gradle -i -PintTest_selenium_server_url=http://127.0.0.1:4444 -PintTest_web_app_url=http://127.0.0.1:8080 intTestFirefox
+  - gradle -i -PintTest_selenium_server_url=http://127.0.0.1:4444 -PintTest_web_app_url=http://127.0.0.1:8080/ intTestFirefox
 
-script: gradle clean dockerize
+script: gradle clean init-dockerize
 
 after_success:
   - docker push opencadc/storage
