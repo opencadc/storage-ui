@@ -108,13 +108,16 @@ sourceSets {
 
         if (project.hasProperty('intTest_selenium_server_url')) {
             systemProperty 'selenium.server.url', project.intTest_selenium_server_url
+            logger.info('Running browser tests on ' + project.intTest_selenium_server_url)
         }
         else {
             systemProperty 'selenium.server.url', 'http://cadcint2.cadc.dao.nrc.ca:4444'
+            logger.info('Running browser tests on cadcint2')
         }
 
         if (project.hasProperty('intTest_web_app_url')) {
             systemProperty 'web.app.url', project.intTest_web_app_url
+            logger.info('Running browser tests on ' + project.intTest_web_app_url)
         }
 
         if (project.hasProperty('intTest_user_name')) {
