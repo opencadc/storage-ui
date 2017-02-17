@@ -38,17 +38,22 @@ import org.junit.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
+import org.apache.log4j.Logger;
+
 import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
 
 
 public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTest
 {
+	private static final Logger LOGGER = Logger.getLogger(
+			AbstractWebApplicationIntegrationTest.class);
 	static final String STORAGE_ENDPOINT = "storage/list";
 
 
     @Test
     public void browseUserStorage() throws Exception
     {
+		LOGGER.info("Visiting: " + getWebURL() + STORAGE_ENDPOINT)
 
     	UserStorageBrowserPage userStoragePage =
                 goTo(STORAGE_ENDPOINT, null, UserStorageBrowserPage.class);
