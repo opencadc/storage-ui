@@ -35,230 +35,247 @@ package ca.nrc.cadc;
 
 
 import org.junit.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.ui.Select;
-
 import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
 
 
-public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTest
+public class UserStorageBrowserTest
+        extends AbstractWebApplicationIntegrationTest
 {
-	static final String STORAGE_ENDPOINT = "storage/list";
+    private static final String STORAGE_ENDPOINT = "/storage/list";
 
 
     @Test
     public void browseUserStorage() throws Exception
     {
-		System.out.println("Visiting: " + getWebURL() + STORAGE_ENDPOINT);
+        System.out.println("Visiting: " + getWebURL() + STORAGE_ENDPOINT);
 
-    	UserStorageBrowserPage userStoragePage =
-                goTo(STORAGE_ENDPOINT, null, UserStorageBrowserPage.class);
+        UserStorageBrowserPage userStoragePage =
+                goTo(STORAGE_ENDPOINT, null,
+                     UserStorageBrowserPage.class);
 
-		String testFolderName = "CADCtest";
-		verifyTrue(userStoragePage.isDefaultSort());
+        String testFolderName = "CADCtest";
+        verifyTrue(userStoragePage.isDefaultSort());
 
-    	// Scenario 1:
-    	// enter search(filter) value
-    	// check that rows of table are shorted correctly
-    	// verify entry is correct
+        // Scenario 1:
+        // enter search(filter) value
+        // check that rows of table are shorted correctly
+        // verify entry is correct
 
-    	userStoragePage.enterSearch(testFolderName);
-    	int rowCount = userStoragePage.getTableRowCount();
-    	verifyTrue(rowCount < 3);
-    	verifyTrue(userStoragePage.verifyFolderName(rowCount-1, testFolderName));
-    	verifyTrue(userStoragePage.verifyFolderSize(rowCount-1));
-
-
-		// Verify page permissions prior to logging in
-		// click through to CADCtest folder
-		userStoragePage.clickFolder(testFolderName);
-		// Verify sub folder page state
-		verifyTrue(userStoragePage.isSubFolder(testFolderName));
-
-		// Check permissions on page
-		verifyTrue(userStoragePage.isReadAccess());
+        userStoragePage.enterSearch(testFolderName);
+        int rowCount = userStoragePage.getTableRowCount();
+        verifyTrue(rowCount < 3);
+        verifyTrue(userStoragePage.verifyFolderName(rowCount - 1,
+                                                    testFolderName));
+        verifyTrue(userStoragePage.verifyFolderSize(rowCount - 1));
 
 
-    	// Scenario 2: Login test - credentials should be in the gradle build file.
-		userStoragePage.doLogin("CADCtest","sywymUL4");
-		verifyTrue(userStoragePage.isLoggedIn());
-		System.out.println("logged in");
+        // Verify page permissions prior to logging in
+        // click through to CADCtest folder
+        userStoragePage.clickFolder(testFolderName);
 
-		rowCount = userStoragePage.getTableRowCount();
+        // Verify sub folder page state
+        verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
-		System.out.println("Rowcount: " + rowCount);
-		verifyTrue(rowCount > 2);
-
-		// Check access to page: should be write accessible
-		verifyFalse(userStoragePage.isReadAccess());
+        // Check permissions on page
+        verifyTrue(userStoragePage.isReadAccess());
 
 
-		// Scenario 3: Test navigation buttons
-		// Test state is currently in a subfolder: Start at Root
-		System.out.println("navigating to root...");
-		userStoragePage.navToRoot();
-		// Verify in Root Folder
-		verifyTrue(userStoragePage.isRootFolder());
+        // Scenario 2: Login test - credentials should be in the gradle build file.
+        userStoragePage.doLogin(getUsername(), getPassword());
+        verifyTrue(userStoragePage.isLoggedIn());
+        System.out.println("logged in");
 
-		int startRow = 1;
+        rowCount = userStoragePage.getTableRowCount();
 
-		System.out.println("Starting navigation tests");
-		// click through to first folder
-		int firstPageRowClicked = userStoragePage.getNextAvailabileFolderRow(startRow);
-		String subFolder1 = userStoragePage.getFolderName(firstPageRowClicked);
-		userStoragePage.clickFolderForRow(firstPageRowClicked);
-		verifyTrue(userStoragePage.isSubFolder(subFolder1));
-		verifyTrue(userStoragePage.quotaIsDisplayed());
+        System.out.println("Rowcount: " + rowCount);
+        verifyTrue(rowCount > 2);
 
-		// Go down one more level
-		int secondPageRowCilcked = userStoragePage.getNextAvailabileFolderRow(startRow);
-		String subFolder2 = userStoragePage.getFolderName(secondPageRowCilcked);
-		userStoragePage.clickFolderForRow(secondPageRowCilcked);
-		verifyTrue(userStoragePage.isSubFolder(subFolder2));
-
-		// Navigate up one level (should be up one level)
-		userStoragePage.navUpLevel();
-		verifyTrue(userStoragePage.isSubFolder(subFolder1));
-
-		// Go back down one folder
-		userStoragePage.clickFolderForRow(secondPageRowCilcked);
-		verifyTrue(userStoragePage.isSubFolder(subFolder2));
-
-		// Go up to root
-		userStoragePage.navToRoot();
-		// Verify in Root Folder
-		verifyTrue(userStoragePage.isRootFolder());
-		verifyFalse(userStoragePage.quotaIsDisplayed());
+        // Check access to page: should be write accessible
+        verifyFalse(userStoragePage.isReadAccess());
 
 
-		// Scenario 4: test file actions
-		System.out.println("testing file actions");
-		userStoragePage.clickFolderForRow(firstPageRowClicked);
-		userStoragePage.clickCheckboxForRow(startRow);
-		verifyTrue(userStoragePage.isFileSelectedMode(startRow));
+        // Scenario 3: Test navigation buttons
+        // Test state is currently in a subfolder: Start at Root
+        System.out.println("navigating to root...");
+        userStoragePage.navToRoot();
+        // Verify in Root Folder
+        verifyTrue(userStoragePage.isRootFolder());
 
-		userStoragePage.clickCheckboxForRow(startRow);
-		verifyFalse(userStoragePage.isFileSelectedMode(startRow));
+        int startRow = 1;
 
-		// Go up to root
-		userStoragePage.navToRoot();
-		verifyTrue(userStoragePage.isRootFolder());
-		//  click through to CADCtest folder
-		userStoragePage.clickFolder(testFolderName);
-		// Verify sub folder page state
-		verifyTrue(userStoragePage.isSubFolder(testFolderName));
+        System.out.println("Starting navigation tests");
+        // click through to first folder
+        int firstPageRowClicked = userStoragePage
+                .getNextAvailabileFolderRow(startRow);
+        String subFolder1 = userStoragePage.getFolderName(firstPageRowClicked);
+        userStoragePage.clickFolderForRow(firstPageRowClicked);
+        verifyTrue(userStoragePage.isSubFolder(subFolder1));
+        verifyTrue(userStoragePage.quotaIsDisplayed());
 
+        // Go down one more level
+        int secondPageRowCilcked = userStoragePage
+                .getNextAvailabileFolderRow(startRow);
+        String subFolder2 = userStoragePage.getFolderName(secondPageRowCilcked);
+        userStoragePage.clickFolderForRow(secondPageRowCilcked);
+        verifyTrue(userStoragePage.isSubFolder(subFolder2));
 
+        // Navigate up one level (should be up one level)
+        userStoragePage.navUpLevel();
+        verifyTrue(userStoragePage.isSubFolder(subFolder1));
 
-		// navigate to automated test folder
-		String autoTestFolder = "automated_test";
+        // Go back down one folder
+        userStoragePage.clickFolderForRow(secondPageRowCilcked);
+        verifyTrue(userStoragePage.isSubFolder(subFolder2));
 
-		// Get Write and Read group permissions for this folder
-		userStoragePage.enterSearch(autoTestFolder);
-
-		// For whatever reason the automated test folder has been deleted. Recreate it
-		if (userStoragePage.isTableEmpty() == true)
-		{
-			userStoragePage.createNewFolder(autoTestFolder);
-			userStoragePage.enterSearch(autoTestFolder);
-		}
-
-		String parentWriteGroup = userStoragePage.getValueForRowCol(1, 5);
-		String parentReadGroup = userStoragePage.getValueForRowCol(1, 6);
-		userStoragePage.clickFolder(autoTestFolder);
-
-
-		// Create second test folder
-		// This will be deleted at the end of this test suite
-		String tempTestFolder = "vosui_automated_test";
-		userStoragePage.createNewFolder(tempTestFolder);
-		userStoragePage.enterSearch(tempTestFolder);
-
-		boolean isPublic = false;
-		if (parentReadGroup.equals("Public"))
-		{
-			isPublic = true;
-		}
-
-		// Test that permissions are same as the parent to start
-		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, parentReadGroup, isPublic));
-
-		// Edit permissions on the form
-		String currentReadGroup = userStoragePage.getValueForRowCol(1,6);
-
-		// Clearly only works for English test suite. :/
-		// Toggle the Public attribute to get the underlying read group (if any)
-		if (currentReadGroup.equals("Public")) {
-			userStoragePage.togglePublicAttributeForRow(1);
-			currentReadGroup = userStoragePage.getValueForRowCol(1, 6);
-		}
-
-		String readGroupName = "cadcsw";
-		String writeGroupName = "cadc-dev";
-		String invalidGroupName = "invalid-group";
-
-		// Set read group
-		userStoragePage.setGroup(userStoragePage.READ_GROUP_INPUT, readGroupName, false);
-		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, readGroupName, false));
-
-		// Set write group
-		userStoragePage.setGroup(userStoragePage.WRITE_GROUP_INPUT, writeGroupName, false);
-		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
-
-		// Test response to invalid autocomplete selection
-		userStoragePage.clickEditIconForFirstRow();
-		// last parameter says 'don't confirm anything'
-		userStoragePage.setGroupOnly(userStoragePage.READ_GROUP_INPUT, invalidGroupName, false);
-		verifyTrue(userStoragePage.isGroupError(userStoragePage.READ_GROUP_DIV));
-
-		// Enter correct one in order to close the prompt
-		userStoragePage.setGroupOnly(userStoragePage.READ_GROUP_INPUT, readGroupName, true);
-		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
-
-		// Test response to invalid autocomplete selection
-		userStoragePage.clickEditIconForFirstRow();
-		// second parameter says 'don't confirm anything'
-		userStoragePage.setGroupOnly(userStoragePage.WRITE_GROUP_INPUT, invalidGroupName, false);
-		verifyTrue(userStoragePage.isGroupError(userStoragePage.WRITE_GROUP_DIV));
-
-		// Enter correct one in order to close the prompt
-		userStoragePage.setGroupOnly(userStoragePage.WRITE_GROUP_INPUT, writeGroupName, true);
-		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
-
-		// short list displayed in page again
-		userStoragePage.enterSearch(tempTestFolder);
-
-		// Toggle public permissions to set them
-		// Group name displayed in table should read "Public"
-		String currentstatus = userStoragePage.togglePublicAttributeForRow(1);
-
-		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, "Public", true));
-		System.out.println("Set read group to public");
-
-		// short list displayed in page again
-		userStoragePage.enterSearch(tempTestFolder);
-		// Toggle public permission to unset
-		currentstatus = userStoragePage.togglePublicAttributeForRow(1);
-		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+        // Go up to root
+        userStoragePage.navToRoot();
+        // Verify in Root Folder
+        verifyTrue(userStoragePage.isRootFolder());
+        verifyFalse(userStoragePage.quotaIsDisplayed());
 
 
-		// Delete folder just created
-		userStoragePage.enterSearch(tempTestFolder);
-		userStoragePage.clickCheckboxForRow(1);
-		userStoragePage.deleteFolder(tempTestFolder);
+        // Scenario 4: test file actions
+        System.out.println("testing file actions");
+        userStoragePage.clickFolderForRow(firstPageRowClicked);
+        userStoragePage.clickCheckboxForRow(startRow);
+        verifyTrue(userStoragePage.isFileSelectedMode(startRow));
 
-		// verify the folder is no longer there
-		userStoragePage.enterSearch(tempTestFolder);
-		verifyTrue(userStoragePage.isTableEmpty());
+        userStoragePage.clickCheckboxForRow(startRow);
+        verifyFalse(userStoragePage.isFileSelectedMode(startRow));
+
+        // Go up to root
+        userStoragePage.navToRoot();
+        verifyTrue(userStoragePage.isRootFolder());
+        //  click through to CADCtest folder
+        userStoragePage.clickFolder(testFolderName);
+        // Verify sub folder page state
+        verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
 
-		// Scenario 5: logout
-		System.out.println("Test logout");
-		userStoragePage.doLogout();
-		verifyFalse(userStoragePage.isLoggedIn());
-   
-    	System.out.println("UserStorageBrowserTest completed");
-    	
+        // navigate to automated test folder
+        String autoTestFolder = "automated_test";
+
+        // Get Write and Read group permissions for this folder
+        userStoragePage.enterSearch(autoTestFolder);
+
+        // For whatever reason the automated test folder has been deleted. Recreate it
+        if (userStoragePage.isTableEmpty())
+        {
+            userStoragePage.createNewFolder(autoTestFolder);
+            userStoragePage.enterSearch(autoTestFolder);
+        }
+
+        String parentWriteGroup = userStoragePage.getValueForRowCol(1, 5);
+        String parentReadGroup = userStoragePage.getValueForRowCol(1, 6);
+        userStoragePage.clickFolder(autoTestFolder);
+
+
+        // Create second test folder
+        // This will be deleted at the end of this test suite
+        String tempTestFolder = "vosui_automated_test";
+        userStoragePage.createNewFolder(tempTestFolder);
+        userStoragePage.enterSearch(tempTestFolder);
+
+        boolean isPublic = false;
+        if (parentReadGroup.equals("Public"))
+        {
+            isPublic = true;
+        }
+
+        // Test that permissions are same as the parent to start
+        verifyTrue(userStoragePage
+                           .isPermissionDataForRow(1, parentWriteGroup, parentReadGroup, isPublic));
+
+        // Edit permissions on the form
+        String currentReadGroup = userStoragePage.getValueForRowCol(1, 6);
+
+        // Clearly only works for English test suite. :/
+        // Toggle the Public attribute to get the underlying read group (if any)
+        if (currentReadGroup.equals("Public"))
+        {
+            userStoragePage.togglePublicAttributeForRow(1);
+            currentReadGroup = userStoragePage.getValueForRowCol(1, 6);
+        }
+
+        String readGroupName = "cadcsw";
+        String writeGroupName = "cadc-dev";
+        String invalidGroupName = "invalid-group";
+
+        // Set read group
+        userStoragePage
+                .setGroup(UserStorageBrowserPage.READ_GROUP_INPUT, readGroupName, false);
+        verifyTrue(userStoragePage
+                           .isPermissionDataForRow(1, parentWriteGroup, readGroupName, false));
+
+        // Set write group
+        userStoragePage
+                .setGroup(UserStorageBrowserPage.WRITE_GROUP_INPUT, writeGroupName, false);
+        verifyTrue(userStoragePage
+                           .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+
+        // Test response to invalid autocomplete selection
+        userStoragePage.clickEditIconForFirstRow();
+        // last parameter says 'don't confirm anything'
+        userStoragePage
+                .setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, invalidGroupName, false);
+        verifyTrue(userStoragePage
+                           .isGroupError(UserStorageBrowserPage.READ_GROUP_DIV));
+
+        // Enter correct one in order to close the prompt
+        userStoragePage
+                .setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, readGroupName, true);
+        verifyTrue(userStoragePage
+                           .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+
+        // Test response to invalid autocomplete selection
+        userStoragePage.clickEditIconForFirstRow();
+        // second parameter says 'don't confirm anything'
+        userStoragePage
+                .setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT, invalidGroupName, false);
+        verifyTrue(userStoragePage
+                           .isGroupError(UserStorageBrowserPage.WRITE_GROUP_DIV));
+
+        // Enter correct one in order to close the prompt
+        userStoragePage
+                .setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT, writeGroupName, true);
+        verifyTrue(userStoragePage
+                           .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+
+        // short list displayed in page again
+        userStoragePage.enterSearch(tempTestFolder);
+
+        // Toggle public permissions to set them
+        // Group name displayed in table should read "Public"
+        userStoragePage.togglePublicAttributeForRow(1);
+
+        verifyTrue(userStoragePage
+                           .isPermissionDataForRow(1, writeGroupName, "Public", true));
+        System.out.println("Set read group to public");
+
+        // short list displayed in page again
+        userStoragePage.enterSearch(tempTestFolder);
+        // Toggle public permission to unset
+        userStoragePage.togglePublicAttributeForRow(1);
+        verifyTrue(userStoragePage
+                           .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+
+
+        // Delete folder just created
+        userStoragePage.enterSearch(tempTestFolder);
+        userStoragePage.clickCheckboxForRow(1);
+        userStoragePage.deleteFolder(tempTestFolder);
+
+        // verify the folder is no longer there
+        userStoragePage.enterSearch(tempTestFolder);
+        verifyTrue(userStoragePage.isTableEmpty());
+
+
+        // Scenario 5: logout
+        System.out.println("Test logout");
+        userStoragePage.doLogout();
+        verifyFalse(userStoragePage.isLoggedIn());
+
+        System.out.println("UserStorageBrowserTest completed");
+
     }
 }
