@@ -122,8 +122,6 @@ sourceSets {
             systemProperty 'web.app.url', project.intTest_default_web_app_url
         }
 
-        logger.info('Running app ' + project.intTest_web_app_url)
-
         if (project.hasProperty('intTest_user_name')) {
             systemProperty 'user.name', project.intTest_user_name
         }
