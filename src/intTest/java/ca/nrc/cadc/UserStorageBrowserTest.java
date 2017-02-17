@@ -53,7 +53,7 @@ public class UserStorageBrowserTest extends AbstractWebApplicationIntegrationTes
     @Test
     public void browseUserStorage() throws Exception
     {
-		LOGGER.info("Visiting: " + getWebURL() + STORAGE_ENDPOINT)
+		LOGGER.info("Visiting: " + getWebURL() + STORAGE_ENDPOINT);
 
     	UserStorageBrowserPage userStoragePage =
                 goTo(STORAGE_ENDPOINT, null, UserStorageBrowserPage.class);
