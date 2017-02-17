@@ -10,8 +10,8 @@ services:
 
 before_install:
   - docker pull selenium/node-firefox
-  - docker run -d -p 127.0.0.1:4444:4444 selenium/node-firefox
-  - docker run -d -p 127.0.0.1:8080:8080 -e CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1" opencadc/storage
+  - docker run -d --net=host -p 127.0.0.1:4444:4444 selenium/node-firefox
+  - docker run -d --net=host -p 127.0.0.1:8080:8080 -e CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1" opencadc/storage
   - docker ps -a
   - gradle -i -PintTest_selenium_server_url=http://127.0.0.1:4444 -Pext.intTest_web_app_url=http://127.0.0.1:8080 intTestFirefox
 
