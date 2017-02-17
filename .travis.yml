@@ -17,9 +17,8 @@ before_install:
   - chmod +x docker-compose
   - sudo mv docker-compose /usr/local/bin
 
-script: gradle clean dockerize
-
-after_script:
+script:
+  - gradle clean dockerize
   - sudo docker-compose up -d
   - sudo docker ps -a
   - gradle -i -PintTest_selenium_server_url=http://127.0.0.1:4444 -PintTest_web_app_url=http://127.0.0.1:8080/ intTestFirefox
