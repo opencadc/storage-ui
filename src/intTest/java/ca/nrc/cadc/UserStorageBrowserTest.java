@@ -41,7 +41,7 @@ import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
 public class UserStorageBrowserTest
         extends AbstractWebApplicationIntegrationTest
 {
-    private static final String STORAGE_ENDPOINT = "/storage/list";
+    private static final String STORAGE_ENDPOINT = "/storage/list/CADCtest";
 
 
     @Test
