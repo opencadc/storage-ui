@@ -25,3 +25,6 @@ script:
 
 after_success:
   - docker push opencadc/storage
+
+notifications:
+  slack: 'dustinj:xoxp-19196234690-104316640387-143221994178-e87effff1f8b218eef9ed441dc38fa61#dustinj'
