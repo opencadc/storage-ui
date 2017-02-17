@@ -74,14 +74,11 @@ import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import org.openqa.selenium.support.ui.Select;
 import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
 
 import ca.nrc.cadc.util.StringUtil;
 
-
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.openqa.selenium.By.xpath;
 
@@ -117,54 +114,54 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     @FindBy(id = "beacon_info")
     private WebElement statusMessage;
 
-    @FindBy(className="beacon-progress")
+    @FindBy(className = "beacon-progress")
     private WebElement progressBar;
 
     // header displaying name of current folder
-    @FindBy(xpath="//h2[@property='name']")
+    @FindBy(xpath = "//h2[@property='name']")
     private WebElement folderNameHeader;
 
-    @FindBy(xpath="//*[@id=\"navbar-functions\"]/ul")
+    @FindBy(xpath = "//*[@id=\"navbar-functions\"]/ul")
     private WebElement navbarButtonList;
 
-    @FindBy(xpath="//*[@id=\"beacon\"]/tbody/tr[1]")
+    @FindBy(xpath = "//*[@id=\"beacon\"]/tbody/tr[1]")
     private WebElement firstTableRow;
 
     // Elements present once user has navigated away from ROOT folder
     // Toobar buttons
-    @FindBy(id="level-up")
+    @FindBy(id = "level-up")
     private WebElement leveUpButton;
 
-    @FindBy(id="root")
+    @FindBy(id = "root")
     private WebElement rootButton;
 
     // class has 'disabled' in it for base case.
-    @FindBy(id="newdropdown")
+    @FindBy(id = "newdropdown")
     private WebElement newdropdownButton;
 
     // element of the list under newdropdown
-    @FindBy(id="newfolder")
+    @FindBy(id = "newfolder")
     private WebElement newFolder;
 
 
-    @FindBy(id="download")
+    @FindBy(id = "download")
     private WebElement downloadButton;
 
-    @FindBy(id="delete")
+    @FindBy(id = "delete")
     private WebElement deleteButton;
 
-    @FindBy(id="more_details")
+    @FindBy(id = "more_details")
     private WebElement moredetailsButton;
 
 
     // Login Form elements
-    @FindBy(id="username")
+    @FindBy(id = "username")
     private WebElement loginUsername;
 
-    @FindBy(id="password")
+    @FindBy(id = "password")
     private WebElement loginPassword;
 
-    @FindBy(id="submitLogin")
+    @FindBy(id = "submitLogin")
     private WebElement submitLoginButton;
 
     @FindBy(id = "logout")
@@ -184,7 +181,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
-
     // Transition functions
     public void clickButton(String promptText) throws Exception
     {
@@ -194,7 +190,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         button.click();
     }
 
-    public void clickButtonWithClass(String promptText, String className) throws Exception
+    public void clickButtonWithClass(String promptText, String className) throws
+                                                                          Exception
     {
         WebElement button = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
@@ -204,7 +201,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public void enterSearch(final String searchString) throws Exception
     {
-    	sendKeys(searchFilter, searchString);
+        sendKeys(searchFilter, searchString);
         waitForStorageLoad();
     }
 
@@ -216,10 +213,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         waitForElementPresent(By.id("logout"));
     }
 
-    public void doLogout() throws Exception {
+    public void doLogout() throws Exception
+    {
         click(logoutButton);
     }
-
 
 
     // Folder Related Transition functions
@@ -227,7 +224,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         WebElement folder = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
-                        xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName  + "')]]")));
+                        xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName + "')]]")));
 
         System.out.println("Folder to be clicked: " + folder.getText());
         folder.click();
@@ -235,7 +232,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public void clickFolderForRow(int rowNum) throws Exception
     {
-        WebElement firstCheckbox  = (new WebDriverWait(driver, 10))
+        WebElement firstCheckbox = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
                         xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a")));
         click(firstCheckbox);
@@ -329,7 +326,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         editIcon.click();
     }
 
-    public void setGroup(String idToFind, String newGroup, boolean isPublic) throws Exception
+    public void setGroup(String idToFind, String newGroup, boolean isPublic) throws
+                                                                             Exception
     {
         String currentPermission = "";
         clickEditIconForFirstRow();
@@ -351,7 +349,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         else
         {
             currentPermission = permissionCheckbox.getAttribute("checked");
-            if (currentPermission != null) {
+            if (currentPermission != null)
+            {
                 // clear checkbox
                 // read group field should be enabled
                 click(permissionCheckbox);
@@ -369,10 +368,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     /**
      * Convenience function to click through most of the impromptu .prompt
      * confirmation patterns.
+     *
      * @param messageType
      * @throws Exception
      */
-    public void confirmJqiMsg(String messageType) throws Exception {
+    public void confirmJqiMsg(String messageType) throws Exception
+    {
         if (isJqiMsgShowing(messageType))
         {
             clickButton(OK);
@@ -383,7 +384,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
     }
 
-    public void setGroupOnly(String idToFind, String newGroup, boolean confirm) throws Exception
+    public void setGroupOnly(String idToFind, String newGroup, boolean confirm) throws
+                                                                                Exception
     {
         String currentPermission = "";
         WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
@@ -393,7 +395,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         WebElement groupInput = find(By.id(idToFind));
 
         currentPermission = permissionCheckbox.getAttribute("checked");
-        if (currentPermission != null) {
+        if (currentPermission != null)
+        {
             // clear checkbox
             // read group field should be enabled
             click(permissionCheckbox);
@@ -447,15 +450,15 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         //   not all folders have editable data for currently logged in user
         boolean found = false;
         int rowNum = startRow;
-        WebElement firstEditIcon = null;
 
         while (!found)
         {
             // This method throws an exception if the element is not found
             try
             {
-                firstEditIcon = beaconTable.findElement(
-                        xpath("//*[@id='beacon']/tbody/tr[" + rowNum + "]/td[2]/span[contains(@class, 'glyphicon-pencil']"));
+                beaconTable.findElement(
+                        xpath("//*[@id='beacon']/tbody/tr[" + rowNum
+                              + "]/td[2]/span[contains(@class, 'glyphicon-pencil']"));
 
             }
             catch (Exception e)
@@ -465,14 +468,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             }
             found = true;
         }
+
         return rowNum;
     }
 
     // Row Checkbox related
     public void clickCheckboxForRow(int rowNum) throws Exception
     {
-        WebElement firstCheckbox  = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
+        WebElement firstCheckbox = waitUntil(ExpectedConditions.elementToBeClickable(
                 xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[1]")));
         click(firstCheckbox);
     }
@@ -480,12 +483,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public void clickCheckboxForFolder(String folderName) throws Exception
     {
         WebElement folder = find(
-                xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[contains(text()," + folderName  + ")]"));
+                xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[contains(text()," + folderName + ")]"));
         WebElement folderParent = folder.findElement(xpath(".."));
-        WebElement folderCheckbox = folderParent.findElement(xpath("//div[contains(@class=\"select-checkbox\")]"));
+        WebElement folderCheckbox = folderParent
+                .findElement(xpath("//div[contains(@class=\"select-checkbox\")]"));
         folderCheckbox.click();
     }
-
 
 
     // Navigation functions
@@ -500,7 +503,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         click(leveUpButton);
     }
-
 
 
     // Inspection functions
@@ -520,7 +522,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         List<WebElement> tableRows = beaconTable.findElements(By.tagName("tr"));
         WebElement selectedRow = tableRows.get(rowNum);
-        WebElement namecolumn = selectedRow.findElement(By.cssSelector("a:nth-of-type(1)"));
+        WebElement namecolumn = selectedRow
+                .findElement(By.cssSelector("a:nth-of-type(1)"));
         System.out.println(namecolumn.getText());
         return expectedValue.equals(namecolumn.getText());
 
@@ -539,8 +542,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         List<WebElement> tableRows = beaconTable.findElements(By.tagName("tr"));
         WebElement selectedRow = tableRows.get(rowNum);
-        WebElement namecolumn = selectedRow.findElement(By.cssSelector("a:nth-of-type(1)"));
-        System.out.println("Foldername to be returned: " + namecolumn.getText());
+        WebElement namecolumn = selectedRow
+                .findElement(By.cssSelector("a:nth-of-type(1)"));
+        System.out
+                .println("Foldername to be returned: " + namecolumn.getText());
         return namecolumn.getText();
     }
 
@@ -554,12 +559,15 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public String getValueForRowCol(int rowNum, int colNum)
     {
-        String val = "";
+        String val;
+
         try
         {
-            WebElement el = find(xpath("//*[@id='beacon']/tbody/tr[" + rowNum + "]/td[" + colNum + "]"));
-             val = el.getText();
-        } catch (Exception e)
+            WebElement el = find(xpath("//*[@id='beacon']/tbody/tr["
+                                       + rowNum + "]/td[" + colNum + "]"));
+            val = el.getText();
+        }
+        catch (Exception e)
         {
             // element not found, return empty string
             val = "";
@@ -567,7 +575,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return val;
     }
 
-    boolean isLoggedIn() {
+    boolean isLoggedIn() throws Exception
+    {
         try
         {
             logoutButton.isDisplayed();
@@ -587,75 +596,47 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public boolean isReadAccess()
     {
         // need to check class of these buttons, look for 'disabled' in there
-        if (isDisabled(downloadButton) &&
-                isDisabled(newdropdownButton) &&
-                !isDisabled(searchFilter) &&
-                !isDisabled(leveUpButton) &&
-                !isDisabled(rootButton))
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return isDisabled(downloadButton) &&
+               isDisabled(newdropdownButton) &&
+               !isDisabled(searchFilter) &&
+               !isDisabled(leveUpButton) &&
+               !isDisabled(rootButton);
     }
 
     public boolean isSubFolder(String folderName) throws Exception
     {
-        // Verify folder name
-        if (!(getHeaderText().contains(folderName)) )
-        {
-                return false;
-        }
-
         // Check number of elements in button bar
-        if (navbarButtonList.findElements(xpath("//*[@id=\"navbar-functions\"]/ul")).size() == 6 )
-        {
-            return true;
-        }
-
         // Check state of buttons
-        if (leveUpButton.isDisplayed() &&
-                deleteButton.isDisplayed() &&
-                rootButton.isDisplayed() &&
-                newdropdownButton.isDisplayed() &&
-                moredetailsButton.isDisplayed())
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return getHeaderText().contains(folderName) &&
+               (navbarButtonList
+                        .findElements(xpath("//*[@id=\"navbar-functions\"]/ul"))
+                        .size() == 6) &&
+               leveUpButton.isDisplayed() &&
+               deleteButton.isDisplayed() &&
+               rootButton.isDisplayed() &&
+               newdropdownButton.isDisplayed() &&
+               moredetailsButton.isDisplayed();
     }
 
     public boolean isRootFolder() throws Exception
     {
-        // Verify folder name
-        if (!(getHeaderText().contains(ROOT_FOLDER_NAME)) )
-        {
-            return false;
-        }
         // navigation buttons are NOT displayed in root
         // folder. This will change as functionality is added
         // Currently the navbar only has one child, and it's ID is
 
-        if (navbarButtonList.findElements(xpath("//*[@id=\"navbar-functions\"]/ul")).size() == 1)
-        {
-            return true;
-        }
-        return false;
+        return getHeaderText().contains(ROOT_FOLDER_NAME)
+               && navbarButtonList.findElements(
+                xpath("//*[@id=\"navbar-functions\"]/ul")).size() == 1;
     }
 
-    public boolean isFileSelectedMode(int rowNumber)
+    public boolean isFileSelectedMode(int rowNumber) throws Exception
     {
         // Class of selected row is different:
         // visually it will be different, but for now the change
         // in css class is enough to check
         //*[@id="beacon"]/tbody/tr[1]
         WebElement selectedRow = beaconTable.findElement(
-                xpath("//*[@id=\"beacon\"]/tbody/tr["+rowNumber+"]"));
+                xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNumber + "]"));
 
         if (!selectedRow.getAttribute("class").contains("selected"))
         {
@@ -665,7 +646,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // Behaviour is different if person is logged in or not
         if (isLoggedIn())
         {
-            if ( ! (isDisabled(deleteButton) && isDisabled(downloadButton)) )
+            if (!(isDisabled(deleteButton) && isDisabled(downloadButton)))
             {
                 return true;
             }
@@ -686,15 +667,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         // Name column asc is default sort when page loads
         WebElement nameColHeader = beaconTable.findElement(
-                xpath("//*[@id=\"beacon_wrapper\"]/div[2]/div/div[1]/div[1]/div/table/thead/tr/th[2]")
-        );
-
-        if (nameColHeader.getAttribute("class").equals("sorting_asc"))
-        {
-            return true;
-        }
-
-        return false;
+                xpath("//*[@id=\"beacon_wrapper\"]/div[2]/div/div[1]/div[1]/div/table/thead/tr/th[2]"));
+        return nameColHeader.getAttribute("class").equals("sorting_asc");
     }
 
 
@@ -703,10 +677,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         try
         {
-            WebElement jqiMsg = (new WebDriverWait(driver, 10))
-                    .until(ExpectedConditions.elementToBeClickable(
-                            xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
-                                    + message + "\")]")));
+            waitUntil(ExpectedConditions.elementToBeClickable(
+                    xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
+                          + message + "\")]")));
             return true;
         }
         catch (Exception e)
@@ -722,10 +695,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             WebElement jqiMsg = (new WebDriverWait(driver, 10))
                     .until(ExpectedConditions.elementToBeClickable(
                             xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
-                                    + message +"')]")));
+                                  + message + "')]")));
             return true;
         }
-        catch ( Exception e )
+        catch (Exception e)
         {
             return false;
         }
@@ -735,12 +708,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public boolean isTableEmpty()
     {
         //*[@id="beacon"]/tbody/tr[6]
-        List<WebElement> rowList = beaconTable.findElements(By.xpath("//*/tbody/tr"));
+        List<WebElement> rowList = beaconTable
+                .findElements(By.xpath("//*/tbody/tr"));
 
         if (rowList.size() > 0)
         {
             // Value is different if the entire table is empty, as compared to a list shorted to a particular value
-            if (rowList.get(0).findElement(By.xpath("//*/td")).getAttribute("class").equals("dataTables_empty"))
+            if (rowList.get(0).findElement(By.xpath("//*/td"))
+                    .getAttribute("class").equals("dataTables_empty"))
             {
                 return true;
             }
@@ -755,12 +730,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     /**
      * Verify that the given row has the values passed in
+     *
      * @param readGroup
      * @param isPublic
      * @return
      * @throws Exception
      */
-    public boolean isPermissionDataForRow(int row, String writeGroup, String readGroup, boolean isPublic) throws Exception
+    public boolean isPermissionDataForRow(int row, String writeGroup, String readGroup, boolean isPublic) throws
+                                                                                                          Exception
     {
         // readGroup is the last column (#5)
         // isPublic defines what might be in that row: text should say 'Public' if isPublic is true
@@ -768,14 +745,16 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         String rowWriteGroup = getValueForRowCol(row, 5);
         boolean isPermissionSetCorrect = false;
 
-        if (isPublic == true)
+        if (isPublic)
         {
-            if (rowReadGroup.equals("Public") && rowWriteGroup.equals(writeGroup))
+            if (rowReadGroup.equals("Public") && rowWriteGroup
+                    .equals(writeGroup))
             {
-                isPermissionSetCorrect =  true;
+                isPermissionSetCorrect = true;
             }
         }
-        else if (rowReadGroup.equals(readGroup) && rowWriteGroup.equals(writeGroup))
+        else if (rowReadGroup.equals(readGroup) && rowWriteGroup
+                .equals(writeGroup))
         {
             isPermissionSetCorrect = true;
         }
@@ -785,11 +764,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
-
     public boolean isGroupError(String idToFind) throws Exception
     {
         WebElement readGroupDiv = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(By.id(idToFind)));
+                .until(ExpectedConditions
+                               .elementToBeClickable(By.id(idToFind)));
 
         return readGroupDiv.getAttribute("class").contains("has-error");
     }
@@ -828,17 +807,15 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
-    public void waitForStorageLoad()
+    public void waitForStorageLoad() throws Exception
     {
         // The beacon-progress bar state changes while it's loading
         // the page. Firefox doesn't display whole list until the bar is green
         // instead of striped. Could be this test isn't sufficient but it works
         // to have intTestFirefox not fail.
 
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        wait.until(ExpectedConditions.attributeContains(
+        waitUntil(ExpectedConditions.attributeContains(
                 By.className("beacon-progress"), "class", "progress-bar-success"));
-
     }
 }
 
