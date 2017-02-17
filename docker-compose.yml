@@ -1,24 +1,14 @@
 version: '2'
 services:
-  ui:
+  nodehub:  
+    image: selenium/node-firefox:2.53.1
+    ports:
+      - '4444:4444'
+  storage-ui:
     image: opencadc/storage
     ports:
       - '8080:8080'
-      - '5555:5555'
-    networks:
-      - 'vospace'
     environment:
-      - 'CATALINA_OPTS=-Dcadc.search.acServiceID=ivo://cadc.nrc.ca/ac -Dcadc.search.vospaceServiceID=ivo://cadc.nrc.ca/vospace -Dca.nrc.cadc.reg.client.RegistryClient.host=jenkinsd.cadc.dao.nrc.ca'
-    depends_on:
-      - vospace
-    volumes:
-      - /usr/local/vosui/webapps:/usr/local/tomcat/webapps
-  vospace:
-    image: opencadc/vospace
-    networks:
-      - 'vospace'
+      - CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1 apps.canfar.net www.canfar.phys.uvic.ca"
 
-# Create the network 'archive' for which this system will run within.
-networks:
-  vospace:
-    driver: 'bridge'
+
