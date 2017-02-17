@@ -1,14 +1,15 @@
 version: '2'
 services:
-  nodehub:  
-    image: selenium/node-firefox:2.53.1
+  firefox:  
+    image: selenium/standalone-firefox:2.53.1
     ports:
       - '4444:4444'
   storage-ui:
     image: opencadc/storage
     ports:
       - '8080:8080'
+    depends_on: 
+      - 'firefox'
     environment:
       - CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1 apps.canfar.net www.canfar.phys.uvic.ca"
-
 
