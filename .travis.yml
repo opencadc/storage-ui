@@ -1,30 +1,25 @@
 env:
   DOCKER_COMPOSE_VERSION: 1.11.1
-
 language: java
-
 jdk:
-  - oraclejdk8
-
+- oraclejdk8
 sudo: required
-
 services:
-  - docker
-
+- docker
 before_install:
-  - sudo rm /usr/local/bin/docker-compose
-  - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
-  - chmod +x docker-compose
-  - sudo mv docker-compose /usr/local/bin
-
+- sudo rm /usr/local/bin/docker-compose
+- curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname
+  -s`-`uname -m` > docker-compose
+- chmod +x docker-compose
+- sudo mv docker-compose /usr/local/bin
 script:
-  - gradle clean dockerize
-  - sudo docker-compose up -d
-  - sudo docker ps -a
-  - gradle -i -PintTest_selenium_server_url=http://127.0.0.1:4444 -PintTest_web_app_url=http://127.0.0.1:8080/ intTestFirefox
-
+- gradle clean dockerize
+- sudo docker-compose up -d
+- sudo docker ps -a
+- gradle -i -PintTest_selenium_server_url=http://127.0.0.1:4444 -PintTest_web_app_url=http://127.0.0.1:8080/
+  intTestFirefox
 after_success:
-  - docker push opencadc/storage
-
+- docker push opencadc/storage
 notifications:
-  slack: 'dustinj:xoxp-19196234690-104316640387-143221994178-e87effff1f8b218eef9ed441dc38fa61@dustinj'
+  slack:
+    secure: DSSrBfq1yHIcPU30PqD4+unnyWhXDE0AykX0FNBB6Snp/xZHU54+VMHWRMVkjbXWETIlMmlMrTblyglNoaRbqSRBlbEy/VW0vOlelkAice9NSLF6dMYHIpLfISX/rSJJHnArIMEslv3/chu5tAhrpCS3bloLKiG9E1cSHfrdCGiw3CckMQiClcKxFvX5s8GdyGWHZ/mmAeJ2XV003/toHDRpXZ2OF8M9B3ohtH4HuMhBNQVMZmU7amIqp8YTw4uDRIupVrjP2bNqBgs8dKjeCIEpBfuLRQApc7PJ68w04JpyqkpVWvLvj9bJnhDhKgtz0djx8Hj2gI08Ob9SNh43IfOLCvlDumwvsIF1ZsXwW5EiXTyy+a1zWkBf0+u1qoVzzddZ6rLq/oEBAiiBUdmQzsAtoLPFdhw0z+YkYw3ToJefE5IJ+DaOB8oda4eA5t/+x7RqbIV+insy9KTh0p9DTrGDCz5tISwhs4YK4ILb3SzUXv7OMMP15zsavmDmA8Ko8LD5/FWN8/3IbDf12m2MycYVF3prfv7oVLgZaLhF1D47nxmfjgDkSeI0bsyE2UzFKiuGVJvcoPsaGmtasTcvnRwVPDuX2U/7kMDoRRlBw/WS8noh0dXcOw9VOGQ/qVp9/Fki4MiBBWWfjXWD42x4zvkzICYMr6hBuM5dFgcZj+E=
