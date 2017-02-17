@@ -108,8 +108,12 @@ public class AccessControlServerResource extends SecureServerResource
                                       false);
 
             getResponse().getCookieSettings().add(cookieSetting);
+
+            final String contextPath = getContextPath();
+
             getResponse().redirectSeeOther(
-                    getContextPath() + "/list"
+                    contextPath
+                    + (contextPath.endsWith("/") ? "" : "/") + "list"
                     + form.getFirstValue("redirectPath"));
         }
         else

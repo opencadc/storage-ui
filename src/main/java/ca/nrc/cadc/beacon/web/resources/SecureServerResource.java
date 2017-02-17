@@ -160,18 +160,17 @@ class SecureServerResource extends ServerResource
                 VOSpaceApplication.SERVLET_CONTEXT_ATTRIBUTE_KEY);
     }
 
+    /**
+     * Set a default context path when this is not running in a servlet
+     * container.
+     *
+     * @return      String path.
+     */
     String getContextPath()
     {
-        final ServletContext servletContext = getServletContext();
-
-        if (servletContext == null)
-        {
-            return "/";
-        }
-        else
-        {
-            return servletContext.getContextPath();
-        }
+        return (getServletContext() == null)
+               ? VOSpaceApplication.DEFAULT_CONTEXT_PATH
+               : getServletContext().getContextPath();
     }
 
     protected String getPath()

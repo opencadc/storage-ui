@@ -582,6 +582,5 @@ public class StorageItemServerResource extends SecureServerResource
         }
 
         setNodeSecure(currentNode);
-
     }
 }

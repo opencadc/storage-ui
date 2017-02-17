@@ -163,8 +163,6 @@ public class VOSpaceApplication extends Application
                 (ServletContext) context.getAttributes().get(
                         SERVLET_CONTEXT_ATTRIBUTE_KEY);
 
-
-
         final String contextPath = (servletContext == null)
                                    ? DEFAULT_CONTEXT_PATH : "/";
 
