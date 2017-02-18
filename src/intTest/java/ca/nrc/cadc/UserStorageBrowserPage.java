@@ -276,6 +276,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         final WebElement newdropdownButton = find(By.id("newdropdown"));
         hover(newdropdownButton);
         click(newdropdownButton);
+        waitForElementVisible(NEW_FOLDER_BY);
         hover(NEW_FOLDER_BY);
         click(NEW_FOLDER_BY);
         WebElement newfolderInput =
