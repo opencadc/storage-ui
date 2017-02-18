@@ -223,23 +223,22 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return new UserStorageBrowserPage(driver);
     }
 
-
     // Folder Related Transition functions
-    public void clickFolder(String folderName)
+    public UserStorageBrowserPage clickFolder(String folderName)
     {
-        WebElement folder = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
-                        xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'" + folderName + "')]]")));
+        WebElement folder = waitUntil(ExpectedConditions.elementToBeClickable(
+                xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
+                + folderName + "')]]")));
 
         System.out.println("Folder to be clicked: " + folder.getText());
         folder.click();
+        return new UserStorageBrowserPage(driver);
     }
 
     public void clickFolderForRow(int rowNum) throws Exception
     {
-        WebElement firstCheckbox = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
-                        xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a")));
+        WebElement firstCheckbox = waitUntil(ExpectedConditions.elementToBeClickable(
+                xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a")));
         click(firstCheckbox);
     }
 
@@ -506,9 +505,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return new UserStorageBrowserPage(driver);
     }
 
-    public void navUpLevel() throws Exception
+    public UserStorageBrowserPage navUpLevel() throws Exception
     {
         click(leveUpButton);
+        return new UserStorageBrowserPage(driver);
     }
 
 
@@ -533,7 +533,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 .findElement(By.cssSelector("a:nth-of-type(1)"));
         System.out.println(namecolumn.getText());
         return expectedValue.equals(namecolumn.getText());
-
     }
 
     boolean verifyFolderSize(int rowNum) throws Exception
@@ -556,13 +555,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return namecolumn.getText();
     }
 
-
     public String getHeaderText() throws Exception
     {
         System.out.println("Header text: " + folderNameHeader.getText());
         return folderNameHeader.getText();
     }
-
 
     public String getValueForRowCol(int rowNum, int colNum)
     {

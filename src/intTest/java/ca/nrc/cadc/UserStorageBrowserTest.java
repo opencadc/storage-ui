@@ -120,7 +120,7 @@ public class UserStorageBrowserTest
         verifyTrue(userStoragePage.isSubFolder(subFolder2));
 
         // Navigate up one level (should be up one level)
-        userStoragePage.navUpLevel();
+        userStoragePage = userStoragePage.navUpLevel();
         verifyTrue(userStoragePage.isSubFolder(subFolder1));
 
         // Go back down one folder
@@ -128,11 +128,10 @@ public class UserStorageBrowserTest
         verifyTrue(userStoragePage.isSubFolder(subFolder2));
 
         // Go up to root
-        userStoragePage.navToRoot();
+        userStoragePage = userStoragePage.navToRoot();
         // Verify in Root Folder
         verifyTrue(userStoragePage.isRootFolder());
         verifyFalse(userStoragePage.quotaIsDisplayed());
-
 
         // Scenario 4: test file actions
         System.out.println("testing file actions");
@@ -144,13 +143,12 @@ public class UserStorageBrowserTest
         verifyFalse(userStoragePage.isFileSelectedMode(startRow));
 
         // Go up to root
-        userStoragePage.navToRoot();
+        userStoragePage = userStoragePage.navToRoot();
         verifyTrue(userStoragePage.isRootFolder());
         //  click through to CADCtest folder
-        userStoragePage.clickFolder(testFolderName);
+        userStoragePage = userStoragePage.clickFolder(testFolderName);
         // Verify sub folder page state
         verifyTrue(userStoragePage.isSubFolder(testFolderName));
-
 
         // navigate to automated test folder
         String autoTestFolder = "automated_test";
@@ -168,7 +166,6 @@ public class UserStorageBrowserTest
         String parentWriteGroup = userStoragePage.getValueForRowCol(1, 5);
         String parentReadGroup = userStoragePage.getValueForRowCol(1, 6);
         userStoragePage.clickFolder(autoTestFolder);
-
 
         // Create second test folder
         // This will be deleted at the end of this test suite
