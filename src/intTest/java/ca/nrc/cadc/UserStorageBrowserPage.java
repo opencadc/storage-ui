@@ -96,6 +96,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String YES = "Yes";
     private static final String CLOSE = "Close";
     private static final String SAVE = "Save";
+    private static final By NAVBAR_ELEMENTS_BY =
+            xpath("//*[@id=\"navbar-functions\"]/ul");
+
     // Define in here what elements are mode indicators
 
     public static final String READ_GROUP_DIV = "readGroupDiv";
@@ -607,10 +610,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         // Check number of elements in button bar
         // Check state of buttons
+        final List<WebElement> navbarElements = navbarButtonList
+                .findElements(NAVBAR_ELEMENTS_BY);
+
+        System.out.println(String.format("Navbar has %d elements.",
+                                         navbarElements.size()));
+
         return getHeaderText().contains(folderName) &&
-               (navbarButtonList
-                        .findElements(xpath("//*[@id=\"navbar-functions\"]/ul"))
-                        .size() == 6) &&
+               (navbarElements.size() == 6) &&
                leveUpButton.isDisplayed() &&
                deleteButton.isDisplayed() &&
                rootButton.isDisplayed() &&
@@ -766,9 +773,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public boolean isGroupError(String idToFind) throws Exception
     {
-        WebElement readGroupDiv = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions
-                               .elementToBeClickable(By.id(idToFind)));
+        WebElement readGroupDiv =
+                waitUntil(ExpectedConditions.elementToBeClickable(By.id(idToFind)));
 
         return readGroupDiv.getAttribute("class").contains("has-error");
     }
@@ -794,9 +800,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     // --------- Page state wait methods
 
-    public void waitForAjaxFinished()
+    public void waitForAjaxFinished() throws Exception
     {
-        new WebDriverWait(driver, 180).until(new ExpectedCondition<Boolean>()
+        waitUntil(new ExpectedCondition<Boolean>()
         {
             public Boolean apply(WebDriver driver)
             {
@@ -816,6 +822,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
         waitUntil(ExpectedConditions.attributeContains(
                 By.className("beacon-progress"), "class", "progress-bar-success"));
+        waitForElementPresent(NAVBAR_ELEMENTS_BY);
     }
 }
 
