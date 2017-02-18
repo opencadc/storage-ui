@@ -272,17 +272,19 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // CRUD for folders
     public void createNewFolder(String foldername) throws Exception
     {
-        newdropdownButton.click();
-        newFolder.click();
+        final WebElement newdropdownButton = find(By.id("newdropdown"));
+        hover(newdropdownButton);
+        click(newdropdownButton);
+        click(By.id("newfolder"));
         WebElement newfolderInput =
-                (new WebDriverWait(driver, 10))
-                        .until(ExpectedConditions.elementToBeClickable(
+                waitUntil(ExpectedConditions.elementToBeClickable(
                                 By.id("fname")));
 
         sendKeys(newfolderInput, foldername);
 
-        WebElement createFolderButton = find(xpath("//button[contains(text(),\"Create Folder\")]"));
-        createFolderButton.click();
+        WebElement createFolderButton =
+            find(xpath("//button[contains(text(),\"Create Folder\")]"));
+        click(createFolderButton);
 
         try
         {
