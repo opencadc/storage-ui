@@ -224,6 +224,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     // Folder Related Transition functions
     public UserStorageBrowserPage clickFolder(String folderName)
+        throws Exception
     {
         WebElement folder = waitUntil(ExpectedConditions.elementToBeClickable(
                 xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
