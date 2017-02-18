@@ -187,19 +187,18 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Transition functions
     public void clickButton(String promptText) throws Exception
     {
-        WebElement button = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
-                        xpath("//button[contains(text(),\"" + promptText + "\")]")));
-        button.click();
+        WebElement button = waitUntil(ExpectedConditions.elementToBeClickable(
+                xpath("//button[contains(text(),\"" + promptText + "\")]")));
+        click(button);
     }
 
     public void clickButtonWithClass(String promptText, String className) throws
                                                                           Exception
     {
-        WebElement button = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
-                        xpath("//button[contains(@class, '" + className + "') and contains(text(),'" + promptText + "')]")));
-        button.click();
+        WebElement button = waitUntil(ExpectedConditions.elementToBeClickable(
+                xpath("//button[contains(@class, '" + className
+                + "') and contains(text(),'" + promptText + "')]")));
+        click(button);
     }
 
     public void enterSearch(final String searchString) throws Exception
