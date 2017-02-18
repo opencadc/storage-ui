@@ -98,6 +98,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String SAVE = "Save";
     private static final By NAVBAR_ELEMENTS_BY =
             xpath("//*[@id=\"navbar-functions\"]/ul");
+    private static final By NEW_FOLDER_BY = By.id("newfolder");
 
     // Define in here what elements are mode indicators
 
@@ -275,7 +276,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         final WebElement newdropdownButton = find(By.id("newdropdown"));
         hover(newdropdownButton);
         click(newdropdownButton);
-        click(By.id("newfolder"));
+        hover(NEW_FOLDER_BY);
+        click(NEW_FOLDER_BY);
         WebElement newfolderInput =
                 waitUntil(ExpectedConditions.elementToBeClickable(
                                 By.id("fname")));
