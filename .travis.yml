@@ -16,7 +16,6 @@ script:
 - gradle clean dockerize
 - docker-compose up -d
 - docker ps -a
-- curl -v http://127.0.0.1:8080/storage/list/CADCtest
 - gradle -i -PintTest_selenium_server_url=http://127.0.0.1:4444 -PintTest_web_app_url=http://127.0.0.1:8080
   intTestFirefox
 after_success:
