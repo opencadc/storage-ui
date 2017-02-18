@@ -612,7 +612,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // Check number of elements in button bar
         // Check state of buttons
         final List<WebElement> navbarElements = navbarButtonList
-                .findElements(By.cssSelector("> li"));
+                .findElements(By.xpath("*"));
 
         System.out.println(String.format("Navbar has %d elements.",
                                          navbarElements.size()));
