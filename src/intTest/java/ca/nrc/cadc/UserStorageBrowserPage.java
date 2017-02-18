@@ -208,17 +208,19 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         waitForStorageLoad();
     }
 
-    public void doLogin(String username, String password) throws Exception
+    public UserStorageBrowserPage doLogin(String username, String password) throws Exception
     {
         sendKeys(loginUsername, username);
         sendKeys(loginPassword, password);
         click(submitLoginButton);
         waitForElementPresent(By.id("logout"));
+        return new UserStorageBrowserPage(driver);
     }
 
-    public void doLogout() throws Exception
+    public UserStorageBrowserPage doLogout() throws Exception
     {
         click(logoutButton);
+        return new UserStorageBrowserPage(driver);
     }
 
 
@@ -495,12 +497,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
 
     // Navigation functions
-    public void navToRoot() throws Exception
+    public UserStorageBrowserPage navToRoot() throws Exception
     {
         // opting for sendKeys because chromedriver
         // doesn't work for click() function for some reason. :(
 //        rootButton.sendKeys(Keys.ENTER);
         click(By.id("root"));
+        return new UserStorageBrowserPage(driver);
     }
 
     public void navUpLevel() throws Exception

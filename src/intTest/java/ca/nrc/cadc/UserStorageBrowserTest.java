@@ -81,7 +81,7 @@ public class UserStorageBrowserTest
 
 
         // Scenario 2: Login test - credentials should be in the gradle build file.
-        userStoragePage.doLogin(getUsername(), getPassword());
+        userStoragePage = userStoragePage.doLogin(getUsername(), getPassword());
         verifyTrue(userStoragePage.isLoggedIn());
         System.out.println("logged in");
 
@@ -97,7 +97,7 @@ public class UserStorageBrowserTest
         // Scenario 3: Test navigation buttons
         // Test state is currently in a subfolder: Start at Root
         System.out.println("navigating to root...");
-        userStoragePage.navToRoot();
+        userStoragePage = userStoragePage.navToRoot();
         // Verify in Root Folder
         verifyTrue(userStoragePage.isRootFolder());
 
@@ -272,7 +272,7 @@ public class UserStorageBrowserTest
 
         // Scenario 5: logout
         System.out.println("Test logout");
-        userStoragePage.doLogout();
+        userStoragePage = userStoragePage.doLogout();
         verifyFalse(userStoragePage.isLoggedIn());
 
         System.out.println("UserStorageBrowserTest completed");
