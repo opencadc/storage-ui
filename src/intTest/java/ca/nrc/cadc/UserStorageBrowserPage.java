@@ -276,6 +276,29 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         final WebElement newdropdownButton = find(By.id("newdropdown"));
         hover(newdropdownButton);
         click(newdropdownButton);
+
+        if (newdropdownButton.getAttribute("class").contains("disabled"))
+        {
+            try
+            {
+                final WebElement logout = find(By.id("logout"));
+                if (logout == null)
+                {
+                    throw new RuntimeException("You are not logged in.");
+                }
+                else
+                {
+                    throw new RuntimeException("You are logged in, but
+                    something else is keeping this functionality disabled.");
+                }
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Can't create new items.  That
+                functionality is disabled.  Did you remember to login?");
+            }
+        }
+
         waitForElementVisible(NEW_FOLDER_BY);
         hover(NEW_FOLDER_BY);
         click(NEW_FOLDER_BY);
