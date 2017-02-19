@@ -288,14 +288,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 }
                 else
                 {
-                    throw new RuntimeException("You are logged in, but
-                    something else is keeping this functionality disabled.");
+                    throw new RuntimeException("You are logged in, but " +
+                    "something else is keeping this functionality disabled.");
                 }
             }
             catch (Exception e)
             {
-                throw new RuntimeException("Can't create new items.  That
-                functionality is disabled.  Did you remember to login?");
+                throw new RuntimeException("Can't create new items.  That " +
+                "functionality is disabled.  Did you remember to login?");
             }
         }
 
