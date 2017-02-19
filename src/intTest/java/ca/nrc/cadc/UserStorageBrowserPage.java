@@ -298,6 +298,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 "functionality is disabled.  Did you remember to login?");
             }
         }
+        else
+        {
+            System.out.println("Everything is kosher > > " + newdropdownButton.getAttribute("class"));
+        }
 
         waitForElementVisible(NEW_FOLDER_BY);
         hover(NEW_FOLDER_BY);
