@@ -101,7 +101,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         // Test state is currently in a subfolder: Start at Root
         System.out.println("navigating to root...");
         userStoragePage = userStoragePage.navToRoot();
-        
+
         // Verify in Root Folder
         verifyTrue(userStoragePage.isRootFolder());
 
@@ -173,7 +173,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         String parentWriteGroup = userStoragePage.getValueForRowCol(1, 5);
         String parentReadGroup = userStoragePage.getValueForRowCol(1, 6);
-        userStoragePage.clickFolder(autoTestFolder);
+        userStoragePage = userStoragePage.clickFolder(autoTestFolder);
 
         // Create second test folder
         // This will be deleted at the end of this test suite
@@ -281,6 +281,5 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         verifyFalse(userStoragePage.isLoggedIn());
 
         System.out.println("UserStorageBrowserTest completed");
-
     }
 }
