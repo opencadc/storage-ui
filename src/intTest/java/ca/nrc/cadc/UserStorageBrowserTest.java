@@ -86,6 +86,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         System.out.println("logged in");
 
         userStoragePage.createNewFolder(workdirFolder);
+        userStoragePage.confirmSubItem(workdirFolder);
         userStoragePage = userStoragePage.clickFolder(workdirFolder);
 
         // rowCount = userStoragePage.getTableRowCount();
