@@ -50,7 +50,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
                 goTo(STORAGE_ENDPOINT, null,
                      UserStorageBrowserPage.class);
 
-        final String workdirFolderName = "TEST_" + generateAlphaNumeric(16);
+        final String workdirFolder = "TEST_" + generateAlphaNumeric(16);
 
         String testFolderName = "CADCtest";
         verifyTrue(userStoragePage.isDefaultSort());
@@ -85,8 +85,8 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         verifyTrue(userStoragePage.isLoggedIn());
         System.out.println("logged in");
 
-        userStoragePage.createNewFolder(workdirFolderName);
-        userStoragePage = userStoragePage.clickFolder(workdirFolderName);
+        userStoragePage.createNewFolder(workdirFolder);
+        userStoragePage = userStoragePage.clickFolder(workdirFolder);
 
         // rowCount = userStoragePage.getTableRowCount();
         //
@@ -101,12 +101,13 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         // Test state is currently in a subfolder: Start at Root
         System.out.println("navigating to root...");
         userStoragePage = userStoragePage.navToRoot();
+        
         // Verify in Root Folder
         verifyTrue(userStoragePage.isRootFolder());
 
         userStoragePage = userStoragePage.clickFolder(testFolderName);
-        userStoragePage.confirmSubItem(workdirFolderName);
-        userStoragePage = userStoragePage.clickFolder(workdirFolderName);
+        userStoragePage.confirmSubItem(workdirFolder);
+        userStoragePage = userStoragePage.clickFolder(workdirFolder);
 
         int startRow = 1;
 

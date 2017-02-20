@@ -272,10 +272,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     protected void confirmSubItem(final String itemName) throws Exception
     {
-        WebElement item = waitUntil(ExpectedConditions.elementToBeClickable(
+        waitUntil(ExpectedConditions.elementToBeClickable(
                 xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
                 + itemName + "')]]")));
-        return (item != null);        
     }
 
     // CRUD for folders
