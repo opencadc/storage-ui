@@ -34,13 +34,11 @@
 package ca.nrc.cadc;
 
 
-import org.junit.Test;
 import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
 import org.apache.commons.lang3.RandomStringUtils;
 
 
-public class AbstractBrowserTest
-        extends AbstractWebApplicationIntegrationTest
+public class AbstractBrowserTest extends AbstractWebApplicationIntegrationTest
 {
     private static final char[] SEED_CHARS;
 

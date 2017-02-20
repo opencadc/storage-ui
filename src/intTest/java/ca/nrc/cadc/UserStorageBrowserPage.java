@@ -245,20 +245,20 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
-    public int getNextAvailabileFolderRow(int startRow) throws Exception
+    protected int getNextAvailabileFolderRow(final int startRow)
+            throws Exception
     {
         //   not all folders are clickable, go down the rows to find one
         boolean found = false;
         int rowNum = startRow;
-        WebElement firstCheckbox = null;
 
         while (!found)
         {
             // This method throws an exception if the element is not found
             try
             {
-                firstCheckbox = beaconTable.findElement(
-                        xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a"));
+                beaconTable.findElement(xpath("//*[@id=\"beacon\"]/tbody/tr["
+                                              + rowNum + "]/td[2]/a"));
             }
             catch (Exception e)
             {
@@ -278,7 +278,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
     // CRUD for folders
-    public void createNewFolder(String foldername) throws Exception
+    protected UserStorageBrowserPage createNewFolder(final String foldername)
+            throws Exception
     {
         final WebElement newdropdownButton = find(By.id("newdropdown"));
         click(newdropdownButton);
@@ -325,6 +326,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         try
         {
             confirmJqiMsg(CONFIRMATION_MSG);
+
+            return new UserStorageBrowserPage(driver);
         }
         catch (Exception e)
         {
@@ -368,10 +371,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         editIcon.click();
     }
 
-    public void setGroup(String idToFind, String newGroup, boolean isPublic) throws
-                                                                             Exception
+    protected UserStorageBrowserPage setGroup(final String idToFind,
+                                           final String newGroup,
+                                           final boolean isPublic)
+            throws Exception
     {
-        String currentPermission = "";
         clickEditIconForFirstRow();
         WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
@@ -379,18 +383,16 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
         WebElement groupInput = find(By.id(idToFind));
 
-        if (isPublic == true)
+        if (isPublic)
         {
-            if (currentPermission == null)
-            {
-                // toggle checkbox
-                // read group field should clear automatically
-                click(permissionCheckbox);
-            }
+            // toggle checkbox
+            // read group field should clear automatically
+            click(permissionCheckbox);
         }
         else
         {
-            currentPermission = permissionCheckbox.getAttribute("checked");
+            final String currentPermission =
+                    permissionCheckbox.getAttribute("checked");
             if (currentPermission != null)
             {
                 // clear checkbox
@@ -405,6 +407,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         clickButton(SAVE);
 
         confirmJqiMsg(SUCCESSFUL);
+
+        return new UserStorageBrowserPage(driver);
     }
 
     /**
@@ -426,23 +430,25 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
     }
 
-    public void setGroupOnly(String idToFind, String newGroup, boolean confirm) throws
-                                                                                Exception
+    protected UserStorageBrowserPage setGroupOnly(final String idToFind,
+                                                  final String newGroup,
+                                                  final boolean confirm)
+            throws Exception
     {
-        String currentPermission = "";
-        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
+        final WebElement permissionCheckbox = waitUntil(
+                ExpectedConditions.elementToBeClickable(
                         By.id("publicPermission")));
+        final WebElement groupInput = find(By.id(idToFind));
+        final String currentPermission =
+                permissionCheckbox.getAttribute("checked");
 
-        WebElement groupInput = find(By.id(idToFind));
-
-        currentPermission = permissionCheckbox.getAttribute("checked");
         if (currentPermission != null)
         {
             // clear checkbox
             // read group field should be enabled
             click(permissionCheckbox);
         }
+
         sendKeys(groupInput, newGroup);
 
         clickButton(SAVE);
@@ -450,23 +456,26 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // read/writeGroupDiv should have 'has-error' class
         // confirm here is conditional because it won't
         // show up if an invalid group has been sent in.
-        if (confirm == true)
+        if (confirm)
         {
             confirmJqiMsg(SUCCESSFUL);
         }
+
+        return new UserStorageBrowserPage(driver);
     }
 
 
-    public String togglePublicAttributeForRow(int rowNum) throws Exception
+    protected UserStorageBrowserPage togglePublicAttributeForRow()
+            throws Exception
     {
-        String currentPermission = "";
         clickEditIconForFirstRow();
-        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
+        WebElement permissionCheckbox = waitUntil(
+                ExpectedConditions.elementToBeClickable(
                         By.id("publicPermission")));
 
         click(permissionCheckbox);
-        currentPermission = permissionCheckbox.getAttribute("checked");
+        final String currentPermission =
+                permissionCheckbox.getAttribute("checked");
 
         waitForAjaxFinished();
 
@@ -474,7 +483,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
         confirmJqiMsg(SUCCESSFUL);
 
-        return currentPermission;
+        return new UserStorageBrowserPage(driver);
     }
 
 
