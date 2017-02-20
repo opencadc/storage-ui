@@ -85,17 +85,17 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         verifyTrue(userStoragePage.isLoggedIn());
         System.out.println("logged in");
 
-        userStoragePage.createNewFolder(workdirFolder);
-        userStoragePage.confirmSubItem(workdirFolder);
-        userStoragePage = userStoragePage.clickFolder(workdirFolder);
+        //userStoragePage.createNewFolder(workdirFolder);
+        //userStoragePage.confirmSubItem(workdirFolder);
+        //userStoragePage = userStoragePage.clickFolder(workdirFolder);
 
-        // rowCount = userStoragePage.getTableRowCount();
+        rowCount = userStoragePage.getTableRowCount();
         //
-        // System.out.println("Rowcount: " + rowCount);
-        // verifyTrue(rowCount > 2);
+        System.out.println("Rowcount: " + rowCount);
+        verifyTrue(rowCount > 2);
 
         // Check access to page: should be write accessible
-        verifyTrue(userStoragePage.isReadAccess());
+        verifyFalse(userStoragePage.isReadAccess());
 
 
         // Scenario 3: Test navigation buttons
@@ -107,8 +107,8 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         verifyTrue(userStoragePage.isRootFolder());
 
         userStoragePage = userStoragePage.clickFolder(testFolderName);
-        userStoragePage.confirmSubItem(workdirFolder);
-        userStoragePage = userStoragePage.clickFolder(workdirFolder);
+        // userStoragePage.confirmSubItem(workdirFolder);
+        // userStoragePage = userStoragePage.clickFolder(workdirFolder);
 
         int startRow = 1;
 
