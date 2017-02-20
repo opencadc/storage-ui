@@ -17,5 +17,6 @@ services:
     network_mode: 'host'
     depends_on: 
       - 'firefox'
+      - 'chrome'
     environment:
       - CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1 apps.canfar.net www.canfar.phys.uvic.ca"
