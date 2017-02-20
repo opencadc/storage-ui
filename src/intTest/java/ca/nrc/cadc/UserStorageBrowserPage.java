@@ -274,7 +274,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public void createNewFolder(String foldername) throws Exception
     {
         final WebElement newdropdownButton = find(By.id("newdropdown"));
-        hover(newdropdownButton);
         click(newdropdownButton);
 
         if (newdropdownButton.getAttribute("class").contains("disabled"))
@@ -300,11 +299,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
         else
         {
-            System.out.println("Everything is kosher > > " + newdropdownButton.getAttribute("class"));
+            System.out.println("Everything is kosher > > "
+                               + newdropdownButton.getAttribute("class"));
         }
 
         waitForElementVisible(NEW_FOLDER_BY);
-        hover(NEW_FOLDER_BY);
         click(NEW_FOLDER_BY);
         WebElement newfolderInput =
                 waitUntil(ExpectedConditions.elementToBeClickable(

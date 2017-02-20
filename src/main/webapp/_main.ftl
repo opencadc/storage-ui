@@ -39,7 +39,7 @@
                     <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></a>
                   <ul class="dropdown-menu">
                     <li>
-                      <a id="newfolder">
+                      <a id="newfolder" name="newfolder">
                         <span class="glyphicon glyphicon-folder-open"></span>&nbsp;Folder</a></li>
                     <li>
                       <a id="upload">
@@ -103,5 +103,3 @@
     </section>
   </div>
 </div>
-
-
