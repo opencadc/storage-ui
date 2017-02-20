@@ -1,9 +1,14 @@
 version: '2'
 services:
-  firefox:  
+  firefox:
     image: selenium/standalone-firefox:2.53.1
     ports:
       - '127.0.0.1:4444:4444'
+    network_mode: 'host'
+  chrome:
+    image: selenium/standalone-chrome:2.53.1
+    ports:
+      - '127.0.0.1:5444:4444'
     network_mode: 'host'
   storage-ui:
     image: opencadc/storage
