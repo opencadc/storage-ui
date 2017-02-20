@@ -170,8 +170,13 @@ public class UserStorageBrowserTest
         // Create second test folder
         // This will be deleted at the end of this test suite
         String tempTestFolder = "vosui_automated_test";
-        userStoragePage.createNewFolder(tempTestFolder);
-        userStoragePage.enterSearch(tempTestFolder);
+
+        userStoragePage.enterSearch(autoTestFolder);
+        if (userStoragePage.isTableEmpty())
+        {
+            userStoragePage.createNewFolder(tempTestFolder);
+            userStoragePage.enterSearch(tempTestFolder);
+        }
 
         boolean isPublic = false;
         if (parentReadGroup.equals("Public"))
