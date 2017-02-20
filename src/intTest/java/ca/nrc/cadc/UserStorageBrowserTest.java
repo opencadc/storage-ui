@@ -38,7 +38,8 @@ import org.junit.Test;
 import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
 
 
-public class UserStorageBrowserTest extends AbstractBrowserTest
+public class UserStorageBrowserTest
+        extends AbstractWebApplicationIntegrationTest
 {
     private static final String STORAGE_ENDPOINT = "/storage/list";
 
@@ -46,11 +47,11 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
     @Test
     public void browseUserStorage() throws Exception
     {
+        System.out.println("Visiting: " + getWebURL() + STORAGE_ENDPOINT);
+
         UserStorageBrowserPage userStoragePage =
                 goTo(STORAGE_ENDPOINT, null,
                      UserStorageBrowserPage.class);
-
-        final String workdirFolder = "TEST_" + generateAlphaNumeric(16);
 
         String testFolderName = "CADCtest";
         verifyTrue(userStoragePage.isDefaultSort());
@@ -70,8 +71,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         // Verify page permissions prior to logging in
         // click through to CADCtest folder
-        userStoragePage = userStoragePage.clickFolder(testFolderName);
-        verifyTrue(userStoragePage.quotaIsDisplayed());
+        userStoragePage.clickFolder(testFolderName);
 
         // Verify sub folder page state
         verifyTrue(userStoragePage.isSubFolder(testFolderName));
@@ -85,12 +85,8 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         verifyTrue(userStoragePage.isLoggedIn());
         System.out.println("logged in");
 
-        //userStoragePage.createNewFolder(workdirFolder);
-        //userStoragePage.confirmSubItem(workdirFolder);
-        //userStoragePage = userStoragePage.clickFolder(workdirFolder);
-
         rowCount = userStoragePage.getTableRowCount();
-        //
+
         System.out.println("Rowcount: " + rowCount);
         verifyTrue(rowCount > 2);
 
@@ -102,13 +98,8 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         // Test state is currently in a subfolder: Start at Root
         System.out.println("navigating to root...");
         userStoragePage = userStoragePage.navToRoot();
-
         // Verify in Root Folder
         verifyTrue(userStoragePage.isRootFolder());
-
-        userStoragePage = userStoragePage.clickFolder(testFolderName);
-        // userStoragePage.confirmSubItem(workdirFolder);
-        // userStoragePage = userStoragePage.clickFolder(workdirFolder);
 
         int startRow = 1;
 
@@ -174,18 +165,13 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         String parentWriteGroup = userStoragePage.getValueForRowCol(1, 5);
         String parentReadGroup = userStoragePage.getValueForRowCol(1, 6);
-        userStoragePage = userStoragePage.clickFolder(autoTestFolder);
+        userStoragePage.clickFolder(autoTestFolder);
 
         // Create second test folder
         // This will be deleted at the end of this test suite
         String tempTestFolder = "vosui_automated_test";
+        userStoragePage.createNewFolder(tempTestFolder);
         userStoragePage.enterSearch(tempTestFolder);
-
-        if (userStoragePage.isTableEmpty())
-        {
-            userStoragePage.createNewFolder(tempTestFolder);
-            userStoragePage.enterSearch(tempTestFolder);
-        }
 
         boolean isPublic = false;
         if (parentReadGroup.equals("Public"))
@@ -287,5 +273,6 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         verifyFalse(userStoragePage.isLoggedIn());
 
         System.out.println("UserStorageBrowserTest completed");
+
     }
 }
