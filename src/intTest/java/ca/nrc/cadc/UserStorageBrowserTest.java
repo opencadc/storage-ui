@@ -38,8 +38,7 @@ import org.junit.Test;
 import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
 
 
-public class UserStorageBrowserTest
-        extends AbstractWebApplicationIntegrationTest
+public class UserStorageBrowserTest extends AbstractBrowserTest
 {
     private static final String STORAGE_ENDPOINT = "/storage/list";
 
@@ -47,11 +46,11 @@ public class UserStorageBrowserTest
     @Test
     public void browseUserStorage() throws Exception
     {
-        System.out.println("Visiting: " + getWebURL() + STORAGE_ENDPOINT);
-
         UserStorageBrowserPage userStoragePage =
                 goTo(STORAGE_ENDPOINT, null,
                      UserStorageBrowserPage.class);
+
+        final String workdirFolderName = "TEST_" + generateAlphaNumeric(16);
 
         String testFolderName = "CADCtest";
         verifyTrue(userStoragePage.isDefaultSort());
@@ -71,7 +70,8 @@ public class UserStorageBrowserTest
 
         // Verify page permissions prior to logging in
         // click through to CADCtest folder
-        userStoragePage.clickFolder(testFolderName);
+        userStoragePage = userStoragePage.clickFolder(testFolderName);
+        verifyTrue(userStoragePage.quotaIsDisplayed());
 
         // Verify sub folder page state
         verifyTrue(userStoragePage.isSubFolder(testFolderName));
@@ -85,13 +85,16 @@ public class UserStorageBrowserTest
         verifyTrue(userStoragePage.isLoggedIn());
         System.out.println("logged in");
 
-        rowCount = userStoragePage.getTableRowCount();
+        userStoragePage.createNewFolder(workdirFolderName);
+        userStoragePage = userStoragePage.clickFolder(workdirFolderName);
 
-        System.out.println("Rowcount: " + rowCount);
-        verifyTrue(rowCount > 2);
+        // rowCount = userStoragePage.getTableRowCount();
+        //
+        // System.out.println("Rowcount: " + rowCount);
+        // verifyTrue(rowCount > 2);
 
         // Check access to page: should be write accessible
-        verifyFalse(userStoragePage.isReadAccess());
+        verifyTrue(userStoragePage.isReadAccess());
 
 
         // Scenario 3: Test navigation buttons
@@ -100,6 +103,10 @@ public class UserStorageBrowserTest
         userStoragePage = userStoragePage.navToRoot();
         // Verify in Root Folder
         verifyTrue(userStoragePage.isRootFolder());
+
+        userStoragePage = userStoragePage.clickFolder(testFolderName);
+        userStoragePage.confirmSubItem(workdirFolderName);
+        userStoragePage = userStoragePage.clickFolder(workdirFolderName);
 
         int startRow = 1;
 

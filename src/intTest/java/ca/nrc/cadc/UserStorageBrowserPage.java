@@ -232,7 +232,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 + folderName + "')]]")));
 
         System.out.println("Folder to be clicked: " + folder.getText());
-        folder.click();
+        click(folder);
+
         return new UserStorageBrowserPage(driver);
     }
 
@@ -269,6 +270,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return rowNum;
     }
 
+    protected void confirmSubItem(final String itemName) throws Exception
+    {
+        WebElement item = waitUntil(ExpectedConditions.elementToBeClickable(
+                xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
+                + itemName + "')]]")));
+        return (item != null);        
+    }
 
     // CRUD for folders
     public void createNewFolder(String foldername) throws Exception
