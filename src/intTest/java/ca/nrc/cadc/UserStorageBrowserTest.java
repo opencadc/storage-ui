@@ -220,13 +220,13 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 		{
 			isModifyNode = false;
 		}
-		userStoragePage = userStoragePage.setGroup(userStoragePage.READ_GROUP_INPUT, "", false, isModifyNode);
+		userStoragePage = userStoragePage.setGroup(userStoragePage.READ_GROUP_INPUT, "", isModifyNode);
 		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, "", false));
 		userStoragePage.waitForPromptFinish();
 
 		isModifyNode = true;
 		// Set read group to selected group
-		userStoragePage = userStoragePage.setGroup(userStoragePage.READ_GROUP_INPUT, readGroupName, false, true);
+		userStoragePage = userStoragePage.setGroup(userStoragePage.READ_GROUP_INPUT, readGroupName, true);
 		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, readGroupName, false));
 
 		// Set write group to blank
@@ -234,11 +234,10 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 		{
 			isModifyNode = false;
 		}
-		userStoragePage = userStoragePage.setGroup(userStoragePage.WRITE_GROUP_INPUT, "", false, isModifyNode);
+		userStoragePage = userStoragePage.setGroup(userStoragePage.WRITE_GROUP_INPUT, "", isModifyNode);
 		verifyTrue(userStoragePage.isPermissionDataForRow(1, "", readGroupName, false));
-
-
-		userStoragePage = userStoragePage.setGroup(userStoragePage.WRITE_GROUP_INPUT, writeGroupName, false, true);
+		git stat
+		userStoragePage = userStoragePage.setGroup(userStoragePage.WRITE_GROUP_INPUT, writeGroupName, true);
 		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
 		// Test response to invalid autocomplete selection

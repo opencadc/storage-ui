@@ -378,36 +378,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     protected UserStorageBrowserPage setGroup(final String idToFind,
                                            final String newGroup,
-                                           final boolean isPublic,
                                             final boolean isModifyNode)
             throws Exception
     {
         clickEditIconForFirstRow();
-        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
+        WebElement groupInput = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
-                        By.id("publicPermission")));
-
-        WebElement groupInput = find(By.id(idToFind));
-        final String currentPermission =
-                permissionCheckbox.getAttribute("checked");
-
-        if (isPublic)
-        {
-            // ensure checkbox is on
-            if (currentPermission == null)
-            {
-                click(permissionCheckbox);
-            }
-        }
-        else
-        {
-            // ensure checkbox is off
-            if (currentPermission != null)
-            {
-                click(permissionCheckbox);
-            }
-
-        }
+                        By.id(idToFind)));
 
         // Send group name
         sendKeys(groupInput, newGroup);
