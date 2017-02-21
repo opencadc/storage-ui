@@ -388,26 +388,29 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                         By.id("publicPermission")));
 
         WebElement groupInput = find(By.id(idToFind));
+        final String currentPermission =
+                permissionCheckbox.getAttribute("checked");
 
         if (isPublic)
         {
-            // toggle checkbox
-            click(permissionCheckbox);
+            // ensure checkbox is on
+            if (currentPermission == null)
+            {
+                click(permissionCheckbox);
+            }
         }
         else
         {
-            final String currentPermission =
-                    permissionCheckbox.getAttribute("checked");
+            // ensure checkbox is off
             if (currentPermission != null)
             {
-                // clear checkbox
-                if (currentPermission == null)
-                {
-                    click(permissionCheckbox);
-                }
+                click(permissionCheckbox);
             }
-            sendKeys(groupInput, newGroup);
+
         }
+
+        // Send group name
+        sendKeys(groupInput, newGroup);
 
         waitForAjaxFinished();
 
