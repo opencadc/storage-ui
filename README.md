@@ -33,6 +33,8 @@ To get around this, please supply a property called `SSO_SERVERS` containing a s
   - As a System property (e.g. `-DSSO_SERVERS="<host 1> <host 2>" etc.`)
   - In a file located at `${user.home}/config/AccessControl.properties` (e.g. `cat SSO_SERVERS=<host 1> <host 2> > $HOME/config/AccessControl.properties`)
 
+The hostnames included in this property are all of the servers involved in your setup (i.e. the web server, and the VOSpace Web Service host).
+
 For an embedded Jetty container, you can just run:
 
 `gradle run`
