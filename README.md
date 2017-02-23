@@ -1,7 +1,7 @@
 ---
 ---
 
-#### User Storage User Interface 0.8
+#### User Storage User Interface 0.9
 
 By default, this uses the CANFAR (CADC) VOSpace located at:
 
@@ -21,6 +21,18 @@ Will produce a `war` file in the `build/libs` directory that can be deployed int
 
 ### Running
 
+#### Environment
+
+In order for Authorization and Authentication to work properly, the User Storage UI uses Domain Cookies to pass from the browser to the application.
+The browser will always send a valid cookie to the server whose domain matches the cookie's, but the application will then make another request
+to the VOSpace Web Service using the cookie.  The VOSpace Web Service can run on a different domain, however, which presents a problem for
+cookie passing.
+
+To get around this, please supply a property called `SSO_SERVERS` containing a space delimited list of trusted servers one of two ways:
+
+  - As a System property (e.g. `-DSSO_SERVERS="<host 1> <host 2>" etc.`)
+  - In a file located at `${user.home}/config/AccessControl.properties` (e.g. `cat SSO_SERVERS=<host 1> <host 2> > $HOME/config/AccessControl.properties`)
+
 For an embedded Jetty container, you can just run:
 
 `gradle run`
@@ -29,7 +41,7 @@ To produce a running embedded Jetty container running on port `8080`, with a deb
 
 Pass your own Registry settings into the `JAVA_OPTS` environment variable to use your own VOSpace service:
 
-`gradle -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.auth.BasicX509TrustManager.trust=true -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry host> run`
+`gradle -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry host> run`
 
 To specify the Service ID (often called Resource ID) of your services.  The User Storage Interface relies on two services:
 
@@ -71,7 +83,7 @@ To run in your environment, create your own Dockerfile:
 FROM opencadc/storage
 
 # The JAVA_OPTS variable to pass to Tomcat.  Note the -Dca.nrc.cadc.reg.client.RegistryClient.host property.
-ENV JAVA_OPTS "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.auth.BasicX509TrustManager.trust=true -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry lookup>"
+ENV JAVA_OPTS "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry lookup>"
 ```
 
 Then run:
