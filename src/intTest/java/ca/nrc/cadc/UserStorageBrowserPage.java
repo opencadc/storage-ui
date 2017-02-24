@@ -91,11 +91,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String DELETE_CONFIRMATION_TEXT = "Are you sure you wish to delete the selected items?";
     private static final String SUCCESSFUL = "successful";
     private static final String ALREADY_EXISTS = "already exists";
+    public static final String MODIFIED = "modified";
+    public static final String NOT_MODIFIED = "not modified";
     private static final String CONFIRMATION_MSG = "New folder added successfully";
     private static final String OK = "Ok";
     private static final String YES = "Yes";
     private static final String CLOSE = "Close";
-    private static final String SAVE = "Save";
+    public static final String SAVE = "Save";
     private static final By NAVBAR_ELEMENTS_BY =
             xpath("//*[@id=\"navbar-functions\"]/ul");
     private static final By NEW_FOLDER_BY = By.id("newfolder");
@@ -367,48 +369,39 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Permissions functions
     public void clickEditIconForFirstRow() throws Exception
     {
-        WebElement editIcon = find(xpath("//span[contains(@class, 'glyphicon-pencil')]"));
+
+        WebElement editIcon = (new WebDriverWait(driver, 10))
+                .until(ExpectedConditions.elementToBeClickable(
+                        xpath("//span[contains(@class, 'glyphicon-pencil')]")));
         editIcon.click();
     }
 
     protected UserStorageBrowserPage setGroup(final String idToFind,
                                            final String newGroup,
-                                           final boolean isPublic)
+                                            final boolean isModifyNode)
             throws Exception
     {
         clickEditIconForFirstRow();
-        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
+        WebElement groupInput = (new WebDriverWait(driver, 10))
                 .until(ExpectedConditions.elementToBeClickable(
-                        By.id("publicPermission")));
+                        By.id(idToFind)));
 
-        WebElement groupInput = find(By.id(idToFind));
-
-        if (isPublic)
-        {
-            // toggle checkbox
-            // read group field should clear automatically
-            click(permissionCheckbox);
-        }
-        else
-        {
-            final String currentPermission =
-                    permissionCheckbox.getAttribute("checked");
-            if (currentPermission != null)
-            {
-                // clear checkbox
-                // read group field should be enabled
-                click(permissionCheckbox);
-            }
-            sendKeys(groupInput, newGroup);
-        }
+        // Send group name
+        sendKeys(groupInput, newGroup);
 
         waitForAjaxFinished();
 
         clickButton(SAVE);
 
-        confirmJqiMsg(SUCCESSFUL);
+        String confirmationBoxMsg = SUCCESSFUL;
+        if (isModifyNode == false)
+        {
+            confirmationBoxMsg = MODIFIED;
+        }
+        confirmJqiMsg(confirmationBoxMsg);
 
         return new UserStorageBrowserPage(driver);
+
     }
 
     /**
@@ -445,7 +438,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         if (currentPermission != null)
         {
             // clear checkbox
-            // read group field should be enabled
             click(permissionCheckbox);
         }
 
@@ -473,9 +465,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 ExpectedConditions.elementToBeClickable(
                         By.id("publicPermission")));
 
+//        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
+//                .until(ExpectedConditions.elementToBeClickable(
+//                        By.id("publicPermission")));
+
         click(permissionCheckbox);
-        final String currentPermission =
-                permissionCheckbox.getAttribute("checked");
 
         waitForAjaxFinished();
 
@@ -626,8 +620,23 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return val;
     }
 
-    boolean isLoggedIn() throws Exception
+    // Permissions Data
+    public PermissionsFormData getValuesFromEditIcon() throws Exception
     {
+        WebElement editIcon = find(xpath("//span[contains(@class, 'glyphicon-pencil')]/a"));
+
+        PermissionsFormData formData = new PermissionsFormData
+                (
+                        editIcon.getAttribute("readGroup"),
+                        editIcon.getAttribute("writeGroup"),
+                        editIcon.getAttribute("publicPermissions")
+                );
+
+        return formData;
+    }
+
+    boolean isLoggedIn() {
+
         try
         {
             logoutButton.isDisplayed();
@@ -638,6 +647,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             return false;
         }
     }
+
 
     private boolean isDisabled(WebElement webEl)
     {
@@ -678,6 +688,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // navigation buttons are NOT displayed in root
         // folder. This will change as functionality is added
         // Currently the navbar only has one child, and it's ID is
+
+        waitForElementPresent(NAVBAR_ELEMENTS_BY);
 
         return getHeaderText().contains(ROOT_FOLDER_NAME)
                && navbarButtonList.findElements(
@@ -814,7 +826,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             isPermissionSetCorrect = true;
         }
 
-
         return isPermissionSetCorrect;
     }
 
@@ -835,7 +846,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         try
         {
             WebElement quota = find(xpath("//div[contains(@class, 'quota')]"));
-//            isDisplayed = !quota.getText().isEmpty();
             isDisplayed = StringUtil.hasText(quota.getText());
         }
         catch (Exception e)
@@ -872,4 +882,55 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 By.className("beacon-progress"), "class", "progress-bar-success"));
         waitForElementPresent(NAVBAR_ELEMENTS_BY);
     }
+
+
+    public void waitForPromptFinish()
+    {
+        // jqifade modal div will be up sometimes for longer than it takes
+        // for the scripts to click through. Wait for it to go away
+        WebDriverWait wait = new WebDriverWait(driver, 10);
+        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.className("jqifade")));
+    }
+
+
 }
+
+
+class PermissionsFormData {
+    private String readGroup;
+    private String writeGroup;
+    private String publicPermissions;
+
+    public PermissionsFormData(String readGroup, String writeGroup, String publicPerms)
+    {
+        this.readGroup = readGroup;
+        this.writeGroup = writeGroup;
+        this.publicPermissions = publicPerms;
+    }
+
+    public String getReadGroup() {
+        return readGroup;
+    }
+
+    public void setReadGroup(String readGroup) {
+        this.readGroup = readGroup;
+    }
+
+
+    public String getWriteGroup() {
+        return writeGroup;
+    }
+
+    public void setWriteGroup(String writeGroup) {
+        this.writeGroup = writeGroup;
+    }
+
+    public String getPublicPermissions() {
+        return publicPermissions;
+    }
+
+    public void setPublicPermissions(String publicPermissions) {
+        this.publicPermissions = publicPermissions;
+    }
+}
+

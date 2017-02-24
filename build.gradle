@@ -3,10 +3,13 @@ apply plugin: 'application'
 
 repositories {
     jcenter()
+
+    // Local repository for CADC private code
     maven {
         url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
     }
     mavenLocal()
+
 }
 
 dependencies {
@@ -20,6 +23,7 @@ dependencies {
 
     compile 'org.opencadc:cadc-web-util:1.+'
     compile 'org.opencadc:cadc-util:1.+'
+
     compile 'org.opencadc:cadc-registry:1.+'
     compile 'org.opencadc:cadc-vosi:1.+'
 
@@ -116,7 +120,6 @@ sourceSets {
         }
         else {
             systemProperty 'selenium.server.url', 'http://cadcint2.cadc.dao.nrc.ca:4444'
-            logger.info('Running browser tests on cadcint2')
         }
 
         if (project.hasProperty('intTest_web_app_url')) {

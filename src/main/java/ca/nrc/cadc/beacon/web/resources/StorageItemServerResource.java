@@ -78,10 +78,12 @@ import ca.nrc.cadc.net.InputStreamWrapper;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
+import ca.nrc.cadc.vos.client.ClientRecursiveSetNode;
 import ca.nrc.cadc.vos.client.VOSClientUtil;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.json.JSONObject;
 import org.restlet.Context;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.resource.Delete;
@@ -98,6 +100,7 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -443,6 +446,41 @@ public class StorageItemServerResource extends SecureServerResource
     /**
      * Perform the HTTPS command.
      *
+     * @param newNode The Node whose permissions are to be recursively set
+     */
+    private URL setNodeRecursiveSecure(final Node newNode) throws IOException
+    {
+        URL recursiveJobURL = null;
+        try
+        {
+            recursiveJobURL = Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<URL>()
+            {
+                @Override
+                public URL run() throws Exception
+                {
+                    ClientRecursiveSetNode rj = voSpaceClient.setNodeRecursive(newNode);
+                    // Fire & forget
+                    rj.setMonitor(false);
+                    rj.run();
+
+                    return rj.getJobURL();
+                }
+            });
+        }
+        catch (PrivilegedActionException pae)
+        {
+            throw new IOException(pae.getException());
+        }
+
+        return recursiveJobURL;
+    }
+
+
+
+
+    /**
+     * Perform the HTTPS command.
+     *
      * @param newNode The newly created Node.
      */
     private void setNodeSecure(final Node newNode) throws IOException
@@ -457,6 +495,7 @@ public class StorageItemServerResource extends SecureServerResource
             }
         });
     }
+
 
     void createLink(final URI target) throws IOException
     {
@@ -529,7 +568,6 @@ public class StorageItemServerResource extends SecureServerResource
 
     private void setNodeProperty(List<NodeProperty> nodeProperties, String propertyName, String propertyValue)
     {
-
         nodeProperties.remove(new NodeProperty(propertyName, ""));
 
         if (!StringUtil.hasLength(propertyValue))
@@ -540,10 +578,8 @@ public class StorageItemServerResource extends SecureServerResource
         }
         else
         {
-            nodeProperties.add(new NodeProperty(propertyName,
-                    IVO_GMS_PROPERTY_PREFIX + propertyValue));
+            nodeProperties.add(new NodeProperty(propertyName, propertyValue));
         }
-
     }
 
     @Post("json")
@@ -551,37 +587,99 @@ public class StorageItemServerResource extends SecureServerResource
     {
         final JSONObject jsonObject = payload.getJsonObject();
         ContainerNode currentNode = null;
+        Boolean dataChanged = false;
 
         // limit=0, detail=min so should only get the current node
         currentNode = getCurrentNode(VOS.Detail.properties);
         final List<NodeProperty> nodeProperties = currentNode.getProperties();
+        String parameterValue = "";
+        NodeProperty np = null;
 
-        nodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, ""));
-
-        String isPublic = "false";
 
         if (jsonObject.keySet().contains("publicPermission"))
         {
             if (jsonObject.get("publicPermission").equals("on"))
             {
-                isPublic = "true";
+                parameterValue = "true";
+            }
+            else
+            {
+                parameterValue = "false";
+            }
+
+            np = currentNode.findProperty(VOS.PROPERTY_URI_ISPUBLIC);
+            if (np != null && !np.getPropertyValue().equals(parameterValue)) {
+                // change value
+                dataChanged = true;
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_ISPUBLIC, parameterValue);
             }
         }
 
-        nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, isPublic));
 
         if (jsonObject.keySet().contains("readGroup"))
         {
-            String readGroup = jsonObject.get("readGroup").toString();
-            setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, readGroup);
+            if (StringUtil.hasLength((String) jsonObject.get("readGroup")))
+            {
+                parameterValue = IVO_GMS_PROPERTY_PREFIX + (String) jsonObject.get("readGroup");
+            }
+            else
+            {
+                parameterValue = "";
+            }
+
+            np = currentNode.findProperty(VOS.PROPERTY_URI_GROUPREAD);
+            if ((np != null && !np.getPropertyValue().equals(parameterValue)) ||
+                    (np == null && StringUtil.hasLength(parameterValue)) )
+            {
+                // change value
+                dataChanged = true;
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, parameterValue);
+            }
+
         }
 
         if (jsonObject.keySet().contains("writeGroup"))
         {
-            String writeGroup = jsonObject.get("writeGroup").toString();
-            setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE, writeGroup);
+            if (StringUtil.hasLength((String) jsonObject.get("writeGroup")))
+            {
+                parameterValue = IVO_GMS_PROPERTY_PREFIX + (String) jsonObject.get("writeGroup");
+            }
+            else
+            {
+                parameterValue = "";
+            }
+
+            np = currentNode.findProperty(VOS.PROPERTY_URI_GROUPWRITE);
+            if ((np != null && !np.getPropertyValue().equals(parameterValue)) ||
+                    (np == null && StringUtil.hasLength(parameterValue)) )
+            {
+                // change value
+                dataChanged = true;
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE, parameterValue);
+            }
         }
 
-        setNodeSecure(currentNode);
+
+        if (dataChanged == true) {
+            setNodeSecure(currentNode);
+            getResponse().setEntity("Node properties successfully modified.", MediaType.TEXT_PLAIN);
+        } else {
+            getResponse().setEntity("Node properties not modified.", MediaType.TEXT_PLAIN);
+        }
+
+
+//        // Recursively set permissions if requested
+//        if (jsonObject.keySet().contains("recursive"))
+//        {
+//            dataChanged = true;
+//            if (jsonObject.get("recursive").toString().equals("on"))
+//            {
+//                setNodeRecursiveSecure(currentNode);
+//            }
+//        }
+
+        getResponse().setStatus(Status.SUCCESS_OK);
+
+
     }
 }
