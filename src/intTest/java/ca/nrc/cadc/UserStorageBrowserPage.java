@@ -101,6 +101,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final By NAVBAR_ELEMENTS_BY =
             xpath("//*[@id=\"navbar-functions\"]/ul");
     private static final By NEW_FOLDER_BY = By.id("newfolder");
+    private static final By ROOT_BY = By.id("root");
 
     // Define in here what elements are mode indicators
 
@@ -200,7 +201,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         WebElement button = waitUntil(ExpectedConditions.elementToBeClickable(
                 xpath("//button[contains(@class, '" + className
-                + "') and contains(text(),'" + promptText + "')]")));
+                      + "') and contains(text(),'" + promptText + "')]")));
         click(button);
     }
 
@@ -210,7 +211,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         waitForStorageLoad();
     }
 
-    public UserStorageBrowserPage doLogin(String username, String password) throws Exception
+    public UserStorageBrowserPage doLogin(String username, String password) throws
+                                                                            Exception
     {
         sendKeys(loginUsername, username);
         sendKeys(loginPassword, password);
@@ -227,11 +229,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     // Folder Related Transition functions
     public UserStorageBrowserPage clickFolder(String folderName)
-        throws Exception
+            throws Exception
     {
         WebElement folder = waitUntil(ExpectedConditions.elementToBeClickable(
                 xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
-                + folderName + "')]]")));
+                      + folderName + "')]]")));
 
         System.out.println("Folder to be clicked: " + folder.getText());
         click(folder);
@@ -241,8 +243,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public void clickFolderForRow(int rowNum) throws Exception
     {
-        WebElement firstCheckbox = waitUntil(ExpectedConditions.elementToBeClickable(
-                xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a")));
+        WebElement firstCheckbox = waitUntil(ExpectedConditions
+                                                     .elementToBeClickable(
+                                                             xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a")));
         click(firstCheckbox);
     }
 
@@ -276,7 +279,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         waitUntil(ExpectedConditions.elementToBeClickable(
                 xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
-                + itemName + "')]]")));
+                      + itemName + "')]]")));
     }
 
     // CRUD for folders
@@ -298,13 +301,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 else
                 {
                     throw new RuntimeException("You are logged in, but " +
-                    "something else is keeping this functionality disabled.");
+                                               "something else is keeping this functionality disabled.");
                 }
             }
             catch (Exception e)
             {
                 throw new RuntimeException("Can't create new items.  That " +
-                "functionality is disabled.  Did you remember to login?");
+                                           "functionality is disabled.  Did you remember to login?");
             }
         }
         else
@@ -317,12 +320,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         click(NEW_FOLDER_BY);
         WebElement newfolderInput =
                 waitUntil(ExpectedConditions.elementToBeClickable(
-                                By.id("fname")));
+                        By.id("fname")));
 
         sendKeys(newfolderInput, foldername);
 
         WebElement createFolderButton =
-            find(xpath("//button[contains(text(),\"Create Folder\")]"));
+                find(xpath("//button[contains(text(),\"Create Folder\")]"));
         click(createFolderButton);
 
         try
@@ -377,14 +380,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
     protected UserStorageBrowserPage setGroup(final String idToFind,
-                                           final String newGroup,
-                                            final boolean isModifyNode)
+                                              final String newGroup,
+                                              final boolean isModifyNode)
             throws Exception
     {
         clickEditIconForFirstRow();
-        WebElement groupInput = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
-                        By.id(idToFind)));
+        final WebElement groupInput = find(By.id(idToFind));
+        waitForElementClickable(groupInput);
 
         // Send group name
         sendKeys(groupInput, newGroup);
@@ -393,11 +395,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
         clickButton(SAVE);
 
-        String confirmationBoxMsg = SUCCESSFUL;
-        if (isModifyNode == false)
-        {
-            confirmationBoxMsg = MODIFIED;
-        }
+        final String confirmationBoxMsg = isModifyNode ? MODIFIED : SUCCESSFUL;
+
         confirmJqiMsg(confirmationBoxMsg);
 
         return new UserStorageBrowserPage(driver);
@@ -465,10 +464,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 ExpectedConditions.elementToBeClickable(
                         By.id("publicPermission")));
 
-//        WebElement permissionCheckbox = (new WebDriverWait(driver, 10))
-//                .until(ExpectedConditions.elementToBeClickable(
-//                        By.id("publicPermission")));
-
         click(permissionCheckbox);
 
         waitForAjaxFinished();
@@ -520,8 +515,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Row Checkbox related
     public void clickCheckboxForRow(int rowNum) throws Exception
     {
-        WebElement firstCheckbox = waitUntil(ExpectedConditions.elementToBeClickable(
-                xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[1]")));
+        WebElement firstCheckbox = waitUntil(ExpectedConditions
+                                                     .elementToBeClickable(
+                                                             xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[1]")));
         click(firstCheckbox);
     }
 
@@ -539,10 +535,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Navigation functions
     public UserStorageBrowserPage navToRoot() throws Exception
     {
-        // opting for sendKeys because chromedriver
-        // doesn't work for click() function for some reason. :(
-//        rootButton.sendKeys(Keys.ENTER);
-        click(By.id("root"));
+        click(rootButton);
         return new UserStorageBrowserPage(driver);
     }
 
@@ -635,7 +628,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return formData;
     }
 
-    boolean isLoggedIn() {
+    boolean isLoggedIn()
+    {
 
         try
         {
@@ -759,10 +753,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         try
         {
-            WebElement jqiMsg = (new WebDriverWait(driver, 10))
-                    .until(ExpectedConditions.elementToBeClickable(
-                            xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
-                                  + message + "')]")));
+            waitForElementClickable(
+                    xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
+                          + message + "')]"));
             return true;
         }
         catch (Exception e)
@@ -778,20 +771,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         List<WebElement> rowList = beaconTable
                 .findElements(By.xpath("//*/tbody/tr"));
 
-        if (rowList.size() > 0)
-        {
-            // Value is different if the entire table is empty, as compared to a list shorted to a particular value
-            if (rowList.get(0).findElement(By.xpath("//*/td"))
-                    .getAttribute("class").equals("dataTables_empty"))
-            {
-                return true;
-            }
-            return false;
-        }
-        else
-        {
-            return true;
-        }
+        return rowList.isEmpty() || rowList.get(0)
+                .findElement(By.xpath("//*/td"))
+                .getAttribute("class").equals("dataTables_empty");
     }
 
 
@@ -833,7 +815,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public boolean isGroupError(String idToFind) throws Exception
     {
         WebElement readGroupDiv =
-                waitUntil(ExpectedConditions.elementToBeClickable(By.id(idToFind)));
+                waitUntil(ExpectedConditions
+                                  .elementToBeClickable(By.id(idToFind)));
 
         return readGroupDiv.getAttribute("class").contains("has-error");
     }
@@ -884,19 +867,17 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
-    public void waitForPromptFinish()
+    public void waitForPromptFinish() throws Exception
     {
         // jqifade modal div will be up sometimes for longer than it takes
         // for the scripts to click through. Wait for it to go away
-        WebDriverWait wait = new WebDriverWait(driver, 10);
-        wait.until(ExpectedConditions.invisibilityOfElementLocated(By.className("jqifade")));
+        waitForElementInvisible(By.className("jqifade"));
     }
-
-
 }
 
 
-class PermissionsFormData {
+final class PermissionsFormData
+{
     private String readGroup;
     private String writeGroup;
     private String publicPermissions;
@@ -908,29 +889,34 @@ class PermissionsFormData {
         this.publicPermissions = publicPerms;
     }
 
-    public String getReadGroup() {
+    public String getReadGroup()
+    {
         return readGroup;
     }
 
-    public void setReadGroup(String readGroup) {
+    public void setReadGroup(String readGroup)
+    {
         this.readGroup = readGroup;
     }
 
 
-    public String getWriteGroup() {
+    public String getWriteGroup()
+    {
         return writeGroup;
     }
 
-    public void setWriteGroup(String writeGroup) {
+    public void setWriteGroup(String writeGroup)
+    {
         this.writeGroup = writeGroup;
     }
 
-    public String getPublicPermissions() {
+    public String getPublicPermissions()
+    {
         return publicPermissions;
     }
 
-    public void setPublicPermissions(String publicPermissions) {
+    public void setPublicPermissions(String publicPermissions)
+    {
         this.publicPermissions = publicPermissions;
     }
 }
-
