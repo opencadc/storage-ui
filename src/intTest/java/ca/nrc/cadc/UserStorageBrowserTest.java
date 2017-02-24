@@ -236,7 +236,6 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 		}
 		userStoragePage = userStoragePage.setGroup(userStoragePage.WRITE_GROUP_INPUT, "", isModifyNode);
 		verifyTrue(userStoragePage.isPermissionDataForRow(1, "", readGroupName, false));
-		git stat
 		userStoragePage = userStoragePage.setGroup(userStoragePage.WRITE_GROUP_INPUT, writeGroupName, true);
 		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
