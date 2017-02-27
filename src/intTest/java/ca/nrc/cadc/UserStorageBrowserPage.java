@@ -88,6 +88,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String ROOT_FOLDER_NAME = "ROOT";
 
     // Strings for matching against prompt messages and buttons
+    private static final String MOVE_CONFIRMATION_TEXT = "Are you sure you wish to move the selected items?";
     private static final String DELETE_CONFIRMATION_TEXT = "Are you sure you wish to delete the selected items?";
     private static final String SUCCESSFUL = "successful";
     private static final String ALREADY_EXISTS = "already exists";
@@ -152,6 +153,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     @FindBy(id = "download")
     private WebElement downloadButton;
+
+    @FindBy(id = "move")
+    private WebElement moveButton;
 
     @FindBy(id = "delete")
     private WebElement deleteButton;
@@ -334,6 +338,35 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         catch (Exception e)
         {
             throw new Exception("Could not create folder " + foldername);
+        }
+    }
+
+    // TODO: verify logic of this moveFolder method
+    public void moveFolder(String foldername) throws Exception
+    {
+        if (!isDisabled(moveButton))
+        {
+            moveButton.click();
+        }
+
+        // locate folder, select checkbox, select move button
+        if (isJqiMsgShowing(MOVE_CONFIRMATION_TEXT))
+        {
+            clickButtonWithClass(YES, "btn-danger");
+        }
+        else
+        {
+            throw new Exception("Could not move folder " + foldername);
+        }
+
+        // confirm folder delete
+        if (isJqiColourMsgShowing(SUCCESSFUL))
+        {
+            clickButton(CLOSE);
+        }
+        else
+        {
+            throw new Exception("Folder move not successful: " + foldername);
         }
     }
 
@@ -675,8 +708,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                                          navbarElements.size()));
 
         return getHeaderText().contains(folderName) &&
-               (navbarElements.size() == 6) &&
+               (navbarElements.size() == 7) &&
                leveUpButton.isDisplayed() &&
+               moveButton.isDisplayed() &&
                deleteButton.isDisplayed() &&
                rootButton.isDisplayed() &&
                newdropdownButton.isDisplayed() &&
@@ -713,14 +747,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // Behaviour is different if person is logged in or not
         if (isLoggedIn())
         {
-            if (!(isDisabled(deleteButton) && isDisabled(downloadButton)))
+            if (!(isDisabled(moveButton) && isDisabled(deleteButton) && isDisabled(downloadButton)))
             {
                 return true;
             }
         }
         else
         {   // There will need to be a check for publicly available for download or not?
-            if (isDisabled(deleteButton) && !isDisabled(downloadButton))
+            if (isDisabled(moveButton) && isDisabled(deleteButton) && !isDisabled(downloadButton))
             {
                 return true;
             }
