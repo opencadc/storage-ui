@@ -77,6 +77,10 @@
 <#if !isRoot>
                 <#-- Disabled by default -->
                 <li class="disabled multi-select-function-container-writable">
+                  <a disabled="disabled" class="disabled multi-select-function-writable" id="move" name="move" role="button" title="Move selected items">
+                    <span class="glyphicon glyphicon-move"></span>&nbsp;Move</a></li>
+                <#-- Disabled by default -->
+                <li class="disabled multi-select-function-container-writable">
                   <a disabled="disabled" class="disabled multi-select-function-writable" id="delete" name="delete" role="button" title="Delete selected items">
                     <span class="glyphicon glyphicon-trash"></span>&nbsp;Delete</a></li>
 </#if>
