@@ -1586,59 +1586,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       }
     }); // end prompt declaration
 
-  // });
-
-      // $.prompt(msg, {
-      //   title: '<h3 class="prompt-h3">' + iconAnchor.getAttribute("itemName") + '</h3>',
-      //   html: msg,
-      //   buttons: btns,
-      //   classes: {
-      //     form:'form-horizontal',
-      //     box: '',
-      //     fade: '',
-      //     prompt: '',
-      //     close: '',
-      //     title: 'lead',
-      //     message: '',
-      //     buttons: '',
-      //     button: 'btn',
-      //     defaultButton: 'btn-primary'
-      //   },
-      //   submit: handleEditPermissions,
-      //   loaded: function ()
-      //   {
-      //     // Get the group names list for populating the dropdown first
-      //     $.ajax(
-      //         {
-      //           type: 'GET',
-      //           url: contextPath + "groups",
-      //           success: function (returnValue)
-      //           {
-      //             handleLoadAutocomplete(returnValue);
-      //           },
-      //           error: function (errorValue)
-      //           {
-      //             $.prompt(lg.ERROR_GROUPNAMES);
-      //           }
-      //         }
-      //     );
-      //
-      //     // Set initial form state
-      //     $("#readGroup").val(iconAnchor.getAttribute("readGroup"));
-      //     $("#writeGroup").val(iconAnchor.getAttribute("writeGroup"));
-      //     // $(".listener-hook").addClass("disabled");
-      //     // $(".listener-hook").attr("disabled", "disabled");
-      //     $.prompt.disableStateButtons("state0", "b1");
-      //
-      //     $(".action-hook").on('click', function(event)
-      //     {
-      //       // $(".listener-hook").removeClass("disabled");
-      //       // $(".listener-hook").removeAttribute("disabled");
-      //       $.prompt.enableStateButtons("state0", "b1");
-      //     });
-      //
-      //   }
-      // });
   });
 
 
