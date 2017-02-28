@@ -73,7 +73,6 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
 
 import ca.nrc.cadc.util.StringUtil;
@@ -233,8 +232,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             throws Exception
     {
         WebElement folder = waitUntil(ExpectedConditions.elementToBeClickable(
-                xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
-                      + folderName + "')]]")));
+                xpath("//*/td/a[contains(text(),'" + folderName + "')]")));
 
         System.out.println("Folder to be clicked: " + folder.getText());
         click(folder);
@@ -279,8 +277,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     protected void confirmSubItem(final String itemName) throws Exception
     {
         waitUntil(ExpectedConditions.elementToBeClickable(
-                xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
-                      + itemName + "')]]")));
+                xpath("//*/a[[contains(text(),'" + itemName + "')]]")));
     }
 
     // CRUD for folders
@@ -373,10 +370,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Permissions functions
     public void clickEditIconForFirstRow() throws Exception
     {
-
-        WebElement editIcon = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
-                        xpath("//span[contains(@class, 'glyphicon-pencil')]")));
+        WebElement editIcon = waitUntil(ExpectedConditions.elementToBeClickable(
+                xpath("//span[contains(@class, 'glyphicon-pencil')]")));
         editIcon.click();
     }
 
@@ -386,13 +381,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             throws Exception
     {
         clickEditIconForFirstRow();
-//        final WebElement groupInput = find(By.id(idToFind));
-//        waitForElementClickable(groupInput);
-        // until I have a copy of the library that contains this function, I can't use it!
-        // removing my cached web-util copy and letting gradle re-load doesn't bring it up...
-        WebElement groupInput = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
-                        By.id(idToFind)));
+        final WebElement groupInput = find(By.id(idToFind));
+        waitForElementClickable(groupInput);
 
         // Click on it to enable the save button
         click(groupInput);
@@ -790,14 +780,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         try
         {
-
-            WebElement groupInput = (new WebDriverWait(driver, 10))
-                    .until(ExpectedConditions.elementToBeClickable(
-                            xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
-                                    + message + "')]")));
-//            waitForElementClickable(
-//                    xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
-//                          + message + "')]"));
+            waitForElementClickable(
+                    xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
+                          + message + "')]"));
             return true;
         }
         catch (Exception e)
