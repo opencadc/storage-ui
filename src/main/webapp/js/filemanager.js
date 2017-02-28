@@ -1557,7 +1557,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         defaultButton: 'btn-primary'
       },
       loaded: function (event) {
-        event.preventDefault();
         // Get the group names list for populating the dropdown first
         $.ajax(
             {
@@ -1575,12 +1574,12 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         // Set initial form state
         $("#readGroup").val(iconAnchor.getAttribute("readGroup"));
         $("#writeGroup").val(iconAnchor.getAttribute("writeGroup"));
-        $(".listener-hook").addClass("disabled");
+        var listenerHook = $(".listener-hook");
+        listenerHook.addClass("disabled");
 
         $(".action-hook").on('click', function (event) {
-          $(".listener-hook").removeClass("disabled");
-          $(".listener-hook").removeAttribute("disabled");
-          $.prompt.enableStateButtons("state0");
+          listenerHook.removeClass("disabled");
+          listenerHook.removeAttribute("disabled");
         });
 
       }
