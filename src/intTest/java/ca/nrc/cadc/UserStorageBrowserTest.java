@@ -203,7 +203,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         String readGroupName = "cadcsw";
         String writeGroupName = "cadc-dev";
-//        String invalidGroupName = "invalid-group";
+        String invalidGroupName = "invalid-group";
 
         // Don't change anything, verify that the correct message is displayed
         userStoragePage.clickEditIconForFirstRow();
@@ -251,6 +251,39 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
                 .setGroup(UserStorageBrowserPage.WRITE_GROUP_INPUT, writeGroupName, true);
         verifyTrue(userStoragePage
                            .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+
+        // Test response to invalid autocomplete selection
+        userStoragePage.clickEditIconForFirstRow();
+        // last parameter says 'don't confirm anything'
+        userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, invalidGroupName, false);
+        verifyTrue(userStoragePage.isGroupError(UserStorageBrowserPage.READ_GROUP_DIV));
+
+        readGroupName = "CHIMPS";
+        // Enter correct one in order to close the prompt
+        userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, readGroupName, true);
+        verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+
+        // Test response to invalid autocomplete selection
+        userStoragePage.clickEditIconForFirstRow();
+        // second parameter says 'don't confirm anything'
+        userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT, invalidGroupName, false);
+        verifyTrue(userStoragePage.isGroupError(UserStorageBrowserPage.WRITE_GROUP_DIV));
+
+        // Enter correct one in order to close the prompt
+        writeGroupName = "CHIMPS";
+        userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT, writeGroupName, true);
+        verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+
+        // Toggle public permissions to set them
+        // Group name displayed in table should read "Public"
+        userStoragePage = userStoragePage.togglePublicAttributeForRow();
+
+        verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, "Public", true));
+        System.out.println("Set read group to public");
+
+        // Toggle public permission to unset
+        userStoragePage = userStoragePage.togglePublicAttributeForRow();
+        verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
         userStoragePage.enterSearch(tempTestFolder);
         userStoragePage = userStoragePage.clickFolder(tempTestFolder);
