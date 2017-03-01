@@ -354,9 +354,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Permissions functions
     public void clickEditIconForFirstRow() throws Exception
     {
-        WebElement editIcon = waitUntil(ExpectedConditions.elementToBeClickable(
-                xpath("//span[contains(@class, 'glyphicon-pencil')]")));
-        editIcon.click();
+        final By firstRowBy =
+                xpath("//span[contains(@class, 'glyphicon-pencil')]");
+        waitForElementClickable(firstRowBy);
+        WebElement editIcon = find(firstRowBy);
+        click(editIcon);
     }
 
     protected UserStorageBrowserPage setGroup(final String idToFind,
@@ -403,9 +405,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                                                   final boolean confirm)
             throws Exception
     {
-        final WebElement permissionCheckbox = waitUntil(
-            ExpectedConditions.elementToBeClickable(
-                    By.id("publicPermission")));
+        final By publicPermissionBy = By.id("publicPermission");
+        waitForElementClickable(publicPermissionBy);
+        final WebElement permissionCheckbox = find(publicPermissionBy);
         final WebElement groupInput = find(By.id(idToFind));
         final String currentPermission =
                 permissionCheckbox.getAttribute("checked");
@@ -741,7 +743,18 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         final By messageBy = By.className("jqimessage");
 
         waitForElementPresent(messageBy);
-        waitForTextPresent(messageBy, message);
+
+        try
+        {
+            waitForTextPresent(messageBy, message);
+        }
+        catch (Exception e)
+        {
+            System.err.println("Waited for " + message
+                               + " in jqimessage, but saw "
+                               + find(messageBy).getText());
+            throw e;
+        }
     }
 
     public void confirmJQIColourMessage(String message) throws Exception
