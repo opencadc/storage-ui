@@ -814,9 +814,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public boolean isGroupError(String idToFind) throws Exception
     {
-        WebElement readGroupDiv =
-                waitUntil(ExpectedConditions
-                                  .elementToBeClickable(By.id(idToFind)));
+        final By toFind = By.id(idToFind);
+        waitForElementClickable(toFind);
+
+        final WebElement readGroupDiv = find(toFind);
 
         return readGroupDiv.getAttribute("class").contains("has-error");
     }
@@ -843,14 +844,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public boolean isPromptOpen()
     {
         WebElement quota = find(xpath("//div[@class='jqistate']"));
-        if (quota != null)
-        {
-            return true;
-        }
-        else
-        {
-            return false;
-        }
+        return quota != null;
     }
 
     // --------- Page state wait methods
