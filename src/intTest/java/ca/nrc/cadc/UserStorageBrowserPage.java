@@ -92,7 +92,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String SUBMITTED = "submitted";
     public static final String MODIFIED = "modified";
     public static final String NOT_MODIFIED = "not modified";
-    private static final String CONFIRMATION_MSG = "New folder added successfully.";
+    private static final String CONFIRMATION_MSG = "New folder added successfully";
     private static final String OK = "Ok";
     private static final String YES = "Yes";
     private static final String CLOSE = "Close";
@@ -328,7 +328,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 find(xpath("//button[contains(text(),\"Create Folder\")]"));
         click(createFolderButton);
 
-        confirmJqiMsg(CONFIRMATION_MSG);
+        confirmJqiMsg("success");
         return new UserStorageBrowserPage(driver);
     }
 
