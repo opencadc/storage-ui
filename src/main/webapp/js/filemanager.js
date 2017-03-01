@@ -1577,9 +1577,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         var listenerHook = $(".listener-hook");
         listenerHook.addClass("disabled");
 
-        $(".action-hook").on('click', function (event) {
+        $(".action-hook").on('click', function (event)
+        {
           listenerHook.removeClass("disabled");
-          listenerHook.removeAttribute("disabled");
         });
 
       }
