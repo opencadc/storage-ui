@@ -742,7 +742,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         final By messageBy = By.className("jqimessage");
 
-        waitForElementPresent(messageBy);
+        waitForElementVisible(messageBy);
 
         try
         {
@@ -750,9 +750,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
         catch (Exception e)
         {
-            System.err.println("Waited for " + message
-                               + " in jqimessage, but saw "
-                               + find(messageBy).getText());
+            System.err.println("Waited for \"" + message
+                               + "\" in jqimessage, but saw "
+                               + "\"" + find(messageBy).getText() + "\"");
             throw e;
         }
     }
