@@ -318,9 +318,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
         waitForElementVisible(NEW_FOLDER_BY);
         click(NEW_FOLDER_BY);
-        WebElement newfolderInput =
-                waitUntil(ExpectedConditions.elementToBeClickable(
-                        By.id("fname")));
+        waitForElementClickable(By.id("fname"));
+        WebElement newfolderInput = find(By.id("fname"));
 
         sendKeys(newfolderInput, foldername);
 
@@ -328,19 +327,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
                 find(xpath("//button[contains(text(),\"Create Folder\")]"));
         click(createFolderButton);
 
-        try
-        {
-            confirmJqiMsg(CONFIRMATION_MSG);
-
-            return new UserStorageBrowserPage(driver);
-        }
-        catch (Exception e)
-        {
-            throw new Exception("Could not create folder " + foldername);
-        }
+        confirmJqiMsg(CONFIRMATION_MSG);
+        return new UserStorageBrowserPage(driver);
     }
 
-    public void deleteFolder() throws Exception
+    public UserStorageBrowserPage deleteFolder() throws Exception
     {
         if (!isDisabled(deleteButton))
         {
@@ -354,6 +345,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // confirm folder delete
         confirmJQIColourMessage(SUCCESSFUL);
         clickButton(CLOSE);
+
+        return new UserStorageBrowserPage(driver);
     }
 
 

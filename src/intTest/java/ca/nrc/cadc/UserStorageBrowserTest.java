@@ -150,7 +150,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         userStoragePage = userStoragePage.navToRoot();
         verifyTrue(userStoragePage.isRootFolder());
         //  click through to CADCtest folder
-        userStoragePage.clickFolder(testFolderName);
+        userStoragePage = userStoragePage.clickFolder(testFolderName);
         // Verify sub folder page state
         verifyTrue(userStoragePage.isSubFolder(testFolderName));
 
@@ -165,7 +165,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         // Recreate it.
         if (userStoragePage.isTableEmpty())
         {
-            userStoragePage.createNewFolder(autoTestFolder);
+            userStoragePage = userStoragePage.createNewFolder(autoTestFolder);
             userStoragePage.enterSearch(autoTestFolder);
         }
 
@@ -174,7 +174,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         userStoragePage.clickFolder(autoTestFolder);
 
         // Create a context group, and work writing stuff in there.
-        userStoragePage.createNewFolder(workingDirectoryName);
+        userStoragePage = userStoragePage.createNewFolder(workingDirectoryName);
         userStoragePage.enterSearch(workingDirectoryName);
         userStoragePage = userStoragePage.clickFolder(workingDirectoryName);
 
@@ -303,7 +303,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         // Delete folder just created
         userStoragePage.clickCheckboxForRow(1);
-        userStoragePage.deleteFolder();
+        userStoragePage = userStoragePage.deleteFolder();
 
         // verify the folder is no longer there
         userStoragePage.enterSearch(tempTestFolder);
@@ -313,15 +313,13 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         userStoragePage = userStoragePage.navUpLevel();
         userStoragePage.enterSearch(workingDirectoryName);
         userStoragePage.clickCheckboxForRow(1);
-        userStoragePage.deleteFolder();
+        userStoragePage = userStoragePage.deleteFolder();
 
         // Scenario 5: logout
         System.out.println("Test logout");
-        userStoragePage.doLogout();
+        userStoragePage = userStoragePage.doLogout();
         verifyFalse(userStoragePage.isLoggedIn());
 
         System.out.println("UserStorageBrowserTest completed");
-
-
     }
 }
