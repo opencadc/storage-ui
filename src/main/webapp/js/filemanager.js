@@ -1318,14 +1318,18 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       return true;
     }
 
-    var checkboxState = "";
-    var readGroupBoxDisabled = "false";
+    if (formValues["recursive"] === "on")
+    {
+      return true;
+    }
+
     if ((clickedEditIcon.getAttribute("readable") === "true" && formValues["publicPermission"] === "on") ||
     (clickedEditIcon.getAttribute("readable") === "false") && (typeof(formValues["publicPermission"]) === "undefined"))
     {
       return false;
     }
-    else {
+    else
+    {
       return true;
     }
 
@@ -1341,17 +1345,24 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
     if (value === true)
     {
+      // Form has not been modified, leave it open
+      if ($(".listener-hook").hasClass("disabled"))
+      {
+        return false;
+      }
+
       if (isPermissionChanged(formVals) === true)
       {
         var readGroupValid = false;
         var writeGroupValid = false;
+
+        // validate that form has changed or not. If not, don't submit.
 
         if ((typeof(formVals["readGroup"]) === "undefined") ||
             (formVals["readGroup"] === "") ||
             ($.inArray(formVals["readGroup"], autoCompleteList) >= 0)) {
           readGroupValid = true;
         }
-
 
         if ((typeof(formVals["writeGroup"]) === "undefined") ||
             (formVals["writeGroup"] === "") ||
@@ -1379,23 +1390,19 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                 contentType: "application/json",
                 data: dataStr,
                 statusCode: {
-                  200: function (payload) {
-                    if (payload.match("successfully modified") != null)
+                  202: function ()
                     {
+                      $.prompt(lg.permissions_recursive_submitted,
+                      {
+                        submit: refreshPage
+                      });
+                    },
+                  204: function ()
+                  {
                       $.prompt(lg.permissions_modified,
-                          {
-                            submit: refreshPage
-                          });
-                    }
-                    else if (payload.match("not modified") != null)
-                    {
-                      $.prompt(lg.permissions_not_modified);
-                    }
-                    else
-                    {
-                      $.prompt(lg.server_error);
-                    }
-
+                      {
+                        submit: refreshPage
+                      });
                   },
                   400: function () {
                     $.prompt(lg.NOT_ALLOWED_SYSTEM);
@@ -1408,18 +1415,24 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                   },
                   409: function () {
                     $.prompt(lg.NOT_ALLOWED_SYSTEM.replace(/%s/g, fname));
+                  },
+                  500: function () {
+                    $.prompt(lg.server_error);
                   }
                 }
               });
+
         }
         else
         {
           // Mark fields that are in error, stay on form
           event.preventDefault();
-          if (readGroupValid === false) {
+          if (readGroupValid === false)
+          {
             togglePromptError("#readGroupDiv", "#readGroupLabel", lg.READ_GROUP, "on");
           }
-          if (writeGroupValid === false) {
+          if (writeGroupValid === false)
+          {
             togglePromptError("#writeGroupDiv", "#writeGroupLabel", lg.WRITE_GROUP, "on");
           }
 
@@ -1471,27 +1484,27 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       '<div class="form-group fm-prompt">' +
         '<label for="publicPermission" class="control-label col-sm-4">' + lg.public_question + '</label>' +
         '<div class="col-sm-7">' +
-          '<input style="margin: 9px 0 0;" type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>' +
+          '<input style="margin: 9px 0 0;" class="action-hook" type="checkbox" id="publicPermission" name="publicPermission" ' + checkboxState + '>' +
         '</div>' +
       '</div>' +
       '<div class="form-group ui-front fm-prompt" id="readGroupDiv"> ' +
         '<label for="readGroup" id="readGroupLabel" class="control-label col-sm-4">' + lg.READ_GROUP + '</label>' +
         '<div id="readGroupInputDiv" class="col-sm-7"> ' +
-          '<input type="text" class="form-control  ui-autocomplete-input" id="readGroup" name="readGroup" placeholder="' + lg.group_name_program_id + '">' +
+          '<input type="text" class="form-control  ui-autocomplete-input action-hook" id="readGroup" name="readGroup" placeholder="' + lg.group_name_program_id + '">' +
         '</div>' +
       '</div>' +
       '<div class="form-group ui0front fm-prompt" id="writeGroupDiv">' +
         '<label for="writeGroup" id="writeGroupLabel" class="control-label col-sm-4">' + lg.WRITE_GROUP + '</label>' +
         '<div class="col-sm-7">' +
-          '<input type="text" class="form-control" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
+          '<input type="text" class="form-control action-hook" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
         '</div>' +
       '</div>' +
-      // '<div class="form-group fm-prompt">' +
-      //   '<label for="recursive" class="control-label col-sm-4">' + lg.recursive + '</label>' +
-      //   '<div class="col-sm-7">' +
-      //     '<input style="margin: 9px 0 0;" type="checkbox" id="recursive" name="recursive">' +
-      //   '</div>' +
-      // '</div>' +
+      '<div class="form-group fm-prompt">' +
+        '<label for="recursive" class="control-label col-sm-4"">' + lg.recursive + '</label>' +
+        '<div class="col-sm-7">' +
+          '<input style="margin: 9px 0 0;" class="action-hook" type="checkbox" id="recursive" name="recursive">' +
+        '</div>' +
+      '</div>' +
       '<div class="form-group fm-prompt">' +
         '<div class="col-sm-4" >' +
         '</div>' +
@@ -1505,12 +1518,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       var btns = [];
       btns.push
       ({
+        "name": "b1",
         "title": lg.save,
         "value": true,
-        "classes": "btn btn-primary"
+        "classes": "btn btn-primary listener-hook"
       });
       btns.push
       ({
+        "name": "b2",
         "title": lg.cancel,
         "value": false,
         "classes": "btn btn-default"
@@ -1518,47 +1533,58 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
       // 'classes' entry below is to enable bootstrap to
       // handle styling, including form-horizontal
-      $.prompt(msg, {
+
+    var states = {
+      state0: {
         title: '<h3 class="prompt-h3">' + iconAnchor.getAttribute("itemName") + '</h3>',
         html: msg,
         buttons: btns,
-        classes: {
-          form:'form-horizontal',
-          box: '',
-          fade: '',
-          prompt: '',
-          close: '',
-          title: 'lead',
-          message: '',
-          buttons: '',
-          button: 'btn',
-          defaultButton: 'btn-primary'
-        },
-        submit: handleEditPermissions,
-        loaded: function ()
-        {
-          // Get the group names list for populating the dropdown first
-          $.ajax(
-              {
-                type: 'GET',
-                url: contextPath + "groups",
-                success: function (returnValue)
-                {
-                  handleLoadAutocomplete(returnValue);
-                },
-                error: function (errorValue)
-                {
-                  $.prompt(lg.ERROR_GROUPNAMES);
-                }
+        submit: handleEditPermissions
+      }
+    };
+
+    $.prompt( states, {
+      classes: {
+        form: 'form-horizontal',
+        box: '',
+        fade: '',
+        prompt: '',
+        close: '',
+        title: 'lead',
+        message: '',
+        buttons: '',
+        button: 'btn',
+        defaultButton: 'btn-primary'
+      },
+      loaded: function (event) {
+        // Get the group names list for populating the dropdown first
+        $.ajax(
+            {
+              type: 'GET',
+              url: contextPath + "groups",
+              success: function (returnValue) {
+                handleLoadAutocomplete(returnValue);
+              },
+              error: function (errorValue) {
+                $.prompt(lg.ERROR_GROUPNAMES);
               }
-          );
+            }
+        );
 
-          // Set initial form state
-          $("#readGroup").val(iconAnchor.getAttribute("readGroup"));
-          $("#writeGroup").val(iconAnchor.getAttribute("writeGroup"));
+        // Set initial form state
+        $("#readGroup").val(iconAnchor.getAttribute("readGroup"));
+        $("#writeGroup").val(iconAnchor.getAttribute("writeGroup"));
+        var listenerHook = $(".listener-hook");
+        listenerHook.addClass("disabled");
 
-        }
-      });
+        $(".action-hook").on('click', function (event)
+        {
+          listenerHook.removeClass("disabled");
+        });
+
+      }
+    }); // end prompt declaration
+
   });
 
 

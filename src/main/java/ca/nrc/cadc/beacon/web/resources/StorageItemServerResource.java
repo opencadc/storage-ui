@@ -77,6 +77,7 @@ import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.net.InputStreamWrapper;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.uws.ExecutionPhase;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.ClientRecursiveSetNode;
 import ca.nrc.cadc.vos.client.VOSClientUtil;
@@ -444,26 +445,29 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     /**
-     * Perform the HTTPS command.
+     * Perform the HTTPS command to recursively set permissions for a node.
+     * Returns when job is complete, OR a maximum of (15) seconds has elapsed.
+     * If timeout has been reached, job will continue to run until is cancelled.
      *
      * @param newNode The Node whose permissions are to be recursively set
      */
-    private URL setNodeRecursiveSecure(final Node newNode) throws IOException
+    private ClientRecursiveSetNode setNodeRecursiveSecure(final Node newNode) throws IOException
     {
-        URL recursiveJobURL = null;
+        ClientRecursiveSetNode recursiveSetNodeJob = null;
+
         try
         {
-            recursiveJobURL = Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<URL>()
+            recursiveSetNodeJob = Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientRecursiveSetNode>()
             {
                 @Override
-                public URL run() throws Exception
+                public ClientRecursiveSetNode run() throws Exception
                 {
-                    ClientRecursiveSetNode rj = voSpaceClient.setNodeRecursive(newNode);
-                    // Fire & forget
+                    final ClientRecursiveSetNode rj = voSpaceClient.setNodeRecursive(newNode);
+                    // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
                     rj.setMonitor(false);
                     rj.run();
 
-                    return rj.getJobURL();
+                    return rj;
                 }
             });
         }
@@ -472,7 +476,7 @@ public class StorageItemServerResource extends SecureServerResource
             throw new IOException(pae.getException());
         }
 
-        return recursiveJobURL;
+        return recursiveSetNodeJob;
     }
 
 
@@ -587,7 +591,6 @@ public class StorageItemServerResource extends SecureServerResource
     {
         final JSONObject jsonObject = payload.getJsonObject();
         ContainerNode currentNode = null;
-        Boolean dataChanged = false;
 
         // limit=0, detail=min so should only get the current node
         currentNode = getCurrentNode(VOS.Detail.properties);
@@ -609,8 +612,6 @@ public class StorageItemServerResource extends SecureServerResource
 
             np = currentNode.findProperty(VOS.PROPERTY_URI_ISPUBLIC);
             if (np != null && !np.getPropertyValue().equals(parameterValue)) {
-                // change value
-                dataChanged = true;
                 setNodeProperty(nodeProperties, VOS.PROPERTY_URI_ISPUBLIC, parameterValue);
             }
         }
@@ -631,8 +632,6 @@ public class StorageItemServerResource extends SecureServerResource
             if ((np != null && !np.getPropertyValue().equals(parameterValue)) ||
                     (np == null && StringUtil.hasLength(parameterValue)) )
             {
-                // change value
-                dataChanged = true;
                 setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, parameterValue);
             }
 
@@ -653,33 +652,25 @@ public class StorageItemServerResource extends SecureServerResource
             if ((np != null && !np.getPropertyValue().equals(parameterValue)) ||
                     (np == null && StringUtil.hasLength(parameterValue)) )
             {
-                // change value
-                dataChanged = true;
                 setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE, parameterValue);
             }
         }
 
-
-        if (dataChanged == true) {
-            setNodeSecure(currentNode);
-            getResponse().setEntity("Node properties successfully modified.", MediaType.TEXT_PLAIN);
-        } else {
-            getResponse().setEntity("Node properties not modified.", MediaType.TEXT_PLAIN);
+        // Recursively set permissions if requested
+        if (jsonObject.keySet().contains("recursive"))
+        {
+            if (jsonObject.get("recursive").toString().equals("on"))
+            {
+                ClientRecursiveSetNode setRecursiveJob = setNodeRecursiveSecure(currentNode);
+                getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+            }
         }
-
-
-//        // Recursively set permissions if requested
-//        if (jsonObject.keySet().contains("recursive"))
-//        {
-//            dataChanged = true;
-//            if (jsonObject.get("recursive").toString().equals("on"))
-//            {
-//                setNodeRecursiveSecure(currentNode);
-//            }
-//        }
-
-        getResponse().setStatus(Status.SUCCESS_OK);
-
+        else
+        {
+            // Update the node properties
+            setNodeSecure(currentNode);
+            getResponse().setStatus(Status.SUCCESS_OK);
+        }
 
     }
 }

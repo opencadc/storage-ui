@@ -73,7 +73,6 @@ import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
 
 import ca.nrc.cadc.util.StringUtil;
@@ -90,7 +89,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Strings for matching against prompt messages and buttons
     private static final String DELETE_CONFIRMATION_TEXT = "Are you sure you wish to delete the selected items?";
     private static final String SUCCESSFUL = "successful";
-    private static final String ALREADY_EXISTS = "already exists";
+    private static final String SUBMITTED = "submitted";
     public static final String MODIFIED = "modified";
     public static final String NOT_MODIFIED = "not modified";
     private static final String CONFIRMATION_MSG = "New folder added successfully";
@@ -98,6 +97,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String YES = "Yes";
     private static final String CLOSE = "Close";
     public static final String SAVE = "Save";
+    public static final String CANCEL = "Cancel";
     private static final By NAVBAR_ELEMENTS_BY =
             xpath("//*[@id=\"navbar-functions\"]/ul");
     private static final By NEW_FOLDER_BY = By.id("newfolder");
@@ -231,10 +231,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public UserStorageBrowserPage clickFolder(String folderName)
             throws Exception
     {
-        WebElement folder = waitUntil(ExpectedConditions.elementToBeClickable(
-                xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
-                      + folderName + "')]]")));
+        final By folderBy =
+                xpath("//*/td/a[contains(text(),'" + folderName + "')]");
+        waitForElementClickable(folderBy);
 
+        final WebElement folder = find(folderBy);
         System.out.println("Folder to be clicked: " + folder.getText());
         click(folder);
 
@@ -243,10 +244,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public void clickFolderForRow(int rowNum) throws Exception
     {
-        WebElement firstCheckbox = waitUntil(ExpectedConditions
-                                                     .elementToBeClickable(
-                                                             xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a")));
-        click(firstCheckbox);
+        final By rowBy =
+                xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a");
+        waitForElementClickable(rowBy);
+        click(rowBy);
     }
 
 
@@ -278,8 +279,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     protected void confirmSubItem(final String itemName) throws Exception
     {
         waitUntil(ExpectedConditions.elementToBeClickable(
-                xpath("//*[@id=\"beacon\"]/tbody/tr/td/a[text()[contains(.,'"
-                      + itemName + "')]]")));
+                xpath("//*/a[[contains(text(),'" + itemName + "')]]")));
     }
 
     // CRUD for folders
@@ -335,7 +335,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     {
         if (!isDisabled(deleteButton))
         {
-            deleteButton.click();
+            click(deleteButton);
         }
 
         // locate folder, select checkbox, select delete button
@@ -353,10 +353,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Permissions functions
     public void clickEditIconForFirstRow() throws Exception
     {
-
-        WebElement editIcon = (new WebDriverWait(driver, 10))
-                .until(ExpectedConditions.elementToBeClickable(
-                        xpath("//span[contains(@class, 'glyphicon-pencil')]")));
+        WebElement editIcon = waitUntil(ExpectedConditions.elementToBeClickable(
+                xpath("//span[contains(@class, 'glyphicon-pencil')]")));
         editIcon.click();
     }
 
@@ -369,6 +367,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         final WebElement groupInput = find(By.id(idToFind));
         waitForElementClickable(groupInput);
 
+        // Click on it to enable the save button
+        click(groupInput);
         // Send group name
         sendKeys(groupInput, newGroup);
 
@@ -376,7 +376,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
         clickButton(SAVE);
 
-        final String confirmationBoxMsg = isModifyNode ? MODIFIED : SUCCESSFUL;
+        final String confirmationBoxMsg = isModifyNode ? MODIFIED : NOT_MODIFIED;
 
         confirmJqiMsg(confirmationBoxMsg);
 
@@ -403,8 +403,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             throws Exception
     {
         final WebElement permissionCheckbox = waitUntil(
-                ExpectedConditions.elementToBeClickable(
-                        By.id("publicPermission")));
+            ExpectedConditions.elementToBeClickable(
+                    By.id("publicPermission")));
         final WebElement groupInput = find(By.id(idToFind));
         final String currentPermission =
                 permissionCheckbox.getAttribute("checked");
@@ -415,6 +415,9 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             click(permissionCheckbox);
         }
 
+        // click on the box first - if a blank is sent in the test
+        // could be that the save button is not activated otherwise
+        click(groupInput);
         sendKeys(groupInput, newGroup);
 
         clickButton(SAVE);
@@ -424,7 +427,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // show up if an invalid group has been sent in.
         if (confirm)
         {
-            confirmJqiMsg(SUCCESSFUL);
+            confirmJqiMsg(MODIFIED);
         }
 
         return new UserStorageBrowserPage(driver);
@@ -450,6 +453,32 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return new UserStorageBrowserPage(driver);
     }
 
+
+    protected UserStorageBrowserPage applyRecursivePermissions(final String idToFind,
+                                                  final String newGroup)
+            throws Exception {
+
+        clickEditIconForFirstRow();
+        final WebElement recursiveCheckbox = waitUntil(
+                ExpectedConditions.elementToBeClickable(
+                        By.id("recursive")));
+        final WebElement groupInput = find(By.id(idToFind));
+
+        click(recursiveCheckbox);
+
+        // click on the box first - if a blank is sent in the test
+        // could be that the save button is not activated otherwise
+        click(groupInput);
+        sendKeys(groupInput, newGroup);
+
+        waitForAjaxFinished();
+
+        clickButton(SAVE);
+
+        confirmJqiMsg(SUBMITTED);
+
+        return new UserStorageBrowserPage(driver);
+    }
 
     /**
      * Gets row number for next row that has an edit icon after the row passed in.
@@ -796,6 +825,20 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
 
         return isDisplayed;
+    }
+
+
+    public boolean isPromptOpen()
+    {
+        WebElement quota = find(xpath("//div[@class='jqistate']"));
+        if (quota != null)
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
     }
 
     // --------- Page state wait methods

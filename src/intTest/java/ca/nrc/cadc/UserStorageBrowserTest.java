@@ -173,7 +173,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         String parentReadGroup = userStoragePage.getValueForRowCol(1, 6);
         userStoragePage.clickFolder(autoTestFolder);
 
-        // Create a context group, and work writing stuff in there.
+        // Create a context group, and run tests in there
         userStoragePage = userStoragePage.createNewFolder(workingDirectoryName);
         userStoragePage.enterSearch(workingDirectoryName);
         userStoragePage = userStoragePage.clickFolder(workingDirectoryName);
@@ -184,142 +184,145 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
                                 + generateAlphaNumeric(8);
         userStoragePage = userStoragePage.createNewFolder(tempTestFolder);
 
-        boolean isPublic = false;
-        if (parentReadGroup.equals("Public"))
-        {
-            isPublic = true;
-        }
+		final boolean isPublic = parentReadGroup.equals("Public");
 
-        // Test that permissions are same as the parent to start
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, parentWriteGroup, parentReadGroup, isPublic));
+		// Test that permissions are same as the parent to start
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, parentReadGroup, isPublic));
 
-        // Edit permissions on the form
-        String currentReadGroup =
-                userStoragePage.getValueForRowCol(1, 6);
+		String currentReadGroup = userStoragePage.getValueForRowCol(1,6);
 
-        // Clearly only works for English test suite. :/
-        // Toggle the Public attribute to get the underlying read group (if any)
-        if (currentReadGroup.equals("Public"))
-        {
-            userStoragePage = userStoragePage.togglePublicAttributeForRow();
-            userStoragePage.getValueForRowCol(1, 6);
-        }
+		// Clearly only works for English test suite. :/
+		// Toggle the Public attribute to get the underlying read group (if any)
+		if (currentReadGroup.equals("Public")) {
+			userStoragePage = userStoragePage.togglePublicAttributeForRow();
+			userStoragePage.getValueForRowCol(1, 6);
+		}
 
-        String readGroupName = "cadcsw";
-        String writeGroupName = "cadc-dev";
-        String invalidGroupName = "invalid-group";
+		String readGroupName = "cadcsw";
+		String writeGroupName = "cadc-dev";
+		String invalidGroupName = "invalid-group";
 
-        // Don't change anything, verify that the correct message is displayed
-        userStoragePage.clickEditIconForFirstRow();
-        userStoragePage.clickButton(UserStorageBrowserPage.SAVE);
-        userStoragePage.confirmJQIMessage(UserStorageBrowserPage.NOT_MODIFIED);
-        userStoragePage.confirmJqiMsg(UserStorageBrowserPage.NOT_MODIFIED);
-        userStoragePage.waitForPromptFinish();
+		// Don't change anything, verify that save button disabled
+		userStoragePage.clickEditIconForFirstRow();
+		userStoragePage.clickButton(UserStorageBrowserPage.SAVE);
+
+        verifyTrue(userStoragePage.isPromptOpen());
+
+        // Cancel the form to be ready for the next test
+        userStoragePage.clickButton(UserStorageBrowserPage.CANCEL);
 
 
-        PermissionsFormData formData = userStoragePage.getValuesFromEditIcon();
-        Boolean isModifyNode = true;
-        // Set read group to blank (owner access only)
-        // Depending on whether the permissions on automated_test parent folder have been changed,
-        // the readGroup may not be set initially.
-        // Read group may be displayed as 'public', where the read group itself may not be that.
-        // The element grabbd here is not visible, but is a reflection of the input to the
-        // permissions editing form - attached to the edit icon (the glyphicon-pencil)
-        if (formData.getReadGroup().equals(""))
-        {
-            isModifyNode = false;
-        }
-        userStoragePage = userStoragePage
-                .setGroup(UserStorageBrowserPage.READ_GROUP_INPUT, "", isModifyNode);
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, parentWriteGroup, "", false));
-        userStoragePage.waitForPromptFinish();
+		PermissionsFormData formData = userStoragePage.getValuesFromEditIcon();
+		Boolean isModifyNode = true;
+		// Set read group to blank (owner access only)
+		// Depending on whether the permissions on automated_test parent folder have been changed,
+		// the readGroup may not be set initially.
+		// Read group may be displayed as 'public', where the read group itself may not be that.
+		// The element grabbd here is not visible, but is a reflection of the input to the
+		// permissions editing form - attached to the edit icon (the glyphicon-pencil)
+		if (formData.getReadGroup().equals(""))
+		{
+			isModifyNode = false;
+		}
+		userStoragePage = userStoragePage.setGroup(UserStorageBrowserPage.READ_GROUP_INPUT, "", isModifyNode);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, "", false));
+		userStoragePage.waitForPromptFinish();
 
-        isModifyNode = true;
-        // Set read group to selected group
-        userStoragePage = userStoragePage
-                .setGroup(UserStorageBrowserPage.READ_GROUP_INPUT, readGroupName, true);
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, parentWriteGroup, readGroupName, false));
+		isModifyNode = true;
+		// Set read group to selected group
+		userStoragePage = userStoragePage.setGroup(UserStorageBrowserPage.READ_GROUP_INPUT, readGroupName, true);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, readGroupName, false));
 
-        // Set write group to blank
-        if (formData.getWriteGroup().equals(""))
-        {
-            isModifyNode = false;
-        }
-        userStoragePage = userStoragePage
-                .setGroup(UserStorageBrowserPage.WRITE_GROUP_INPUT, "", isModifyNode);
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, "", readGroupName, false));
-        userStoragePage = userStoragePage
-                .setGroup(UserStorageBrowserPage.WRITE_GROUP_INPUT, writeGroupName, true);
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+		// Set write group to blank
+		if (formData.getWriteGroup().equals(""))
+		{
+			isModifyNode = false;
+		}
+		userStoragePage = userStoragePage.setGroup(UserStorageBrowserPage.WRITE_GROUP_INPUT, "", isModifyNode);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, "", readGroupName, false));
 
-        // Test response to invalid autocomplete selection
-        userStoragePage.clickEditIconForFirstRow();
-        // last parameter says 'don't confirm anything'
-        userStoragePage = userStoragePage
-                .setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, invalidGroupName, false);
-        verifyTrue(userStoragePage
-                           .isGroupError(UserStorageBrowserPage.READ_GROUP_DIV));
+		userStoragePage = userStoragePage.setGroup(UserStorageBrowserPage.WRITE_GROUP_INPUT, writeGroupName, true);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
-        readGroupName = "CHIMPS";
-        // Enter correct one in order to close the prompt
-        userStoragePage = userStoragePage
-                .setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, readGroupName, true);
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+		// Test response to invalid autocomplete selection
+		userStoragePage.clickEditIconForFirstRow();
+		// last parameter says 'don't confirm anything'
+		userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, invalidGroupName, false);
+		verifyTrue(userStoragePage.isGroupError(UserStorageBrowserPage.READ_GROUP_DIV));
 
-        // Test response to invalid autocomplete selection
-        userStoragePage.clickEditIconForFirstRow();
-        // second parameter says 'don't confirm anything'
-        userStoragePage = userStoragePage
-                .setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT, invalidGroupName, false);
-        verifyTrue(userStoragePage
-                           .isGroupError(UserStorageBrowserPage.WRITE_GROUP_DIV));
+		readGroupName = "CHIMPS";
+		// Enter correct one in order to close the prompt
+		userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, readGroupName, true);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
-        // Enter correct one in order to close the prompt
-        writeGroupName = "CHIMPS";
-        userStoragePage = userStoragePage
-                .setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT, writeGroupName, true);
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+		// Test response to invalid autocomplete selection
+		userStoragePage.clickEditIconForFirstRow();
+		// second parameter says 'don't confirm anything'
+		userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT, invalidGroupName, false);
+		verifyTrue(userStoragePage.isGroupError(UserStorageBrowserPage.WRITE_GROUP_DIV));
 
-        // Toggle public permissions to set them
-        // Group name displayed in table should read "Public"
-        userStoragePage = userStoragePage.togglePublicAttributeForRow();
+		// Enter correct one in order to close the prompt
+		writeGroupName = "CHIMPS";
+		userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT, writeGroupName, true);
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, writeGroupName, "Public", true));
-        System.out.println("Set read group to public");
+		// Toggle public permissions to set them
+		// Group name displayed in table should read "Public"
+		userStoragePage = userStoragePage.togglePublicAttributeForRow();
 
-        // Toggle public permission to unset
-        userStoragePage = userStoragePage.togglePublicAttributeForRow();
-        verifyTrue(userStoragePage
-                           .isPermissionDataForRow(1, writeGroupName, readGroupName, false));
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, "Public", true));
+		System.out.println("Set read group to public");
+
+		// Toggle public permission to unset
+		userStoragePage = userStoragePage.togglePublicAttributeForRow();
+		verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
 
-        // Delete folder just created
-        userStoragePage.clickCheckboxForRow(1);
-        userStoragePage = userStoragePage.deleteFolder();
+        // Test Recursive permissions flag
 
-        // verify the folder is no longer there
         userStoragePage.enterSearch(tempTestFolder);
-        verifyTrue(userStoragePage.isTableEmpty());
+        userStoragePage = userStoragePage.clickFolder(tempTestFolder);
 
-        // Nav up one level & delete working folder as well
+        String recursiveTestFolder = "recursive_tobedeleted"; // + generateAlphaNumeric(8);
+        userStoragePage = userStoragePage.createNewFolder(recursiveTestFolder);
+
         userStoragePage = userStoragePage.navUpLevel();
-        userStoragePage.enterSearch(workingDirectoryName);
+
+        userStoragePage.applyRecursivePermissions(UserStorageBrowserPage.WRITE_GROUP_INPUT, "cadcsw");
+        verifyTrue(userStoragePage.isPermissionDataForRow(1, "cadcsw", readGroupName, false));
+
+        userStoragePage = userStoragePage.clickFolder(tempTestFolder);
+        verifyTrue(userStoragePage.isPermissionDataForRow(1, "cadcsw", readGroupName, false));
+
+
+        // Test Delete and clean up
+		// Delete folder just created
+
+        userStoragePage.enterSearch(recursiveTestFolder);
         userStoragePage.clickCheckboxForRow(1);
         userStoragePage = userStoragePage.deleteFolder();
+        userStoragePage = userStoragePage.navUpLevel();
 
-        // Scenario 5: logout
-        System.out.println("Test logout");
+        userStoragePage.enterSearch(tempTestFolder);
+        userStoragePage.clickCheckboxForRow(1);
+
+        userStoragePage = userStoragePage.deleteFolder();
+
+		// verify the folder is no longer there
+		userStoragePage.enterSearch(tempTestFolder);
+		verifyTrue(userStoragePage.isTableEmpty());
+
+		// Nav up one level & delete working folder as well
+		userStoragePage = userStoragePage.navUpLevel();
+		userStoragePage.enterSearch(workingDirectoryName);
+		userStoragePage.clickCheckboxForRow(1);
+        userStoragePage = userStoragePage.deleteFolder();
+
+		// Scenario 5: logout
+		System.out.println("Test logout");
         userStoragePage = userStoragePage.doLogout();
-        verifyFalse(userStoragePage.isLoggedIn());
-
-        System.out.println("UserStorageBrowserTest completed");
+		verifyFalse(userStoragePage.isLoggedIn());
+   
+    	System.out.println("UserStorageBrowserTest completed");
     }
 }
