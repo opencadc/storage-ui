@@ -77,11 +77,14 @@ import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.net.InputStreamWrapper;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.uws.ExecutionPhase;
 import ca.nrc.cadc.vos.*;
+import ca.nrc.cadc.vos.client.ClientRecursiveSetNode;
 import ca.nrc.cadc.vos.client.VOSClientUtil;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.json.JSONObject;
 import org.restlet.Context;
+import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.resource.Delete;
@@ -98,6 +101,7 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -441,6 +445,44 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     /**
+     * Perform the HTTPS command to recursively set permissions for a node.
+     * Returns when job is complete, OR a maximum of (15) seconds has elapsed.
+     * If timeout has been reached, job will continue to run until is cancelled.
+     *
+     * @param newNode The Node whose permissions are to be recursively set
+     */
+    private ClientRecursiveSetNode setNodeRecursiveSecure(final Node newNode) throws IOException
+    {
+        ClientRecursiveSetNode recursiveSetNodeJob = null;
+
+        try
+        {
+            recursiveSetNodeJob = Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientRecursiveSetNode>()
+            {
+                @Override
+                public ClientRecursiveSetNode run() throws Exception
+                {
+                    final ClientRecursiveSetNode rj = voSpaceClient.setNodeRecursive(newNode);
+                    // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
+                    rj.setMonitor(false);
+                    rj.run();
+
+                    return rj;
+                }
+            });
+        }
+        catch (PrivilegedActionException pae)
+        {
+            throw new IOException(pae.getException());
+        }
+
+        return recursiveSetNodeJob;
+    }
+
+
+
+
+    /**
      * Perform the HTTPS command.
      *
      * @param newNode The newly created Node.
@@ -457,6 +499,7 @@ public class StorageItemServerResource extends SecureServerResource
             }
         });
     }
+
 
     void createLink(final URI target) throws IOException
     {
@@ -528,7 +571,6 @@ public class StorageItemServerResource extends SecureServerResource
 
     private void setNodeProperty(List<NodeProperty> nodeProperties, String propertyName, String propertyValue)
     {
-
         nodeProperties.remove(new NodeProperty(propertyName, ""));
 
         if (!StringUtil.hasLength(propertyValue))
@@ -539,10 +581,8 @@ public class StorageItemServerResource extends SecureServerResource
         }
         else
         {
-            nodeProperties.add(new NodeProperty(propertyName,
-                    IVO_GMS_PROPERTY_PREFIX + propertyValue));
+            nodeProperties.add(new NodeProperty(propertyName, propertyValue));
         }
-
     }
 
     @Post("json")
@@ -554,33 +594,82 @@ public class StorageItemServerResource extends SecureServerResource
         // limit=0, detail=min so should only get the current node
         currentNode = getCurrentNode(VOS.Detail.properties);
         final List<NodeProperty> nodeProperties = currentNode.getProperties();
+        String parameterValue = "";
+        NodeProperty np = null;
 
-        nodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, ""));
-
-        String isPublic = "false";
 
         if (jsonObject.keySet().contains("publicPermission"))
         {
             if (jsonObject.get("publicPermission").equals("on"))
             {
-                isPublic = "true";
+                parameterValue = "true";
+            }
+            else
+            {
+                parameterValue = "false";
+            }
+
+            np = currentNode.findProperty(VOS.PROPERTY_URI_ISPUBLIC);
+            if (np != null && !np.getPropertyValue().equals(parameterValue)) {
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_ISPUBLIC, parameterValue);
             }
         }
 
-        nodeProperties.add(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, isPublic));
 
         if (jsonObject.keySet().contains("readGroup"))
         {
-            String readGroup = jsonObject.get("readGroup").toString();
-            setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, readGroup);
+            if (StringUtil.hasLength((String) jsonObject.get("readGroup")))
+            {
+                parameterValue = IVO_GMS_PROPERTY_PREFIX + (String) jsonObject.get("readGroup");
+            }
+            else
+            {
+                parameterValue = "";
+            }
+
+            np = currentNode.findProperty(VOS.PROPERTY_URI_GROUPREAD);
+            if ((np != null && !np.getPropertyValue().equals(parameterValue)) ||
+                    (np == null && StringUtil.hasLength(parameterValue)) )
+            {
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, parameterValue);
+            }
+
         }
 
         if (jsonObject.keySet().contains("writeGroup"))
         {
-            String writeGroup = jsonObject.get("writeGroup").toString();
-            setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE, writeGroup);
+            if (StringUtil.hasLength((String) jsonObject.get("writeGroup")))
+            {
+                parameterValue = IVO_GMS_PROPERTY_PREFIX + (String) jsonObject.get("writeGroup");
+            }
+            else
+            {
+                parameterValue = "";
+            }
+
+            np = currentNode.findProperty(VOS.PROPERTY_URI_GROUPWRITE);
+            if ((np != null && !np.getPropertyValue().equals(parameterValue)) ||
+                    (np == null && StringUtil.hasLength(parameterValue)) )
+            {
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE, parameterValue);
+            }
         }
 
-        setNodeSecure(currentNode);
+        // Recursively set permissions if requested
+        if (jsonObject.keySet().contains("recursive"))
+        {
+            if (jsonObject.get("recursive").toString().equals("on"))
+            {
+                ClientRecursiveSetNode setRecursiveJob = setNodeRecursiveSecure(currentNode);
+                getResponse().setStatus(Status.SUCCESS_ACCEPTED);
+            }
+        }
+        else
+        {
+            // Update the node properties
+            setNodeSecure(currentNode);
+            getResponse().setStatus(Status.SUCCESS_OK);
+        }
+
     }
 }
