@@ -312,7 +312,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
         else
         {
-            System.out.println("Everything is kosher > > "
+            System.out.println("Everything is kosher > "
                                + newdropdownButton.getAttribute("class"));
         }
 
@@ -340,7 +340,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
     }
 
-    public void deleteFolder(String foldername) throws Exception
+    public void deleteFolder() throws Exception
     {
         if (!isDisabled(deleteButton))
         {
@@ -348,24 +348,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
 
         // locate folder, select checkbox, select delete button
-        if (isJqiMsgShowing(DELETE_CONFIRMATION_TEXT))
-        {
-            clickButtonWithClass(YES, "btn-danger");
-        }
-        else
-        {
-            throw new Exception("Could not delete folder " + foldername);
-        }
+        confirmJQIMessage(DELETE_CONFIRMATION_TEXT);
+        clickButtonWithClass(YES, "btn-danger");
 
         // confirm folder delete
-        if (isJqiColourMsgShowing(SUCCESSFUL))
-        {
-            clickButton(CLOSE);
-        }
-        else
-        {
-            throw new Exception("Folder delete not successful: " + foldername);
-        }
+        confirmJQIColourMessage(SUCCESSFUL);
+        clickButton(CLOSE);
     }
 
 
@@ -412,14 +400,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
      */
     public void confirmJqiMsg(String messageType) throws Exception
     {
-        if (isJqiMsgShowing(messageType))
-        {
-            clickButton(OK);
-        }
-        else
-        {
-            throw new Exception("Could not confirm JqiMsg");
-        }
+        confirmJQIMessage(messageType);
+        clickButton(OK);
     }
 
     protected UserStorageBrowserPage setGroupOnly(final String idToFind,
@@ -734,34 +716,18 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
 
     // Impromptu convenience functions
-    public boolean isJqiMsgShowing(String message)
+    public void confirmJQIMessage(String message) throws Exception
     {
-        try
-        {
-            waitUntil(ExpectedConditions.elementToBeClickable(
-                    xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
-                          + message + "\")]")));
-            return true;
-        }
-        catch (Exception e)
-        {
-            return false;
-        }
+        waitForElementClickable(
+                xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
+                                      + message + "\")]"));
     }
 
-    public boolean isJqiColourMsgShowing(String message)
+    public void confirmJQIColourMessage(String message) throws Exception
     {
-        try
-        {
-            waitForElementClickable(
-                    xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
-                          + message + "')]"));
-            return true;
-        }
-        catch (Exception e)
-        {
-            return false;
-        }
+        waitForElementClickable(
+                xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
+                      + message + "')]"));
     }
 
 

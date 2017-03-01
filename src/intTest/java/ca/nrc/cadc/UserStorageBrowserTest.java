@@ -213,8 +213,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         // Don't change anything, verify that the correct message is displayed
         userStoragePage.clickEditIconForFirstRow();
         userStoragePage.clickButton(UserStorageBrowserPage.SAVE);
-        verifyTrue(userStoragePage.isJqiMsgShowing(
-                UserStorageBrowserPage.NOT_MODIFIED));
+        userStoragePage.confirmJQIMessage(UserStorageBrowserPage.NOT_MODIFIED);
         userStoragePage.confirmJqiMsg(UserStorageBrowserPage.NOT_MODIFIED);
         userStoragePage.waitForPromptFinish();
 
@@ -304,7 +303,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         // Delete folder just created
         userStoragePage.clickCheckboxForRow(1);
-        userStoragePage.deleteFolder(tempTestFolder);
+        userStoragePage.deleteFolder();
 
         // verify the folder is no longer there
         userStoragePage.enterSearch(tempTestFolder);
@@ -314,7 +313,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         userStoragePage = userStoragePage.navUpLevel();
         userStoragePage.enterSearch(workingDirectoryName);
         userStoragePage.clickCheckboxForRow(1);
-        userStoragePage.deleteFolder(workingDirectoryName);
+        userStoragePage.deleteFolder();
 
         // Scenario 5: logout
         System.out.println("Test logout");
