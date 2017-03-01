@@ -92,7 +92,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String SUBMITTED = "submitted";
     public static final String MODIFIED = "modified";
     public static final String NOT_MODIFIED = "not modified";
-    private static final String CONFIRMATION_MSG = "New folder added successfully";
+    private static final String CONFIRMATION_MSG = "New folder added successfully.";
     private static final String OK = "Ok";
     private static final String YES = "Yes";
     private static final String CLOSE = "Close";
@@ -191,9 +191,10 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     // Transition functions
     public void clickButton(String promptText) throws Exception
     {
-        WebElement button = waitUntil(ExpectedConditions.elementToBeClickable(
-                xpath("//button[contains(text(),\"" + promptText + "\")]")));
-        click(button);
+        final By buttonBy =
+                xpath("//button[contains(text(),\"" + promptText + "\")]");
+        waitForElementClickable(buttonBy);
+        click(buttonBy);
     }
 
     public void clickButtonWithClass(String promptText, String className) throws
@@ -339,7 +340,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         }
 
         // locate folder, select checkbox, select delete button
-        confirmJQIMessage(DELETE_CONFIRMATION_TEXT);
+        confirmJQIMessageText(DELETE_CONFIRMATION_TEXT);
         clickButtonWithClass(YES, "btn-danger");
 
         // confirm folder delete
@@ -388,12 +389,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
      * Convenience function to click through most of the impromptu .prompt
      * confirmation patterns.
      *
-     * @param messageType
+     * @param message
      * @throws Exception
      */
-    public void confirmJqiMsg(String messageType) throws Exception
+    public void confirmJqiMsg(String message) throws Exception
     {
-        confirmJQIMessage(messageType);
+        confirmJQIMessageText(message);
         clickButton(OK);
     }
 
@@ -669,9 +670,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         final List<WebElement> navbarElements = navbarButtonList
                 .findElements(By.xpath("*"));
 
-        System.out.println(String.format("Navbar has %d elements.",
-                                         navbarElements.size()));
-
         return getHeaderText().contains(folderName) &&
                (navbarElements.size() == 6) &&
                leveUpButton.isDisplayed() &&
@@ -738,16 +736,17 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
 
     // Impromptu convenience functions
-    public void confirmJQIMessage(String message) throws Exception
+    public void confirmJQIMessageText(String message) throws Exception
     {
-        waitForElementClickable(
-                xpath("//div[contains(@class, \"jqimessage\") and contains(text(), \""
-                                      + message + "\")]"));
+        final By messageBy = By.className("jqimessage");
+
+        waitForElementPresent(messageBy);
+        waitForTextPresent(messageBy, message);
     }
 
     public void confirmJQIColourMessage(String message) throws Exception
     {
-        waitForElementClickable(
+        waitForElementPresent(
                 xpath("//div[contains(@class, 'jqimessage')]/span[contains(text(), '"
                       + message + "')]"));
     }
