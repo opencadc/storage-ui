@@ -88,7 +88,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var publicHTML = "<div class=\"input-group-addon\">\n"
                    + "<input id=\"public_toggle\" type=\"checkbox\" checked=\"checked\" data-toggle=\"toggle\" data-size=\"small\" data-on=\"Public\" data-off=\"Group name\" />\n"
                    + "</div>";
-  var publicLink = '<span title="Change group read access.">{1}</span>';
+  var publicLink =
+    "<a href=\"#\" class=\"public_link\" title=\"Change group read access.\">{1}</a>";
 
   // Used for controlling button bar function
   var multiSelectSelector = ".multi-select-function-container";
@@ -140,17 +141,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
            + "<'row'<'col-sm-12'tr>>",
       loading: true,
       processing: true,
-      responsive: false,
       deferRender: true,
-      scrollY: "50vh",
-      autoWidth: true,
+      scrollY: "74vh",
       lengthChange: false,
       scrollCollapse: true,
       scroller: true,
       columnDefs: [
         {
           "targets": 0,
-          "width": "3%",
           "orderable": false,
           "className": 'select-checkbox',
           "searchable": false,
@@ -184,16 +182,12 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           }
         },
         {
-          // Name
           "targets": 1,
-          "width": "47%",
           "render": function (data, type, full)
           {
             if (full.length > 10)
             {
               var itemNameDisplay =
-                '<div class="truncate" title="' + data + '">';
-              itemNameDisplay +=
                 '<span class="glyphicon ' + full[8] + '"></span>&nbsp;&nbsp;';
 
               if (full[12] === "true")
@@ -221,8 +215,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                 itemNameDisplay += editIcon;
               }
 
-              itemNameDisplay += "</div>";
-
               return itemNameDisplay;
             }
             else
@@ -232,49 +224,34 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           }
         },
         {
-          // Size
           "targets": 2,
           "type": "file-size",
-          "searchable": false,
-          "width": "8%"
+          "searchable": false
         },
         {
-          // Last modified date
-          "targets": 3,
-          "searchable": false,
-          "width": "18%"
-        },
-        {
-          // Read/Write group.
-          "targets": 4,
-          "searchable": false,
-          "width": "12%",
-          "render": function (data, type, full)
-          {
-            return "<div class=\"truncate\" title=\"" + data + "\">" + data + "</div>";
-          }
-        },
-        {
-          // Read group.
           "targets": 5,
           "searchable": false,
-          "width": "12%",
           "render": function (data, type, full)
           {
-            var renderedValue = "<div class=\"truncate\" title=\"" + data + "\">";
+            var renderedValue;
 
             if (full.length > 9)
             {
               // Column [6] is the public flag.
-              renderedValue = (full[6] === "true") ? lg.public : data;
+              renderedValue = (full[6] === "true")
+                ? lg.public : data;
             }
             else
             {
-              renderedValue += data;
+              renderedValue = data;
             }
 
-            return renderedValue + "</span>";
+            return renderedValue;
           }
+        },
+        {
+          "targets": [3, 4],
+          "searchable": false
         }
       ],
       select: selectInput,
@@ -564,7 +541,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 // Called on initial page load and on resize.
   var setDimensions = function ()
   {
-    var bheight = 85,
+    var bheight = 53,
       $uploader = $('#uploader');
 
     if ($.urlParam('CKEditorCleanUpFuncNum'))
@@ -618,7 +595,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $loginFailContainer.text("");
   };
 
-  $loginForm.find("input.form-control").off().change(function ()
+  $loginForm.find("input.form-control").off().change(function (e)
                                                      {
                                                        resetLoginFormErrors();
                                                      });

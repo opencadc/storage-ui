@@ -23,18 +23,6 @@
   }
 }
 
-@media only screen and (max-height: 1001px) {
-  div.dataTables_scrollBody {
-    max-height: 50vh !important;
-  }
-}
-
-@media only screen and (min-height: 1001px) {
-  div.dataTables_scrollBody {
-    max-height: 72vh !important;
-  }
-}
-
 @media only screen and (max-width: 767px) {
   body {
     padding-top: 85px;
@@ -43,7 +31,6 @@
 
 /* Sidebar navigation */
 .nav-sidebar {
-  /* 20px padding + 1px border */
   margin: 85px -21px 20px -20px;
 }
 
@@ -60,25 +47,6 @@
 
 .navbar-default .navbar-collapse, .navbar-default .navbar-form {
   cursor: auto;
-}
-
-.truncate {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/*
-  Necessary to have DataTables adjust the width!
-  jenkinsd 2016.12.16
-*/
-table.dataTable {
-  margin: 0 auto;
-  width: 100%;
-  clear: both;
-  border-collapse: collapse;
-  table-layout: fixed;
-  word-wrap: break-word;
 }
 
 /*
@@ -110,14 +78,12 @@ div.progress {
   border-radius: 0;
 }
 
-div.quota
-{
+div.quota {
   padding-left: 20px;
   font-style: italic;
 }
 
-div.beacon-progress
-{
+div.beacon-progress {
   padding-top: 0;
   width: 100%;
 }
@@ -133,7 +99,7 @@ div.beacon-progress.active {
   jenkinsd 2016.08.10
 */
 div.beacon-info-row {
-  height: 55px;
+  height: 85px;
 }
 
 /*
@@ -251,11 +217,22 @@ div.dataTables_wrapper div.dataTables_info {
 
 /* CSS for prompts */
 
-
 .prompt-h3 {
   margin-top: 0;
   border-bottom: 1px solid #ccc;
   font-size: 20px;
+}
+
+.fm-prompt {
+  width: 650px;
+}
+
+.prompt-link {
+  margin-top: 10px;
+}
+
+div.jqimessage div.col-sm-4 a {
+  float: right;
 }
 
 .early-access {
@@ -264,17 +241,4 @@ div.dataTables_wrapper div.dataTables_info {
   position: absolute;
   left: 340px;
   top: 40px;
-}
-
-.fm-prompt {
-  width: 650px;
-}
-
-.prompt-link {
-  margin-top:10px;
-}
-
-
-div.jqimessage div.col-sm-4  a {
-  float:right;
 }
