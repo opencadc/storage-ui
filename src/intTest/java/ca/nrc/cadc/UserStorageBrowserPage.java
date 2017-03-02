@@ -101,7 +101,16 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final By NAVBAR_ELEMENTS_BY =
             xpath("//*[@id=\"navbar-functions\"]/ul");
     private static final By NEW_FOLDER_BY = By.id("newfolder");
-    private static final By ROOT_BY = By.id("root");
+    private static final By ACCESS_ACTIONS_DROPDOWN_BY =
+            By.cssSelector("a.access-actions");
+    private static final By LOGIN_DROPDOWN_BY =
+            By.cssSelector("a.login-form");
+    private static final By USER_ACTIONS_LINK_BY =
+            By.cssSelector("a.user-actions");
+    private static final By LOGOUT_LINK_BY = By.id("logout");
+    private static final By USERNAME_INPUT_BY = By.id("username");
+    private static final By PASSWORD_INPUT_BY = By.id("password");
+    private static final By LOGIN_SUBMIT_BUTTON_BY = By.id("submitLogin");
 
     // Define in here what elements are mode indicators
 
@@ -161,18 +170,18 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private WebElement moredetailsButton;
 
 
-    // Login Form elements
-    @FindBy(id = "username")
-    private WebElement loginUsername;
-
-    @FindBy(id = "password")
-    private WebElement loginPassword;
-
-    @FindBy(id = "submitLogin")
-    private WebElement submitLoginButton;
-
-    @FindBy(id = "logout")
-    private WebElement logoutButton;
+    // Login/User elements
+//    @FindBy(id = "username")
+//    private WebElement loginUsername;
+//
+//    @FindBy(id = "password")
+//    private WebElement loginPassword;
+//
+//    @FindBy(id = "submitLogin")
+//    private WebElement submitLoginButton;
+//
+//    @FindBy(id = "logout")
+//    private WebElement logoutButton;
 
     private WebDriver driver = null;
 
@@ -200,10 +209,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public void clickButtonWithClass(String promptText, String className) throws
                                                                           Exception
     {
-        WebElement button = waitUntil(ExpectedConditions.elementToBeClickable(
+        final By buttonWithClassBy =
                 xpath("//button[contains(@class, '" + className
-                      + "') and contains(text(),'" + promptText + "')]")));
-        click(button);
+                      + "') and contains(text(),'" + promptText + "')]");
+        waitForElementClickable(buttonWithClassBy);
+        click(buttonWithClassBy);
     }
 
     public void enterSearch(final String searchString) throws Exception
@@ -215,16 +225,24 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public UserStorageBrowserPage doLogin(String username, String password) throws
                                                                             Exception
     {
-        sendKeys(loginUsername, username);
-        sendKeys(loginPassword, password);
-        click(submitLoginButton);
+        click(LOGIN_DROPDOWN_BY);
+        waitForElementVisible(USERNAME_INPUT_BY);
+        waitForElementVisible(PASSWORD_INPUT_BY);
+        sendKeys(find(USERNAME_INPUT_BY), username);
+        sendKeys(find(PASSWORD_INPUT_BY), password);
+        click(LOGIN_SUBMIT_BUTTON_BY);
         waitForElementPresent(By.id("logout"));
         return new UserStorageBrowserPage(driver);
     }
 
     public UserStorageBrowserPage doLogout() throws Exception
     {
-        click(logoutButton);
+        waitForElementClickable(USER_ACTIONS_LINK_BY);
+        click(USER_ACTIONS_LINK_BY);
+
+        waitForElementClickable(LOGOUT_LINK_BY);
+        click(LOGOUT_LINK_BY);
+
         return new UserStorageBrowserPage(driver);
     }
 
@@ -635,13 +653,15 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return formData;
     }
 
-    boolean isLoggedIn()
+    boolean isLoggedIn() throws Exception
     {
-
         try
         {
-            logoutButton.isDisplayed();
-            return true;
+            waitForElementPresent(ACCESS_ACTIONS_DROPDOWN_BY);
+            final WebElement pullDown = find(ACCESS_ACTIONS_DROPDOWN_BY);
+
+            return (pullDown.getAttribute("class")
+                    .contains("user-actions"));
         }
         catch (NoSuchElementException e)
         {

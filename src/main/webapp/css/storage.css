@@ -5,7 +5,7 @@
 /* Mobile Landscape Size to Tablet Portrait (devices and browsers) */
 @media only screen and (min-width: 768px) {
   body {
-    padding-top: 55px;
+    padding-top: 85px;
   }
 
   .sidebar {
@@ -25,14 +25,31 @@
 
 @media only screen and (max-width: 767px) {
   body {
-    padding-top: 55px;
+    padding-top: 85px;
+  }
+}
+
+@media only screen and (max-height: 767px) {
+  div.dataTables_scrollBody {
+    max-height: 42vh !important;
+  }
+}
+
+@media only screen and (min-height: 768px) and (max-height: 1080px) {
+  div.dataTables_scrollBody {
+    max-height: 60vh !important;
+  }
+}
+
+@media only screen and (min-height: 1081px) and (max-height: 1680px) {
+  div.dataTables_scrollBody {
+    max-height: 66vh !important;
   }
 }
 
 /* Sidebar navigation */
 .nav-sidebar {
-  /* 20px padding + 1px border */
-  margin: 55px -21px 20px -20px;
+  margin: 85px -21px 20px -20px;
 }
 
 .nav-sidebar > .active > a,
@@ -63,6 +80,11 @@ ul > li.divider-vertical {
   border-left: 1px solid #ccc;
 }
 
+.navbar-header
+{
+  margin-top: 25px;
+}
+
 .navbar-nav > li.alert {
   margin-bottom: inherit;
   padding: inherit;
@@ -72,28 +94,24 @@ ul > li.divider-vertical {
   color: #fff;
 }
 
-div.progress
-{
+div.progress {
   height: 0.8rem;
   -webkit-border-radius: 0;
   -moz-border-radius: 0;
   border-radius: 0;
 }
 
-div.quota
-{
+div.quota {
   padding-left: 20px;
   font-style: italic;
 }
 
-div.beacon-progress
-{
+div.beacon-progress {
   padding-top: 0;
   width: 100%;
 }
 
-div.beacon-progress.active
-{
+div.beacon-progress.active {
   line-height: 15px;
   font-size: 90%;
 }
@@ -103,9 +121,8 @@ div.beacon-progress.active
   jump down.
   jenkinsd 2016.08.10
 */
-div.beacon-info-row
-{
-  height: 55px;
+div.beacon-info-row {
+  height: 85px;
 }
 
 /*
@@ -212,7 +229,7 @@ input[type=url] {
  */
 div.dataTables_wrapper div.dataTables_info {
   padding-left: 20px;
-  padding-top: 15px;  /* Remove when progress bar re-instated. */
+  padding-top: 15px; /* Remove when progress bar re-instated. */
   white-space: nowrap;
   cursor: auto;
 }
@@ -221,12 +238,10 @@ div.dataTables_wrapper div.dataTables_info {
   max-width: 500px;
 }
 
-
 /* CSS for prompts */
 
-
 .prompt-h3 {
-  margin-top: 0px;
+  margin-top: 0;
   border-bottom: 1px solid #ccc;
   font-size: 20px;
 }
@@ -236,13 +251,14 @@ div.dataTables_wrapper div.dataTables_info {
 }
 
 .prompt-link {
-  margin-top:10px;
+  margin-top: 10px;
 }
 
-
-div.jqimessage div.col-sm-4  a {
-  float:right;
+div.jqimessage div.col-sm-4 a {
+  float: right;
 }
 
-
-
+section#main_section
+{
+  height: 90%;
+}

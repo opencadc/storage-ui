@@ -30,7 +30,8 @@ video, audio {
 #fileinfo {
 	min-width: 100px;
 	height: auto !important;
-	overflow: auto;
+	overflow-y: hidden;
+	overflow-x: auto;
 	border: 1px solid #ccc;
 	/* no margin or border allowed */
 }
