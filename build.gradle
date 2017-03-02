@@ -36,7 +36,7 @@ dependencies {
 
     testCompile 'junit:junit:4.+'
     testCompile 'ca.nrc.cadc:web-test:1.+'
-    testCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
+    testCompile 'org.seleniumhq.selenium:selenium-java:2.+'
     testCompile 'org.easymock:easymock:3.+'
 }
 
@@ -106,7 +106,7 @@ sourceSets {
         dependencies {
             intTestCompile 'junit:junit:4.+'
             intTestCompile 'org.opencadc:cadc-web-test:1.+'
-            intTestCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
+            intTestCompile 'org.seleniumhq.selenium:selenium-java:2.+'
         }
 
         systemProperty "driver", "${driver}"
