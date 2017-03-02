@@ -80,11 +80,6 @@ ul > li.divider-vertical {
   border-left: 1px solid #ccc;
 }
 
-.navbar-header
-{
-  margin-top: 25px;
-}
-
 .navbar-nav > li.alert {
   margin-bottom: inherit;
   padding: inherit;
