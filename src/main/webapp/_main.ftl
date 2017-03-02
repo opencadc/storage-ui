@@ -24,7 +24,7 @@
 
     <#flush>
 
-    <section>
+    <section id="main_section">
       <div id="fileinfo" class="table-responsive">
         <nav class="navbar navbar-default">
           <div class="container-fluid">
