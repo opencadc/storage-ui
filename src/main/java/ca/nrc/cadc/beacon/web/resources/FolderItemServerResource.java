@@ -140,10 +140,7 @@ public class FolderItemServerResource extends StorageItemServerResource
     		final String propertyURI) throws Exception
     {
     	final NodeProperty property = node.findProperty(propertyURI);
-    	final long value = property == null
-    			? 0L
-    			: Long.parseLong(property.getPropertyValue());
-    	
-    	return value;
+    	return (property == null) ? 0L
+                                  : Long.parseLong(property.getPropertyValue());
     }
 }

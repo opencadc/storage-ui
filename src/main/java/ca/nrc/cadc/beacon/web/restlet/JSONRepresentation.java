@@ -73,7 +73,6 @@ import org.json.JSONObject;
 import org.json.JSONWriter;
 import org.restlet.data.MediaType;
 import org.restlet.ext.json.JsonRepresentation;
-import org.restlet.representation.WriterRepresentation;
 
 import java.io.IOException;
 import java.io.Writer;

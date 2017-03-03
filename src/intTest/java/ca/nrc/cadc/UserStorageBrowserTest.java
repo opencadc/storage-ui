@@ -132,6 +132,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         // Go up to root
         userStoragePage = userStoragePage.navToRoot();
+
         // Verify in Root Folder
         verifyTrue(userStoragePage.isRootFolder());
         verifyFalse(userStoragePage.quotaIsDisplayed());

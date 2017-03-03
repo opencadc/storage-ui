@@ -76,7 +76,6 @@ import ca.nrc.cadc.dlm.client.Main;
 import javax.security.auth.Subject;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;

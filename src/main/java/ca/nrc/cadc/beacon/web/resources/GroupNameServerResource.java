@@ -84,10 +84,11 @@ import java.util.Collections;
 import java.util.List;
 
 
-public class GroupNameServerResource extends SecureServerResource {
+public class GroupNameServerResource extends SecureServerResource
+{
 
     @Get("json")
-     public Representation getGroupNames() throws Exception
+    public Representation getGroupNames() throws Exception
     {
         final GMSClient gmsClient =
                 (GMSClient) getContext().getAttributes().get(
@@ -102,15 +103,19 @@ public class GroupNameServerResource extends SecureServerResource {
             {
                 try
                 {
-                    final List<String> groupNames = Subject.doAs(voSpaceUser,
-                    new PrivilegedExceptionAction<List<String>>()
-                    {
-                        @Override
-                        public List<String> run() throws Exception
-                        {
-                            return gmsClient.getGroupNames();
-                        }
-                    });
+                    final List<String> groupNames =
+                            Subject.doAs(voSpaceUser,
+                                         new PrivilegedExceptionAction<List<String>>()
+                                         {
+                                             @Override
+                                             public List<String> run() throws
+                                                                       Exception
+                                             {
+                                                 return gmsClient
+                                                         .getGroupNames();
+                                             }
+                                         });
+
                     Collections.sort(groupNames);
 
                     writer.array();

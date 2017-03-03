@@ -143,7 +143,7 @@ public class RestletPrincipalExtractor implements PrincipalExtractor
      *
      * @return String username, or null if none found.
      */
-    protected String getAuthenticatedUsername()
+    private String getAuthenticatedUsername()
     {
         final String username;
 

@@ -96,6 +96,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -167,8 +168,7 @@ public class FileItemServerResource extends StorageItemServerResource
     }
 
     protected void upload(final FileItemIterator fileItemIterator)
-            throws IOException, IllegalArgumentException, NodeNotFoundException,
-                   NodeAlreadyExistsException
+            throws Exception
     {
         boolean inheritParentPermissions = false;
         VOSURI newNodeURI = null;
@@ -211,9 +211,7 @@ public class FileItemServerResource extends StorageItemServerResource
      * @return The URI to the new node.
      * @throws IOException If anything goes wrong.
      */
-    VOSURI upload(final FileItemStream fileItemStream)
-            throws IOException, IllegalArgumentException,
-                   NodeAlreadyExistsException
+    VOSURI upload(final FileItemStream fileItemStream) throws Exception
     {
         final String filename = fileItemStream.getName();
 
@@ -257,8 +255,7 @@ public class FileItemServerResource extends StorageItemServerResource
      * @param dataNode    The DataNode to upload to.
      */
     protected void upload(final InputStream inputStream,
-                          final DataNode dataNode)
-            throws NodeAlreadyExistsException, IOException
+                          final DataNode dataNode) throws Exception
     {
         final String path = dataNode.getUri().getPath();
 
@@ -273,7 +270,7 @@ public class FileItemServerResource extends StorageItemServerResource
             // return the 409 code, while maintaining backward compatibility
             // with the catch below.
             // jenkinsd 2016.07.25
-            if (voSpaceClient.getNode(path) != null)
+            if (getNode(dataNode.getUri(), VOS.Detail.min) != null)
             {
                 throw new NodeAlreadyExistsException(path);
             }
@@ -285,11 +282,19 @@ public class FileItemServerResource extends StorageItemServerResource
 
         try
         {
-            upload(outputStreamWrapper, dataNode);
+            executeSecurely(new PrivilegedExceptionAction<Object>()
+            {
+                @Override
+                public Object run() throws Exception
+                {
+                    upload(outputStreamWrapper, dataNode);
+                    return null;
+                }
+            });
         }
         catch (Exception e)
         {
-            String message = null;
+            final String message;
 
             if ((e.getCause() != null)
                 && StringUtil.hasText(e.getCause().getMessage()))
@@ -300,8 +305,7 @@ public class FileItemServerResource extends StorageItemServerResource
             {
                 message = e.getMessage();
             }
-
-            if (message == null)
+            else
             {
                 message = "Error during upload.";
             }

@@ -111,6 +111,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final By USERNAME_INPUT_BY = By.id("username");
     private static final By PASSWORD_INPUT_BY = By.id("password");
     private static final By LOGIN_SUBMIT_BUTTON_BY = By.id("submitLogin");
+    private static final By FOLDER_NAME_HEADER_BY =
+            By.xpath("//h2[@property='name']");
 
     // Define in here what elements are mode indicators
 
@@ -168,20 +170,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     @FindBy(id = "more_details")
     private WebElement moredetailsButton;
-
-
-    // Login/User elements
-//    @FindBy(id = "username")
-//    private WebElement loginUsername;
-//
-//    @FindBy(id = "password")
-//    private WebElement loginPassword;
-//
-//    @FindBy(id = "submitLogin")
-//    private WebElement submitLoginButton;
-//
-//    @FindBy(id = "logout")
-//    private WebElement logoutButton;
 
     private WebDriver driver = null;
 
@@ -706,12 +694,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // navigation buttons are NOT displayed in root
         // folder. This will change as functionality is added
         // Currently the navbar only has one child, and it's ID is
-
         waitForElementPresent(NAVBAR_ELEMENTS_BY);
 
         return getHeaderText().contains(ROOT_FOLDER_NAME)
                && navbarButtonList.findElements(
-                xpath("//*[@id=\"navbar-functions\"]/ul")).size() == 1;
+                       xpath("//*[@id=\"navbar-functions\"]/ul")).size() == 1;
     }
 
     public boolean isFileSelectedMode(int rowNumber) throws Exception
@@ -892,6 +879,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         waitUntil(ExpectedConditions.attributeContains(
                 By.className("beacon-progress"), "class", "progress-bar-success"));
         waitForElementPresent(NAVBAR_ELEMENTS_BY);
+        waitForElementPresent(FOLDER_NAME_HEADER_BY);
     }
 
 

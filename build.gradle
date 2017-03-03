@@ -19,8 +19,6 @@ dependencies {
     compile 'org.restlet.jee:org.restlet.ext.freemarker:2.3.+'
     compile 'org.restlet.jee:org.restlet.ext.json:2.3.+'
 
-    // UWS is necessary for XSD validation.
-    compile 'org.opencadc:cadc-uws:1.+'
     compile 'org.opencadc:cadc-web-util:1.+'
     compile 'org.opencadc:cadc-util:1.+'
 

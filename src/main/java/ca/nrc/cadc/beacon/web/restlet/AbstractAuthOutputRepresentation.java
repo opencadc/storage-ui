@@ -75,8 +75,8 @@ import javax.security.auth.Subject;
 import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 
-public abstract class AbstractAuthOutputRepresentation
-        extends OutputRepresentation
+
+abstract class AbstractAuthOutputRepresentation extends OutputRepresentation
 {
     /**
      * Constructor.

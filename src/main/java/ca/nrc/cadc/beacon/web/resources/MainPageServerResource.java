@@ -194,7 +194,6 @@ public class MainPageServerResource extends StorageItemServerResource
              *                                       yet been called, or the {@code remove} method has already
              *                                       been called after the last call to the {@code next}
              *                                       method
-             * @implSpec The default implementation throws an instance of
              * {@link UnsupportedOperationException} and performs no other action.
              */
             @Override

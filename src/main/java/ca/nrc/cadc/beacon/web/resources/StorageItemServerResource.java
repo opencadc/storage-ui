@@ -77,14 +77,12 @@ import ca.nrc.cadc.net.HttpDownload;
 import ca.nrc.cadc.net.InputStreamWrapper;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.uws.ExecutionPhase;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.ClientRecursiveSetNode;
 import ca.nrc.cadc.vos.client.VOSClientUtil;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.json.JSONObject;
 import org.restlet.Context;
-import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.resource.Delete;
@@ -101,8 +99,8 @@ import java.security.AccessControlContext;
 import java.security.AccessController;
 import java.security.PrivilegedActionException;
 import java.security.PrivilegedExceptionAction;
-import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 
 public class StorageItemServerResource extends SecureServerResource
@@ -129,7 +127,7 @@ public class StorageItemServerResource extends SecureServerResource
     /**
      * Complete constructor for testing.
      *
-     * @param voSpaceClient  The VOSpace Client to use.
+     * @param voSpaceClient The VOSpace Client to use.
      */
     StorageItemServerResource(final VOSpaceClient voSpaceClient)
     {
@@ -149,11 +147,11 @@ public class StorageItemServerResource extends SecureServerResource
         super.doInit();
         final Context context = getContext();
         initialize(((VOSpaceClient) context.getAttributes().get(
-                           VOSpaceApplication.VOSPACE_CLIENT_KEY)));
+                VOSpaceApplication.VOSPACE_CLIENT_KEY)));
     }
 
     private void initialize(
-                            final VOSpaceClient voSpaceClient)
+            final VOSpaceClient voSpaceClient)
     {
         try
         {
@@ -196,6 +194,13 @@ public class StorageItemServerResource extends SecureServerResource
         return getNode(getCurrentItemURI(), detail);
     }
 
+    /**
+     * @param uri URI to look up.
+     * @param <T> Type to translate to.
+     * @return Translated Node to StorageItem.
+     * @throws IOException For any problems.
+     */
+    @SuppressWarnings("unchecked")
     final <T extends StorageItem> T getStorageItem(final URI uri)
             throws IOException
     {
@@ -211,7 +216,7 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
-            throws NodeNotFoundException, IOException
+            throws NodeNotFoundException
     {
         final int pageSize;
 
@@ -233,28 +238,44 @@ public class StorageItemServerResource extends SecureServerResource
                                                     : "&detail="
                                                       + detail.name());
 
-        return executeSecurely(new PrivilegedExceptionAction<T>()
+        try
         {
-            /**
-             * Performs the computation.  This method will be called by
-             * {@code AccessController.doPrivileged} after enabling privileges.
-             *
-             * @return a class-dependent value that may represent the results of the
-             * computation.  Each class that implements
-             * {@code PrivilegedExceptionAction} should document what
-             * (if anything) this value represents.
-             * @throws Exception an exceptional condition has occurred.  Each class
-             *                   that implements {@code PrivilegedExceptionAction} should
-             *                   document the exceptions that its run method can throw.
-             * @see AccessController#doPrivileged(PrivilegedExceptionAction)
-             * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
-             */
-            @Override
-            public T run() throws Exception
+            return executeSecurely(new PrivilegedExceptionAction<T>()
             {
-                return (T) voSpaceClient.getNode(folderURI.getPath(), query);
+                /**
+                 * Performs the computation.  This method will be called by
+                 * {@code AccessController.doPrivileged} after enabling privileges.
+                 *
+                 * @return a class-dependent value that may represent the results of the
+                 * computation.  Each class that implements
+                 * {@code PrivilegedExceptionAction} should document what
+                 * (if anything) this value represents.
+                 * @throws Exception an exceptional condition has occurred.  Each class
+                 *                   that implements {@code PrivilegedExceptionAction} should
+                 *                   document the exceptions that its run method can throw.
+                 * @see AccessController#doPrivileged(PrivilegedExceptionAction)
+                 * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
+                 */
+                @Override
+                @SuppressWarnings("unchecked")
+                public T run() throws Exception
+                {
+                    return (T) voSpaceClient
+                            .getNode(folderURI.getPath(), query);
+                }
+            });
+        }
+        catch (Exception e)
+        {
+            if (e instanceof NodeNotFoundException)
+            {
+                throw (NodeNotFoundException) e;
             }
-        });
+            else
+            {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     VOSURI toURI(final String path)
@@ -262,8 +283,7 @@ public class StorageItemServerResource extends SecureServerResource
         return new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + path));
     }
 
-    void setInheritedPermissions(final VOSURI newNodeURI)
-            throws NodeNotFoundException, IOException
+    void setInheritedPermissions(final VOSURI newNodeURI) throws Exception
     {
         final ContainerNode parentNode = getCurrentNode();
         final Node newNode = getNode(newNodeURI, null);
@@ -340,8 +360,8 @@ public class StorageItemServerResource extends SecureServerResource
                     new HttpDownload(url, new InputStreamWrapper()
                     {
                         @Override
-                        public void read(InputStream inputStream) throws
-                                                                  IOException
+                        public void read(InputStream inputStream)
+                                throws IOException
                         {
                             // create byte buffer
                             final Reader reader =
@@ -451,35 +471,32 @@ public class StorageItemServerResource extends SecureServerResource
      *
      * @param newNode The Node whose permissions are to be recursively set
      */
-    private ClientRecursiveSetNode setNodeRecursiveSecure(final Node newNode) throws IOException
+    private ClientRecursiveSetNode setNodeRecursiveSecure(final Node newNode)
+            throws IOException
     {
-        ClientRecursiveSetNode recursiveSetNodeJob = null;
-
         try
         {
-            recursiveSetNodeJob = Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientRecursiveSetNode>()
-            {
-                @Override
-                public ClientRecursiveSetNode run() throws Exception
-                {
-                    final ClientRecursiveSetNode rj = voSpaceClient.setNodeRecursive(newNode);
-                    // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
-                    rj.setMonitor(false);
-                    rj.run();
+            return Subject
+                    .doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientRecursiveSetNode>()
+                    {
+                        @Override
+                        public ClientRecursiveSetNode run() throws Exception
+                        {
+                            final ClientRecursiveSetNode rj =
+                                    voSpaceClient.setNodeRecursive(newNode);
+                            // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
+                            rj.setMonitor(false);
+                            rj.run();
 
-                    return rj;
-                }
-            });
+                            return rj;
+                        }
+                    });
         }
         catch (PrivilegedActionException pae)
         {
             throw new IOException(pae.getException());
         }
-
-        return recursiveSetNodeJob;
     }
-
-
 
 
     /**
@@ -487,7 +504,7 @@ public class StorageItemServerResource extends SecureServerResource
      *
      * @param newNode The newly created Node.
      */
-    private void setNodeSecure(final Node newNode) throws IOException
+    private void setNodeSecure(final Node newNode) throws Exception
     {
         executeSecurely(new PrivilegedExceptionAction<Void>()
         {
@@ -501,7 +518,7 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
 
-    void createLink(final URI target) throws IOException
+    void createLink(final URI target) throws Exception
     {
         createNode(toLinkNode(target));
     }
@@ -512,7 +529,7 @@ public class StorageItemServerResource extends SecureServerResource
         return new LinkNode(linkNodeURI, target);
     }
 
-    void createFolder() throws IOException
+    void createFolder() throws Exception
     {
         createNode(toContainerNode());
     }
@@ -529,7 +546,7 @@ public class StorageItemServerResource extends SecureServerResource
                + getServletContext().getContextPath();
     }
 
-    void createNode(final Node newNode) throws IOException
+    void createNode(final Node newNode) throws Exception
     {
         executeSecurely(new PrivilegedExceptionAction<Void>()
         {
@@ -543,7 +560,7 @@ public class StorageItemServerResource extends SecureServerResource
     }
 
     @Delete
-    public void deleteNode() throws IOException
+    public void deleteNode() throws Exception
     {
         executeSecurely(new PrivilegedExceptionAction<Void>()
         {
@@ -556,8 +573,8 @@ public class StorageItemServerResource extends SecureServerResource
         });
     }
 
-    <T> T executeSecurely(final PrivilegedExceptionAction<T> runnable) throws
-                                                                       IOException
+    <T> T executeSecurely(final PrivilegedExceptionAction<T> runnable)
+            throws Exception
     {
         try
         {
@@ -565,11 +582,12 @@ public class StorageItemServerResource extends SecureServerResource
         }
         catch (PrivilegedActionException e)
         {
-            throw new IOException(e);
+            throw e.getException();
         }
     }
 
-    private void setNodeProperty(List<NodeProperty> nodeProperties, String propertyName, String propertyValue)
+    private void setNodeProperty(List<NodeProperty> nodeProperties,
+                                 String propertyName, String propertyValue)
     {
         nodeProperties.remove(new NodeProperty(propertyName, ""));
 
@@ -589,69 +607,60 @@ public class StorageItemServerResource extends SecureServerResource
     public void update(final JsonRepresentation payload) throws Exception
     {
         final JSONObject jsonObject = payload.getJsonObject();
-        ContainerNode currentNode = null;
 
         // limit=0, detail=min so should only get the current node
-        currentNode = getCurrentNode(VOS.Detail.properties);
+        final ContainerNode currentNode = getCurrentNode(VOS.Detail.properties);
         final List<NodeProperty> nodeProperties = currentNode.getProperties();
-        String parameterValue = "";
-        NodeProperty np = null;
+        final Set<String> keySet = jsonObject.keySet();
 
-
-        if (jsonObject.keySet().contains("publicPermission"))
+        if (keySet.contains("publicPermission"))
         {
-            if (jsonObject.get("publicPermission").equals("on"))
-            {
-                parameterValue = "true";
-            }
-            else
-            {
-                parameterValue = "false";
-            }
+            final String parameterValue = jsonObject.get("publicPermission")
+                                                  .equals("on")
+                                          ? Boolean.toString(true)
+                                          : Boolean.toString(false);
+            final NodeProperty np =
+                    currentNode.findProperty(VOS.PROPERTY_URI_ISPUBLIC);
 
-            np = currentNode.findProperty(VOS.PROPERTY_URI_ISPUBLIC);
-            if (np != null && !np.getPropertyValue().equals(parameterValue)) {
-                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_ISPUBLIC, parameterValue);
+            if ((np != null) && !np.getPropertyValue().equals(parameterValue))
+            {
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_ISPUBLIC,
+                                parameterValue);
             }
         }
 
 
-        if (jsonObject.keySet().contains("readGroup"))
+        if (keySet.contains("readGroup"))
         {
-            if (StringUtil.hasLength((String) jsonObject.get("readGroup")))
-            {
-                parameterValue = IVO_GMS_PROPERTY_PREFIX + (String) jsonObject.get("readGroup");
-            }
-            else
-            {
-                parameterValue = "";
-            }
+            final String parameterValue =
+                    StringUtil.hasLength((String) jsonObject.get("readGroup"))
+                    ? IVO_GMS_PROPERTY_PREFIX + jsonObject.get("readGroup")
+                    : "";
 
-            np = currentNode.findProperty(VOS.PROPERTY_URI_GROUPREAD);
-            if ((np != null && !np.getPropertyValue().equals(parameterValue)) ||
-                    (np == null && StringUtil.hasLength(parameterValue)) )
+            final NodeProperty np =
+                    currentNode.findProperty(VOS.PROPERTY_URI_GROUPREAD);
+            if (((np != null) && !np.getPropertyValue().equals(parameterValue))
+                || ((np == null) && StringUtil.hasLength(parameterValue)))
             {
-                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, parameterValue);
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD,
+                                parameterValue);
             }
-
         }
 
-        if (jsonObject.keySet().contains("writeGroup"))
+        if (keySet.contains("writeGroup"))
         {
-            if (StringUtil.hasLength((String) jsonObject.get("writeGroup")))
-            {
-                parameterValue = IVO_GMS_PROPERTY_PREFIX + (String) jsonObject.get("writeGroup");
-            }
-            else
-            {
-                parameterValue = "";
-            }
+            final String parameterValue =
+                    StringUtil.hasLength((String) jsonObject.get("writeGroup"))
+                    ? IVO_GMS_PROPERTY_PREFIX + jsonObject.get("writeGroup")
+                    : "";
 
-            np = currentNode.findProperty(VOS.PROPERTY_URI_GROUPWRITE);
-            if ((np != null && !np.getPropertyValue().equals(parameterValue)) ||
-                    (np == null && StringUtil.hasLength(parameterValue)) )
+            final NodeProperty np =
+                    currentNode.findProperty(VOS.PROPERTY_URI_GROUPWRITE);
+            if (((np != null) && !np.getPropertyValue().equals(parameterValue))
+                || ((np == null) && StringUtil.hasLength(parameterValue)))
             {
-                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE, parameterValue);
+                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE,
+                                parameterValue);
             }
         }
 
@@ -660,7 +669,7 @@ public class StorageItemServerResource extends SecureServerResource
         {
             if (jsonObject.get("recursive").toString().equals("on"))
             {
-                ClientRecursiveSetNode setRecursiveJob = setNodeRecursiveSecure(currentNode);
+                setNodeRecursiveSecure(currentNode);
                 getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             }
         }
@@ -670,6 +679,5 @@ public class StorageItemServerResource extends SecureServerResource
             setNodeSecure(currentNode);
             getResponse().setStatus(Status.SUCCESS_OK);
         }
-
     }
 }

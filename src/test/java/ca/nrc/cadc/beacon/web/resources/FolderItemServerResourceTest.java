@@ -193,15 +193,16 @@ public class FolderItemServerResourceTest
         this.retrieveQuota(quota, expectedRemainingSize, prop);
     }
     
-    public void retrieveQuota(long quota, final String expectedRemainingSize, 
-    		final NodeProperty folderSizeNodeProp) throws Exception
+    private void retrieveQuota(long quota, final String expectedRemainingSize,
+                               final NodeProperty folderSizeNodeProp)
+            throws Exception
     {
     	String expectedQuota = new FileSizeRepresentation().getSizeHumanReadable(quota);
     	
         final VOSURI folderURI = new VOSURI(URI.create(
                 StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
                 + "/my/node"));
-        List<NodeProperty> properties = new ArrayList<NodeProperty>();
+        List<NodeProperty> properties = new ArrayList<>();
         properties.add(folderSizeNodeProp);
         NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long.toString(quota));
         properties.add(prop);
@@ -241,7 +242,7 @@ public class FolderItemServerResourceTest
             @SuppressWarnings("unchecked")
 			@Override
             <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
-                    throws NodeNotFoundException, IOException
+                    throws NodeNotFoundException
             {
                 return (T) containerNode;
             }
@@ -257,18 +258,18 @@ public class FolderItemServerResourceTest
         	String[] kv = kvp.split(":");
         	String key = extract(kv[0]);
         	String value = extract(kv[1]);
-        	if (key.equals("size"))
-        	{
-        		Assert.assertEquals("Remainng size is incorrect", expectedRemainingSize, value);
-        	}
-        	else if (key.equals("quota"))
-        	{
-        		Assert.assertEquals("Quota is incorrect", expectedQuota, value);
-        	}
-        	else
-        	{
-        		fail("Incorrect property");
-        	}
+            switch (key)
+            {
+                case "size":
+                    Assert.assertEquals("Remainng size is incorrect", expectedRemainingSize, value);
+                    break;
+                case "quota":
+                    Assert.assertEquals("Quota is incorrect", expectedQuota, value);
+                    break;
+                default:
+                    fail("Incorrect property");
+                    break;
+            }
         }
         	
     }

@@ -91,11 +91,13 @@ class SecureServerResource extends ServerResource
     private final SubjectGenerator subjectGenerator;
 
 
+    @SuppressWarnings("unchecked")
     <T> T getRequestAttribute(final String attributeName)
     {
         return (T) getRequestAttributes().get(attributeName);
     }
 
+    @SuppressWarnings("unchecked")
     <T> T getContextAttribute(final String attributeName)
     {
         return (T) getContext().getAttributes().get(attributeName);
