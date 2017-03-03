@@ -147,7 +147,7 @@ public class StorageItemCSVWriter implements StorageItemWriter
         // Owner: distinguished name [14]
         // TODO: change this to human readable name when issue
         // of authentication for /ac/users/{userid}?typeId=http  is solved for this app
-        row.add(storageItem.getOwner());
+        row.add(storageItem.getOwnerCN());
 
         csvWriter.writeNext(row.toArray(new String[row.size()]));
     }
