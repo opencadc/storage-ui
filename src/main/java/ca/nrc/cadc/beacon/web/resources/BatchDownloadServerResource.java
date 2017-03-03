@@ -73,7 +73,6 @@ import ca.nrc.cadc.beacon.web.restlet.DownloadJNLPRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.ZIPFileRepresentation;
 import ca.nrc.cadc.dlm.DownloadDescriptor;
 import ca.nrc.cadc.dlm.ManifestReader;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.restlet.data.Form;
 import org.restlet.data.MediaType;

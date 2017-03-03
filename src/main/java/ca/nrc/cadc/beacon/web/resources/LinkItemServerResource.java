@@ -68,7 +68,6 @@
 
 package ca.nrc.cadc.beacon.web.resources;
 
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import org.json.JSONObject;
 import org.restlet.data.Status;

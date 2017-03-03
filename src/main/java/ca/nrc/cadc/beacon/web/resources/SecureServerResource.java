@@ -98,22 +98,24 @@ class SecureServerResource extends ServerResource
 
     }
 
+    @SuppressWarnings("unchecked")
     <T> T getRequestAttribute(final String attributeName)
     {
         return (T) getRequestAttributes().get(attributeName);
     }
 
+    @SuppressWarnings("unchecked")
     <T> T getContextAttribute(final String attributeName)
     {
         return (T) getContext().getAttributes().get(attributeName);
     }
 
-    public SecureServerResource()
+    SecureServerResource()
     {
         this(new SubjectGenerator());
     }
 
-    public SecureServerResource(final SubjectGenerator subjectGenerator)
+    SecureServerResource(final SubjectGenerator subjectGenerator)
     {
         this.subjectGenerator = subjectGenerator;
     }

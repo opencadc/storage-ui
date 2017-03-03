@@ -121,7 +121,9 @@ public class FileItemServerResourceTest
         propertyList.add(new NodeProperty("ivo://ivoa.net/vospace/core#length",
                                           "" + dataBytes.length));
         propertyList.add(new NodeProperty("ivo://ivoa.net/vospace/core#MD5",
-                                          new String(MessageDigest.getInstance("MD5").digest(dataBytes))));
+                                          new String(MessageDigest
+                                                             .getInstance("MD5")
+                                                             .digest(dataBytes))));
 
         expectedDataNode.setProperties(propertyList);
 
@@ -198,29 +200,25 @@ public class FileItemServerResourceTest
 
             @Override
             <T> T executeSecurely(PrivilegedExceptionAction<T> runnable)
-                    throws IOException
+                    throws Exception
             {
-                try
-                {
-                    return runnable.run();
-                }
-                catch (Exception e)
-                {
-                    throw new RuntimeException(e);
-                }
+                return runnable.run();
             }
         };
 
         final FileItemStream mockFileItemStream = createMock(FileItemStream.class);
 
-        expect(mockVOSpaceClient.getNode("/parent/sub/MYUPLOADFILE.txt"))
+        expect(mockVOSpaceClient.getNode("/parent/sub/MYUPLOADFILE.txt",
+                                         "limit=0&detail=min"))
                 .andThrow(new NodeNotFoundException("No such node.")).once();
         expect(mockVOSpaceClient.createNode(expectedDataNode, false)).andReturn(
                 expectedDataNode).once();
 
-        expect(mockFileItemStream.getName()).andReturn("MYUPLOADFILE.txt").once();
+        expect(mockFileItemStream.getName()).andReturn("MYUPLOADFILE.txt")
+                .once();
         expect(mockFileItemStream.openStream()).andReturn(inputStream).once();
-        expect(mockFileItemStream.getContentType()).andReturn("text/plain").once();
+        expect(mockFileItemStream.getContentType()).andReturn("text/plain")
+                .once();
 
         replay(mockVOSpaceClient, mockResponse, mockRequest,
                mockFileItemStream);
