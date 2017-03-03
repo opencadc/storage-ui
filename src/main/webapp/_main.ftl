@@ -1,9 +1,7 @@
 <div class="row">
 
-  <#include "defaults/_side_nav.ftl">
-
   <!-- Main content -->
-  <div role="main" class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+  <div role="main" class="col-sm-12 main">
     <h1 class="hidden" property="name">${folder.path}</h1>
     <section>
       <h2 property="name">
@@ -94,6 +92,7 @@
               <th>Last Modified (UTC)</th>
               <th>Read/Write</th>
               <th>Read</th>
+              <th>Owner</th>
             </tr>
           </thead>
           <tbody>

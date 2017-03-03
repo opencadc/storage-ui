@@ -96,7 +96,7 @@ public class StorageItemCSVWriterTest
                                 FolderItem.class, "folder_css",
                                 new VOSURI(URI.create(
                                         "vos://ca.nrc.cadc!vospace/ME/NODE_DIR")),
-                                "/list/ME/NODE_DIR", true, true);
+                                "/list/ME/NODE_DIR", true, true, "test_owner");
 
         replay(mockFolderItem);
 
@@ -105,7 +105,7 @@ public class StorageItemCSVWriterTest
         verify(mockFolderItem);
 
         assertEquals("Wrong CSV Line.",
-                     "\"\",\"node1\",\"18.86MB\",\"2007-09-18 - 01:13\",,\"read_group_1\",\"false\",\"false\",\"folder_css\",\"/ME/NODE_DIR\",\"vos://ca.nrc.cadc!vospace/ME/NODE_DIR\",\"/list/ME/NODE_DIR\",\"true\",\"true\"\n",
+                     "\"\",\"node1\",\"18.86MB\",\"2007-09-18 - 01:13\",,\"read_group_1\",\"false\",\"false\",\"folder_css\",\"/ME/NODE_DIR\",\"vos://ca.nrc.cadc!vospace/ME/NODE_DIR\",\"/list/ME/NODE_DIR\",\"true\",\"true\",\"test_owner\"\n",
                      writer.toString());
     }
 }
