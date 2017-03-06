@@ -68,169 +68,70 @@
 
 package ca.nrc.cadc.beacon.web.view;
 
-import ca.nrc.cadc.beacon.FileSizeRepresentation;
-import ca.nrc.cadc.date.DateUtil;
+import ca.nrc.cadc.beacon.AbstractUnitTest;
+import ca.nrc.cadc.beacon.web.resources.StorageItemServerResource;
+import ca.nrc.cadc.beacon.web.view.FileItem;
+import ca.nrc.cadc.beacon.web.view.StorageItem;
 import ca.nrc.cadc.vos.VOSURI;
-import org.bouncycastle.asn1.x500.RDN;
-import org.bouncycastle.asn1.x500.X500Name;
-import org.bouncycastle.asn1.x500.style.BCStyle;
-import org.bouncycastle.asn1.x500.style.IETFUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 import java.net.URI;
-import java.text.DateFormat;
 import java.util.Date;
 
+import static org.junit.Assert.assertEquals;
 
-public abstract class StorageItem
+
+public class StorageItemTest
+            extends AbstractUnitTest<StorageItem>
 {
-    private static final FileSizeRepresentation FILE_SIZE_REPRESENTATION =
-            new FileSizeRepresentation();
-    private static final DateFormat DATE_FORMAT =
-            DateUtil.getDateFormat("yyyy-MM-dd ' - ' HH:mm:ss", DateUtil.UTC);
-    static final String NO_SIZE_DISPLAY = "--";
 
-    private final String name;
-    private final long sizeInBytes;
-    private final Date lastModified;
-    private final URI[] writeGroupURIs;
-    private final URI[] readGroupURIs;
-    private final String owner;
-    private final boolean readableFlag;
-    private final boolean writableFlag;
-    private final String targetURL;
-
-    final VOSURI uri;
-
-    private final boolean publicFlag;
-    private final boolean lockedFlag;
-
-    StorageItem(VOSURI uri, long sizeInBytes, Date lastModified,
-                boolean publicFlag, boolean lockedFlag,
-                URI[] writeGroupURIs, URI[] readGroupURIs,
-                final String owner, boolean readableFlag,
-                boolean writableFlag,
-                String targetURL)
+    @Test
+    public void testGetOwnerCN() throws Exception
     {
-        this.uri = uri;
-        this.name = getURI().getName();
-        this.sizeInBytes = sizeInBytes;
-        this.lastModified = lastModified;
-        this.publicFlag = publicFlag;
-        this.lockedFlag = lockedFlag;
-        this.writeGroupURIs = writeGroupURIs;
-        this.readGroupURIs = readGroupURIs;
-        this.owner = owner;
-        this.readableFlag = readableFlag;
-        this.writableFlag = writableFlag;
-        this.targetURL = targetURL;
+        final VOSURI testURI = new VOSURI(URI.create("vos://cadc.nrc.ca!vospace/my/node"));
+
+        StorageItem item1 = new StorageItem(testURI, hashCode(), new Date(),
+                        false, false, null, null, "CN=testOwner_1234,OU=ou1,OU=ou2",
+                        true, false, null) {
+            @Override
+            public String getItemIconCSS() {
+                return null;
+            }
+
+        };
+
+        assertEquals(item1.getOwnerCN(),"testOwner");
+
+
+        StorageItem item2 = new StorageItem(testURI, hashCode(), new Date(),
+                false, false, null, null, "CN=Test Owner,OU=ou1,OU=ou2",
+                true, false, null) {
+            @Override
+            public String getItemIconCSS() {
+                return null;
+            }
+
+        };
+
+        assertEquals(item2.getOwnerCN(), "Test Owner");
+
+
+        String dn = "OU=ou1,OU=ou2";
+        StorageItem item3 = new StorageItem(testURI, hashCode(), new Date(),
+                false, false, null, null, dn,
+                true, false, null) {
+            @Override
+            public String getItemIconCSS() {
+                return null;
+            }
+
+        };
+
+        assertEquals(item3.getOwnerCN(),dn);
+
     }
 
 
-    public String getSizeHumanReadable()
-    {
-        return FILE_SIZE_REPRESENTATION.getSizeHumanReadable(sizeInBytes);
-    }
 
-    public long getSizeInBytes()
-    {
-        return sizeInBytes;
-    }
-
-    public String getLastModifiedHumanReadable()
-    {
-        return (lastModified == null) ? "" : DATE_FORMAT.format(lastModified);
-    }
-
-    public String getPath()
-    {
-        return uri.getPath();
-    }
-
-    public String getName()
-    {
-        return name;
-    }
-
-    public VOSURI getURI()
-    {
-        return uri;
-    }
-
-    public boolean isReadable()
-    {
-        return readableFlag;
-    }
-
-    public boolean isWritable()
-    {
-        return writableFlag;
-    }
-
-    public boolean isPublic()
-    {
-        return publicFlag;
-    }
-
-    public boolean isLocked()
-    {
-        return lockedFlag;
-    }
-
-    public String getParentPath()
-    {
-        return uri.isRoot() ? "/" : uri.getParent();
-    }
-
-    public String getWriteGroupNames()
-    {
-        return getURINames(this.writeGroupURIs);
-    }
-
-    public String getReadGroupNames()
-    {
-        return getURINames(this.readGroupURIs);
-    }
-
-    public String getOwner()
-    {
-        return owner;
-    }
-
-    public String getOwnerCN()
-    {
-        X500Name xName = new X500Name(owner);
-
-        RDN[] cnList = xName.getRDNs(BCStyle.CN);
-        if (cnList.length > 0)
-        {
-            // Parse out any part of the cn that is before a '_'
-            String[] cnStringParts = IETFUtils.valueToString(cnList[0].getFirst().getValue()).split("_");
-            return cnStringParts[0];
-        }
-        else
-        {
-            return owner;
-        }
-
-    }
-
-    private String getURINames(final URI[] uris)
-    {
-        final String[] names = new String[uris.length];
-        final int urisLength = uris.length;
-
-        for (int i = 0; i < urisLength; i++)
-        {
-            names[i] = uris[i].getFragment();
-        }
-
-        return String.join(" ", names);
-    }
-
-    public abstract String getItemIconCSS();
-
-    public String getTargetURL()
-    {
-        return targetURL;
-    }
 }
