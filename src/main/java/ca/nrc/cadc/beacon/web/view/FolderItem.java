@@ -103,6 +103,11 @@ public class FolderItem extends StorageItem
         return "glyphicon-folder-" + (isReadable() ? "open" : "close");
     }
 
+    @Override
+    public String getOwner() {
+        return super.getOwnerCN();
+    }
+
     public int getChildCount()
     {
         return childCount;
