@@ -105,7 +105,7 @@
                             {
                               return '<table class="table table-condensed table-bordered">'
                                      +
-                                     '<tbody><tr><td>Owned by</td><td class="info"><strong>${folder.owner}</strong></td></tr>'
+                                     '<tbody><tr><td>Owned by</td><td class="info"><strong>${folder.ownerCN}</strong></td></tr>'
                                      +
                                      '<tr><td>Last used</td><td class="info">${folder.lastModifiedHumanReadable}</td></tr>'
                                      +
