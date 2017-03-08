@@ -45,7 +45,9 @@
 <#assign startTime = .now?time>
 <#assign isRoot = folder.root>
 
-<#if username??>
+<!-- was username. homeDir is populated if the home
+directory for that user actually exists -->
+<#if homeDir??>
   <#assign homeURL = '${contextPath}list/${username}'>
 </#if>
 

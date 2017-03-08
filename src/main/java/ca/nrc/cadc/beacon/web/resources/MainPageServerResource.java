@@ -72,8 +72,10 @@ import ca.nrc.cadc.beacon.StorageItemCSVWriter;
 import ca.nrc.cadc.beacon.StorageItemWriter;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
+import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
+import ca.nrc.cadc.vos.client.VOSpaceClient;
 import freemarker.cache.FileTemplateLoader;
 import freemarker.cache.WebappTemplateLoader;
 import freemarker.template.Configuration;
@@ -237,6 +239,19 @@ public class MainPageServerResource extends StorageItemServerResource
 
         if (httpUsername != null) {
             dataModel.put("username", httpUsername);
+
+            try
+            {
+                // Check to see if home directory exists
+                String userHomeDir = VOSPACE_NODE_URI_PREFIX + "/" + httpUsername;
+
+                getNode(new VOSURI(userHomeDir), VOS.Detail.min);
+                dataModel.put("homeDir", httpUsername);
+            }
+            catch(NodeNotFoundException nfe)
+            {
+                // homeDir does not need to be set
+            }
         }
 
         return new TemplateRepresentation("index.ftl", freemarkerConfiguration, dataModel,

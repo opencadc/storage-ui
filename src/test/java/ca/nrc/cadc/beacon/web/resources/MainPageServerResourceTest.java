@@ -72,7 +72,7 @@ package ca.nrc.cadc.beacon.web.resources;
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.*;
 import org.restlet.Context;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -106,15 +106,23 @@ public class MainPageServerResourceTest
         final VOSURI startURI =
                 new VOSURI(URI.create("vos://myhost.com/node/1"));
 
+
+        final VOSURI folderURI = new VOSURI(URI.create(
+                StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
+                        + "/my/node"));
+        final ContainerNode containerNode = new ContainerNode(folderURI);
+
         initialRowData.add("child1");
         initialRowData.add("child2");
         initialRowData.add("child3");
+
+        String httpUsername = "CADCtest";
 
         final AccessControlClient mockAccessControlClient =
                 createMock(AccessControlClient.class);
 
         expect(mockAccessControlClient.getCurrentHttpPrincipalUsername(subject))
-                .andReturn("CADCtest");
+                .andReturn(httpUsername);
         replay(mockAccessControlClient);
 
         final ConcurrentMap<String, Object> mockContextAttributes =
@@ -124,8 +132,7 @@ public class MainPageServerResourceTest
                 .put(VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY,
                      mockAccessControlClient);
 
-        expect(mockContext.getAttributes()).andReturn(mockContextAttributes)
-                .once();
+        expect(mockContext.getAttributes()).andReturn(mockContextAttributes).anyTimes();
 
         replay(mockServletContext, mockRegistryClient, mockContext);
 
@@ -148,6 +155,15 @@ public class MainPageServerResourceTest
             public Context getContext()
             {
                 return mockContext;
+            }
+
+
+            @SuppressWarnings("unchecked")
+            @Override
+            <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
+                    throws NodeNotFoundException
+            {
+                return (T) containerNode;
             }
         };
 
