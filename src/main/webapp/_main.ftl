@@ -1,9 +1,7 @@
 <div class="row">
 
-  <#include "defaults/_side_nav.ftl">
-
   <!-- Main content -->
-  <div role="main" class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+  <div role="main" class="col-sm-12 main">
     <h1 class="hidden" property="name">${folder.path}</h1>
     <section>
       <h2 property="name">
@@ -27,13 +25,19 @@
           <div class="container-fluid">
             <div class="collapse navbar-collapse" id="navbar-functions">
               <ul class="nav navbar-nav">
+<#if homeDir??>
+                  <li>
+                      <a id="homeDir" name="homeDir" type="button" title="Navigate to home directory." href="${homeURL}">
+                          <span class="glyphicon glyphicon-home"></span>&nbsp;Home</a></li>
+</#if>
 <#if !isRoot>
                 <li>
                   <a id="level-up" name="level-up" href="${contextPath}list${folder.parentPath}" role="button" title="Up one level">
                     <span class="glyphicon glyphicon-level-up"></span>&nbsp;Up</a></li>
                 <li>
                   <a id="root" name="root" type="button" title="Navigate to main root." href="${contextPath}list/">
-                    <span class="glyphicon glyphicon-home"></span>&nbsp;Root</a></li>
+                    <span class="glyphicon glyphicon-folder-close"></span>&nbsp;Root</a></li>
+
                 <li class="dropdown divider-vertical <#if !folder.writable>disabled</#if>">
                   <a title="New" class="dropdown-toggle <#if !folder.writable>disabled</#if>" role="button" id="newdropdown" name="newdropdown" aria-expanded="false" data-toggle="dropdown">
                     <span class="glyphicon glyphicon-plus"></span>&nbsp;New&nbsp;<span class="caret"></span></a>
@@ -94,6 +98,7 @@
               <th>Last Modified (UTC)</th>
               <th>Read/Write</th>
               <th>Read</th>
+              <th>Owner</th>
             </tr>
           </thead>
           <tbody>

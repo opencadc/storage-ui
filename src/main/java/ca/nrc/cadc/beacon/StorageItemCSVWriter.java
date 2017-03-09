@@ -144,6 +144,11 @@ public class StorageItemCSVWriter implements StorageItemWriter
         // Writable flag.  [13]
         row.add(Boolean.toString(storageItem.isWritable()));
 
+        // Owner: distinguished name [14]
+        // TODO: change this to human readable name when issue
+        // of authentication for /ac/users/{userid}?typeId=http  is solved for this app
+        row.add(storageItem.getOwnerCN());
+
         csvWriter.writeNext(row.toArray(new String[row.size()]));
     }
 }

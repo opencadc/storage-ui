@@ -147,8 +147,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     // Elements present once user has navigated away from ROOT folder
     // Toobar buttons
+
+    @FindBy(id = "homeDir")
+    private WebElement homeDirButton;
+
     @FindBy(id = "level-up")
-    private WebElement leveUpButton;
+    private WebElement levelUpButton;
 
     @FindBy(id = "root")
     private WebElement rootButton;
@@ -262,6 +266,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             throws Exception
     {
         //   not all folders are clickable, go down the rows to find one
+        // some elements are not folders. Check for //*[@id="beacon"]/span[@class="glyphicon-folder-open"]
         boolean found = false;
         int rowNum = startRow;
 
@@ -270,8 +275,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             // This method throws an exception if the element is not found
             try
             {
+                // May find an anchor, but it's for a file, not a folder
                 beaconTable.findElement(xpath("//*[@id=\"beacon\"]/tbody/tr["
                                               + rowNum + "]/td[2]/a"));
+                beaconTable.findElement(xpath("//*[@id=\"beacon\"]/tbody/tr["
+                                    + rowNum
+                                    + "]/td[2]/span[contains(@class,\"glyphicon-folder-open\")]"));
             }
             catch (Exception e)
             {
@@ -554,7 +563,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
 
     public UserStorageBrowserPage navUpLevel() throws Exception
     {
-        click(leveUpButton);
+        click(levelUpButton);
+        return new UserStorageBrowserPage(driver);
+    }
+
+    public UserStorageBrowserPage navToHome() throws Exception
+    {
+        click(homeDirButton);
         return new UserStorageBrowserPage(driver);
     }
 
@@ -605,7 +620,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public String getHeaderText() throws Exception
     {
         System.out.println("Header text: " + folderNameHeader.getText());
-        return folderNameHeader.getText();
+        // Trim leading whitespace
+        return folderNameHeader.getText().replaceAll("\\s+","");
     }
 
     public String getValueForRowCol(int rowNum, int colNum)
@@ -649,7 +665,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
             final WebElement pullDown = find(ACCESS_ACTIONS_DROPDOWN_BY);
 
             return (pullDown.getAttribute("class")
-                    .contains("user-actions"));
+                    .contains("user-actions")) &&
+                    homeDirButton.isDisplayed();
         }
         catch (NoSuchElementException e)
         {
@@ -669,7 +686,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return isDisabled(downloadButton) &&
                isDisabled(newdropdownButton) &&
                !isDisabled(searchFilter) &&
-               !isDisabled(leveUpButton) &&
+               !isDisabled(levelUpButton) &&
                !isDisabled(rootButton);
     }
 
@@ -680,13 +697,18 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         final List<WebElement> navbarElements = navbarButtonList
                 .findElements(By.xpath("*"));
 
-        return getHeaderText().contains(folderName) &&
-               (navbarElements.size() == 6) &&
-               leveUpButton.isDisplayed() &&
-               deleteButton.isDisplayed() &&
-               rootButton.isDisplayed() &&
-               newdropdownButton.isDisplayed() &&
-               moredetailsButton.isDisplayed();
+        boolean baseTest = getHeaderText().contains(folderName) &&
+                levelUpButton.isDisplayed() &&
+                deleteButton.isDisplayed() &&
+                rootButton.isDisplayed() &&
+                newdropdownButton.isDisplayed() &&
+                moredetailsButton.isDisplayed();
+
+        if (isLoggedIn())
+        {
+            baseTest = baseTest && homeDirButton.isDisplayed();
+        }
+        return baseTest;
     }
 
     public boolean isRootFolder() throws Exception
@@ -696,9 +718,18 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         // Currently the navbar only has one child, and it's ID is
         waitForElementPresent(NAVBAR_ELEMENTS_BY);
 
-        return getHeaderText().contains(ROOT_FOLDER_NAME)
-               && navbarButtonList.findElements(
-                       xpath("//*[@id=\"navbar-functions\"]/ul")).size() == 1;
+        if (isLoggedIn()) {
+            return getHeaderText().contains(ROOT_FOLDER_NAME)
+                    && homeDirButton.isDisplayed()
+                    && navbarButtonList.findElements(
+                    xpath("//*[@id=\"navbar-functions\"]/ul/li")).size() == 2;
+        }
+        else
+        {
+            return getHeaderText().contains(ROOT_FOLDER_NAME)
+                    && navbarButtonList.findElements(
+                    xpath("//*[@id=\"navbar-functions\"]/ul/li")).size() == 1;
+        }
     }
 
     public boolean isFileSelectedMode(int rowNumber) throws Exception
