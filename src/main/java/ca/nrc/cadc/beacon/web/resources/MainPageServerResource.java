@@ -238,9 +238,23 @@ public class MainPageServerResource extends StorageItemServerResource
         if (StringUtil.hasText(httpUsername))
         {
             dataModel.put("username", httpUsername);
+
+            try
+            {
+                // Check to see if home directory exists
+                String userHomeDir = VOSPACE_NODE_URI_PREFIX + "/" + httpUsername;
+
+                getNode(new VOSURI(userHomeDir), VOS.Detail.min);
+                dataModel.put("homeDir", httpUsername);
+            }
+            catch (NodeNotFoundException nfe)
+            {
+                // homeDir does not need to be set
+            }
         }
 
-        return new TemplateRepresentation("index.ftl", freemarkerConfiguration, dataModel,
+        return new TemplateRepresentation("index.ftl",
+                                          freemarkerConfiguration, dataModel,
                                           MediaType.TEXT_HTML);
     }
 }

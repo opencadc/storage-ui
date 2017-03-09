@@ -1,7 +1,7 @@
 /**
  *  Filemanager JS core
  *
- *  filemanager.js
+ *  filemanager.jsl
  *
  *  @license  MIT License
  *  @author    Jason Huck - Core Five Labs
@@ -252,6 +252,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         {
           "targets": [3, 4],
           "searchable": false
+        },
+        {
+          "targets" : [6],
+          "searchable": false,
+          "render": function (data, type, full)
+          {
+            return full[14];
+          }
         }
       ],
       select: selectInput,

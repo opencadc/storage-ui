@@ -42,7 +42,7 @@ dependencies {
 
 sourceCompatibility = '1.7'
 group = 'org.opencadc'
-version = '1007'
+version = '1008'
 
 def docker_image_name = 'canfar/storage'
 
@@ -77,7 +77,7 @@ task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
 
 ext {
     // Change this value to test other locations, such as Production or RC.
-    intTest_default_web_app_url = 'http://mach378.cadc.dao.nrc.ca:9081'
+    intTest_default_web_app_url = 'http://apps.canfar.net'
     intTest_user_name = 'CADCtest'
     intTest_user_password = 'sywymUL4'
 }

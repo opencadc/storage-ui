@@ -66,46 +66,72 @@
  ************************************************************************
  */
 
-package ca.nrc.cadc.beacon;
+package ca.nrc.cadc.beacon.web.view;
 
-import ca.nrc.cadc.beacon.web.view.FolderItem;
+import ca.nrc.cadc.beacon.AbstractUnitTest;
+import ca.nrc.cadc.beacon.web.resources.StorageItemServerResource;
+import ca.nrc.cadc.beacon.web.view.FileItem;
+import ca.nrc.cadc.beacon.web.view.StorageItem;
 import ca.nrc.cadc.vos.VOSURI;
-import org.restlet.engine.header.StringWriter;
-
-import java.io.Writer;
-import java.net.URI;
-
+import org.junit.Assert;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
-import static org.easymock.EasyMock.*;
+import java.net.URI;
+import java.util.Date;
+
+import static org.junit.Assert.assertEquals;
 
 
-public class StorageItemCSVWriterTest
-        extends AbstractStorageItemWriterTest<StorageItemCSVWriter>
+public class StorageItemTest
+            extends AbstractUnitTest<StorageItem>
 {
+
     @Test
-    public void write() throws Exception
+    public void testGetOwnerCN() throws Exception
     {
-        final Writer writer = new StringWriter();
-        testSubject = new StorageItemCSVWriter(writer);
+        final VOSURI testURI = new VOSURI(URI.create("vos://cadc.nrc.ca!vospace/my/node"));
 
-        final FolderItem mockFolderItem =
-                mockStorageItem("node1", "18.86MB", null, "read_group_1",
-                                "2007-09-18 - 01:13", false, false,
-                                FolderItem.class, "folder_css",
-                                new VOSURI(URI.create(
-                                        "vos://ca.nrc.cadc!vospace/ME/NODE_DIR")),
-                                "/list/ME/NODE_DIR", true, true, "test_owner");
+        StorageItem item1 = new StorageItem(testURI, hashCode(), new Date(),
+                        false, false, null, null, "CN=testOwner_1234,OU=ou1,OU=ou2",
+                        true, false, null) {
+            @Override
+            public String getItemIconCSS() {
+                return null;
+            }
 
-        replay(mockFolderItem);
+        };
 
-        testSubject.write(mockFolderItem);
+        assertEquals(item1.getOwnerCN(),"testOwner");
 
-        verify(mockFolderItem);
 
-        assertEquals("Wrong CSV Line.",
-                     "\"\",\"node1\",\"18.86MB\",\"2007-09-18 - 01:13\",,\"read_group_1\",\"false\",\"false\",\"folder_css\",\"/ME/NODE_DIR\",\"vos://ca.nrc.cadc!vospace/ME/NODE_DIR\",\"/list/ME/NODE_DIR\",\"true\",\"true\",\"test_owner\"\n",
-                     writer.toString());
+        StorageItem item2 = new StorageItem(testURI, hashCode(), new Date(),
+                false, false, null, null, "CN=Test Owner,OU=ou1,OU=ou2",
+                true, false, null) {
+            @Override
+            public String getItemIconCSS() {
+                return null;
+            }
+
+        };
+
+        assertEquals(item2.getOwnerCN(), "Test Owner");
+
+
+        String dn = "OU=ou1,OU=ou2";
+        StorageItem item3 = new StorageItem(testURI, hashCode(), new Date(),
+                false, false, null, null, dn,
+                true, false, null) {
+            @Override
+            public String getItemIconCSS() {
+                return null;
+            }
+
+        };
+
+        assertEquals(item3.getOwnerCN(),dn);
+
     }
+
+
+
 }

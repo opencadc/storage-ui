@@ -84,7 +84,8 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
 
         // Scenario 2: Login test - credentials should be in the gradle build file.
-        userStoragePage = userStoragePage.doLogin("CADCtest", "sywymUL4");
+        String username = "CADCtest";
+        userStoragePage = userStoragePage.doLogin(username, "sywymUL4");
         verifyTrue(userStoragePage.isLoggedIn());
         System.out.println("logged in");
 
@@ -96,13 +97,17 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         // Check access to page: should be write accessible
         verifyFalse(userStoragePage.isReadAccess());
 
-
         // Scenario 3: Test navigation buttons
         // Test state is currently in a subfolder: Start at Root
         System.out.println("navigating to root...");
         userStoragePage = userStoragePage.navToRoot();
+
         // Verify in Root Folder
         verifyTrue(userStoragePage.isRootFolder());
+
+        // Nav to home directory
+        userStoragePage = userStoragePage.navToHome();
+        verifyTrue(userStoragePage.getHeaderText().equals("/" + username));
 
         int startRow = 1;
 
@@ -209,9 +214,6 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         // Don't change anything, verify that the correct message is displayed
         userStoragePage.clickEditIconForFirstRow();
         userStoragePage.clickButton(UserStorageBrowserPage.SAVE);
-//        userStoragePage.confirmJQIMessageText(UserStorageBrowserPage.NOT_MODIFIED);
-//        userStoragePage.confirmJqiMsg(UserStorageBrowserPage.NOT_MODIFIED);
-//        userStoragePage.waitForPromptFinish();
         userStoragePage.clickButton(UserStorageBrowserPage.CANCEL);
 
         PermissionsFormData formData = userStoragePage.getValuesFromEditIcon();
