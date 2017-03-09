@@ -233,6 +233,10 @@ div.dataTables_wrapper div.dataTables_info {
   max-width: 500px;
 }
 
+button#more_details + .popover {
+  left: 10px !important;
+}
+
 /* CSS for prompts */
 
 .prompt-h3 {
