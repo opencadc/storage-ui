@@ -244,5 +244,18 @@ div.jqimessage div.col-sm-4  a {
   float:right;
 }
 
+.collapsibleList li{
+  list-style-image:url('button.png');
+  cursor:auto;
+}
 
+li.collapsibleListOpen{
+  list-style-image:url('button-open.png');
+  cursor:pointer;
+}
+
+li.collapsibleListClosed{
+  list-style-image:url('button-closed.png');
+  cursor:pointer;
+}
 

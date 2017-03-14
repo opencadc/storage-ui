@@ -1044,6 +1044,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
              });
   };
 
+  var setMover = function ()
+  {
+    $('#move').off().click(function ()
+			               {
+						     moveItem();
+						   });
+  };
+  
 // Sets the folder status, upload, and new folder functions
 // to the path specified. Called on initial page load and
 // whenever a new directory is selected.
@@ -1074,7 +1082,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
                                      return false;
                                    });
-
+    
     $('#newfolder').off().click(function ()
                                 {
                                   var buttonAction = function (event, value,
@@ -1208,22 +1216,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                                 $('#fileinfo > h1').text(newName);
                                               }
                                             }).show();
-    }
-
-    if (!has_capability(data, 'move'))
-    {
-      $fileInfo.find('button#move').hide();
-    }
-    else
-    {
-      $fileInfo.find('button#move').click(function ()
-                                          {
-                                            var newName = moveItem(data);
-                                            if (newName.length)
-                                            {
-                                              $('#fileinfo > h1').text(newName);
-                                            }
-                                          }).show();
     }
 
     // @todo
@@ -1899,19 +1891,208 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $('#fileR').click();
   };
 
-// Move the current item to specified dir and returns the new name.
-// Called by clicking the "Move" button in detail views
-// or choosing the "Move" contextual menu option in
-// list views.
-  var moveItem = function (data)
+  function FolderLayer()
   {
-    var finalName = '';
-    var msg = lg.move +
-              ' : <input id="rname" name="rname" type="text" value="" />';
-    msg += '<div class="prompt-info">' + lg.help_move + '</div>';
-
+	FolderLayer.makeNode = function()
+	{
+      return {name: null, path: null, uri: null, child: null};
+	};
+	
+	this.head = new Array();
+	
+	this.addNode = function(name, path, uri)
+	{
+		var node = FolderLayer.makeNode();
+		node.name = name;
+		node.path = path;
+		node.uri = uri;
+		this.head.push(node);
+	}
+	
+	this.findNode = function(name)
+	{
+      for (i=0; i<this.head.length; i++)
+      {
+    	// TODO: delete following line
+    	var tempName = this.head[i].name;
+        if (this.head[i].name == name)
+        {
+          return this.head[i];	
+        }
+        else if (this.head[i].child != null)
+        {
+          var node = this.head[i].child.findNode(name);
+          if (node != null)
+          {
+            return node;
+          }
+        }
+      }
+      
+      return null;
+	}
+	
+	this.toHTML = function()
+	{
+      var returnHTML = '';
+      
+      $.each(this.head, function (index, node)
+                        {
+    	                  if (node.child == null)
+    	                  {
+    	                	  returnHTML = returnHTML + '<li>' + node.name + '<ul></ul></li>';
+    	                  }
+    	                  else
+    	                  {
+    	                	returnHTML = returnHTML + '<li>' + node.name;
+    	                    returnHTML = returnHTML + '<ul>' + node.child.toHTML() + '</ul>';
+    	                    returnHTML = returnHTML + '</li>';    	                  
+    	                  }
+                        });
+      
+      return returnHTML;
+	}
+  }
+  
+  function FolderTree() 
+  {
+	this.root = null;
+	
+	this.findNode = function(name)
+	{
+      var node = null;
+      return this.root == null ? null : this.root.findNode(name);
+	}
+	
+	this.addLayer = function(name, layer) 
+	{
+      // name of root node is an empty string
+      if (this.root == null || (!stringUtil.hasText(name)))
+      {
+    	this.root = layer;
+      }
+      else
+      {
+        this.findNode(name).child = layer;
+      }
+	}
+	
+	this.toHTML = function()
+	{
+      return returnHTML = '<ul class="collapsibleList">' + this.root.toHTML() + '</ul>';
+	}
+  }
+  
+// Move the current item to specified dir and returns the new name.
+// Called by clicking the "Move" button.
+  var moveItem = function ()
+  {
+	var finalName = '';
+	var msg = '';
+	var rootNodeName = '';
+	var folderTree = new FolderTree();
+	var folderLayer;
+	var pageUrl = contextPath + config.options.pageConnector;
+	var folderRequest = {};
+	folderRequest.pageSize = defaultPageSize;
+    
+    $(document).on('ul.collapsibleList li').click(function(event)
+  									            {
+  									              var target = $(event)[0].target;
+  									              var name = $(target.childNodes)[0].data;
+  									              //var name =$(target).text();
+  									              var node = folderTree.findNode(name);
+  									              if (node != null && node.child == null && target.className == 'collapsibleListOpen')
+  									              {
+  									                // we have no sub-folders for this node, get them
+  									                rootNodeName = name;
+  									                pageUrl = contextPath + config.options.pageConnector + node.path;
+  									                folderRequest.startURI = null;
+  									                buildFolderLayer(folderRequest, updateFolderTree);
+  									              }
+  									            });       		                            
+	
+	var getPageOfFolders = function (_pageRequest, _callback)
+	{
+	  $.get({
+              url: pageUrl,
+              dataType: "text",
+              data: _pageRequest
+            })
+      .done(function (csvData)
+            {
+              _callback(csvData);
+            });	
+	};
+	
+	var updateComplete = function ()
+	{
+      // add the new layer to the tree and draw the folder tree
+      folderTree.addLayer(rootNodeName, folderLayer);  
+        
+      if ($('.collapsibleList').length)
+      {
+        // we already have the collapsible list, add to it
+    	var layerNodes = $.parseHTML(folderLayer.toHTML());
+    	var selectedNode = $('ul.collapsibleList li:contains(' + rootNodeName + ')').filter(function(index) 
+																			    		    {
+																			    		      return $(this).text() == rootNodeName;
+																			    		    });
+    	var containerNode = selectedNode.find('ul');
+    	containerNode.append(layerNodes);
+        CollapsibleLists.applyTo(containerNode[0], false);
+      }
+      else
+      { 
+        // initial load, no collapsible list, draw the folder tree
+        var node = $.parseHTML(folderTree.toHTML())[0];
+        CollapsibleLists.applyTo(node, false);
+        $('.jqibuttons')[0].parentNode.insertBefore(node, $('.jqibuttons')[0]);
+      }
+	};
+	
+	var updateFolderTree = function (cvsData)
+	{
+      var data = $.csv.toArrays(cvsData);
+      var dl = data.length;
+      
+      if (dl > 0)
+      {
+    	var startURI = '';
+    	for (var di=0; di<dl; di++)
+    	{
+          var rowData = data[di];          
+          if (rowData[8].includes('glyphicon-folder'))
+    	  {
+        	folderLayer.addNode(rowData[1], rowData[9], rowData[10]);          
+            startURI = rowData[10];
+    	  }
+    	}
+    	    	
+    	folderRequest.startURI = startURI;
+    	if (dl == folderRequest.pageSize)
+    	{
+    	  getPageOfFolders(folderRequest, updateFolderTree);
+    	}
+        else
+        {
+      	updateComplete();  
+        }
+      }
+      else
+      {
+    	updateComplete();  
+      }
+	};
+	                        
+	var buildFolderLayer = function (_folderRequest, _callback)
+	{
+	  folderLayer = new FolderLayer();
+      getPageOfFolders(_folderRequest, _callback);
+	};
+    
     var doMove = function (v, m)
-    {
+    { /*
       if (v != 1)
       {
         return false;
@@ -1940,7 +2121,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                      var newName = result['New Name'];
 
                      // we set fullexpandedFolder value to automatically open
-                     // file in  filetree when calling createFileTree()
+                     // file in filetree when calling createFileTree()
                      // function
                      fullexpandedFolder = newPath;
 
@@ -1959,18 +2140,38 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                    finalName = newPath + newName;
                  }
                });
-      }
+      } */
     };
+
+    // name of root node is an empty string
+    buildFolderLayer(folderRequest, updateFolderTree);
     var btns = {};
     btns[lg.move] = true;
     btns[lg.cancel] = false;
-    $.prompt(msg, {
-      callback: doMove,
-      buttons: btns
-    });
-
+    $.prompt('Please select the destination folder.', {
+        loaded: function ()
+        {
+          // TODO: display waiting icon
+        },             
+        callback: doMove,
+        buttons: btns
+      });
     return finalName;
   };
+
+  $(document).on("click", "#delete",
+                 function ()
+                 {
+                   var paths = [];
+
+                   $.each($dt.rows({selected: true}).data(),
+                          function (key, itemData)
+                          {
+                            paths.push(itemData[9]);
+                          });
+
+                   deleteItems(paths);
+                 });
 
   /**
    * Prompts for confirmation, then deletes the items.
@@ -2106,20 +2307,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
     return isDeleted;
   };
-
-  $(document).on("click", "#delete",
-                 function ()
-                 {
-                   var paths = [];
-
-                   $.each($dt.rows({selected: true}).data(),
-                          function (key, itemData)
-                          {
-                            paths.push(itemData[9]);
-                          });
-
-                   deleteItems(paths);
-                 });
 
   /**
    * Prompts for confirmation, then deletes the items.
@@ -2683,7 +2870,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     // Update location for status, upload, & new folder functions.
     setUploader(path);
   };
-
+  
   /*---------------------------------------------------------
    Initialization
    ---------------------------------------------------------*/
@@ -3195,6 +3382,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       setDimensions();
       $(window).resize(setDimensions);
 
+      setMover();
       getDetailView(fileRoot + expandedFolder);
     });
 
