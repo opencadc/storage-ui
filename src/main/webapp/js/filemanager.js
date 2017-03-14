@@ -1911,10 +1911,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 	
 	this.findNode = function(name)
 	{
-      for (i=0; i<this.head.length; i++)
+      for (var i=0; i<this.head.length; i++)
       {
-    	// TODO: delete following line
-    	var tempName = this.head[i].name;
         if (this.head[i].name == name)
         {
           return this.head[i];	
@@ -2039,7 +2037,18 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 																			    		      return $(this).text() == rootNodeName;
 																			    		    });
     	var containerNode = selectedNode.find('ul');
-    	containerNode.append(layerNodes);
+    	
+    	if (layerNodes == null )
+    	{
+    	  containerNode.remove();
+    	  containerNode = selectedNode;
+    	  containerNode[0].classList.remove('collapsibleListOpen');
+    	}
+    	else
+    	{
+          containerNode.append(layerNodes);
+    	}
+    	
         CollapsibleLists.applyTo(containerNode[0], false);
       }
       else
@@ -2065,8 +2074,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           if (rowData[8].includes('glyphicon-folder'))
     	  {
         	folderLayer.addNode(rowData[1], rowData[9], rowData[10]);          
-            startURI = rowData[10];
     	  }
+          
+          startURI = rowData[10];
     	}
     	    	
     	folderRequest.startURI = startURI;
