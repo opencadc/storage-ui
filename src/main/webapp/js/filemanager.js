@@ -1985,8 +1985,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 // Called by clicking the "Move" button.
   var moveItem = function ()
   {
-	var finalName = '';
-	var msg = '';
+    var srcNodes = '';
 	var rootNodeName = '';
 	var folderTree = new FolderTree();
 	var folderLayer;
@@ -1998,18 +1997,43 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   									            {
   									              var target = $(event)[0].target;
   									              var name = $(target.childNodes)[0].data;
-  									              //var name =$(target).text();
   									              var node = folderTree.findNode(name);
-  									              if (node != null && node.child == null && target.className == 'collapsibleListOpen')
+  									              if (node != null && target.className == 'collapsibleListOpen')
   									              {
-  									                // we have no sub-folders for this node, get them
-  									                rootNodeName = name;
-  									                pageUrl = contextPath + config.options.pageConnector + node.path;
-  									                folderRequest.startURI = null;
-  									                buildFolderLayer(folderRequest, updateFolderTree);
+  									            	if (node.child == null)
+  									            	{
+  									                  // we have no sub-folders for this node, get them
+  									                  rootNodeName = name;
+  									                  pageUrl = contextPath + config.options.pageConnector + node.path;
+  									                  folderRequest.startURI = null;
+  									                  buildFolderLayer(folderRequest, updateFolderTree);
+  									                }
+  									            	
+  									            	$('#destNode').val(node.path);
   									              }
   									            });       		                            
 	
+    function setSrcNodes()
+    {
+      var selectedItems = $('tr.selected > td:nth-child(2) > span.glyphicon-pencil > a');
+      for (var i=0; i<selectedItems.length; i++)
+      {
+    	srcNodes += $(selectedItems[i]).attr('path') + ', ';
+      }
+      /*
+      $.each(selectedItems, function(index, item)
+    		                {
+    	                      //var selectedNode = $(item).find('td:nth-child(2) > span.glyphicon-pencil > a');
+    	                      srcNodes += $(item).attr('path') + ', ';
+    		                });
+       */
+
+      if (srcNodes.length > 0)
+      {
+    	srcNodes = srcNodes.substring(0, srcNodes.length - 2);
+      }
+    }
+    
 	var getPageOfFolders = function (_pageRequest, _callback)
 	{
 	  $.get({
@@ -2040,12 +2064,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     	
     	if (layerNodes == null )
     	{
+    	  // leaf node, indicate it in the collapsible list
     	  containerNode.remove();
     	  containerNode = selectedNode;
     	  containerNode[0].classList.remove('collapsibleListOpen');
     	}
     	else
     	{
+    	  // non-leaf node, insert as a list of sub-nodes
           containerNode.append(layerNodes);
     	}
     	
@@ -2053,13 +2079,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       }
       else
       { 
-        // initial load, no collapsible list, draw the folder tree
+        // initial load, no collapsible list, draw the vospace root folder layer
         var node = $.parseHTML(folderTree.toHTML())[0];
         CollapsibleLists.applyTo(node, false);
         $('.jqibuttons')[0].parentNode.insertBefore(node, $('.jqibuttons')[0]);
       }
 	};
 	
+	// callback to update the cached folder tree
 	var updateFolderTree = function (cvsData)
 	{
       var data = $.csv.toArrays(cvsData);
@@ -2082,15 +2109,18 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     	folderRequest.startURI = startURI;
     	if (dl == folderRequest.pageSize)
     	{
+    	  // current page is full, get the next page
     	  getPageOfFolders(folderRequest, updateFolderTree);
     	}
         else
         {
-      	updateComplete();  
+          // last page is a partial page
+      	  updateComplete();  
         }
       }
       else
       {
+        // last page is empty
     	updateComplete();  
       }
 	};
@@ -2101,12 +2131,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       getPageOfFolders(_folderRequest, _callback);
 	};
     
-    var doMove = function (v, m)
-    { /*
+    var doMove = function (e, v, m, f)
+    { 
+      /*
       if (v != 1)
       {
         return false;
       }
+      
       rname = m.children('#rname').val();
 
       if (rname != '')
@@ -2147,26 +2179,63 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                      $.prompt(result['Error']);
                    }
 
-                   finalName = newPath + newName;
                  }
                });
       } */
+      
+      $.ajax(
+              {
+                url: contextPath + config.options.folderConnector
+                     + getCurrentPath() + "/"
+                     + encodeURIComponent(fname),
+                method: "POST",
+                contentType: "application/json",
+                statusCode: {
+                  201: function ()
+                  {
+                    $.prompt(lg.successful_added_folder,
+                             {
+                               submit: refreshPage
+                             });
+                  },
+                  400: function ()
+                  {
+
+                  },
+                  401: function ()
+                  {
+                    $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                  },
+                  403: function ()
+                  {
+                    $.prompt(lg.NOT_ALLOWED_SYSTEM);
+                  },
+                  409: function ()
+                  {
+                    $.prompt(lg.DIRECTORY_ALREADY_EXISTS.replace(/%s/g, fname));
+                  }
+                }
+              });
+
     };
 
+    setSrcNodes();
     // name of root node is an empty string
     buildFolderLayer(folderRequest, updateFolderTree);
+    var msg = 'Please select the destination folder.' + 
+    '<input type="text" class="hidden" name="srcNodes" id="srcNodes" value="' + srcNodes + '">' +
+    '<input type="text" class="hidden" name="destNode" id="destNode" value="">';
     var btns = {};
     btns[lg.move] = true;
     btns[lg.cancel] = false;
-    $.prompt('Please select the destination folder.', {
+    $.prompt(msg, {
         loaded: function ()
         {
           // TODO: display waiting icon
         },             
-        callback: doMove,
+        submit: doMove,
         buttons: btns
       });
-    return finalName;
   };
 
   $(document).on("click", "#delete",

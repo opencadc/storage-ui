@@ -71,18 +71,24 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.FileSizeRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.Node;
 import ca.nrc.cadc.vos.NodeProperty;
+import ca.nrc.cadc.vos.Transfer;
 import ca.nrc.cadc.vos.VOS;
 import ca.nrc.cadc.vos.VOS.Detail;
+import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.client.ClientTransfer;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+
+import java.io.IOException;
+import java.util.List;
 
 import org.json.JSONException;
 import org.json.JSONWriter;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
+import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 
 
@@ -145,5 +151,27 @@ public class FolderItemServerResource extends StorageItemServerResource
     			: Long.parseLong(property.getPropertyValue());
     	
     	return value;
+    }
+    
+    @Post("json")
+    public void move(List<String> srcNodes, String destNode) throws Exception
+    {
+        VOSURI destURI = new VOSURI(destNode);
+        for (String srcNode : srcNodes)
+        {
+            this.move(new VOSURI(srcNode), destURI);
+        }
+    }
+    
+    private void move(VOSURI source, VOSURI destination) 
+            throws IOException, InterruptedException, RuntimeException
+    {
+        final Transfer transfer = new Transfer(source.getURI(),
+                                               destination.getURI(), false);
+        final ClientTransfer clientTransfer =
+            this.voSpaceClient.createTransfer(transfer);
+            
+        clientTransfer.setMonitor(true);
+        clientTransfer.runTransfer();
     }
 }
