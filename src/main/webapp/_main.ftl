@@ -56,7 +56,7 @@
                       <a id="uploadfolder">
                         <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload Folder</a></li>
                     <li class="disabled">
-                      <a id="new_vospace_link" class="disabled"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
+                      <a id="new_vospace_link"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
                     <li>
                       <a id="new_external_link"><span class="glyphicon glyphicon-link"></span>&nbsp;External Link</a></li>
                   </ul>
@@ -79,6 +79,10 @@
                   </form>
                 </li>
 <#if !isRoot>
+                <#-- Disabled by default -->
+                <li class="disabled multi-select-function-container-writable">
+                  <a disabled="disabled" class="disabled multi-select-function-writable" id="move" name="move" role="button" title="Move selected items">
+                    <span class="glyphicon glyphicon-move"></span>&nbsp;Move</a></li>
                 <#-- Disabled by default -->
                 <li class="disabled multi-select-function-container-writable">
                   <a disabled="disabled" class="disabled multi-select-function-writable" id="delete" name="delete" role="button" title="Delete selected items">

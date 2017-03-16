@@ -71,19 +71,30 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.beacon.FileSizeRepresentation;
 import ca.nrc.cadc.beacon.web.restlet.JSONRepresentation;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeProperty;
-import ca.nrc.cadc.vos.VOS;
+import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.VOS.Detail;
+import ca.nrc.cadc.vos.client.ClientRecursiveSetNode;
+import ca.nrc.cadc.vos.client.ClientTransfer;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 
+import java.io.IOException;
+import java.net.URI;
+import java.security.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
 import org.json.JSONException;
+import org.json.JSONObject;
 import org.json.JSONWriter;
 import org.restlet.data.Status;
+import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
+import org.restlet.resource.Post;
 import org.restlet.resource.Put;
+
+import javax.security.auth.Subject;
 
 
 public class FolderItemServerResource extends StorageItemServerResource
@@ -143,4 +154,108 @@ public class FolderItemServerResource extends StorageItemServerResource
     	return (property == null) ? 0L
                                   : Long.parseLong(property.getPropertyValue());
     }
+    
+    @Post("json")
+    public void moveToFolder(final JsonRepresentation payload) throws Exception {
+        final JSONObject jsonObject = payload.getJsonObject();
+
+        final ContainerNode currentNode = getCurrentNode(VOS.Detail.min);
+        final Set<String> keySet = jsonObject.keySet();
+
+        if (keySet.contains("srcNodes")) {
+
+            final String srcNodeStr = (String) jsonObject.get("srcNodes");
+            String[] srcNodes = srcNodeStr.split(",");
+
+            // iterate over each srcNode & call clientTransfer
+            for (int idx = 0; idx < srcNodes.length; idx++) {
+                VOSURI srcURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + srcNodes[idx]));
+                for (String srcNode : srcNodes) {
+                    move(srcURI, currentNode.getUri());
+                }
+            }
+
+        }
+    }
+    
+    private ClientTransfer move(VOSURI source, VOSURI destination)
+            throws IOException, InterruptedException, AccessControlException, RuntimeException
+    {
+
+        // according to ivoa.net VOSpace 2.1 spec, a move is handled using
+        // a transfer. keeyBytes = false. destination URI is the Direction.
+        final Transfer transfer = new Transfer(source.getURI(),
+                                               destination.getURI(), false);
+
+        try
+        {
+            return Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientTransfer>()
+            {
+                @Override
+                public ClientTransfer run() throws Exception
+                {
+                    final ClientTransfer clientTransfer =  voSpaceClient.createTransfer(transfer);
+                    clientTransfer.setMonitor(false);
+                    clientTransfer.runTransfer();
+                    return clientTransfer;
+                }
+            });
+        }
+        catch (RuntimeException re)
+        {
+            // Chances are high this is a 403. It's weak, but when this is thrown from
+            // ClientTransfer.java, a 403 is converted into a RuntimeException with the 403
+            // response code in the message.
+
+            if (re.getMessage().matches("403"))
+            {
+                throw new AccessControlException("Unable to move node.");
+            }
+            else
+            {
+                throw new RuntimeException(re.getMessage());
+            }
+
+        }
+        catch (PrivilegedActionException e)
+        {
+            throw new RuntimeException(e.getMessage());
+        }
+
+
+    }
+
+
+//    private ClientRecursiveSetNode runClientTransfer(final ClientTransfer cTransfer)
+//            throws IOException
+//    {
+//        try
+//        {
+//            return Subject
+//                    .doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientRecursiveSetNode>()
+//                    {
+//                        @Override
+//                        public ClientRecursiveSetNode run() throws Exception
+//                        {
+//                            final ClientRecursiveSetNode rj =
+//                                    voSpaceClient.setNodeRecursive(newNode);
+//                            // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
+//                            rj.setMonitor(false);
+//                            rj.run();
+//
+//                            return rj;
+//                        }
+//                    });
+//        }
+//        catch (PrivilegedActionException pae)
+//        {
+//            throw new IOException(pae.getException());
+//        }
+//    }
+
+
 }
+
+
+
+

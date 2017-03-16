@@ -36,6 +36,7 @@
     "UPLOAD_IMAGES_ONLY": "Please upload only images, no other files are supported.", 
     "UPLOAD_IMAGES_TYPE_JPEG_GIF_PNG": "Please upload only images of type JPEG, GIF or PNG.",
     "WRITE_GROUP": "Write Group",
+    "authorization_required": "Authorization required for this function.",
     "browse": "Browse...", 
     "bytes": " bytes", 
     "cancel": "Cancel", 
