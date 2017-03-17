@@ -2044,6 +2044,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   									                }
   									            	
   									            	$('#destNode').val(node.path);
+  									                $(".listener-hook").removeClass("disabled");
   									              }
   									            });       		                            
 	
@@ -2230,13 +2231,26 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       '<span id="moveLoading" class="glyphicon glyphicon-refresh fast-right-spinner"></span>' +
       '<input type="text" class="hidden" name="srcNodes" id="srcNodes" value="' + srcNodeList + '">' +
       '<input type="text" class="hidden" name="destNode" id="destNode" value="">';
-    var btns = {};
-    btns[lg.move] = true;
-    btns[lg.cancel] = false;
+    var btns = [];
+    btns.push
+    ({
+      "name": "bMoveto",
+      "title": lg.move,
+      "value": true,
+      "classes": "btn btn-primary listener-hook"
+    });
+    btns.push
+    ({
+      "name": "bCancelMoveto",
+      "title": lg.cancel,
+      "value": false,
+      "classes": "btn btn-default"
+    });
     $.prompt(msg, {
         loaded: function ()
         {
           // TOOD: listener to stop loading icon after tree is loaded
+          $(".listener-hook").addClass("disabled");
         },             
         submit: doMove,
         buttons: btns
