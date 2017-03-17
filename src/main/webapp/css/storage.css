@@ -267,19 +267,25 @@ section#main_section
   height: 90%;
 }
 
-.collapsibleList li{
+.collapsibleList li {
   list-style-image:url('button.png');
   cursor:auto;
 }
 
-li.collapsibleListOpen{
+li.collapsibleListOpen {
   list-style-image:url('button-open.png');
   cursor:pointer;
 }
 
-li.collapsibleListClosed{
+li.collapsibleListClosed {
   list-style-image:url('button-closed.png');
   cursor:pointer;
 }
 
+div.folderTree {
+  max-width: 500px;
+  max-height: 500px;
+  overflow: auto;
+  resize: both;
+}
 

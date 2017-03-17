@@ -2026,6 +2026,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 	var pageUrl = contextPath + config.options.pageConnector;
 	var folderRequest = {};
 	folderRequest.pageSize = defaultPageSize;
+	var spinningWheel = $.parseHTML('<span id="moveLoading" class="glyphicon glyphicon-refresh fast-right-spinner"></span>');
     
     $(document).on('ul.collapsibleList li').click(function(event)
   									            {
@@ -2061,28 +2062,17 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       if (selectedPaths.length > 0) {
         pathListStr = selectedPaths.join(",");
       }
-      // for (var i=0; i<selectedItems.length; i++)
-      // {
-      // srcNodes += $(selectedItems[i]).attr('path') + ', ';
-      // }
-      /*
-      $.each(selectedItems, function(index, item)
-    		                {
-    	                      //var selectedNode = $(item).find('td:nth-child(2) > span.glyphicon-pencil > a');
-    	                      srcNodes += $(item).attr('path') + ', ';
-    		                });
-       */
-
-      // if (srcNodes.length > 0)
-      // {
-      // srcNodes = srcNodes.substring(0, srcNodes.length - 2);
-      // }
 
       return pathListStr;
     }
     
 	var getPageOfFolders = function (_pageRequest, _callback)
 	{
+      if (!$('#moveLoading').length)
+      {
+        $('.mMoveto').after(spinningWheel);
+	  }
+      
 	  $.get({
               url: pageUrl,
               dataType: "text",
@@ -2129,8 +2119,13 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         // initial load, no collapsible list, draw the vospace root folder layer
         var node = $.parseHTML(folderTree.toHTML())[0];
         CollapsibleLists.applyTo(node, false);
-        $('.jqibuttons')[0].parentNode.insertBefore(node, $('.jqibuttons')[0]);
+        $('.folderTree').append(node);
       }
+      
+      if ($('#moveLoading').length)
+      {
+        $('#moveLoading').remove();
+	  }
 	};
 	
 	// callback to update the cached folder tree
@@ -2227,8 +2222,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     var srcNodeList = setSrcNodes();
     // name of root node is an empty string
     buildFolderLayer(folderRequest, updateFolderTree);
-    var msg = 'Please select the destination folder.' +
-      '<span id="moveLoading" class="glyphicon glyphicon-refresh fast-right-spinner"></span>' +
+    var msg = '<div class="mMoveto">Please select the destination folder.</div> ' +
+      '<div class="folderTree"></div>' +
       '<input type="text" class="hidden" name="srcNodes" id="srcNodes" value="' + srcNodeList + '">' +
       '<input type="text" class="hidden" name="destNode" id="destNode" value="">';
     var btns = [];
@@ -2249,7 +2244,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $.prompt(msg, {
         loaded: function ()
         {
-          // TOOD: listener to stop loading icon after tree is loaded
+          $('.mMoveto').after(spinningWheel);
           $(".listener-hook").addClass("disabled");
         },             
         submit: doMove,
