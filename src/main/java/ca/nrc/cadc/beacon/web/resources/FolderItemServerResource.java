@@ -167,26 +167,34 @@ public class FolderItemServerResource extends StorageItemServerResource
             final String srcNodeStr = (String) jsonObject.get("srcNodes");
             String[] srcNodes = srcNodeStr.split(",");
 
-            // iterate over each srcNode & call clientTransfer
-            for (int idx = 0; idx < srcNodes.length; idx++) {
-                VOSURI srcURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + srcNodes[idx]));
-                for (String srcNode : srcNodes) {
-                    move(srcURI, currentNode.getUri());
+            try {
+                // iterate over each srcNode & call clientTransfer
+                for (int idx = 0; idx < srcNodes.length; idx++) {
+                    VOSURI srcURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + srcNodes[idx]));
+                    for (String srcNode : srcNodes) {
+
+                        move(srcURI, currentNode.getUri());
+
+
+                    }
                 }
+                getResponse().setStatus(Status.SUCCESS_OK);
+            }
+            catch (AccessControlException ace)
+            {
+                getResponse().setStatus(Status.CLIENT_ERROR_UNAUTHORIZED);
             }
 
         }
     }
     
     private ClientTransfer move(VOSURI source, VOSURI destination)
-            throws IOException, InterruptedException, AccessControlException, RuntimeException
+            throws IOException, InterruptedException, AccessControlException
     {
-
-        // according to ivoa.net VOSpace 2.1 spec, a move is handled using
+        // According to ivoa.net VOSpace 2.1 spec, a move is handled using
         // a transfer. keeyBytes = false. destination URI is the Direction.
         final Transfer transfer = new Transfer(source.getURI(),
                                                destination.getURI(), false);
-
         try
         {
             return Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientTransfer>()
@@ -201,22 +209,6 @@ public class FolderItemServerResource extends StorageItemServerResource
                 }
             });
         }
-        catch (RuntimeException re)
-        {
-            // Chances are high this is a 403. It's weak, but when this is thrown from
-            // ClientTransfer.java, a 403 is converted into a RuntimeException with the 403
-            // response code in the message.
-
-            if (re.getMessage().matches("403"))
-            {
-                throw new AccessControlException("Unable to move node.");
-            }
-            else
-            {
-                throw new RuntimeException(re.getMessage());
-            }
-
-        }
         catch (PrivilegedActionException e)
         {
             throw new RuntimeException(e.getMessage());
@@ -225,33 +217,6 @@ public class FolderItemServerResource extends StorageItemServerResource
 
     }
 
-
-//    private ClientRecursiveSetNode runClientTransfer(final ClientTransfer cTransfer)
-//            throws IOException
-//    {
-//        try
-//        {
-//            return Subject
-//                    .doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientRecursiveSetNode>()
-//                    {
-//                        @Override
-//                        public ClientRecursiveSetNode run() throws Exception
-//                        {
-//                            final ClientRecursiveSetNode rj =
-//                                    voSpaceClient.setNodeRecursive(newNode);
-//                            // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
-//                            rj.setMonitor(false);
-//                            rj.run();
-//
-//                            return rj;
-//                        }
-//                    });
-//        }
-//        catch (PrivilegedActionException pae)
-//        {
-//            throw new IOException(pae.getException());
-//        }
-//    }
 
 
 }

@@ -2121,13 +2121,15 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         CollapsibleLists.applyTo(node, false);
         $('.folderTree').append(node);
       }
+
       
       if ($('#moveLoading').length)
       {
         $('#moveLoading').remove();
-	  }
+	    }
+
 	};
-	
+
 	// callback to update the cached folder tree
 	var updateFolderTree = function (cvsData)
 	{
@@ -2190,14 +2192,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               contentType: "application/json",
               data: dataStr,
               statusCode: {
-                201: function () {
+                204: function () {
                   $.prompt(lg.successful_moved,
                       {
                         submit: refreshPage
                       });
-                },
-                400: function () {
-
                 },
                 401: function () {
                   $.prompt(lg.NOT_ALLOWED_SYSTEM);
