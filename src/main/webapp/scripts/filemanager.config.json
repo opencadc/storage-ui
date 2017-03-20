@@ -34,7 +34,7 @@
         "plugins": []
     },
     "security": {
-        "loginConnector": "ac/authenticate",
+        "loginConnector": "access/login",
         "allowFolderDownload": false,
         "allowChangeExtensions": false,
         "allowNoExtension": false,

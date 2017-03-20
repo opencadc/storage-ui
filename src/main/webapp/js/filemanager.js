@@ -603,34 +603,34 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $loginFailContainer.text("");
   };
 
-  $loginForm.find("input.form-control").off().change(function (e)
+  $loginForm.find("input.form-control").off().change(function ()
                                                      {
                                                        resetLoginFormErrors();
                                                      });
-
-  $loginForm.off().submit(function ()
-                          {
-                            var $thisForm = $(this);
-                            resetLoginFormErrors();
-
-                            $.post({
-                                     url: contextPath + config.security.loginConnector,
-                                     data: $thisForm.serialize(),
-                                     statusCode: {
-                                       200: function ()
-                                       {
-                                         refreshPage();
-                                       },
-                                       401: function ()
-                                       {
-                                         $thisForm.find("#login_fail").text(lg.INVALID_CREDENTIALS);
-                                         $thisForm.addClass("has-error");
-                                       }
-                                     }
-                                   });
-
-                            return false;
-                          });
+  //
+  // $loginForm.off().submit(function ()
+  //                         {
+  //                           var $thisForm = $(this);
+  //                           resetLoginFormErrors();
+  //
+  //                           $.post({
+  //                                    url: contextPath + config.security.loginConnector,
+  //                                    data: $thisForm.serialize(),
+  //                                    statusCode: {
+  //                                      200: function ()
+  //                                      {
+  //                                        refreshPage();
+  //                                      },
+  //                                      401: function ()
+  //                                      {
+  //                                        $thisForm.find("#login_fail").text(lg.INVALID_CREDENTIALS);
+  //                                        $thisForm.addClass("has-error");
+  //                                      }
+  //                                    }
+  //                                  });
+  //
+  //                           return false;
+  //                         });
 
   /**
    * Obtain the path of the current folder.

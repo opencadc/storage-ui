@@ -75,8 +75,7 @@ import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
-import freemarker.cache.FileTemplateLoader;
-import freemarker.cache.WebappTemplateLoader;
+import freemarker.cache.*;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateModelException;
 import org.restlet.data.MediaType;
@@ -91,6 +90,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URL;
 import java.util.*;
 
 
@@ -112,6 +112,7 @@ public class MainPageServerResource extends StorageItemServerResource
         freemarkerConfiguration.setLocalizedLookup(false);
 
         final ServletContext servletContext = getServletContext();
+        final List<TemplateLoader> templateLoaders = new ArrayList<>();
 
         try
         {
@@ -119,8 +120,8 @@ public class MainPageServerResource extends StorageItemServerResource
             {
                 freemarkerConfiguration.setSharedVariable(
                         "contextPath", VOSpaceApplication.DEFAULT_CONTEXT_PATH);
-                freemarkerConfiguration.setTemplateLoader(
-                        new FileTemplateLoader(new File("src/main/webapp")));
+                templateLoaders.add(new FileTemplateLoader(
+                        new File("src/main/webapp")));
             }
             else
             {
@@ -129,9 +130,14 @@ public class MainPageServerResource extends StorageItemServerResource
                 freemarkerConfiguration.setSharedVariable(
                         "contextPath",
                         servletPath + (servletPath.endsWith("/") ? "" : "/"));
-                freemarkerConfiguration.setTemplateLoader(
-                        new WebappTemplateLoader(servletContext));
+                templateLoaders.add(new WebappTemplateLoader(servletContext));
+                templateLoaders.add(new CANFARURLTemplateLoader(
+                        getRequest().getHostRef().toUrl()));
             }
+
+            freemarkerConfiguration.setTemplateLoader(
+                    new MultiTemplateLoader(templateLoaders.toArray(
+                            new TemplateLoader[templateLoaders.size()])));
         }
         catch (IOException | TemplateModelException e)
         {
@@ -256,5 +262,26 @@ public class MainPageServerResource extends StorageItemServerResource
         return new TemplateRepresentation("index.ftl",
                                           freemarkerConfiguration, dataModel,
                                           MediaType.TEXT_HTML);
+    }
+
+    final class CANFARURLTemplateLoader extends URLTemplateLoader
+    {
+        final Map<String, URL> foreignTemplates = new HashMap<>();
+
+
+        CANFARURLTemplateLoader(final URL host) throws IOException
+        {
+            foreignTemplates.put("_application_header.shtml",
+                                 new URL(host.getProtocol() + "://"
+                                         + host.getHost() + ":"
+                                         + host.getPort()
+                                         + "/canfar/includes/_application_header.shtml"));
+        }
+
+        @Override
+        protected URL getURL(final String name)
+        {
+            return foreignTemplates.get(name);
+        }
     }
 }

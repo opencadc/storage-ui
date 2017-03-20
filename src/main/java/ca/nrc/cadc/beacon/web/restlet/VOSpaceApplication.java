@@ -168,9 +168,6 @@ public class VOSpaceApplication extends Application
 
         final Router router = new Router(context);
 
-        router.attach(contextPath + "ac/authenticate",
-                      AccessControlServerResource.class);
-
         router.attach(contextPath + "groups",
                 GroupNameServerResource.class);
 

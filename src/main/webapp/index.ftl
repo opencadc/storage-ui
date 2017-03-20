@@ -15,9 +15,6 @@
 
   <title>User Storage</title>
 
-  <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-<#--<link href="../../assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">-->
-
   <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
   <!--[if lt IE 9]>
   <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
@@ -51,11 +48,6 @@ directory for that user actually exists -->
   <#assign homeURL = '${contextPath}list/${username}'>
 </#if>
 
-<#-- To use the default header, simply change this line to:
-  <#include "defaults/_top_nav.ftl">
--->
-<#include "_top_nav.ftl">
-
 <div class="container-fluid">
 
 <#include "_main.ftl">
@@ -85,6 +77,16 @@ directory for that user actually exists -->
         src="${contextPath}js/jquery-impromptu.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
+
+<!-- To support CANFAR Header. -->
+<script type="text/javascript"
+        src="${contextPath}/cadcJS/javascript/org.opencadc.js"></script>
+<script type="text/javascript" src="${contextPath}/cadcJS/javascript/cadc.uri.js"></script>
+<script type="text/javascript"
+        src="${contextPath}/canfar/javascript/jquery.address.js"></script>
+<script type="text/javascript" src="${contextPath}/canfar/javascript/cadc.user.js"></script>
+<script type="text/javascript" src="${contextPath}/canfar/javascript/net.canfar.js"></script>
+
 
 <!--
  AWAYS ensure the bootstrap.min.js comes last!
@@ -147,18 +149,10 @@ directory for that user actually exists -->
                                               errorThrown);
                                 });
 
-                      $(document).on("click", "a#logout", function ()
-                      {
-                        $.ajax({
-                                 url: '${contextPath}ac/authenticate',
-                                 method: 'DELETE'
-                               })
-                            .done(function ()
-                                  {
-                                    window.location.reload(true);
-                                  });
-                      });
+                      $('<div class="early-access text-warning">Early access with limited functionality</div>')
+                          .after("#top-nav > div.container > div.navbar-header");
                     });
 </script>
+<#include "_application_header.shtml">
 </body>
 </html>
