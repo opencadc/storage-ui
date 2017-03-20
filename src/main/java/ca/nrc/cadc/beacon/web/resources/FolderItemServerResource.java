@@ -175,7 +175,6 @@ public class FolderItemServerResource extends StorageItemServerResource
 
                         move(srcURI, currentNode.getUri());
 
-
                     }
                 }
                 getResponse().setStatus(Status.SUCCESS_OK);
@@ -187,14 +186,19 @@ public class FolderItemServerResource extends StorageItemServerResource
 
         }
     }
-    
+
+    Transfer getTransfer(VOSURI source, VOSURI destination)
+    {
+        return new Transfer(source.getURI(),
+                destination.getURI(), false);
+    }
     private ClientTransfer move(VOSURI source, VOSURI destination)
             throws IOException, InterruptedException, AccessControlException
     {
         // According to ivoa.net VOSpace 2.1 spec, a move is handled using
-        // a transfer. keeyBytes = false. destination URI is the Direction.
-        final Transfer transfer = new Transfer(source.getURI(),
-                                               destination.getURI(), false);
+        // a transfer. keepBytes = false. destination URI is the Direction.
+        final Transfer transfer = getTransfer(source, destination);
+
         try
         {
             return Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<ClientTransfer>()
@@ -213,11 +217,7 @@ public class FolderItemServerResource extends StorageItemServerResource
         {
             throw new RuntimeException(e.getMessage());
         }
-
-
     }
-
-
 
 }
 

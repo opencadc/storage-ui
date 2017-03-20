@@ -71,25 +71,27 @@ package ca.nrc.cadc.beacon.web.resources;
 
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.beacon.FileSizeRepresentation;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.NodeNotFoundException;
-import ca.nrc.cadc.vos.NodeProperty;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.VOSURI;
+import ca.nrc.cadc.vos.*;
 
+import ca.nrc.cadc.vos.client.ClientTransfer;
+import org.easymock.IAnswer;
+import org.json.JSONObject;
+import org.restlet.Context;
 import org.restlet.Response;
 
 import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URI;
+import java.net.URL;
 import java.security.PrivilegedExceptionAction;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.restlet.data.Status;
+import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
 
+import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 
 import org.junit.Assert;
@@ -279,5 +281,128 @@ public class FolderItemServerResourceTest
     	int beginIndex = text.indexOf('"');
     	int endIndex = text.lastIndexOf('"');
     	return text.substring(beginIndex + 1, endIndex);
+    }
+
+
+    @Test
+    public void moveItemsToFolder() throws Exception
+    {
+        String srcNodeName = "/my/source_node";
+        String destNodeName = "/my/dest_node";
+        final VOSURI source = new VOSURI(URI.create(
+                StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
+                        + srcNodeName));
+
+        final VOSURI destination = new VOSURI(URI.create(
+                StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
+                        + destNodeName));
+
+        List<NodeProperty> properties = new ArrayList<>();
+        final ContainerNode mockDestinationNode = createMock(ContainerNode.class);
+
+        expect(mockDestinationNode.getUri()).andReturn(destination)
+                .once();
+        replay(mockDestinationNode);
+
+
+        final Transfer mockTransfer = createMock(Transfer.class);
+        replay(mockTransfer);
+
+
+        // Need mock ClientTransfer object as well.
+        final ClientTransfer mockClientTransfer = createMock(ClientTransfer.class);
+
+        // Override runTransfer & setMonitor methods
+        mockClientTransfer.setMonitor(false);
+        expectLastCall().andAnswer(new IAnswer<Void>()
+        {
+            @Override
+            public Void answer() throws Throwable {
+                return null;
+            }
+        });
+
+        mockClientTransfer.runTransfer();
+        expectLastCall().andAnswer(new IAnswer<Void>()
+        {
+            @Override
+            public Void answer() throws Throwable {
+                return null;
+            }
+        });
+
+
+        // Set up return code in response
+        mockResponse.setStatus(Status.SUCCESS_OK);
+        expectLastCall().once();
+
+        replay(mockResponse, mockClientTransfer);
+
+        expect(mockVOSpaceClient.createTransfer(mockTransfer))
+                .andReturn(mockClientTransfer).once();
+        replay(mockVOSpaceClient);
+
+
+        expect(mockServletContext.getContextPath()).andReturn("/teststorage")
+                .once();
+        replay(mockServletContext);
+
+
+        testSubject = new FolderItemServerResource(mockVOSpaceClient)
+        {
+            @Override
+            ServletContext getServletContext()
+            {
+                return mockServletContext;
+            }
+
+            @Override
+            RegistryClient getRegistryClient()
+            {
+                return mockRegistryClient;
+            }
+
+            @Override
+            Subject generateVOSpaceUser() throws IOException
+            {
+                return new Subject();
+            }
+
+            @Override
+            public Response getResponse()
+            {
+                return mockResponse;
+            }
+
+            @Override
+            VOSURI getCurrentItemURI()
+            {
+                return destination;
+            }
+
+            @Override
+            <T extends Node> T getNode(VOSURI folderURI, VOS.Detail detail) throws NodeNotFoundException
+            {
+                return (T)mockDestinationNode;
+            }
+
+            @Override
+            Transfer getTransfer(VOSURI source, VOSURI destination)
+            {
+                return mockTransfer;
+            }
+        };
+
+
+        final JSONObject sourceJSON = new JSONObject("{\"destNode\":\"" + destNodeName + "\","
+                + "\"srcNodes\":\"" + srcNodeName + "\"}");
+
+        final JsonRepresentation payload = new JsonRepresentation(sourceJSON);
+
+        testSubject.moveToFolder(payload);
+
+        verify(mockVOSpaceClient, mockResponse, mockServletContext,
+                mockClientTransfer, mockDestinationNode);
+
     }
 }
