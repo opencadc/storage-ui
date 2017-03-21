@@ -50,6 +50,7 @@
                         <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload File</a>
                       <form id="uploader" method="post" class="hidden">
                         <input id="currentpath" name="currentpath" type="hidden" value="${folder.path}"/>
+                        <input id="currentFolderName" name="currentFolderName" type="hidden" value="${folder.name}"/>
                       </form>
                     </li>
                     <li>

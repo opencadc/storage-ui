@@ -1076,7 +1076,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                                      form.setAttribute("method", "POST");
                                      form.setAttribute("action",
                                                        config.upload.url
-                                                       + "/"
                                                        + getCurrentPath());
 
                                      // Move the submit function to another
@@ -1493,7 +1492,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
           '<input type="text" class="form-control  ui-autocomplete-input action-hook" id="readGroup" name="readGroup" placeholder="' + lg.group_name_program_id + '">' +
         '</div>' +
       '</div>' +
-      '<div class="form-group ui0front fm-prompt" id="writeGroupDiv">' +
+      '<div class="form-group ui-front fm-prompt" id="writeGroupDiv">' +
         '<label for="writeGroup" id="writeGroupLabel" class="control-label col-sm-4">' + lg.WRITE_GROUP + '</label>' +
         '<div class="col-sm-7">' +
           '<input type="text" class="form-control action-hook" id="writeGroup" name="writeGroup" placeholder="' + lg.group_name_program_id + '">' +
@@ -1542,7 +1541,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         submit: handleEditPermissions
       }
     };
-
     $.prompt( states, {
       classes: {
         form: 'form-horizontal',
@@ -1972,11 +1970,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                         {
     	                  if (node.child == null)
     	                  {
-    	                	  returnHTML = returnHTML + '<li>' + node.name + '<ul></ul></li>';
+    	                	  returnHTML = returnHTML + '<li><span class="folderName">' + node.name + '</span><ul></ul></li>';
     	                  }
     	                  else
     	                  {
-    	                	returnHTML = returnHTML + '<li>' + node.name;
+    	                	returnHTML = returnHTML + '<li><span class="folderName">' + node.name + '</span>';
     	                    returnHTML = returnHTML + '<ul>' + node.child.toHTML() + '</ul>';
     	                    returnHTML = returnHTML + '</li>';    	                  
     	                  }
@@ -2028,24 +2026,34 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 	folderRequest.pageSize = defaultPageSize;
 	var spinningWheel = $.parseHTML('<span id="moveLoading" class="glyphicon glyphicon-refresh fast-right-spinner"></span>');
     
-    $(document).on('ul.collapsibleList li').click(function(event)
-  									            {
+    $(document).on('ul.collapsibleList li span').click(function(event)
+    {
   									              var target = $(event)[0].target;
   									              var name = $(target.childNodes)[0].data;
   									              var node = folderTree.findNode(name);
   									              if (node != null && target.className == 'collapsibleListOpen')
   									              {
-  									            	if (node.child == null)
-  									            	{
-  									                  // we have no sub-folders for this node, get them
-  									                  rootNodeName = name;
-  									                  pageUrl = contextPath + config.options.pageConnector + node.path;
-  									                  folderRequest.startURI = null;
-  									                  buildFolderLayer(folderRequest, updateFolderTree);
-  									                }
-  									            	
-  									            	$('#destNode').val(node.path);
-  									                $(".listener-hook").removeClass("disabled");
+                                    // Clear all highlights
+                                    $(".folderTreeSelected").removeClass("folderTreeSelected");
+
+                                    $(target).addClass("folderTreeSelected");
+
+                                    if (node.child == null)
+                                    {
+                                        // we have no sub-folders for this node, get them
+                                        rootNodeName = name;
+                                        pageUrl = contextPath + config.options.pageConnector + node.path;
+                                        folderRequest.startURI = null;
+                                        buildFolderLayer(folderRequest, updateFolderTree);
+                                    }
+
+                                    // display path should be the current folder, not entire path
+                                    $('#destNodeDisplay').val("/" + node.name);
+
+                                    // entire path (or should this be URI?) is passed in to back end
+                                    $('#destNode').val(node.path);
+
+                                    $(".listener-hook").removeClass("disabled");
   									              }
   									            });       		                            
 	
@@ -2221,10 +2229,17 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     var srcNodeList = setSrcNodes();
     // name of root node is an empty string
     buildFolderLayer(folderRequest, updateFolderTree);
-    var msg = '<div class="mMoveto">Please select the destination folder.</div> ' +
-      '<div class="folderTree"></div>' +
-      '<input type="text" class="hidden" name="srcNodes" id="srcNodes" value="' + srcNodeList + '">' +
-      '<input type="text" class="hidden" name="destNode" id="destNode" value="">';
+    var msg = '<div class="mMoveto">lg.please_select_folder</div> ' +
+      '<div class="folderTree col-sm-12"></div>' +
+      '<div class="form-group ui-front" id="destNodeDiv">' +
+        '<label for="destNodeDisplay" id=destNodeDisplayLabel" class="control-label col-sm-3">' + lg.destination + '</label>' +
+        '<div class="col-sm-9">' +
+          '<input type="text" disabled="disabled" class="form-control" id="destNodeDisplay" name="destNodeDisplay" placeholder="' + lg.select + " " + lg.destination_folder + '">' +
+        '</div>' +
+      '</div>' +
+      '<input type="text" class="hidden" name="destNode" id="destNode">' +
+      '<input type="text" class="hidden" name="srcNodes" id="srcNodes" value="' + srcNodeList + '">';
+
     var btns = [];
     btns.push
     ({
@@ -2240,7 +2255,21 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       "value": false,
       "classes": "btn btn-default"
     });
+
     $.prompt(msg, {
+        classes:
+        {
+          form: 'form-horizontal',
+          box: '',
+          fade: '',
+          prompt: '',
+          close: '',
+          title: 'lead',
+          message: '',
+          buttons: '',
+          button: 'btn',
+          defaultButton: 'btn-primary'
+        },
         loaded: function ()
         {
           $('.mMoveto').after(spinningWheel);
@@ -3161,14 +3190,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         // https://github.com/simogeo/Filemanager/issues/304 and it may also be
         // safer for IE (see
         // http://stackoverflow.com/questions/1544317/change-type-of-input-field-with-jquery
-        $('#upload').remove();
 
         $('#upload').off().click(function ()
                                  {
-                                   // we create prompt
+                                   // Create prompt window: path is a hidden element in a form
+                                   // embedded in the New menu dropdown.
                                    var msg = '<div id="dropzone-container"><h2>' +
                                              lg.current_folder +
-                                             $('#uploader h1').attr('title') +
+                                             $('#currentFolderName').val() +
                                              '</h2><div id="multiple-uploads" class="dropzone"></div>';
                                    msg +=
                                      '<div id="total-progress"><div data-dz-uploadprogress="" style="width:0;" class="progress-bar"></div></div>';
