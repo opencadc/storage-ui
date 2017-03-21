@@ -1052,11 +1052,32 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
              });
   };
 
+  var setSrcNodes = function()
+  {
+    var selectedItems = $('tr.selected > td:nth-child(2) > span.glyphicon-pencil > a');
+    var selectedPaths = new Array();
+    var pathListStr = "";
+    $(selectedItems).each(function(index, item)
+    {
+      selectedPaths.push($(item).attr('path'));
+    });
+
+    if (selectedPaths.length > 0) {
+      pathListStr = selectedPaths.join(",");
+    }
+
+    return pathListStr;
+  }
+  
   var setMover = function ()
   {
     $('#move').off().click(function ()
 			               {
-						     moveItem();
+        					 var srcNodeList = setSrcNodes();
+        					 if (srcNodeList.length > 0)
+        					 {
+						       moveItem(srcNodeList);
+        					 }
 						   });
   };
   
@@ -2017,7 +2038,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   
 // Move the current item to specified dir and returns the new name.
 // Called by clicking the "Move" button.
-  var moveItem = function ()
+  var moveItem = function (srcNodeList)
   {
     var srcNodes = '';
 	var rootNodeName = '';
@@ -2031,46 +2052,32 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $(document).on('ul.collapsibleList li').click(function(event)
   									            {
   									              var target = $(event)[0].target;
-  									              var name = $(target.childNodes)[0].data;
-  									              var node = folderTree.findNode(name);
-  									              if (node != null && target.className == 'collapsibleListOpen')
+  									              if ($(target.childNodes).length > 0)
   									              {
-  									            	if (node.child == null)
-  									            	{
-  									                  // we have no sub-folders for this node, get them
-  									                  rootNodeName = name;
-  									                  pageUrl = contextPath + config.options.pageConnector + node.path;
-  									                  folderRequest.startURI = null;
-  									                  buildFolderLayer(folderRequest, updateFolderTree);
-  									                }
+  									                var name = $(target.childNodes)[0].data;
+  									                var node = folderTree.findNode(name);
+  									                if (node != null && target.className == 'collapsibleListOpen')
+  									                {
+  									            	  if (node.child == null)
+  									            	  {
+  									                    // we have no sub-folders for this node, get them
+  									                    rootNodeName = name;
+  									                    pageUrl = contextPath + config.options.pageConnector + node.path;
+  									                    folderRequest.startURI = null;
+  									                    buildFolderLayer(folderRequest, updateFolderTree);
+  									                  }
   									            	
-  									            	$('#destNode').val(node.path);
-  									                $(".listener-hook").removeClass("disabled");
+  									            	  $('#destNode').val(node.path);
+  									                  $(".listener-hook").removeClass("disabled");
+  									                }
   									              }
   									            });       		                            
 	
-    var setSrcNodes = function()
-    {
-      var selectedItems = $('tr.selected > td:nth-child(2) > span.glyphicon-pencil > a');
-      var selectedPaths = new Array();
-      var pathListStr = "";
-      $(selectedItems).each(function(index, item)
-      {
-        selectedPaths.push($(item).attr('path'));
-      });
-
-      if (selectedPaths.length > 0) {
-        pathListStr = selectedPaths.join(",");
-      }
-
-      return pathListStr;
-    }
-    
 	var getPageOfFolders = function (_pageRequest, _callback)
 	{
       if (!$('#moveLoading').length)
       {
-        $('.mMoveto').after(spinningWheel);
+    	$('.mMoveto').append(spinningWheel);
 	  }
       
 	  $.get({
@@ -2218,10 +2225,9 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
     };
 
-    var srcNodeList = setSrcNodes();
     // name of root node is an empty string
     buildFolderLayer(folderRequest, updateFolderTree);
-    var msg = '<div class="mMoveto">Please select the destination folder.</div> ' +
+    var msg = '<div class="mMoveto">Please select the destination folder. </div> ' +
       '<div class="folderTree"></div>' +
       '<input type="text" class="hidden" name="srcNodes" id="srcNodes" value="' + srcNodeList + '">' +
       '<input type="text" class="hidden" name="destNode" id="destNode" value="">';
@@ -2243,7 +2249,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $.prompt(msg, {
         loaded: function ()
         {
-          $('.mMoveto').after(spinningWheel);
+          $('.mMoveto').append(spinningWheel);
           $(".listener-hook").addClass("disabled");
         },             
         submit: doMove,
