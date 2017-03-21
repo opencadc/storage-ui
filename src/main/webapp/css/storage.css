@@ -262,6 +262,9 @@ div.jqimessage div.col-sm-4 a {
   float: right;
 }
 
+.spinnerSpan {
+    margin-left:20px;
+}
 
 section#main_section
 {
@@ -285,7 +288,7 @@ li.collapsibleListClosed {
 
 div.folderTree {
   max-width: 500px;
-  max-height: 500px;
+  max-height: 400px;
   overflow: auto;
   resize: both;
   margin-top: 10px;
