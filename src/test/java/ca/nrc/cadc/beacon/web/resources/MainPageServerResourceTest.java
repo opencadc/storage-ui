@@ -74,6 +74,8 @@ import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
 import ca.nrc.cadc.beacon.web.view.FolderItem;
 import ca.nrc.cadc.vos.*;
 import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.data.Reference;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
 
@@ -109,7 +111,7 @@ public class MainPageServerResourceTest
 
         final VOSURI folderURI = new VOSURI(URI.create(
                 StorageItemServerResource.VOSPACE_NODE_URI_PREFIX
-                        + "/my/node"));
+                + "/my/node"));
         final ContainerNode containerNode = new ContainerNode(folderURI);
 
         initialRowData.add("child1");
@@ -132,9 +134,14 @@ public class MainPageServerResourceTest
                 .put(VOSpaceApplication.ACCESS_CONTROL_CLIENT_KEY,
                      mockAccessControlClient);
 
-        expect(mockContext.getAttributes()).andReturn(mockContextAttributes).anyTimes();
+        expect(mockContext.getAttributes()).andReturn(mockContextAttributes)
+                .anyTimes();
 
-        replay(mockServletContext, mockRegistryClient, mockContext);
+        expect(mockRequest.getHostRef()).andReturn(
+                new Reference("http://mysite.com/storage"));
+
+        replay(mockServletContext, mockRegistryClient, mockContext,
+               mockRequest);
 
 
         testSubject = new MainPageServerResource()
@@ -157,10 +164,21 @@ public class MainPageServerResourceTest
                 return mockContext;
             }
 
+            /**
+             * Returns the handled request.
+             *
+             * @return The handled request.
+             */
+            @Override
+            public Request getRequest()
+            {
+                return mockRequest;
+            }
 
             @SuppressWarnings("unchecked")
             @Override
-            <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
+            <T extends Node> T getNode(final VOSURI folderURI,
+                                       final VOS.Detail detail)
                     throws NodeNotFoundException
             {
                 return (T) containerNode;
@@ -187,6 +205,7 @@ public class MainPageServerResourceTest
         assertTrue("Should contain initialRows",
                    dataModel.containsKey("initialRows"));
 
-        verify(mockFolderItem, mockServletContext, mockContext);
+        verify(mockFolderItem, mockServletContext, mockRegistryClient,
+               mockContext, mockRequest);
     }
 }

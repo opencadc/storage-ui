@@ -35,6 +35,7 @@
 
   <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
   <link rel="stylesheet" href="${contextPath}css/storage.css" media="screen"/>
+  <link rel="stylesheet" type="text/css" href="${contextPath}themes/canfar/styles/filemanager.css" />
 </head>
 
 <body>
@@ -62,11 +63,10 @@ directory for that user actually exists -->
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <#--<script src="${contextPath}js/ie10-viewport-bug-workaround.js"></script>-->
 
-<script type="text/javascript" src="${contextPath}js/org.opencadc.js"></script>
-<script type="text/javascript" src="${contextPath}js/datatables.min.js"></script>
-<script type="text/javascript" src="${contextPath}js/file-size.js"></script>
 <script type="text/javascript"
         src="${contextPath}js/jquery.csv-0.71.min.js"></script>
+<script type="text/javascript" src="${contextPath}js/datatables.min.js"></script>
+<script type="text/javascript" src="${contextPath}js/file-size.js"></script>
 <script type="text/javascript" src="${contextPath}js/jquery-browser.js"></script>
 <script type="text/javascript" src="${contextPath}js/jquery.form-3.24.js"></script>
 <script type="text/javascript"
@@ -78,14 +78,15 @@ directory for that user actually exists -->
 <script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
 
+
 <!-- To support CANFAR Header. -->
 <script type="text/javascript"
-        src="${contextPath}/cadcJS/javascript/org.opencadc.js"></script>
-<script type="text/javascript" src="${contextPath}/cadcJS/javascript/cadc.uri.js"></script>
+        src="${canfarWebHost}/cadcJS/javascript/org.opencadc.js"></script>
+<script type="text/javascript" src="${canfarWebHost}/cadcJS/javascript/cadc.uri.js"></script>
 <script type="text/javascript"
-        src="${contextPath}/canfar/javascript/jquery.address.js"></script>
-<script type="text/javascript" src="${contextPath}/canfar/javascript/cadc.user.js"></script>
-<script type="text/javascript" src="${contextPath}/canfar/javascript/net.canfar.js"></script>
+        src="${canfarWebHost}/canfar/javascript/jquery.address.js"></script>
+<script type="text/javascript" src="${canfarWebHost}/canfar/javascript/cadc.user.js"></script>
+<script type="text/javascript" src="${canfarWebHost}/canfar/javascript/net.canfar.js"></script>
 
 
 <!--
@@ -145,8 +146,8 @@ directory for that user actually exists -->
                           .fail(function (request, textStatus, errorThrown)
                                 {
                                   console.log("Error (" + request.status + "): "
-                                              + textStatus + "\n" +
-                                              errorThrown);
+                                              + textStatus + "\n"
+                                              + errorThrown);
                                 });
 
                       $('<div class="early-access text-warning">Early access with limited functionality</div>')

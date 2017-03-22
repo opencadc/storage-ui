@@ -131,8 +131,7 @@ public class MainPageServerResource extends StorageItemServerResource
                         "contextPath",
                         servletPath + (servletPath.endsWith("/") ? "" : "/"));
                 templateLoaders.add(new WebappTemplateLoader(servletContext));
-                templateLoaders.add(new CANFARURLTemplateLoader(
-                        getRequest().getHostRef().toUrl()));
+                templateLoaders.add(new CANFARURLTemplateLoader(getWebHost()));
             }
 
             freemarkerConfiguration.setTemplateLoader(
@@ -219,6 +218,24 @@ public class MainPageServerResource extends StorageItemServerResource
         return representFolderItem(folderItem, initialRows, startNextPageURI);
     }
 
+    private URL getWebHost() throws IOException
+    {
+        final String envWebHost =
+                System.getenv("CANFAR_WEB_HOST");
+        final URL webHost;
+
+        if (StringUtil.hasLength(envWebHost))
+        {
+            webHost = new URL(envWebHost);
+        }
+        else
+        {
+            webHost = getRequest().getHostRef().toUrl();
+        }
+
+        return webHost;
+    }
+
     Representation representFolderItem(final FolderItem folderItem,
                                        final Iterator<String> initialRows,
                                        final VOSURI startNextPageURI)
@@ -240,6 +257,8 @@ public class MainPageServerResource extends StorageItemServerResource
         Subject s = getCurrentUser();
         String httpUsername = accessControlClient
                 .getCurrentHttpPrincipalUsername(s);
+
+        dataModel.put("canfarWebHost", getWebHost().toString());
 
         if (StringUtil.hasText(httpUsername))
         {
