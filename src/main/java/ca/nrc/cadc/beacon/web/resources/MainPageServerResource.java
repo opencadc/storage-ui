@@ -78,6 +78,7 @@ import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import freemarker.cache.*;
 import freemarker.template.Configuration;
 import freemarker.template.TemplateModelException;
+import org.apache.log4j.Logger;
 import org.restlet.data.MediaType;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -98,6 +99,8 @@ public class MainPageServerResource extends StorageItemServerResource
 {
     private final Configuration freemarkerConfiguration =
             new Configuration(Configuration.VERSION_2_3_25);
+    private static final Logger LOGGER =
+            Logger.getLogger(MainPageServerResource.class);
 
 
     /**
@@ -174,8 +177,17 @@ public class MainPageServerResource extends StorageItemServerResource
 
                 try
                 {
-                    storageItemWriter.write(storageItemFactory.translate(
-                            childNodeIterator.next()));
+                    final Node nextChild = childNodeIterator.next();
+
+                    if (nextChild != null)
+                    {
+                        storageItemWriter.write(
+                                storageItemFactory.translate(nextChild));
+                    }
+                    else
+                    {
+                        LOGGER.warn("A NULL Node was found!");
+                    }
                 }
                 catch (Exception e)
                 {
