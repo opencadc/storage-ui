@@ -201,29 +201,20 @@ public abstract class StorageItem
     {
         if (StringUtil.hasLength(owner))
         {
-            try
+            final X500Name xName = new X500Name(owner);
+            final RDN[] cnList = xName.getRDNs(BCStyle.CN);
+
+            if (cnList.length > 0)
             {
-                final X500Name xName = new X500Name(owner);
-
-                final RDN[] cnList = xName.getRDNs(BCStyle.CN);
-
-                if (cnList.length > 0)
-                {
-                    // Parse out any part of the cn that is before a '_'
-                    String[] cnStringParts = IETFUtils
-                            .valueToString(cnList[0].getFirst().getValue())
-                            .split("_");
-                    return cnStringParts[0];
-                }
-                else
-                {
-                    return owner;
-                }
+                // Parse out any part of the cn that is before a '_'
+                String[] cnStringParts = IETFUtils
+                        .valueToString(cnList[0].getFirst().getValue())
+                        .split("_");
+                return cnStringParts[0];
             }
-            catch (NullPointerException e)
+            else
             {
-                System.out.println("*** BUG *** > Cannot parse " + owner);
-                throw e;
+                return owner;
             }
         }
         else
