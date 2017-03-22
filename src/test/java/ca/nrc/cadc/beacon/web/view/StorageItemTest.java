@@ -69,11 +69,7 @@
 package ca.nrc.cadc.beacon.web.view;
 
 import ca.nrc.cadc.beacon.AbstractUnitTest;
-import ca.nrc.cadc.beacon.web.resources.StorageItemServerResource;
-import ca.nrc.cadc.beacon.web.view.FileItem;
-import ca.nrc.cadc.beacon.web.view.StorageItem;
 import ca.nrc.cadc.vos.VOSURI;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.URI;
@@ -82,8 +78,7 @@ import java.util.Date;
 import static org.junit.Assert.assertEquals;
 
 
-public class StorageItemTest
-            extends AbstractUnitTest<StorageItem>
+public class StorageItemTest extends AbstractUnitTest<StorageItem>
 {
 
     @Test
@@ -92,23 +87,27 @@ public class StorageItemTest
         final VOSURI testURI = new VOSURI(URI.create("vos://cadc.nrc.ca!vospace/my/node"));
 
         StorageItem item1 = new StorageItem(testURI, hashCode(), new Date(),
-                        false, false, null, null, "CN=testOwner_1234,OU=ou1,OU=ou2",
-                        true, false, null) {
+                                            false, false, null, null, "CN=testOwner_1234,OU=ou1,OU=ou2",
+                                            true, false, null)
+        {
             @Override
-            public String getItemIconCSS() {
+            public String getItemIconCSS()
+            {
                 return null;
             }
 
         };
 
-        assertEquals(item1.getOwnerCN(),"testOwner");
+        assertEquals(item1.getOwnerCN(), "testOwner");
 
 
         StorageItem item2 = new StorageItem(testURI, hashCode(), new Date(),
-                false, false, null, null, "CN=Test Owner,OU=ou1,OU=ou2",
-                true, false, null) {
+                                            false, false, null, null, "CN=Test Owner,OU=ou1,OU=ou2",
+                                            true, false, null)
+        {
             @Override
-            public String getItemIconCSS() {
+            public String getItemIconCSS()
+            {
                 return null;
             }
 
@@ -119,19 +118,42 @@ public class StorageItemTest
 
         String dn = "OU=ou1,OU=ou2";
         StorageItem item3 = new StorageItem(testURI, hashCode(), new Date(),
-                false, false, null, null, dn,
-                true, false, null) {
+                                            false, false, null, null, dn,
+                                            true, false, null)
+        {
             @Override
-            public String getItemIconCSS() {
+            public String getItemIconCSS()
+            {
                 return null;
             }
 
         };
 
-        assertEquals(item3.getOwnerCN(),dn);
-
+        assertEquals(item3.getOwnerCN(), dn);
     }
 
 
+    @Test
+    public void getOwnerCNNull() throws Exception
+    {
+        final VOSURI testURI =
+                new VOSURI(URI.create("vos://cadc.nrc.ca!vospace/my/node"));
 
+        final StorageItem testSubject = new StorageItem(testURI, 88L,
+                                                        new Date(), false,
+                                                        false, null,
+                                                        null, null,
+                                                        false, false,
+                                                        null)
+        {
+            @Override
+            public String getItemIconCSS()
+            {
+                return null;
+            }
+        };
+
+        assertEquals("Should be empty.", "",
+                     testSubject.getOwnerCN());
+    }
 }

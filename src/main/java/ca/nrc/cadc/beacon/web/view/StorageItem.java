@@ -70,6 +70,7 @@ package ca.nrc.cadc.beacon.web.view;
 
 import ca.nrc.cadc.beacon.FileSizeRepresentation;
 import ca.nrc.cadc.date.DateUtil;
+import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.VOSURI;
 import org.bouncycastle.asn1.x500.RDN;
 import org.bouncycastle.asn1.x500.X500Name;
@@ -198,20 +199,28 @@ public abstract class StorageItem
 
     public String getOwnerCN()
     {
-        X500Name xName = new X500Name(owner);
-
-        RDN[] cnList = xName.getRDNs(BCStyle.CN);
-        if (cnList.length > 0)
+        if (StringUtil.hasLength(owner))
         {
-            // Parse out any part of the cn that is before a '_'
-            String[] cnStringParts = IETFUtils.valueToString(cnList[0].getFirst().getValue()).split("_");
-            return cnStringParts[0];
+            final X500Name xName = new X500Name(owner);
+            final RDN[] cnList = xName.getRDNs(BCStyle.CN);
+
+            if (cnList.length > 0)
+            {
+                // Parse out any part of the cn that is before a '_'
+                String[] cnStringParts = IETFUtils
+                        .valueToString(cnList[0].getFirst().getValue())
+                        .split("_");
+                return cnStringParts[0];
+            }
+            else
+            {
+                return owner;
+            }
         }
         else
         {
-            return owner;
+            return "";
         }
-
     }
 
     private String getURINames(final URI[] uris)
