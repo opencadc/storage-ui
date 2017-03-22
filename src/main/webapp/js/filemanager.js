@@ -2737,9 +2737,17 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       }
 
       $('#link-to-project').attr('href', config.url).attr('target', '_blank')
-        .attr('title', lg.support_fm + ' [' + lg.version + ' : '
-                       + config.version + ']');
+        .attr('title', lg.support_fm +
+                                                                                            ' [' +
+                                                                                            lg.version +
+                                                                                            ' : ' +
+                                                                                            config.version +
+                                                                                            ']');
       $('div.version').html(config.version);
+
+      // Loading theme
+      loadCSS(contextPath + 'themes/' + config.options.theme +
+              '/styles/filemanager.css');
 
       $.ajax({
                url: contextPath + 'themes/' + config.options.theme +

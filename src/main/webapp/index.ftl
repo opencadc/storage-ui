@@ -35,7 +35,6 @@
 
   <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
   <link rel="stylesheet" href="${contextPath}css/storage.css" media="screen"/>
-  <link rel="stylesheet" type="text/css" href="${contextPath}themes/canfar/styles/filemanager.css" />
 </head>
 
 <body>
