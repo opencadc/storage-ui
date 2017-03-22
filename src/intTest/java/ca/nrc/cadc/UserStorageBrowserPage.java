@@ -98,6 +98,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     private static final String YES = "Yes";
     private static final String CLOSE = "Close";
     public static final String SAVE = "Save";
+    public static final String MOVE_TO = "Move to";
+    private static final String MOVE_OK = "Move";
     public static final String CANCEL = "Cancel";
     private static final By NAVBAR_ELEMENTS_BY =
             xpath("//*[@id=\"navbar-functions\"]/ul");
@@ -266,6 +268,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     }
 
 
+
     protected int getNextAvailabileFolderRow(final int startRow)
             throws Exception
     {
@@ -351,34 +354,45 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return new UserStorageBrowserPage(driver);
     }
 
-    // TODO: verify logic of this moveFolder method
-//    public void moveFolder(String foldername) throws Exception
-//    {
-//        if (!isDisabled(moveButton))
-//        {
-//            moveButton.click();
-//        }
-//
-//        // locate folder, select checkbox, select move button
-//        if (isJqiMsgShowing(MOVE_CONFIRMATION_TEXT))
-//        {
-//            clickButtonWithClass(YES, "btn-danger");
-//        }
-//        else
-//        {
-//            throw new Exception("Could not move folder " + foldername);
-//        }
-//
-//        // confirm folder delete
-//        if (isJqiColourMsgShowing(SUCCESSFUL))
-//        {
-//            clickButton(CLOSE);
-//        }
-//        else
-//        {
-//            throw new Exception("Folder move not successful: " + foldername);
-//        }
-//    }
+
+
+    public UserStorageBrowserPage selectFolderFromTree(String foldername) throws Exception
+    {
+
+        WebElement folderTree = find(xpath("//*[@id=\"folderTree\"]"));
+//        WebElement folderEl = folderTree.findElement(xpath("//*[@class='folderName' and contains(text(),'" + foldername + "')]"))
+//        folderTree.findElement(By.xpath("//*div[contains(@class,'folderName')]"));
+        // locate the folder with the name/path provided
+        WebElement folderEl = waitUntil(ExpectedConditions.elementToBeClickable(
+                xpath("//*[@class='folderName' and contains(text(),'" + foldername + "')]")));
+
+//        WebElement folderEl = find(By.xpath("//*div[contains(@class,\"folderName\") and contains(text()," + foldername + ")]"));
+        // click on it
+        click(folderEl);
+        // wait for the spinner icon to not exist in the prompt box anymore
+
+        return new UserStorageBrowserPage(driver);
+    }
+
+    public UserStorageBrowserPage startMove() throws Exception
+    {
+        if (!isDisabled(moveButton))
+        {
+            moveButton.click();
+        }
+
+        return new UserStorageBrowserPage(driver);
+    }
+
+
+    public UserStorageBrowserPage doMove() throws Exception
+    {
+        clickButton(MOVE_TO);
+        confirmJQIMessageText(MOVE_OK);
+        clickButton(OK);
+        return new UserStorageBrowserPage(driver);
+    }
+
 
     public UserStorageBrowserPage deleteFolder() throws Exception
     {
