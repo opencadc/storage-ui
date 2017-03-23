@@ -1955,14 +1955,14 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 	
 	this.addNode = function(name, path, uri)
 	{
-		var node = FolderLayer.makeNode();
-		node.name = name;
-		node.path = path;
-		node.uri = uri;
-		this.head.push(node);
+      var node = FolderLayer.makeNode();
+      node.name = name;
+      node.path = path;
+      node.uri = uri;
+      this.head.push(node);
 	}
 	
-	this.findNode = function(name)
+	this.findNodeOnCurrentLayer = function(name)
 	{
       for (var i=0; i<this.head.length; i++)
       {
@@ -1970,17 +1970,28 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
         {
           return this.head[i];	
         }
-        else if (this.head[i].child != null)
-        {
-          var node = this.head[i].child.findNode(name);
-          if (node != null)
-          {
-            return node;
-          }
-        }
       }
       
       return null;
+	}
+	
+	this.findNode = function(fullName)
+	{
+      var node = null;
+      var tempName = '/';
+      
+      if (stringUtil.hasText(fullName))
+      {
+    	var name = fullName.split('/')[1];
+    	node = this.findNodeOnCurrentLayer(name);
+    	tempName = tempName + name;
+    	if (fullName.length > tempName.length)
+    	{
+          node = node.child.findNode(fullName.substr(tempName.length));
+    	}
+      }
+      
+      return node;    
 	}
 	
 	this.toHTML = function()
@@ -1991,11 +2002,11 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
                         {
     	                  if (node.child == null)
     	                  {
-    	                	  returnHTML = returnHTML + '<li><div class="folderName">' + node.name + '</div><ul></ul></li>';
+    	                	  returnHTML = returnHTML + '<li><div class="folderName" fullName="' + node.path + '">' + node.name + '</div><ul></ul></li>';
     	                  }
     	                  else
     	                  {
-    	                	returnHTML = returnHTML + '<li><div class="folderName">' + node.name + '</div>';
+    	                	returnHTML = returnHTML + '<li><div class="folderName" fullName="' + node.path + '">' + node.name + '</div>';
     	                    returnHTML = returnHTML + '<ul>' + node.child.toHTML() + '</ul>';
     	                    returnHTML = returnHTML + '</li>';    	                  
     	                  }
@@ -2011,7 +2022,6 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 	
 	this.findNode = function(name)
 	{
-      var node = null;
       return this.root == null ? null : this.root.findNode(name);
 	}
 	
@@ -2039,7 +2049,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
   var moveItem = function (srcNodeList)
   {
     var srcNodes = '';
-    var rootNodeName = '';
+    var fullName = '';
     var folderTree = new FolderTree();
     var folderLayer;
     var pageUrl = contextPath + config.options.pageConnector;
@@ -2050,8 +2060,8 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     $(document).on('.folderName').click(function(event)
     {
             var target = $(event)[0].target;
-            var name = $(target.childNodes)[0].data;
-            var node = folderTree.findNode(name);
+            var nameWithPath = $(target).attr('fullName');
+            var node = folderTree.findNode(nameWithPath);
             // Clear all highlights
             $(".folderName.bg-success").removeClass("bg-success");
 
@@ -2062,7 +2072,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
               if (node.child == null)
               {
                 // we have no sub-folders for this node, get them
-                rootNodeName = name;
+                fullName = nameWithPath;
                 pageUrl = contextPath + config.options.pageConnector + node.path;
                 folderRequest.startURI = null;
                 buildFolderLayer(folderRequest, updateFolderTree);
@@ -2098,16 +2108,13 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     var updateComplete = function ()
     {
       // add the new layer to the tree and draw the folder tree
-      folderTree.addLayer(rootNodeName, folderLayer);
+      folderTree.addLayer(fullName, folderLayer);
 
       if ($('.collapsibleList').length)
       {
         // we already have the collapsible list, add to it
     	var layerNodes = $.parseHTML(folderLayer.toHTML());
-    	var selectedNode = $('ul.collapsibleList li:contains(' + rootNodeName + ')').filter(function(index)
-																			    		    {
-																			    		      return $(this).text() == rootNodeName;
-																			    		    });
+    	var selectedNode = $('ul.collapsibleList').find('div[fullName="' + fullName + '"]').closest('li');
     	var containerNode = selectedNode.find('ul');
 
     	if (layerNodes == null )
