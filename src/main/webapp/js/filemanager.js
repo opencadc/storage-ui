@@ -2057,7 +2057,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
             $(target).addClass("bg-success");
 
-            if (node != null && target.parentNode.className == 'collapsibleListOpen')
+            if (node != null && target.parentNode.className != 'collapsibleListClosed')
             {
               if (node.child == null)
               {
