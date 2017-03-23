@@ -2067,7 +2067,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
 
             $(target).addClass("bg-success");
 
-            if (node != null && target.parentNode.className == 'collapsibleListOpen')
+            if (node != null && target.parentNode.className != 'collapsibleListClosed')
             {
               if (node.child == null)
               {
@@ -2241,7 +2241,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
     buildFolderLayer(folderRequest, updateFolderTree);
 
     var msg = '<div class="mMoveto">' + lg.please_select_folder + '<span class="spinnerSpan"></span></div> ' +
-      '<div class="folderTree col-sm-12"></div>' +
+      '<div id="folderTree" class="folderTree col-sm-12"></div>' +
       '<div class="form-group ui-front" id="destNodeDiv">' +
         '<label for="destNodeDisplay" id=destNodeDisplayLabel" class="control-label col-sm-3">' + lg.destination + '</label>' +
         '<div class="col-sm-9">' +

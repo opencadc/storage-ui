@@ -304,4 +304,8 @@ div.folderTree {
   background-color: white;
 }
 
+.folderName {
+    cursor:pointer;
+}
+
 
