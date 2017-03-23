@@ -82,6 +82,7 @@ directory for that user actually exists -->
 <script type="text/javascript"
         src="${contextPath}js/jquery-impromptu.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="${contextPath}js/CollapsibleLists.src.js"></script>
 <script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
 
 <!--
