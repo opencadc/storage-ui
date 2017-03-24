@@ -639,7 +639,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
    */
   var getCurrentPath = function ()
   {
-    return path = $('#currentpath').val();
+    return $('#currentpath').val() || '/';
   };
 
 
