@@ -3042,11 +3042,12 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
              });
       
       // Loading quota and folder size for root folder, e.g. /CADCTest
-      if (stringUtil.hasText(getCurrentPath()))
+      var currPath = getCurrentPath();
+      if (stringUtil.hasText(currPath))
       {
 	      $.ajax({
 	          method: 'GET',
-	          url: contextPath + config.options.folderConnector + '/' + getCurrentPath().split('/')[1] ,
+	          url: contextPath + config.options.folderConnector + '/' + currPath.split('/')[1] ,
 	          dataType: 'json',
 	          async: false,
 	          success: function (data)
