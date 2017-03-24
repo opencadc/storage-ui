@@ -35,6 +35,13 @@
 
   <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
   <link rel="stylesheet" href="${contextPath}css/storage.css" media="screen"/>
+
+  <style type="text/css">
+    .navbar-header
+    {
+      margin-top: 0;
+    }
+  </style>
 </head>
 
 <body>
@@ -50,6 +57,7 @@ directory for that user actually exists -->
 
 <div class="container-fluid">
 
+<#-- Obtained from root library. -->
 <#include "_main.ftl">
 
 </div><!-- /.container -->
@@ -75,6 +83,7 @@ directory for that user actually exists -->
 <script type="text/javascript"
         src="${contextPath}js/jquery-impromptu.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>
+<script type="text/javascript" src="${contextPath}js/CollapsibleLists.compressed.js"></script>
 <script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
 
 
