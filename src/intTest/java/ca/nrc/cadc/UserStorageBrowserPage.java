@@ -259,12 +259,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return new UserStorageBrowserPage(driver);
     }
 
-    public void clickFolderForRow(int rowNum) throws Exception
+    public UserStorageBrowserPage clickFolderForRow(int rowNum) throws Exception
     {
         final By rowBy =
                 xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a");
         waitForElementClickable(rowBy);
         click(rowBy);
+
+        return new UserStorageBrowserPage(driver);
     }
 
 
