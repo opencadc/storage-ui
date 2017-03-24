@@ -556,7 +556,7 @@ function fileManager(_initialData, _$beaconTable, _startURI, _folderPath,
       bheight += 60;
     }
 
-    var newH = ($uploader && $uploader.offset)
+    var newH = ($uploader && ($uploader.length > 0))
       ? ($(window).height() - $uploader.height() - $uploader.offset().top - bheight)
       : ($(window).height() - bheight);
     $fileInfo.height(newH);
