@@ -1,7 +1,7 @@
 ---
 ---
 
-#### User Storage User Interface 0.9 for CANFAR
+#### User Storage User Interface 0.10 (Build 1009) for CANFAR
 
 By default, this uses the CANFAR (CADC) VOSpace located at:
 
