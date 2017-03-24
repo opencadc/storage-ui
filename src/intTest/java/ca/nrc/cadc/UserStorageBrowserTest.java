@@ -117,7 +117,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         int firstPageRowClicked = userStoragePage
                 .getNextAvailabileFolderRow(startRow);
         String subFolder1 = userStoragePage.getFolderName(firstPageRowClicked);
-        userStoragePage = userStoragePage.clickFolderForRow(firstPageRowClicked);
+        userStoragePage.clickFolderForRow(firstPageRowClicked);
         verifyTrue(userStoragePage.isSubFolder(subFolder1));
         verifyTrue(userStoragePage.quotaIsDisplayed());
 
@@ -125,7 +125,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         int secondPageRowCilcked = userStoragePage
                 .getNextAvailabileFolderRow(startRow);
         String subFolder2 = userStoragePage.getFolderName(secondPageRowCilcked);
-        userStoragePage = userStoragePage.clickFolderForRow(secondPageRowCilcked);
+        userStoragePage.clickFolderForRow(secondPageRowCilcked);
         verifyTrue(userStoragePage.isSubFolder(subFolder2));
 
         // Navigate up one level (should be up one level)
@@ -133,7 +133,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         verifyTrue(userStoragePage.isSubFolder(subFolder1));
 
         // Go back down one folder
-        userStoragePage = userStoragePage.clickFolderForRow(secondPageRowCilcked);
+        userStoragePage.clickFolderForRow(secondPageRowCilcked);
         verifyTrue(userStoragePage.isSubFolder(subFolder2));
 
         // Go up to root
@@ -146,8 +146,7 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         // Scenario 4: test file actions
         System.out.println("testing file actions");
-        userStoragePage.enterSearch("CADCtest");
-        userStoragePage = userStoragePage.clickFolder("CADCtest");
+        userStoragePage.clickFolderForRow(firstPageRowClicked);
         userStoragePage.clickCheckboxForRow(startRow);
         verifyTrue(userStoragePage.isFileSelectedMode(startRow));
 
@@ -157,7 +156,6 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         // Go up to root
         userStoragePage = userStoragePage.navToRoot();
         verifyTrue(userStoragePage.isRootFolder());
-
         //  click through to CADCtest folder
         userStoragePage = userStoragePage.clickFolder(testFolderName);
         // Verify sub folder page state

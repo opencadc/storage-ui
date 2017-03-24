@@ -259,14 +259,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
         return new UserStorageBrowserPage(driver);
     }
 
-    public UserStorageBrowserPage clickFolderForRow(int rowNum) throws Exception
+    public void clickFolderForRow(int rowNum) throws Exception
     {
         final By rowBy =
                 xpath("//*[@id=\"beacon\"]/tbody/tr[" + rowNum + "]/td[2]/a");
         waitForElementClickable(rowBy);
         click(rowBy);
-
-        return new UserStorageBrowserPage(driver);
     }
 
 
@@ -361,11 +359,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public UserStorageBrowserPage selectFolderFromTree(String foldername) throws Exception
     {
 
-        find(xpath("//*[@id=\"folderTree\"]"));
+        WebElement folderTree = find(xpath("//*[@id=\"folderTree\"]"));
+//        WebElement folderEl = folderTree.findElement(xpath("//*[@class='folderName' and contains(text(),'" + foldername + "')]"))
+//        folderTree.findElement(By.xpath("//*div[contains(@class,'folderName')]"));
         // locate the folder with the name/path provided
         WebElement folderEl = waitUntil(ExpectedConditions.elementToBeClickable(
                 xpath("//*[@class='folderName' and contains(text(),'" + foldername + "')]")));
 
+//        WebElement folderEl = find(By.xpath("//*div[contains(@class,\"folderName\") and contains(text()," + foldername + ")]"));
         // click on it
         click(folderEl);
         // wait for the spinner icon to not exist in the prompt box anymore

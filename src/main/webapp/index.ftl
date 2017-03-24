@@ -75,18 +75,7 @@ directory for that user actually exists -->
 <script type="text/javascript"
         src="${contextPath}js/jquery-impromptu.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>
-<script type="text/javascript" src="${contextPath}js/CollapsibleLists.compressed.js"></script>
 <script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
-
-
-<!-- To support CANFAR Header. -->
-<script type="text/javascript"
-        src="${canfarWebHost}/cadcJS/javascript/org.opencadc.js"></script>
-<script type="text/javascript" src="${canfarWebHost}/cadcJS/javascript/cadc.uri.js"></script>
-<script type="text/javascript"
-        src="${canfarWebHost}/canfar/javascript/jquery.address.js"></script>
-<script type="text/javascript" src="${canfarWebHost}/canfar/javascript/cadc.user.js"></script>
-<script type="text/javascript" src="${canfarWebHost}/canfar/javascript/net.canfar.js"></script>
 
 
 <!--

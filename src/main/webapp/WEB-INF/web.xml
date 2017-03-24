@@ -16,7 +16,7 @@
 
     <init-param>
       <param-name>org.restlet.application</param-name>
-      <param-value>ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication</param-value>
+      <param-value>net.canfar.CANFARVOSpaceApplication</param-value>
     </init-param>
 
     <init-param>
