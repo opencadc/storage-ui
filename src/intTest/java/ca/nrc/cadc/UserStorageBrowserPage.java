@@ -359,14 +359,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage
     public UserStorageBrowserPage selectFolderFromTree(String foldername) throws Exception
     {
 
-        WebElement folderTree = find(xpath("//*[@id=\"folderTree\"]"));
-//        WebElement folderEl = folderTree.findElement(xpath("//*[@class='folderName' and contains(text(),'" + foldername + "')]"))
-//        folderTree.findElement(By.xpath("//*div[contains(@class,'folderName')]"));
+        find(xpath("//*[@id=\"folderTree\"]"));
         // locate the folder with the name/path provided
         WebElement folderEl = waitUntil(ExpectedConditions.elementToBeClickable(
                 xpath("//*[@class='folderName' and contains(text(),'" + foldername + "')]")));
 
-//        WebElement folderEl = find(By.xpath("//*div[contains(@class,\"folderName\") and contains(text()," + foldername + ")]"));
         // click on it
         click(folderEl);
         // wait for the spinner icon to not exist in the prompt box anymore
