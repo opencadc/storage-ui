@@ -11,7 +11,6 @@
   <meta name="author" content="Canadian Astronomy Data Centre">
   <meta name="keywords"
         content="VOSpace, IVOA, CADC, Canadian Astronomy Data Centre">
-  <link rel="icon" href="../../favicon.ico">
 
   <title>User Storage</title>
 
@@ -35,6 +34,13 @@
 
   <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
   <link rel="stylesheet" href="${contextPath}css/storage.css" media="screen"/>
+
+  <style type="text/css">
+    .navbar-header
+    {
+      margin-top: 0;
+    }
+  </style>
 </head>
 
 <body>
@@ -50,6 +56,7 @@ directory for that user actually exists -->
 
 <div class="container-fluid">
 
+<#-- Obtained from root library. -->
 <#include "_main.ftl">
 
 </div><!-- /.container -->
@@ -77,16 +84,6 @@ directory for that user actually exists -->
 <script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/CollapsibleLists.compressed.js"></script>
 <script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
-
-
-<!-- To support CANFAR Header. -->
-<script type="text/javascript"
-        src="${canfarWebHost}/cadcJS/javascript/org.opencadc.js"></script>
-<script type="text/javascript" src="${canfarWebHost}/cadcJS/javascript/cadc.uri.js"></script>
-<script type="text/javascript"
-        src="${canfarWebHost}/canfar/javascript/jquery.address.js"></script>
-<script type="text/javascript" src="${canfarWebHost}/canfar/javascript/cadc.user.js"></script>
-<script type="text/javascript" src="${canfarWebHost}/canfar/javascript/net.canfar.js"></script>
 
 
 <!--
@@ -141,7 +138,7 @@ directory for that user actually exists -->
                                   fileManager(rows, $("#beacon"),
                                               "<#if startURI??>${startURI}</#if>",
                                               "${folder.path}", ${folder.writable?c},
-                                              100 , json, "${contextPath}");
+                                              100 , json, "${contextPath}", false);
                                 })
                           .fail(function (request, textStatus, errorThrown)
                                 {
