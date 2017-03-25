@@ -330,7 +330,6 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
         verifyTrue(rowCount < 3);
         verifyTrue(userStoragePage.verifyFolderName(rowCount - 1, moveTestFolder));
 
-
         // Test Link folder (can't do link to file yet if no browser test for upload file...
         String linkTestFolder = "linkTest_toBeDeleted_" + generateAlphaNumeric(4);
         userStoragePage = userStoragePage.createNewFolder(linkTestFolder);
@@ -358,7 +357,6 @@ public class UserStorageBrowserTest extends AbstractBrowserTest
 
         // Test Delete while cleaning up
         userStoragePage = userStoragePage.navUpLevel();
-//        userStoragePage = userStoragePage.navUpLevel();
 
 		// Nav up one level & delete working folder as well
 		userStoragePage = userStoragePage.navUpLevel();

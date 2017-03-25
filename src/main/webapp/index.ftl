@@ -11,7 +11,6 @@
   <meta name="author" content="Canadian Astronomy Data Centre">
   <meta name="keywords"
         content="VOSpace, IVOA, CADC, Canadian Astronomy Data Centre">
-  <link rel="icon" href="../../favicon.ico">
 
   <title>User Storage</title>
 
@@ -139,7 +138,7 @@ directory for that user actually exists -->
                                   fileManager(rows, $("#beacon"),
                                               "<#if startURI??>${startURI}</#if>",
                                               "${folder.path}", ${folder.writable?c},
-                                              100 , json, "${contextPath}");
+                                              100 , json, "${contextPath}", false);
                                 })
                           .fail(function (request, textStatus, errorThrown)
                                 {
