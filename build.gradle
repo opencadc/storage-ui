@@ -20,6 +20,7 @@ repositories {
 dependencies {
     compile 'org.opencadc:cadc-vosui:1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
+    providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 }
 
 sourceCompatibility = '1.7'
