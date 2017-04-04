@@ -54,6 +54,13 @@ directory for that user actually exists -->
   <#assign homeURL = '${contextPath}list/${username}'>
 </#if>
 
+<!-- jQuery needs to be loaded before the application header.  I don't know why.
+jenkinsd 2017.04.04
+-->
+<script src="${contextPath}js/jquery.min.js"></script>
+
+<#include "_application_header.shtml">
+
 <div class="container-fluid">
 
 <#-- Obtained from root library. -->
@@ -65,7 +72,6 @@ directory for that user actually exists -->
 <!-- Bootstrap core JavaScript
 ================================================== -->
 <!-- Placed at the end of the document so the pages load faster -->
-<script src="${contextPath}js/jquery.min.js"></script>
 <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
 <#--<script src="${contextPath}js/ie10-viewport-bug-workaround.js"></script>-->
 
@@ -151,6 +157,5 @@ directory for that user actually exists -->
                           .after("#top-nav > div.container > div.navbar-header");
                     });
 </script>
-<#include "_application_header.shtml">
 </body>
 </html>
