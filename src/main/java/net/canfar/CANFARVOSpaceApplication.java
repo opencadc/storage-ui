@@ -79,7 +79,7 @@ import java.net.URL;
 
 public class CANFARVOSpaceApplication extends VOSpaceApplication
 {
-    public final String DEFAULT_WEB_HOST = "http://rcapps.canfar.net";
+    public final String DEFAULT_WEB_HOST = "http://apps.canfar.net";
 
 
     public CANFARVOSpaceApplication(final Context context)
