@@ -10,15 +10,11 @@ repositories {
     maven {
         url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
     }
-
-    // Only here until cadc-vosui is in jcenter.
-    maven {
-        url  "http://dl.bintray.com/opencadc/software"
-    }
 }
 
 dependencies {
     compile 'org.opencadc:cadc-vosui:[1.1.12, )'
+    runtime 'org.opencadc:cadc-upload-manager:[1.0.3, )'
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 }
