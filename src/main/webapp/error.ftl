@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 
 <#-- Set this appropriately -->
-<#assign canfarWebRoot = "http://www.canfar.net/beta-canfar.github.io">
+<#assign canfarWebRoot = "http://www.canfar.net">
 
 <html lang="en">
 <head>
