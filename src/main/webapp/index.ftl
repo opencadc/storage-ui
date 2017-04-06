@@ -37,7 +37,7 @@
 
   <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
   <link rel="stylesheet" href="${contextPath}css/storage.css" media="screen"/>
-  <link rel="icon" type="image/x-icon"  href="${canfarWebRoot}/favicon.ico" />
+  <link rel="icon" type="image/x-icon"  href="${canfarWebRoot}/favicon.ico?v=2" />
 
   <style type="text/css">
     .navbar-header
