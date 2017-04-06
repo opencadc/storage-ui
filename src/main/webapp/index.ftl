@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 
+<#-- Set this appropriately -->
+<#assign canfarWebRoot = "http://www.canfar.net/beta-canfar.github.io">
+
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -21,9 +24,9 @@
   <![endif]-->
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/canfar.css" media="screen"/>
-  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/github-dark.css" media="screen"/>
-  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/print.css" media="print"/>
+  <link rel="stylesheet" href="${canfarWebRoot}/css/canfar.css" media="screen"/>
+  <link rel="stylesheet" href="${canfarWebRoot}/css/github-dark.css" media="screen"/>
+  <link rel="stylesheet" href="${canfarWebRoot}/css/print.css" media="print"/>
 
   <!-- jquery ui CSS -->
   <link href="${contextPath}css/jquery-ui.min.css" rel="stylesheet" media="screen">
@@ -34,6 +37,7 @@
 
   <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
   <link rel="stylesheet" href="${contextPath}css/storage.css" media="screen"/>
+  <link rel="icon" type="image/x-icon"  href="${canfarWebRoot}/favicon.ico" />
 
   <style type="text/css">
     .navbar-header

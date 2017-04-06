@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 
+<#-- Set this appropriately -->
+<#assign canfarWebRoot = "http://www.canfar.net/beta-canfar.github.io">
+
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -21,9 +24,9 @@
   <![endif]-->
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/canfar.css" media="screen"/>
-  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/github-dark.css" media="screen"/>
-  <link rel="stylesheet" href="http://www.canfar.net/beta-canfar.github.io/css/print.css" media="print"/>
+  <link rel="stylesheet" href="${canfarWebRoot}/css/canfar.css" media="screen"/>
+  <link rel="stylesheet" href="${canfarWebRoot}/css/github-dark.css" media="screen"/>
+  <link rel="stylesheet" href="${canfarWebRoot}/css/print.css" media="print"/>
 
   <!-- jquery ui CSS -->
   <link href="${contextPath}css/jquery-ui.min.css" rel="stylesheet" media="screen">
@@ -72,21 +75,6 @@ jenkinsd 2017.04.04
 <#--<script src="${contextPath}js/ie10-viewport-bug-workaround.js"></script>-->
 
 <script type="text/javascript" src="${contextPath}js/org.opencadc.js"></script>
-<#--<script type="text/javascript" src="${contextPath}js/datatables.min.js"></script>-->
-<#--<script type="text/javascript" src="${contextPath}js/file-size.js"></script>-->
-<#--<script type="text/javascript"-->
-        <#--src="${contextPath}js/jquery.csv-0.71.min.js"></script>-->
-<#--<script type="text/javascript" src="${contextPath}js/jquery-browser.js"></script>-->
-<#--<script type="text/javascript" src="${contextPath}js/jquery.form-3.24.js"></script>-->
-<#--<script type="text/javascript"-->
-        <#--src="${contextPath}js/jquery.contextmenu/jquery.contextMenu-1.01.js"></script>-->
-<#--<script type="text/javascript"-->
-        <#--src="${contextPath}js/jquery.tablesorter-2.7.2.min.js"></script>-->
-<#--<script type="text/javascript"-->
-        <#--src="${contextPath}js/jquery-impromptu.min.js"></script>-->
-<#--<script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>-->
-<#--<script type="text/javascript" src="${contextPath}js/CollapsibleLists.compressed.js"></script>-->
-<#--<script type="text/javascript" src="${contextPath}js/filemanager.js"></script>-->
 
 <!--
  AWAYS ensure the bootstrap.min.js comes last!
