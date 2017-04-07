@@ -14,9 +14,13 @@ repositories {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:[1.1.17, )'
+    compile 'org.opencadc:cadc-vosui:[1.1.18, )'
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
+
+    testCompile 'junit:junit:4.+'
+    testCompile 'ca.nrc.cadc:web-test:1.+'
+    testCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
 }
 
 sourceCompatibility = '1.7'
@@ -97,6 +101,6 @@ sourceSets {
         systemProperty 'user.name', project.intTest_user_name
         systemProperty 'user.password', project.intTest_user_password
 
-        maxParallelForks = 3
+        maxParallelForks = 1
     }
 }
