@@ -14,18 +14,18 @@ repositories {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:[1.1.23, )'
+    compile 'org.opencadc:cadc-vosui:[1.1.24, )'
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 
     testCompile 'junit:junit:4.+'
     testCompile 'ca.nrc.cadc:web-test:1.+'
-    testCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
+    testCompile 'org.seleniumhq.selenium:selenium-java:3.+'
 }
 
 sourceCompatibility = '1.7'
 
-version = '1002'
+version = '1003'
 
 def docker_image_name = 'canfar/storage'
 
@@ -37,7 +37,7 @@ clean {
     doFirst {
         exec {
             executable 'rm'
-            args('-rf', './docker')
+            args = ['-rf', './docker']
         }
     }
 }
@@ -79,8 +79,8 @@ sourceSets {
         dependencies {
             intTestCompile 'junit:junit:4.+'
             intTestCompile 'ca.nrc.cadc:web-test:1.+'
-            intTestCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
-//            intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
+//            intTestCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
+            intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
         }
 
         systemProperty "driver", "${driver}"
