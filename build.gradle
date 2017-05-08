@@ -14,13 +14,13 @@ repositories {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:[1.1.24, )'
+    compile 'org.opencadc:cadc-vosui:[1.1.26, )'
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 
     testCompile 'junit:junit:4.+'
     testCompile 'ca.nrc.cadc:web-test:1.+'
-    testCompile 'org.seleniumhq.selenium:selenium-java:3.+'
+    testCompile 'org.seleniumhq.selenium:selenium-java:2.53.+'
 }
 
 sourceCompatibility = '1.7'
@@ -79,8 +79,8 @@ sourceSets {
         dependencies {
             intTestCompile 'junit:junit:4.+'
             intTestCompile 'ca.nrc.cadc:web-test:1.+'
-//            intTestCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
-            intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
+            intTestCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
+//            intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
         }
 
         systemProperty "driver", "${driver}"

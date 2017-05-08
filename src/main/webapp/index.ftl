@@ -124,7 +124,7 @@ jenkinsd 2017.04.04
                                      +
                                      '<tr><td>Last used</td><td class="info">${folder.lastModifiedHumanReadable}</td></tr>'
                                      +
-                                     '<tr><td colspan="2">Is <#if !folder.writable><span class="text-danger">not </span></#if>writable by you.</td></tr>'
+                                     '<tr><td colspan="2">Is <#if !folderWritable><span class="text-danger">not </span></#if>writable by you.</td></tr>'
                                      + '</tbody></table>';
                             }
                           });
@@ -146,10 +146,8 @@ jenkinsd 2017.04.04
                                 {
                                   // Row count is 100 by default to just show
                                   // a moving barber pole progress.
-                                  fileManager(rows, $("#beacon"),
-                                              "<#if startURI??>${startURI}</#if>",
-                                              "${folder.path}", ${folder.writable?c},
-                                              100 , json, "${contextPath}", false);
+                                  fileManager(rows, $("#beacon"), "<#if startURI??>${startURI}</#if>", "${folder.path}",
+                                              ${folderWritable?c}, 100 , json, "${contextPath}", false);
                                 })
                           .fail(function (request, textStatus, errorThrown)
                                 {
