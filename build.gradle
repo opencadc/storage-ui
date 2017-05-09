@@ -19,7 +19,7 @@ dependencies {
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 
     testCompile 'junit:junit:4.+'
-    testCompile 'ca.nrc.cadc:web-test:[1.0.2, )'
+    testCompile 'org.opencadc:cadc-web-test:[1.0.2, )'
     testCompile 'org.seleniumhq.selenium:selenium-java:2.53.+'
 }
 
@@ -78,7 +78,7 @@ sourceSets {
         }
         dependencies {
             intTestCompile 'junit:junit:4.+'
-            intTestCompile 'ca.nrc.cadc:web-test:[1.0.2, )'
+            intTestCompile 'ca.nrc.cadc:web-test:1.+'
             intTestCompile 'org.seleniumhq.selenium:selenium-java:2.53.1'
 //            intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
         }
