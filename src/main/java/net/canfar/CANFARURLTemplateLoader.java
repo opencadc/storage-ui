@@ -86,8 +86,8 @@ public class CANFARURLTemplateLoader extends URLTemplateLoader
         {
             foreignTemplates.put("_application_header.shtml",
                                  new URL(webHost.getProtocol() + "://"
-                                         + webHost.getHost() + ":"
-                                         + webHost.getPort()
+                                         + webHost.getHost()
+                                         + ((webHost.getPort() > 0) ? ":" + webHost.getPort() : "")
                                          + "/canfar/includes/_application_header.shtml"));
         }
         catch (IOException e)
