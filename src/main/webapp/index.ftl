@@ -24,7 +24,7 @@
   <![endif]-->
 
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="${canfarWebRoot}/css/canfar.css" media="screen"/>
+  <link rel="stylesheet" href="${canfarWebRoot}/css/canfar.css?version=2" media="screen"/>
   <link rel="stylesheet" href="${canfarWebRoot}/css/github-dark.css" media="screen"/>
   <link rel="stylesheet" href="${canfarWebRoot}/css/print.css" media="print"/>
 
@@ -36,7 +36,7 @@
   <link href="${contextPath}css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
 
   <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
-  <link rel="stylesheet" href="${contextPath}css/storage.css" media="screen"/>
+  <link rel="stylesheet" href="${contextPath}css/storage.css?version=2" media="screen"/>
   <link rel="icon" type="image/x-icon"  href="${canfarWebRoot}/favicon.ico?v=2" />
 
   <style type="text/css">

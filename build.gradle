@@ -28,7 +28,7 @@ dependencies {
 
 sourceCompatibility = '1.7'
 
-version = '1004'
+version = '1005'
 
 def docker_image_name = 'canfar/storage'
 
