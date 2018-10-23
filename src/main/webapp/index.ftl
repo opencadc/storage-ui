@@ -35,7 +35,7 @@
   <link href="${contextPath}css/bootstrap.min.css" rel="stylesheet" media="screen">
   <link href="${contextPath}css/bootstrap-theme.min.css" rel="stylesheet" media="screen">
 
-  <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>  
+  <link rel="stylesheet" href="${contextPath}css/datatables.min.css" media="screen"/>
   <link rel="stylesheet" href="${contextPath}css/storage.css?version=4" media="screen"/>
   <link rel="icon" type="image/x-icon"  href="${canfarWebRoot}/favicon.ico?v=2" />
 
@@ -95,6 +95,9 @@ jenkinsd 2017.04.04
 <script type="text/javascript" src="${contextPath}js/jquery-ui.min.js"></script>
 <script type="text/javascript" src="${contextPath}js/CollapsibleLists.compressed.js"></script>
 <script type="text/javascript" src="${contextPath}js/filemanager.js"></script>
+<script type="text/javascript" src="//apps.canfar.net/cadcJS/javascript/cadc.registry-client.js"></script>
+<script type="text/javascript" src="//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/cadc/bootstrap/js/cadc.user.js"></script>
+<script type="text/javascript" src="//www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/cadc/bootstrap/js/login.js"></script>
 
 
 <!--
