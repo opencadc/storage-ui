@@ -23,7 +23,7 @@ configurations.all {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:1.1.32'
+    compile 'org.opencadc:cadc-vosui:1.1.33'
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 
@@ -34,7 +34,7 @@ dependencies {
 
 sourceCompatibility = '1.7'
 
-version = '1008'
+version = '1009'
 
 def docker_image_name = 'canfar/storage'
 
