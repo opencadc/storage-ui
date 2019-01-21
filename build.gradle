@@ -23,13 +23,13 @@ configurations.all {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:1.1.33'
+    compile 'org.opencadc:cadc-vosui:1.1.34'
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 
     testCompile 'junit:junit:4.+'
     testCompile 'org.opencadc:cadc-web-test:[2.0, )'
-    testCompile 'org.seleniumhq.selenium:selenium-java:2.53.+'
+    testCompile 'org.seleniumhq.selenium:selenium-java:3.+'
 }
 
 sourceCompatibility = '1.7'
