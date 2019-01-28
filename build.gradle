@@ -23,18 +23,18 @@ configurations.all {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:1.1.34'
+    compile 'org.opencadc:cadc-vosui:1.1.35'
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 
     testCompile 'junit:junit:4.+'
-    testCompile 'org.opencadc:cadc-web-test:[2.0, )'
+    testCompile 'org.opencadc:cadc-web-test:[2.1.1, )'
     testCompile 'org.seleniumhq.selenium:selenium-java:3.+'
 }
 
 sourceCompatibility = '1.7'
 
-version = '1009'
+version = '1010'
 
 def docker_image_name = 'canfar/storage'
 
@@ -100,7 +100,7 @@ idea {
         }
         dependencies {
             intTestCompile 'junit:junit:4.+'
-            intTestCompile 'ca.nrc.cadc:web-test:2.+'
+            intTestCompile 'org.opencadc:cadc-web-test:[2.1.0, )'
             intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
         }
 

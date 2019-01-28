@@ -68,7 +68,7 @@
 
 package net.canfar;
 
-import ca.nrc.cadc.beacon.web.restlet.VOSpaceApplication;
+import ca.nrc.cadc.beacon.web.restlet.StorageApplication;
 import ca.nrc.cadc.beacon.web.view.FreeMarkerConfiguration;
 import ca.nrc.cadc.util.StringUtil;
 import freemarker.template.TemplateModelException;
@@ -77,44 +77,32 @@ import org.restlet.Context;
 import java.io.IOException;
 import java.net.URL;
 
-public class CANFARVOSpaceApplication extends VOSpaceApplication
-{
+public class CANFARStorageApplication extends StorageApplication {
     public final String DEFAULT_WEB_HOST = "http://localhost";
 
 
-    public CANFARVOSpaceApplication(final Context context)
-    {
+    public CANFARStorageApplication(final Context context) {
         super(context);
     }
 
     @Override
-    public FreeMarkerConfiguration createFreemarkerConfig()
-    {
-        final FreeMarkerConfiguration freeMarkerConfiguration =
-                super.createFreemarkerConfig();
+    public FreeMarkerConfiguration createFreemarkerConfig() {
+        final FreeMarkerConfiguration freeMarkerConfiguration = super.createFreemarkerConfig();
 
-        try
-        {
+        try {
             final URL webHost = getWebHost();
 
-            freeMarkerConfiguration.setSharedVariable("canfarWebHost",
-                                                      webHost.toString());
-            freeMarkerConfiguration.addTemplateLoader(
-                    new CANFARURLTemplateLoader(webHost));
-        }
-        catch (IOException | TemplateModelException e)
-        {
+            freeMarkerConfiguration.setSharedVariable("canfarWebHost", webHost.toString());
+            freeMarkerConfiguration.addTemplateLoader(new CANFARURLTemplateLoader(webHost));
+        } catch (IOException | TemplateModelException e) {
             throw new IllegalArgumentException(e);
         }
 
         return freeMarkerConfiguration;
     }
 
-    private URL getWebHost() throws IOException
-    {
+    private URL getWebHost() throws IOException {
         final String envWebHost = System.getenv("CANFAR_WEB_HOST");
-
-        return StringUtil.hasLength(envWebHost) ? new URL(envWebHost)
-                                                : new URL(DEFAULT_WEB_HOST);
+        return StringUtil.hasLength(envWebHost) ? new URL(envWebHost) : new URL(DEFAULT_WEB_HOST);
     }
 }
