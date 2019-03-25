@@ -11,7 +11,7 @@ repositories {
 
     // Local repository for CADC private code
     maven {
-        url = 'http://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
+        url = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
     }
 }
 
@@ -27,14 +27,14 @@ dependencies {
     providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
     providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
 
-    testCompile 'junit:junit:4.+'
+    testCompile 'junit:junit:F4.+'
     testCompile 'org.opencadc:cadc-web-test:[2.1.1, )'
     testCompile 'org.seleniumhq.selenium:selenium-java:3.+'
 }
 
 sourceCompatibility = '1.7'
 
-version = '1012'
+version = '1013FF'
 
 def docker_image_name = 'canfar/storage'
 
