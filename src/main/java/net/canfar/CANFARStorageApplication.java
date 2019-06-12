@@ -70,15 +70,20 @@ package net.canfar;
 
 import ca.nrc.cadc.beacon.web.restlet.StorageApplication;
 import ca.nrc.cadc.beacon.web.view.FreeMarkerConfiguration;
+import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import freemarker.template.TemplateModelException;
 import org.restlet.Context;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 
+
 public class CANFARStorageApplication extends StorageApplication {
-    public final String DEFAULT_WEB_HOST = "http://localhost";
+
+    private static final String DEFAULT_APP_REGISTRY_URL = "https://www.canfar.net/reg/applications";
+    private static final URI DEFAULT_APP_ROOT_REGISTRY_KEY = URI.create("ivo://cadc.nrc.ca/canfar-dashboard");
 
 
     public CANFARStorageApplication(final Context context) {
@@ -102,7 +107,12 @@ public class CANFARStorageApplication extends StorageApplication {
     }
 
     private URL getWebHost() throws IOException {
-        final String envWebHost = System.getenv("CANFAR_WEB_HOST");
-        return StringUtil.hasLength(envWebHost) ? new URL(envWebHost) : new URL(DEFAULT_WEB_HOST);
+        final RegistryClient registryClient = new RegistryClient(getAppRegistryURL());
+        return registryClient.getAccessURL(DEFAULT_APP_ROOT_REGISTRY_KEY);
+    }
+
+    private URL getAppRegistryURL() throws IOException {
+        final String envAppRegistryURL = System.getenv("APP_REGISTRY_URL");
+        return StringUtil.hasLength(envAppRegistryURL) ? new URL(envAppRegistryURL) : new URL(DEFAULT_APP_REGISTRY_URL);
     }
 }
