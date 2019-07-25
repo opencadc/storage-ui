@@ -8,11 +8,6 @@ plugins {
 repositories {
     mavenLocal()
     jcenter()
-
-    // Local repository for CADC private code
-    maven {
-        url = 'https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/m2repo'
-    }
 }
 
 configurations.all {
@@ -23,48 +18,21 @@ configurations.all {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:1.1.38'
+    compile 'org.opencadc:cadc-vosui:1.1.39'
     compile 'org.opencadc:cadc-registry:[1.5.2,)'
-    providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
-    providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
+    providedCompile 'javax.servlet:javax.servlet-api:[3.1,)'
+    providedCompile 'javax.servlet:javax.servlet-api:[3.0,)'
 
     testCompile 'junit:junit:[4.12,)'
     testCompile 'org.opencadc:cadc-web-test:[2.1.1, )'
-    testCompile 'org.seleniumhq.selenium:selenium-java:3.+'
+    testCompile 'org.seleniumhq.selenium:selenium-java:[3.14,)'
 }
 
 sourceCompatibility = '1.7'
-version = '1014'
-
-def docker_image_name = 'canfar/storage'
+version = '1015'
 
 war {
     archiveName 'storage##' + project.version + '.war'
-}
-
-clean {
-    doFirst {
-        exec {
-            executable 'rm'
-            args = ['-rf', './docker']
-        }
-    }
-}
-
-task initDockerize(type: Copy, dependsOn: build) {
-    from 'Dockerfile'
-    from 'LocalAuthority.properties'
-    into 'docker/'
-}
-
-task copyWAR(type: Copy, dependsOn: war) {
-    from 'build/libs/'
-    into 'docker/'
-    include '*.war'
-}
-
-task dockerize(type: Exec, dependsOn: [initDockerize, copyWAR]) {
-    commandLine 'docker', 'build', '-t', docker_image_name, '-f', './docker/Dockerfile', './docker/'
 }
 
 ext {
@@ -99,9 +67,9 @@ idea {
             html.destination = reporting.file("$name/html")
         }
         dependencies {
-            intTestCompile 'junit:junit:4.+'
-            intTestCompile 'org.opencadc:cadc-web-test:[2.1.1, )'
-            intTestCompile 'org.seleniumhq.selenium:selenium-java:3.+'
+            intTestCompile 'junit:junit:[4.12,)'
+            intTestCompile 'org.opencadc:cadc-web-test:[2.1.1,)'
+            intTestCompile 'org.seleniumhq.selenium:selenium-java:[3.14,)'
         }
 
         systemProperty "driver", "${driver}"

@@ -1,7 +1,7 @@
-version: '2'
+version: '3.2'
 services:
   firefox:
-    image: selenium/standalone-firefox:2.53.1
+    image: selenium/standalone-firefox:3.14
     ports:
       - '127.0.0.1:4444:4444'
     network_mode: 'host'
@@ -13,4 +13,4 @@ services:
     depends_on: 
       - 'firefox'
     environment:
-      - CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1 apps.canfar.net www.canfar.phys.uvic.ca"
+      - CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1 www.canfar.net www.canfar.phys.uvic.ca"
