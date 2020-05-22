@@ -1,16 +1,38 @@
 version: '3.2'
 services:
-  firefox:
-    image: selenium/standalone-firefox:3.14
+  proxy.cadc.dao.nrc.ca:
+    image: nginx:alpine
     ports:
-      - '127.0.0.1:4444:4444'
-    network_mode: 'host'
-  storage-ui:
-    image: canfar/storage
+      - '443:443'
+      - '80:80'
+    networks:
+      - 'storage'
+    volumes:
+      - './docker/proxy/default.conf:/etc/nginx/conf.d/default.conf'
+      - './docker/proxy/html:/usr/share/nginx/html'
+      - 'server_certs:/usr/share/nginx/certs'
+    depends_on:
+      - 'storage'
+      - 'web-root'
+
+  web-root:
+    image: canfar/web-root:jdk11-slim
+    networks:
+      - 'storage'
+
+  storage:
+    image: canfar/storage:9-jdk13-slim
     ports:
-      - '127.0.0.1:8080:8080'
-    network_mode: 'host'
-    depends_on: 
-      - 'firefox'
+      - '5555:5555'
+    networks:
+      - 'storage'
     environment:
-      - CATALINA_OPTS="-DSSO_SERVERS=127.0.0.1 www.canfar.net www.canfar.phys.uvic.ca"
+      APP_REGISTRY_URL: https://proxy.cadc.dao.nrc.ca/reg/applications
+      CATALINA_OPTS: -DSSO_SERVERS="jenkinsd.cadc.dao.nrc.ca www.canfar.net" -Dorg.opencadc.vospace.service_id=ivo://canfar.net/cavern
+
+networks:
+  storage:
+
+volumes:
+  server_certs:
+    external: true

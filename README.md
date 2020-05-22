@@ -1,11 +1,11 @@
 ---
 ---
 
-#### User Storage User Interface 0.10 (Build 1009) for CANFAR
+#### User Storage User Interface (Build 1018) for CANFAR
 
-By default, this uses the CANFAR (CADC) VOSpace located at:
+By default, this uses the CADC VOSpace (named Vault) located at:
 
-<a rel="external" href="https://www.canfar.phys.uvic.ca/vospace">https://www.canfar.phys.uvic.ca/vospace</a>
+<a rel="external" href="https://ws-cadc.canfar.net">https://ws-cadc.canfar.net/vault</a>
 
 <a href="https://travis-ci.org/canfar/vosui"><img src="https://travis-ci.org/canfar/vosui.svg?branch=master" /></a>
 
