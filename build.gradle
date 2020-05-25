@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
 
-    implementation 'org.opencadc:cadc-vosui:1.1.43'
+    implementation 'org.opencadc:cadc-vosui:1.1.44'
     implementation 'org.opencadc:cadc-registry:[1.5.2,)'
     providedCompile 'javax.servlet:javax.servlet-api:[3.1,)'
     providedCompile 'javax.servlet:javax.servlet-api:[3.0,)'
@@ -23,7 +23,7 @@ dependencies {
 }
 
 sourceCompatibility = '1.8'
-version = '1019'
+version = '1020'
 
 war {
     archiveName 'storage##' + project.version + '.war'
