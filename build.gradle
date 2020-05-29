@@ -11,19 +11,19 @@ repositories {
 }
 
 dependencies {
+    implementation 'org.freemarker:freemarker:2.3.28'
+    implementation 'org.opencadc:cadc-vosui:1.1.45'
+    implementation 'org.opencadc:cadc-registry:[1.5.9,2.0)'
+    implementation 'org.restlet.jee:org.restlet:2.3.12'
+//    implementation 'org.restlet.jee:org.restlet.ext.servlet:2.3.12'
 
-    implementation 'org.opencadc:cadc-vosui:1.1.44'
-    implementation 'org.opencadc:cadc-registry:[1.5.2,)'
-    providedCompile 'javax.servlet:javax.servlet-api:[3.1,)'
-    providedCompile 'javax.servlet:javax.servlet-api:[3.0,)'
-
-    testImplementation 'junit:junit:[4.12,)'
+    testImplementation 'junit:junit:[4.12,5.0)'
     testImplementation 'org.opencadc:cadc-web-test:[2.1.1, )'
     testImplementation 'org.seleniumhq.selenium:selenium-java:[3.14,)'
 }
 
 sourceCompatibility = '1.8'
-version = '1020'
+version = '1021'
 
 war {
     archiveName 'storage##' + project.version + '.war'
