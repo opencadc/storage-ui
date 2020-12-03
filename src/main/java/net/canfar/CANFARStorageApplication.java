@@ -70,6 +70,7 @@ package net.canfar;
 
 import ca.nrc.cadc.beacon.web.restlet.StorageApplication;
 import ca.nrc.cadc.beacon.web.view.FreeMarkerConfiguration;
+import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import freemarker.template.TemplateModelException;
@@ -99,14 +100,14 @@ public class CANFARStorageApplication extends StorageApplication {
 
             freeMarkerConfiguration.setSharedVariable("canfarWebHost", webHost.toString());
             freeMarkerConfiguration.addTemplateLoader(new CANFARURLTemplateLoader(webHost));
-        } catch (IOException | TemplateModelException e) {
+        } catch (IOException | ResourceNotFoundException | TemplateModelException e) {
             throw new IllegalArgumentException(e);
         }
 
         return freeMarkerConfiguration;
     }
 
-    private URL getWebHost() throws IOException {
+    private URL getWebHost() throws IOException, ResourceNotFoundException {
         final RegistryClient registryClient = new RegistryClient(getAppRegistryURL());
         return registryClient.getAccessURL(DEFAULT_APP_ROOT_REGISTRY_KEY);
     }

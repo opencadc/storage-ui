@@ -68,6 +68,7 @@
 
 package ca.nrc.cadc;
 
+import org.apache.log4j.Logger;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
@@ -83,6 +84,11 @@ import java.util.List;
 
 
 public class UserStorageBrowserPage extends AbstractTestWebPage {
+
+    private static final Logger log =
+        Logger.getLogger(UserStorageBrowserPage.class);
+
+
     // Strings for matching against prompt messages and buttons
     public static final String CANCEL = "Cancel";
     private static final String CLOSE = "Close";
@@ -556,8 +562,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     // Navigation functions
     public UserStorageBrowserPage navToRoot() throws Exception {
         final UserStorageBrowserPage rootPage = clickButtonAndWait(rootButton);
-        rootPage.waitForStorageLoad();
-
         return rootPage;
     }
 
@@ -662,7 +666,8 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
             waitForElementPresent(ACCESS_ACTIONS_DROPDOWN_BY);
             final WebElement pullDown = find(ACCESS_ACTIONS_DROPDOWN_BY);
 
-            return (pullDown.getAttribute("class").contains("user-actions")) && isHomeDirButtonDisplayed();
+//            return (pullDown.getAttribute("class").contains("user-actions")) && isHomeDirButtonDisplayed();
+            return (pullDown.getAttribute("class").contains("user-actions"));
         } catch (NoSuchElementException e) {
             return false;
         }
@@ -834,6 +839,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
             isDisplayed = false;
         }
 
+        log.debug("quota displayed: " + isDisplayed);
         return isDisplayed;
     }
 

@@ -23,18 +23,18 @@ configurations.all {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:1.1.38'
+    compile 'org.opencadc:cadc-vosui:[1.1.47,)'
     compile 'org.opencadc:cadc-registry:[1.5.2,)'
-    providedCompile 'javax.servlet:javax.servlet-api:3.1.+'
-    providedCompile 'javax.servlet:javax.servlet-api:3.0.+'
+    providedCompile 'javax.servlet:javax.servlet-api:[3.1.0,)'
+    providedCompile 'javax.servlet:javax.servlet-api:[3.0.0,)'
 
     testCompile 'junit:junit:[4.12,)'
-    testCompile 'org.opencadc:cadc-web-test:[2.1.1, )'
-    testCompile 'org.seleniumhq.selenium:selenium-java:3.+'
+    testCompile 'org.opencadc:cadc-web-test:[2.1.4, )'
+    testCompile 'org.seleniumhq.selenium:selenium-java:[3.0,)'
 }
 
-sourceCompatibility = '1.7'
-version = '1014'
+sourceCompatibility = '1.8'
+version = '1016'
 
 def docker_image_name = 'canfar/storage'
 
@@ -72,6 +72,11 @@ ext {
     intTest_default_web_app_url = 'http://localhost:8080'
     intTest_user_name = 'CADCtest'
     intTest_user_password = 'sywymUL4'
+    // Change this to match the root of the test directory the tests should run against
+    // cavern test directory
+    intTest_directory = '/home/CADCtest'
+    // vault test directory
+    // intTest_directory = '/CADCtest'
 }
 
 sourceSets {
@@ -123,6 +128,7 @@ idea {
 
         systemProperty 'user.name', project.intTest_user_name
         systemProperty 'user.password', project.intTest_user_password
+        systemProperty 'test.directory', project.intTest_directory
 
         maxParallelForks = 1
     }

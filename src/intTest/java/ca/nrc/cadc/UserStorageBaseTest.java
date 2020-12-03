@@ -2,7 +2,7 @@
  ************************************************************************
  ****  C A N A D I A N   A S T R O N O M Y   D A T A   C E N T R E  *****
  *
- * (c) 2014.                         (c) 2014.
+ * (c) 2020.                            (c) 2020.
  * National Research Council            Conseil national de recherches
  * Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
  * All rights reserved                  Tous droits reserves
@@ -23,8 +23,6 @@
  *                                      sation du logiciel.
  *
  *
- * @author jenkinsd
- * 15/05/14 - 1:19 PM
  *
  *
  *
@@ -34,12 +32,15 @@
 
 package ca.nrc.cadc;
 
-
 import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.log4j.Logger;
 
 
-public class AbstractBrowserTest extends AbstractWebApplicationIntegrationTest {
+public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
+    private static final Logger log =
+        Logger.getLogger(UserStorageBaseTest.class);
+
     private static final char[] SEED_CHARS;
 
     static {
@@ -62,7 +63,7 @@ public class AbstractBrowserTest extends AbstractWebApplicationIntegrationTest {
         SEED_CHARS = chars.toString().toCharArray();
     }
 
-    public AbstractBrowserTest() throws Exception {
+    public UserStorageBaseTest() throws Exception {
         super();
     }
 
@@ -87,5 +88,45 @@ public class AbstractBrowserTest extends AbstractWebApplicationIntegrationTest {
     protected String generateAlphaNumeric(final int length) {
         return RandomStringUtils.random(length, 0, SEED_CHARS.length, false,
                                         false, SEED_CHARS);
+    }
+
+    /**
+     * Log in and return new page instance.
+     * @param userPage
+     * @return UserStorageBrowserPage instance with user logged in
+     * @throws Exception if login fails
+     */
+    protected UserStorageBrowserPage loginTest(final UserStorageBrowserPage userPage) throws Exception {
+        // Assumption: username and password have been sanely populated during test initialization
+        final UserStorageBrowserPage authPage = userPage.doLogin(username, password);
+
+        // Possibly unnecessary, also possibly prudent.
+        waitFor(3);
+        verifyTrue(authPage.isLoggedIn());
+        System.out.println("logged in");
+
+        return authPage;
+    }
+
+    protected UserStorageBrowserPage cleanup(final UserStorageBrowserPage userPage, final String workingDir) throws Exception {
+        // Nav up one level & delete working folder as well
+
+        userPage.enterSearch(workingDir);
+        userPage.clickCheckboxForRow(1);
+        UserStorageBrowserPage newPage = userPage.deleteFolder();
+
+        // verify the folder is no longer there
+        newPage.enterSearch(workingDir);
+        verifyTrue(newPage.isTableEmpty());
+        return newPage;
+    }
+
+    protected String[] parseTestDirPath(String testDir) throws Exception {
+        String[] parsedPath = testDir.split("/");
+
+        for (String s: parsedPath) {
+            log.debug("path:" + s);
+        }
+        return parsedPath;
     }
 }
