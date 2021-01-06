@@ -87,13 +87,15 @@ public class UserStorageMoveFolderTest extends UserStorageBaseTest {
         userStoragePage = userStoragePage.clickFolder(workingDirectoryName);
 
         // Test Move folder
-        String sourceFolder = "moveTest_source_toBeDeleted_" + generateAlphaNumeric();
+        String sourceFolder = "moveTest_source_toBeDeleted";
         userStoragePage = userStoragePage.createNewFolder(sourceFolder);
+        log.debug("move source folder: " + sourceFolder);
 
         // Second folder to move first into
         // Test Move folder
-        String targetFolder = "moveTest_target_toBeDeleted_" + generateAlphaNumeric();
+        String targetFolder = "moveTest_target_toBeDeleted";
         userStoragePage = userStoragePage.createNewFolder(targetFolder);
+        log.debug("move target folder: " + targetFolder);
 
         // Select folder to be moved
         userStoragePage.enterSearch(sourceFolder);

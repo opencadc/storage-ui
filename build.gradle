@@ -23,7 +23,7 @@ configurations.all {
 
 dependencies {
 
-    compile 'org.opencadc:cadc-vosui:[1.1.47,)'
+    compile 'org.opencadc:cadc-vosui:[1.2.1,)'
     compile 'org.opencadc:cadc-registry:[1.5.2,)'
     providedCompile 'javax.servlet:javax.servlet-api:[3.1.0,)'
     providedCompile 'javax.servlet:javax.servlet-api:[3.0.0,)'
@@ -73,10 +73,10 @@ ext {
     intTest_user_name = 'CADCtest'
     intTest_user_password = 'sywymUL4'
     // Change this to match the root of the test directory the tests should run against
-    // cavern test directory
-    intTest_directory = '/home/CADCtest'
     // vault test directory
     // intTest_directory = '/CADCtest'
+    // cavern test directory
+    intTest_directory = '/home/CADCtest'
 }
 
 sourceSets {

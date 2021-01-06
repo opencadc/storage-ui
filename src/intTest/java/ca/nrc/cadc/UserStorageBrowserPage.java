@@ -92,11 +92,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     // Strings for matching against prompt messages and buttons
     public static final String CANCEL = "Cancel";
     private static final String CLOSE = "Close";
-    private static final String DELETE_CONFIRMATION_TEXT = "Are you sure you wish to delete the selected items?";
+    private static final String DELETE_CONFIRMATION_TEXT = "Are you sure you wish to delete the selected item(s)?";
+    private static final String MOVE_CONFIRMATION_TEXT = "Are you sure you wish to move the selected item(s)?";
+    private static final String MOVING_TEXT = "Moving item(s)";
     public static final String LINK = "Link";
     public static final String LINK_OK = "Link successful";
     public static final String MODIFIED = "modified";
-    private static final String MOVE_OK = "Move";
+    public static final String MOVE_OK = "Move successful";
     public static final String NOT_MODIFIED = "not modified";
     private static final String OK = "Ok";
     private static final String ROOT_FOLDER_NAME = "ROOT";
@@ -365,9 +367,21 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         waitForElementPresent(MOVE_TO_BUTTON_BY);
         waitForElementVisible(MOVE_TO_BUTTON_BY);
         click(MOVE_TO_BUTTON_BY);
-        confirmJQIMessageText(MOVE_OK);
 
-        return clickButtonAndWait(OK);
+        // Click 'Yes' on confirmation box
+        // locate folder, select checkbox, select delete button
+        confirmJQIMessageText(MOVE_CONFIRMATION_TEXT);
+        clickButtonWithClass(YES, "btn-danger");
+
+        // Code frequently moves too fast for server response
+        waitFor(5);
+
+        // confirm folder move
+        confirmJQIColourMessage(SUCCESSFUL);
+        final UserStorageBrowserPage nextPage = clickButtonAndWait(CLOSE);
+        nextPage.waitForStorageLoad();
+
+        return nextPage;
     }
 
 
@@ -404,7 +418,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         // confirm folder delete
         confirmJQIColourMessage(SUCCESSFUL);
         final UserStorageBrowserPage nextPage = clickButtonAndWait(CLOSE);
-        nextPage.waitForStorageLoad(); ;
+        nextPage.waitForStorageLoad();
 
         return nextPage;
     }
@@ -754,7 +768,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         return nameColHeader.getAttribute("class").equals("sorting_asc");
     }
 
-
     // Impromptu convenience functions
     public void confirmJQIMessageText(final String message) throws Exception {
         final By messageBy = By.className("jqimessage");
@@ -769,7 +782,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
                                                  ? "" : find(messageBy)
                                                  .getText() + "'"),
                                              message));
-
             throw e;
         }
     }

@@ -131,16 +131,15 @@ public class UserStorageNavTest extends UserStorageBaseTest {
         userStoragePage = userStoragePage.clickFolder(workingDirectoryName);
         log.debug("gone back into working directory");
 
+        // Go back to home directory where test was started.
+
         // Nav up one level to start cleanup
-        userStoragePage = userStoragePage.navUpLevel();
-        log.debug("gone up one level");
+        userStoragePage = userStoragePage.navToHome();
+        log.debug("gone to home directory");
 
         userStoragePage = cleanup(userStoragePage, workingDirectoryName);
 
         userStoragePage.doLogout();
-
-        // TODO: look at adding home directory icon test
-        // will be part of CADC-8961
 
         log.debug("UserStorageNavTest completed");
     }
