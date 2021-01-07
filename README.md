@@ -1,13 +1,12 @@
 ---
 ---
 
-#### User Storage User Interface (Build 1018) for CANFAR
+#### User Storage User Interface (Build 1022) for CANFAR
 
-By default, this uses the CADC VOSpace (named Vault) located at:
+A fully functional UI is deployed at:
+<a rel="external" href="https://www.canfar.net/storage/list">https://www.canfar.net/storage/list/</a>
 
-<a rel="external" href="https://ws-cadc.canfar.net">https://ws-cadc.canfar.net/vault</a>
-
-<a href="https://travis-ci.org/canfar/vosui"><img src="https://travis-ci.org/canfar/vosui.svg?branch=master" /></a>
+<a href="https://travis-ci.org/opencadc/cadc-vosui"><img src="https://travis-ci.org/opencadc/cadc-vosui.svg?branch=master" /></a>
 
 This implementation has a side navigation bar and header specifically for CANFAR.
 
@@ -18,6 +17,34 @@ Running:
 `gradle clean build`
 
 Will produce a `war` file in the `build/libs` directory that can be deployed into a Java container such as Tomcat or Jetty.
+
+### Configuration
+User Storage requires a properties file be available, named `org.opencadc.vosui.properties`. 
+Both the VOSpace web service implementation and the Files web service User Storage uses must be configured before
+running this UI.
+
+#### VOSpace implementation 
+To configure the VOSpace implementation User Storage should use, the org.opencadc.vosui.properties file should 
+contain the following entries:
+
+`org.opencadc.vosui.service.name = <service_name>`
+
+`# The resource id of the VOSpace web service to use`
+`org.opencadc.vosui.<service_name>.service.resourceid = <URI that identifies the VOSPace web service>`
+
+`# Base URI to use as node identifier`
+`org.opencadc.vosui.<service_name>.node.resourceid = <URI that is the base of node identifiers>`
+
+`# Base home directory for authenticated users`
+`org.opencadc.vosui.<service_name>.user.home = <relative path, starting with '/'>`
+
+Note: replace <service_name> with the name of the VOSpace implementation in all cases, ie `vault` or `cavern`.
+
+#### File service implementation 
+To configure the File service org.opencadc.vosui.properties should contain the following entry:
+
+`# Files service for returning content`
+`org.opencadc.vospace.files_meta_service_id = <URI resource ID of Files service>`
 
 
 ### Running
@@ -49,13 +76,14 @@ Pass your own Registry settings into the `JAVA_OPTS` environment variable to use
 To specify the Service ID (often called Resource ID) of your services.  The User Storage Interface relies on two services:
 
 
- - VOSpace
+ - A VOSpace web service implementation (e.g. `vault` or `cavern`)
  - Group Management Service (Access Control)
+ 
+ See the 'Configuration' section for how to set up access to a VOSpace implementation. 
 
-To specify the Service ID for each service, add the appropriate System property for those, too e.g.:
+To specify the Service ID for Group Management, add the appropriate System property, e.g.:
 
-`... -Dorg.opencadc.vospace.service_id=ivo://<your domain>/<vospace service name> -Dorg.opencadc.gms.service_id=ivo://<your domain>/<gms service name> ...`
-
+`... -Dorg.opencadc.gms.service_id=ivo://<your domain>/<gms service name> ...`
 
 Or deploy the `war` file in `build/libs` into a Java container such as Tomcat.
 
