@@ -100,7 +100,7 @@ public class CANFARStorageApplication extends StorageApplication {
 
             freeMarkerConfiguration.setSharedVariable("canfarWebHost", webHost.toString());
             freeMarkerConfiguration.addTemplateLoader(new CANFARURLTemplateLoader(webHost));
-        } catch (IOException | TemplateModelException | ResourceNotFoundException e) {
+        } catch (IOException | ResourceNotFoundException | TemplateModelException e) {
             throw new IllegalArgumentException(e);
         }
 

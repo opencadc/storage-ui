@@ -12,7 +12,7 @@ repositories {
 
 dependencies {
     implementation 'org.freemarker:freemarker:2.3.28'
-    implementation 'org.opencadc:cadc-vosui:1.1.45'
+    implementation 'org.opencadc:cadc-vosui:[1.2.1,)'
     implementation 'org.opencadc:cadc-registry:[1.5.9,2.0)'
     implementation 'org.restlet.jee:org.restlet:2.3.12'
 //    implementation 'org.restlet.jee:org.restlet.ext.servlet:2.3.12'
@@ -23,7 +23,7 @@ dependencies {
 }
 
 sourceCompatibility = '1.8'
-version = '1021'
+version = '1022'
 
 war {
     archiveName 'storage##' + project.version + '.war'
@@ -34,6 +34,11 @@ ext {
     intTest_default_web_app_url = 'http://localhost:8080'
     intTest_user_name = 'CADCtest'
     intTest_user_password = 'sywymUL4'
+    // Change this to match the root of the test directory the tests should run against
+    // vault test directory
+    // intTest_directory = '/CADCtest'
+    // cavern test directory
+    intTest_directory = '/home/CADCtest'
 }
 
 sourceSets {
@@ -64,6 +69,7 @@ idea {
             intTestCompile 'junit:junit:[4.12,)'
             intTestCompile 'org.opencadc:cadc-web-test:[2.1.1,)'
             intTestCompile 'org.seleniumhq.selenium:selenium-java:[3.14,)'
+            intTestCompile 'org.apache.commons:commons-lang3:[3.0,)'
         }
 
         systemProperty "driver", "${driver}"
@@ -85,6 +91,7 @@ idea {
 
         systemProperty 'user.name', project.intTest_user_name
         systemProperty 'user.password', project.intTest_user_password
+        systemProperty 'test.directory', project.intTest_directory
 
         maxParallelForks = 1
     }
