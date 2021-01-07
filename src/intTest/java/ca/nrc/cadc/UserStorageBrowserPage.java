@@ -682,8 +682,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         try {
             waitForElementPresent(ACCESS_ACTIONS_DROPDOWN_BY);
             final WebElement pullDown = find(ACCESS_ACTIONS_DROPDOWN_BY);
-
-//            return (pullDown.getAttribute("class").contains("user-actions")) && isHomeDirButtonDisplayed();
             return (pullDown.getAttribute("class").contains("user-actions"));
         } catch (NoSuchElementException e) {
             return false;
