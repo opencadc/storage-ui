@@ -42,6 +42,7 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
         Logger.getLogger(UserStorageBaseTest.class);
 
     private static final char[] SEED_CHARS;
+    protected static String testDirectory;
 
     static {
         final StringBuilder chars = new StringBuilder(128);
@@ -65,6 +66,7 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
 
     public UserStorageBaseTest() throws Exception {
         super();
+        testDirectory = System.getProperty("test.directory");
     }
 
 
