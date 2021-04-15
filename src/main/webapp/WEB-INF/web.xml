@@ -21,6 +21,31 @@
     </filter-mapping>
 
     <servlet>
+        <load-on-startup>1</load-on-startup>
+        <servlet-name>logControl</servlet-name>
+        <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
+        <init-param>
+            <param-name>logLevel</param-name>
+            <param-value>info</param-value>
+        </init-param>
+        <init-param>
+            <param-name>logLevelPackages</param-name>
+            <param-value>
+                ca.nrc.cadc.beacon
+            </param-value>
+        </init-param>
+        <init-param>
+            <param-name>logAccessGroup</param-name>
+            <param-value>ivo://cadc.nrc.ca/gms?CADC</param-value>
+        </init-param>
+        <init-param>
+            <param-name>groupAuthorizer</param-name>
+            <param-value>ca.nrc.cadc.ac.client.GroupAuthorizer</param-value>
+        </init-param>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
         <servlet-name>Restlet</servlet-name>
         <servlet-class>org.restlet.ext.servlet.ServerServlet</servlet-class>
 
@@ -39,6 +64,11 @@
             <param-value>ivo://cadc.nrc.ca/vault</param-value>
         </init-param>
     </servlet>
+
+    <servlet-mapping>
+        <servlet-name>logControl</servlet-name>
+        <url-pattern>/logControl</url-pattern>
+    </servlet-mapping>
 
     <servlet-mapping>
         <servlet-name>default</servlet-name>
