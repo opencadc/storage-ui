@@ -20,12 +20,8 @@ jobs:
         java-version: 1.11
     - name: Build with Gradle
       run: ./gradlew -i clean build test
-
-  build-docker:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Docker build
-        run: docker build -t opencadc/storage:SNAPSHOT .
+    - name: Docker build
+      run: docker build -t opencadc/storage:SNAPSHOT .
 
   test:
     runs-on: ubuntu-latest
