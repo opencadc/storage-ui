@@ -75,23 +75,19 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CANFARURLTemplateLoader extends URLTemplateLoader
-{
+
+public class CANFARURLTemplateLoader extends URLTemplateLoader {
     private final Map<String, URL> foreignTemplates = new HashMap<>();
 
 
-    public CANFARURLTemplateLoader(final URL webHost)
-    {
-        try
-        {
+    public CANFARURLTemplateLoader(final URL webHost) {
+        try {
             foreignTemplates.put("_application_header.shtml",
                                  new URL(webHost.getProtocol() + "://"
                                          + webHost.getHost()
                                          + (webHost.getPort() > 0 ? ":" + webHost.getPort() : "")
                                          + "/canfar/includes/_application_header.shtml"));
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             throw new IllegalArgumentException(e);
         }
     }
@@ -106,8 +102,7 @@ public class CANFARURLTemplateLoader extends URLTemplateLoader
      * determine that the template source does not exist.
      */
     @Override
-    protected URL getURL(final String name)
-    {
+    protected URL getURL(final String name) {
         return foreignTemplates.get(name);
     }
 }
