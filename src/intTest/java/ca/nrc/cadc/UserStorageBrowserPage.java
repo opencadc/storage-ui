@@ -174,6 +174,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     @FindBy(id = "root")
     private WebElement rootButton;
 
+    @FindBy(id = "vos_arc")
+    private WebElement arcVosSelect;
+
+    @FindBy(id = "svcdropdown")
+    private WebElement vospaceSvcMenu;
+
     // class has 'disabled' in it for base case.
     @FindBy(id = "newdropdown")
     private WebElement newdropdownButton;
@@ -426,6 +432,12 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         return nextPage;
     }
 
+    public UserStorageBrowserPage switchVOSpaceService(final String serviceName) throws Exception {
+        click(vospaceSvcMenu);
+        WebElement anchor = find(By.xpath("//*[@id=\"vos_" + serviceName + "\"]"));
+        return clickButtonAndWait(anchor);
+    }
+
     // Permissions functions
     public void clickEditIconForFirstRow() throws Exception {
         final By firstRowBy = By.xpath(String.format(EDIT_ICON_BY_TEMPLATE, "1"));
@@ -574,7 +586,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         WebElement folderCheckbox = folderParent.findElement(By.xpath("//div[contains(@class=\"select-checkbox\")]"));
         folderCheckbox.click();
     }
-
 
     // Navigation functions
     public UserStorageBrowserPage navToRoot() throws Exception {

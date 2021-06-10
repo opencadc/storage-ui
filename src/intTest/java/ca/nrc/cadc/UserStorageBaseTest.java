@@ -2,7 +2,7 @@
  ************************************************************************
  ****  C A N A D I A N   A S T R O N O M Y   D A T A   C E N T R E  *****
  *
- * (c) 2020.                            (c) 2020.
+ * (c) 2021.                            (c) 2021.
  * National Research Council            Conseil national de recherches
  * Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
  * All rights reserved                  Tous droits reserves
@@ -43,6 +43,9 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
 
     private static final char[] SEED_CHARS;
     protected static String testDirectory;
+    protected static String defaultVOSpaceSvc;
+    protected static String altVOSpaceSvc;
+    protected static String altHomeDir;
 
     static {
         final StringBuilder chars = new StringBuilder(128);
@@ -67,6 +70,9 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
     public UserStorageBaseTest() throws Exception {
         super();
         testDirectory = System.getProperty("test.directory");
+        defaultVOSpaceSvc = System.getProperty("test.default_vospace");
+        altVOSpaceSvc = System.getProperty("test.alt_vospace");
+        altHomeDir = System.getProperty("test.alt_home_directory");
     }
 
 

@@ -147,7 +147,8 @@ jenkinsd 2017.04.04
                                   // Row count is 100 by default to just show
                                   // a moving barber pole progress.
                                   fileManager(rows, $("#beacon"), "<#if startURI??>${startURI}</#if>", "${folder.path}",
-                                              ${folderWritable?c}, 100 , json, "${contextPath}", false);
+                                              ${folderWritable?c}, 100 , json, "${contextPath}", false,
+                                              "${vospaceSvcPath}", "${vospaceNodePrefixURI}");
                                 })
                           .fail(function (request, textStatus, errorThrown)
                                 {

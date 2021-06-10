@@ -1,4 +1,8 @@
 # Storage User Interface
+## June 4, 2021
+### version 1023
+* Support for multiple VOSpace Services
+* Retains support for existing URLs
 
 ## Apr 15, 2021
 ### version 1022 (unchanged)
