@@ -61,7 +61,7 @@ jenkinsd 2017.04.04
         Unable to fulfil request: ${errorMessage}
         <div class="returnTo">
             <br />
-            Return to <a title="Home" href='${contextPath}list/'>User Storage Root folder</a>
+            Return to <a title="Root Folder" href='${contextPath}${vospaceSvcPath}list'>User Storage Root folder</a>
         </div>
     </div>
 </div>
