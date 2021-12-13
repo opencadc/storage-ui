@@ -32,6 +32,7 @@
             <param-name>logLevelPackages</param-name>
             <param-value>
                 ca.nrc.cadc.beacon
+                ca.nrc.cadc.vos
             </param-value>
         </init-param>
         <init-param>
