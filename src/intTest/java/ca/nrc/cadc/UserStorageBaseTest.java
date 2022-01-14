@@ -36,10 +36,11 @@ import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.log4j.Logger;
 
+import java.util.Properties;
+
 
 public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
-    private static final Logger log =
-        Logger.getLogger(UserStorageBaseTest.class);
+    private static final Logger log = Logger.getLogger(UserStorageBaseTest.class);
 
     private static final char[] SEED_CHARS;
     protected static String testDirectory;
@@ -67,12 +68,16 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
         SEED_CHARS = chars.toString().toCharArray();
     }
 
-    public UserStorageBaseTest() throws Exception {
+    public UserStorageBaseTest() {
         super();
-        testDirectory = System.getProperty("test.directory");
-        defaultVOSpaceSvc = System.getProperty("test.default_vospace");
-        altVOSpaceSvc = System.getProperty("test.alt_vospace");
-        altHomeDir = System.getProperty("test.alt_home_directory");
+        final Properties systemProperties = System.getProperties();
+        testDirectory = systemProperties.contains("test.directory")
+                        ? systemProperties.getProperty("test.directory") : String.format("/%s", username);
+        defaultVOSpaceSvc = systemProperties.getProperty("test.default_vospace");
+        altVOSpaceSvc = systemProperties.getProperty("test.alt_vospace");
+        altHomeDir = systemProperties.contains("test.alt_home_directory")
+                     ? systemProperties.getProperty("test.alt_home_directory")
+                     : String.format("/home/%s", username);
     }
 
 
@@ -100,7 +105,8 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
 
     /**
      * Log in and return new page instance.
-     * @param userPage
+     *
+     * @param userPage  The current page.
      * @return UserStorageBrowserPage instance with user logged in
      * @throws Exception if login fails
      */
@@ -116,7 +122,8 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
         return authPage;
     }
 
-    protected UserStorageBrowserPage cleanup(final UserStorageBrowserPage userPage, final String workingDir) throws Exception {
+    protected UserStorageBrowserPage cleanup(final UserStorageBrowserPage userPage, final String workingDir)
+            throws Exception {
         // Nav up one level & delete working folder as well
 
         userPage.enterSearch(workingDir);
@@ -129,10 +136,10 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
         return newPage;
     }
 
-    protected String[] parseTestDirPath(String testDir) throws Exception {
+    protected String[] parseTestDirPath(String testDir) {
         String[] parsedPath = testDir.split("/");
 
-        for (String s: parsedPath) {
+        for (String s : parsedPath) {
             log.debug("path:" + s);
         }
         return parsedPath;

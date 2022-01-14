@@ -70,7 +70,7 @@ public class UserStorageVOSpaceServiceTest extends UserStorageBaseTest {
         userStoragePage = userStoragePage.navToHome();
 
         // check folder name
-        userStoragePage.waitForHeaderText("/CADCtest");
+        userStoragePage.waitForHeaderText(testDirectory);
 
         // go to root
         userStoragePage = userStoragePage.navToRoot();
