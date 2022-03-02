@@ -1,4 +1,10 @@
 # Storage User Interface
+
+## March 1, 2022
+* Zip file generation for vault storage nodes
+* storage.war file is unversioned
+* requires cadc-vosui v 1.2.8
+
 ## June 4, 2021
 ### version 1023
 * Support for multiple VOSpace Services
