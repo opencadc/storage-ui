@@ -1,5 +1,9 @@
 # Storage User Interface
 
+## May 12, 2022
+* Zip file generation for arc storage nodes
+* requires cadc-vosui v 1.2.12
+
 ## March 1, 2022
 * Zip file generation for vault storage nodes
 * storage.war file is unversioned
