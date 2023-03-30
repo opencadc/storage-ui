@@ -1,5 +1,9 @@
 # Storage User Interface
 
+## March 29, 2023
+* Add Shell Script download
+* Merge library as forking is not practical.
+
 ## May 12, 2022
 * Zip file generation for arc storage nodes
 * requires cadc-vosui v 1.2.12
