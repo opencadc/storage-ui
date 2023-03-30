@@ -1,5 +1,5 @@
 <#if mode??>
-  <#if mode = "dev">
+  <#if mode == "dev">
     <#include "_default.ftl">
   <#else>
     <#include "_canfar.ftl">
