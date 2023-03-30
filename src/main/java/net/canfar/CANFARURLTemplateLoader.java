@@ -70,26 +70,23 @@ package net.canfar;
 
 import freemarker.cache.URLTemplateLoader;
 
-import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class CANFARURLTemplateLoader extends URLTemplateLoader {
-    private final Map<String, URL> foreignTemplates = new HashMap<>();
+    private final Map<String, URI> foreignTemplates = new HashMap<>();
 
 
     public CANFARURLTemplateLoader(final URL webHost) {
-        try {
-            foreignTemplates.put("_application_header.shtml",
-                                 new URL(webHost.getProtocol() + "://"
-                                         + webHost.getHost()
-                                         + (webHost.getPort() > 0 ? ":" + webHost.getPort() : "")
-                                         + "/canfar/includes/_application_header.shtml"));
-        } catch (IOException e) {
-            throw new IllegalArgumentException(e);
-        }
+        foreignTemplates.put("_application_header.shtml",
+                             URI.create(webHost.getProtocol() + "://"
+                                        + webHost.getHost()
+                                        + (webHost.getPort() > 0 ? ":" + webHost.getPort() : "")
+                                        + "/canfar/includes/_application_header.shtml"));
     }
 
     /**
@@ -103,6 +100,10 @@ public class CANFARURLTemplateLoader extends URLTemplateLoader {
      */
     @Override
     protected URL getURL(final String name) {
-        return foreignTemplates.get(name);
+        try {
+            return foreignTemplates.get(name).toURL();
+        } catch (MalformedURLException ioException) {
+            throw new IllegalArgumentException(ioException.getMessage(), ioException);
+        }
     }
 }

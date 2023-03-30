@@ -68,12 +68,12 @@
 
 package net.canfar;
 
-import ca.nrc.cadc.beacon.web.restlet.StorageApplication;
-import ca.nrc.cadc.beacon.web.view.FreeMarkerConfiguration;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.util.StringUtil;
 import freemarker.template.TemplateModelException;
+import net.canfar.storage.web.restlet.StorageApplication;
+import net.canfar.storage.web.view.FreeMarkerConfiguration;
+
 import org.restlet.Context;
 
 import java.io.IOException;
@@ -82,8 +82,6 @@ import java.net.URL;
 
 
 public class CANFARStorageApplication extends StorageApplication {
-
-    private static final String DEFAULT_APP_REGISTRY_URL = "https://www.canfar.net/reg/applications";
     private static final URI DEFAULT_APP_ROOT_REGISTRY_KEY = URI.create("ivo://cadc.nrc.ca/canfar-dashboard");
 
 
@@ -98,6 +96,7 @@ public class CANFARStorageApplication extends StorageApplication {
         try {
             final URL webHost = getWebHost();
 
+            freeMarkerConfiguration.setSharedVariable("mode", System.getProperty("org.opencadc.vosui.mode", "prod"));
             freeMarkerConfiguration.setSharedVariable("canfarWebHost", webHost.toString());
             freeMarkerConfiguration.addTemplateLoader(new CANFARURLTemplateLoader(webHost));
         } catch (IOException | ResourceNotFoundException | TemplateModelException e) {
@@ -108,12 +107,7 @@ public class CANFARStorageApplication extends StorageApplication {
     }
 
     private URL getWebHost() throws IOException, ResourceNotFoundException {
-        final RegistryClient registryClient = new RegistryClient(getAppRegistryURL());
-        return registryClient.getAccessURL(DEFAULT_APP_ROOT_REGISTRY_KEY);
-    }
-
-    private URL getAppRegistryURL() throws IOException {
-        final String envAppRegistryURL = System.getenv("APP_REGISTRY_URL");
-        return StringUtil.hasLength(envAppRegistryURL) ? new URL(envAppRegistryURL) : new URL(DEFAULT_APP_REGISTRY_URL);
+        final RegistryClient registryClient = new RegistryClient();
+        return registryClient.getAccessURL(RegistryClient.Query.APPLICATIONS, DEFAULT_APP_ROOT_REGISTRY_KEY);
     }
 }

@@ -1,29 +1,21 @@
----
----
+# User Storage User Interface for CANFAR
 
-#### User Storage User Interface (Build 1022) for CANFAR
+A fully functional UI is deployed at [CANFAR.net](https://www.canfar.net/storage/list/) (https://www.canfar.net/storage/list/).
 
-A fully functional UI is deployed at:
-<a rel="external" href="https://www.canfar.net/storage/list">https://www.canfar.net/storage/list/</a>
+## Building
 
-<a href="https://travis-ci.org/opencadc/cadc-vosui"><img src="https://travis-ci.org/opencadc/cadc-vosui.svg?branch=master" /></a>
+Executing:
 
-This implementation has a side navigation bar and header specifically for CANFAR.
-
-### Building
-
-Running:
-
-`gradle clean build`
+`./gradlew --info clean build`
 
 Will produce a `war` file in the `build/libs` directory that can be deployed into a Java container such as Tomcat or Jetty.
 
-### Configuration
+## Configuration
 User Storage requires a properties file be available, named `org.opencadc.vosui.properties`. 
 Both the VOSpace web service implementation and the Files web service User Storage uses must be configured before
 running this UI.
 
-#### VOSpace implementation 
+### VOSpace implementation 
 To configure the VOSpace implementation User Storage should use, the org.opencadc.vosui.properties file should 
 contain the following entries:
 
@@ -40,7 +32,7 @@ contain the following entries:
 
 Note: replace <service_name> with the name of the VOSpace implementation in all cases, ie `vault` or `cavern`.
 
-#### File service implementation 
+### File service implementation 
 To configure the File service org.opencadc.vosui.properties should contain the following entry:
 
 `# Files service for returning content`
@@ -60,21 +52,19 @@ To get around this, please supply a property called `SSO_SERVERS` containing a s
 
   - As a System property (e.g. `-DSSO_SERVERS="<host 1> <host 2>" etc.`)
   - In a file located at `${user.home}/config/AccessControl.properties` (e.g. `cat SSO_SERVERS=<host 1> <host 2> > $HOME/config/AccessControl.properties`)
+  - Supply the System property `-Dorg.opencadc.vosui.mode=dev` to run with a default UI.  The alternative will require CANFAR decorations.  This is useful for development testing.
 
-The hostnames included in this property are all of the servers involved in your setup (i.e. the web server, and the VOSpace Web Service host).
+The hostnames included in this property are all the servers involved in your setup (i.e. the web server, and the VOSpace Web Service host).
 
-For an embedded Jetty container, you can just run:
+#### Deployment
 
-`gradle run`
-
-To produce a running embedded Jetty container running on port `8080`, with a debug port on `5555`.
+To produce a running embedded Tomcat container running on port `8080`, with a debug port on `5555`, deploy with Docker:
 
 Pass your own Registry settings into the `JAVA_OPTS` environment variable to use your own VOSpace service:
 
-`gradle -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry host> run`
+`docker run --rm -d -p 8080:8080 -e CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry host>" tomcat:9-jdk11-openjdk-slim`
 
 To specify the Service ID (often called Resource ID) of your services.  The User Storage Interface relies on two services:
-
 
  - A VOSpace web service implementation (e.g. `vault` or `cavern`)
  - Group Management Service (Access Control)
@@ -91,33 +81,24 @@ Then, in your browser, look at <a href="http://localhost:8080/storage/list">http
 
 #### Running with Docker
 
-See the Docker repo here:
+See the [Docker repository](https://hub.docker.com/r/opencadc/storage/)
 
-<a rel="external" href="https://hub.docker.com/r/opencadc/storage/">https://hub.docker.com/r/opencadc/storage/</a>
-
-It uses the lightweight Tomcat 8.5 java container that was built using Alpine Linux found here:
-
-<a href="https://hub.docker.com/_/tomcat/" rel="external">https://hub.docker.com/_/tomcat/</a>
-
-To run it as-is and use the CANFAR VOSpace Service, use:
-
-`docker run --name storage -d -p 8080:8080 -p 5555:5555 opencadc/storage`
-
-Then, in your browser, look at <a href="http://localhost:8080/storage/list">http://localhost:8080/storage/list</a>.
+It uses the lightweight Tomcat 9.0 java container that was built using Debian slim Linux found here:
+[https://hub.docker.com/_/tomcat/](https://hub.docker.com/_/tomcat/)
 
 ##### Running with Docker for your environment
 
 To run in your environment, create your own Dockerfile:
 
 ```
-# This is the Docker hub location for the User Storage User Interface (Project Beacon)
-FROM opencadc/storage
+# This is the Docker hub location for the User Storage User Interface
+FROM tomcat:9-jdk11-openjdk-slim
 
 # The JAVA_OPTS variable to pass to Tomcat.  Note the -Dca.nrc.cadc.reg.client.RegistryClient.host property.
 ENV JAVA_OPTS "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry lookup>"
 ```
 
-Then run:
+Then build it:
 
 `docker build -t user_storage_ui .`
 
@@ -129,4 +110,4 @@ Or mount your own built `war`:
 
 `docker run --name storage -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps user_storage_ui`
 
-Then, in your browser, look at <a href="http://localhost:8080/storage/list">http://localhost:8080/storage/list</a>.
+Then, in your browser, [look at http://localhost:8080/storage/list](http://localhost:8080/storage/list).
