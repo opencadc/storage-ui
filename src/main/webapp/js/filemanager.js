@@ -2529,6 +2529,10 @@ function fileManager(
   $(document).on('click', '.download-dropdown-menu > li > a', function() {
     var $thisLink = $(this)
 
+    // ZIP file is disabled for now
+    // 2023.05.10
+    // jenkinsd
+    //
     if ($thisLink.attr('class') === 'download-zip-file') {
 
       var postData = {}
