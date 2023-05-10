@@ -81,10 +81,6 @@
             "download-shell-script": {
                 "id": "Shell Script"
             },
-            "download-zip-file":
-            {
-                "id": "ZIP File"
-            },
             "download-html-list":
             {
                 "id": "HTML List"

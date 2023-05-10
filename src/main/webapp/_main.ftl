@@ -93,10 +93,6 @@
                     <li><a class="download-shell-script"><span class="glyphicon glyphicon-list"></span>&nbsp;Shell Script</a></li>
                     <li><a class="download-html-list"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;HTML List</a></li>
                     <li><a class="download-download-manager"><span class="glyphicon glyphicon-download-alt"></span>&nbsp;Download Manager</a></li>
-                    <li>
-                      <a class="download-zip-file" id="vos_zip_pkg" role="button">
-                        <span class="glyphicon glyphicon-compressed"></span>&nbsp;ZIP</a>
-                    </li>
                   </ul>
                 </li>
 </#if>
