@@ -81,7 +81,6 @@ import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.StorageItem;
 
 import org.json.JSONObject;
-import org.restlet.Context;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.resource.Delete;
@@ -99,7 +98,7 @@ import java.util.Set;
 
 public class StorageItemServerResource extends SecureServerResource {
 
-    static final String IVO_GMS_PROPERTY_PREFIX = "ivo://cadc.nrc.ca/gms#";
+    static final String IVO_GMS_PROPERTY_PREFIX = "ivo://cadc.nrc.ca/gms?";
 
     // Page size for the initial page display.
     private static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
@@ -438,23 +437,17 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     void createNode(final Node newNode) throws Exception {
-        executeSecurely(new PrivilegedExceptionAction<Void>() {
-            @Override
-            public Void run() {
-                voSpaceClient.createNode(newNode, false);
-                return null;
-            }
+        executeSecurely((PrivilegedExceptionAction<Void>) () -> {
+            voSpaceClient.createNode(newNode, false);
+            return null;
         });
     }
 
     @Delete
     public void deleteNode() throws Exception {
-        executeSecurely(new PrivilegedExceptionAction<Void>() {
-            @Override
-            public Void run() {
-                voSpaceClient.deleteNode(getCurrentPath());
-                return null;
-            }
+        executeSecurely((PrivilegedExceptionAction<Void>) () -> {
+            voSpaceClient.deleteNode(getCurrentPath());
+            return null;
         });
     }
 
