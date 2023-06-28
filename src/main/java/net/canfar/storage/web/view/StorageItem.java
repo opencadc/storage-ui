@@ -201,7 +201,7 @@ public abstract class StorageItem {
                 }
             } catch (IllegalArgumentException iae) {
                 // X500Name instantiation above can fail, so the 'else' that should
-                // normally return the owner in it's entirety is missed.
+                // normally return the owner in its entirety is missed.
                 // if X500Name parsing fails, treat the owner variable as a string.
                 LOGGER.debug("owner is not an X500 principal, passing back as string.", iae);
                 ownerStr = owner;
