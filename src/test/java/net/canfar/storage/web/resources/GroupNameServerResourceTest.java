@@ -72,15 +72,18 @@ import net.canfar.storage.web.restlet.StorageApplication;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import org.json.JSONArray;
 import org.json.JSONWriter;
+import org.junit.Assert;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
+
 import org.restlet.Context;
 import org.restlet.Response;
 
 import javax.security.auth.Subject;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,21 +91,19 @@ import java.util.Map;
 import static org.easymock.EasyMock.*;
 
 
-
 public class GroupNameServerResourceTest
         extends AbstractServerResourceTest<GroupNameServerResource> {
     @Test
     public void getGroupNames() throws Exception {
-
-        List<String> groupList = new ArrayList<String>();
+        List<String> groupList = new ArrayList<>();
         groupList.add("CHIMPS");
         groupList.add("A-TEAM");
         groupList.add("ABC");
         groupList.add("ABCDE");
 
-        expect(mockGMSClient.getGroupNames())
-                .andReturn(groupList).once();
+        Collections.sort(groupList);
 
+        expect(mockGMSClient.getGroupNames()).andReturn(groupList).once();
         replay(mockGMSClient, mockServletContext);
 
         final Map<String, Object> attributes = new HashMap<>();
@@ -114,8 +115,7 @@ public class GroupNameServerResourceTest
 
         testSubject = new GroupNameServerResource() {
             @Override
-            public Context getContext()
-            {
+            public Context getContext() {
                 return context;
             }
 
@@ -125,8 +125,7 @@ public class GroupNameServerResourceTest
             }
 
             @Override
-            Subject generateVOSpaceUser() throws IOException
-            {
+            Subject generateVOSpaceUser() {
                 return new Subject();
             }
 
@@ -142,6 +141,79 @@ public class GroupNameServerResourceTest
 
         };
 
+        JSONRepresentation r = (JSONRepresentation) testSubject.getGroupNames();
+
+        StringWriter sw = new StringWriter();
+        JSONWriter jw = new JSONWriter(sw);
+        r.write(jw);
+
+        JSONArray jo = new JSONArray(sw.getBuffer().toString());
+
+        ArrayList<String> listData = new ArrayList<>();
+        for (int i = 0; i < jo.length(); i++) {
+            listData.add(jo.getString(i));
+        }
+        assertEquals(listData, groupList);
+
+        verify(mockGMSClient);
+    }
+
+    @Test
+    public void getFilteredGroupNames() throws Exception {
+        final List<String> groupList = new ArrayList<>();
+        groupList.add("CHIMPS");
+        groupList.add("A-TEAM");
+        groupList.add("ABC");
+        groupList.add("ABCDE");
+
+        Collections.sort(groupList);
+
+        expect(mockGMSClient.getGroupNames()).andReturn(groupList).once();
+        replay(mockGMSClient, mockServletContext);
+
+        final Map<String, Object> attributes = new HashMap<>();
+        final Context context = new Context();
+        final String queryTerm = "m";
+        final List<String> expectedGroupList = new ArrayList<>();
+        expectedGroupList.add("CHIMPS");
+        expectedGroupList.add("A-TEAM");
+
+        Collections.sort(expectedGroupList);
+        attributes.put(StorageApplication.GMS_SERVICE_PROPERTY_KEY, mockGMSClient);
+        context.setAttributes(attributes);
+
+        testSubject = new GroupNameServerResource() {
+            @Override
+            public Context getContext() {
+                return context;
+            }
+
+            @Override
+            RegistryClient getRegistryClient() {
+                return mockRegistryClient;
+            }
+
+            @Override
+            Subject generateVOSpaceUser() {
+                return new Subject();
+            }
+
+            @Override
+            public String getQueryValue(String name) {
+                return queryTerm;
+            }
+
+            /**
+             * Returns the handled response.
+             *
+             * @return The handled response.
+             */
+            @Override
+            public Response getResponse() {
+                return mockResponse;
+            }
+
+        };
 
         JSONRepresentation r = (JSONRepresentation) testSubject.getGroupNames();
 
@@ -151,16 +223,16 @@ public class GroupNameServerResourceTest
 
         JSONArray jo = new JSONArray(sw.getBuffer().toString());
 
-        ArrayList<String> listdata = new ArrayList<String>();
-        if (jo != null) {
-            for (int i=0;i<jo.length();i++){
-                listdata.add(jo.getString(i));
+        ArrayList<String> listData = new ArrayList<>();
+        for (int i = 0; i < jo.length(); i++) {
+            final String s = jo.getString(i);
+            if (s.toLowerCase().contains(queryTerm.toLowerCase())) {
+                listData.add(s);
             }
         }
-        assertEquals(listdata,groupList);
+        Assert.assertArrayEquals("Wrong output list.", listData.toArray(), expectedGroupList.toArray());
 
         verify(mockGMSClient);
-
-    };
+    }
 }
 

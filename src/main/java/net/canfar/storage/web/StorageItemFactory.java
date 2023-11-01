@@ -83,9 +83,13 @@ import javax.security.auth.Subject;
 import java.net.URI;
 import java.security.Principal;
 import java.text.ParseException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 
@@ -198,21 +202,22 @@ public class StorageItemFactory {
         final boolean publicFlag = Boolean.parseBoolean(node.getPropertyValue(VOS.PROPERTY_URI_ISPUBLIC));
         final String lockedFlagValue = node.getPropertyValue(VOS.PROPERTY_URI_ISLOCKED);
         final boolean lockedFlag = StringUtil.hasText(lockedFlagValue) && Boolean.parseBoolean(lockedFlagValue);
+        final List<NodeProperty> nodePropertyList = node.getProperties();
 
-        final String writeGroupValues = node.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE);
+        final String[] writeGroupValues = getPropertyValues(VOS.PROPERTY_URI_GROUPWRITE, nodePropertyList);
         GroupURI[] writeGroupURIs = null;
         try {
             writeGroupURIs = uriExtractor.extract(writeGroupValues);
         } catch (Exception iae) {
-            log.warn("Unable to extract group, skipping...: " + writeGroupValues, iae);
+            log.warn("Unable to extract write groups, skipping...: " + Arrays.toString(writeGroupValues), iae);
         }
 
-        final String readGroupValues = node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
+        final String[] readGroupValues = getPropertyValues(VOS.PROPERTY_URI_GROUPREAD, nodePropertyList);
         GroupURI[] readGroupURIs = null;
         try {
             readGroupURIs = uriExtractor.extract(readGroupValues);
         } catch (Exception iae) {
-            log.warn("Unable to extract group, skipping...: " + readGroupValues, iae);
+            log.warn("Unable to extract read groups, skipping...: " + Arrays.toString(readGroupValues), iae);
         }
 
         final String readableFlagValue = node.getPropertyValue(VOS.PROPERTY_URI_READABLE);
@@ -259,5 +264,12 @@ public class StorageItemFactory {
 
     public FolderItem getFolderItemView(final ContainerNode containerNode) {
         return (FolderItem) translate(containerNode);
+    }
+
+    private String[] getPropertyValues(final String key, final List<NodeProperty> nodePropertyList) {
+        return nodePropertyList.stream()
+                               .filter(np -> np.getPropertyURI().equalsIgnoreCase(key))
+                               .map(NodeProperty::getPropertyValue)
+                               .toArray(String[]::new);
     }
 }

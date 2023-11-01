@@ -70,6 +70,7 @@
 package net.canfar.storage.web;
 
 import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.vos.NodeProperty;
 import net.canfar.storage.AbstractUnitTest;
 import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.StorageItem;
@@ -85,6 +86,8 @@ import org.mockito.*;
 
 import java.net.URI;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory> {
@@ -95,14 +98,25 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         final DataNode mockDataNode = Mockito.mock(DataNode.class);
         final String contextPath = "/warehouse";
         final VOSURI vosuri = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
-        final String writeGroupURIs = "ivo://cadc.nrc.ca/gms/mygroups?GROUP1";
-        final String readGroupURIs = "ivo://cadc.nrc.ca/gms/mygroups?GROUP2 ivo://cadc.nrc.ca/gms/mygroups?GROUP3";
         final URL serviceURL = new URL("https://www.site.com/myservice");
 
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE)).thenReturn(writeGroupURIs);
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD)).thenReturn(readGroupURIs);
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH)).thenReturn("88000");
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_READABLE)).thenReturn("true");
+        final List<NodeProperty> nodePropertyList = new ArrayList<>();
+
+        nodePropertyList.add(new NodeProperty(VOS.PROPERTY_URI_GROUPWRITE,
+                                              "ivo://cadc.nrc.ca/gms/mygroups?GROUP1"));
+        nodePropertyList.add(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
+                                              "ivo://cadc.nrc.ca/gms/mygroups?GROUP2"));
+        nodePropertyList.add(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
+                                              "ivo://cadc.nrc.ca/gms/mygroups?GROUP3"));
+
+        final NodeProperty contentLengthProperty = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "88000");
+        final NodeProperty readableFlagProperty = new NodeProperty(VOS.PROPERTY_URI_READABLE, "true");
+
+        Mockito.when(mockDataNode.getProperties()).thenReturn(nodePropertyList);
+        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH))
+               .thenReturn(contentLengthProperty.getPropertyValue());
+        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_READABLE))
+               .thenReturn(readableFlagProperty.getPropertyValue());
 
         Mockito.when(mockDataNode.getUri()).thenReturn(vosuri);
 
@@ -138,14 +152,24 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         final DataNode mockDataNode = Mockito.mock(DataNode.class);
         final String contextPath = "/warehouse";
         final VOSURI vosuri = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
-        final String writeGroupURIs = "ivo://cadc.nrc.ca/gms/mygroups?GROUP1";
-        final String readGroupURIs = "ivo://cadc.nrc.ca/gms/mygroups?GROUP2 ivo://cadc.nrc.ca/gms/mygroups?GROUP3";
         final URL serviceURL = new URL("https://www.oldsite.com/oldservice");
+        final List<NodeProperty> nodePropertyList = new ArrayList<>();
 
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE)).thenReturn(writeGroupURIs);
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD)).thenReturn(readGroupURIs);
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH)).thenReturn("88000");
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_READABLE)).thenReturn("true");
+        nodePropertyList.add(new NodeProperty(VOS.PROPERTY_URI_GROUPWRITE,
+                                              "ivo://cadc.nrc.ca/gms/mygroups?GROUP1"));
+        nodePropertyList.add(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
+                                              "ivo://cadc.nrc.ca/gms/mygroups?GROUP2"));
+        nodePropertyList.add(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD,
+                                              "ivo://cadc.nrc.ca/gms/mygroups?GROUP3"));
+
+        final NodeProperty contentLengthProperty = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "88000");
+        final NodeProperty readableFlagProperty = new NodeProperty(VOS.PROPERTY_URI_READABLE, "true");
+
+        Mockito.when(mockDataNode.getProperties()).thenReturn(nodePropertyList);
+        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH))
+               .thenReturn(contentLengthProperty.getPropertyValue());
+        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_READABLE))
+               .thenReturn(readableFlagProperty.getPropertyValue());
 
         Mockito.when(mockDataNode.getUri()).thenReturn(vosuri);
 

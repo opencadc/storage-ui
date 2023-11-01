@@ -69,7 +69,6 @@
 package net.canfar.storage.web;
 
 import org.opencadc.gms.GroupURI;
-import ca.nrc.cadc.util.StringUtil;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -78,13 +77,9 @@ import java.util.List;
 
 
 public class URIExtractor {
-    public GroupURI[] extract(final String groupPropertyValue) {
+    public GroupURI[] extract(final String[] groupPropertyValues) {
         final List<GroupURI> uris = new ArrayList<>();
-        Arrays.stream(extractAsStrings(groupPropertyValue)).map(s -> new GroupURI(URI.create(s))).forEach(uris::add);
+        Arrays.stream(groupPropertyValues).map(s -> new GroupURI(URI.create(s))).forEach(uris::add);
         return uris.toArray(new GroupURI[0]);
-    }
-
-    public String[] extractAsStrings(final String groupPropertyValue) {
-        return StringUtil.hasLength(groupPropertyValue) ? groupPropertyValue.split(" ") : new String[0];
     }
 }

@@ -124,8 +124,7 @@ public class FolderItemServerResource extends StorageItemServerResource {
         final long quota = getPropertyValue(node, VOS.PROPERTY_URI_QUOTA);
 
 
-        final String quotaString = new FileSizeRepresentation()
-            .getSizeHumanReadable(quota);
+        final String quotaString = new FileSizeRepresentation().getSizeHumanReadable(quota);
         final String remainingSizeString =
             fileSizeRepresentation.getSizeHumanReadable(
                 ((quota - folderSize) > 0) ? (quota - folderSize) : 0);

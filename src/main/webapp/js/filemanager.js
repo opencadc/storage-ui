@@ -1569,7 +1569,7 @@ function fileManager(
       lg.READ_GROUP +
       '</label>' +
       '<div id="readGroupInputDiv" class="col-sm-7"> ' +
-      '<input type="text" class="form-control  ui-autocomplete-input action-hook" id="readGroup" name="readGroup" placeholder="' +
+      '<input type="text" class="form-control ui-autocomplete-input action-hook" id="readGroup" name="readGroup" placeholder="' +
       lg.group_name_program_id +
       '">' +
       '</div>' +
@@ -1644,16 +1644,16 @@ function fileManager(
       loaded: function() {
         // Get the group names list for populating the dropdown first
         // /groups endpoint does NOT need vospaceServicePath
-        $.ajax({
-          type: 'GET',
-          url: contextPath + 'groups',
-          success: function(returnValue) {
-            handleLoadAutocomplete(returnValue)
-          },
-          error: function() {
-            $.prompt(lg.ERROR_GROUPNAMES)
-          }
-        })
+        // $.ajax({
+        //   type: 'GET',
+        //   url: contextPath + 'groups',
+        //   success: function(returnValue) {
+        //     handleLoadAutocomplete(returnValue)
+        //   },
+        //   error: function() {
+        //     $.prompt(lg.ERROR_GROUPNAMES)
+        //   }
+        // })
 
         // Set initial form state
         $('#readGroup').val(promptData.data('readgroup'))
@@ -1661,9 +1661,55 @@ function fileManager(
         var listenerHook = $('.listener-hook')
         listenerHook.addClass('disabled')
 
-        $('.action-hook').on('click', function(event) {
+        $('.action-hook').on('click', function(_event) {
           listenerHook.removeClass('disabled')
         })
+
+        function split( val ) {
+          return val.split( /,\s*/ )
+        }
+        function extractLast( term ) {
+          return split( term ).pop()
+        }
+     
+        $('.ui-autocomplete-input')
+          // don't navigate away from the field on tab when selecting an item
+          .off().on( 'keydown', function(event) {
+            if (event.keyCode === $.ui.keyCode.TAB && $(this).autocomplete('instance').menu.active) {
+              event.preventDefault()
+            }
+          })
+          .autocomplete({
+            source: function( request, response ) {
+              $.getJSON( contextPath + 'groups', {
+                q: extractLast( request.term )
+              }, response )
+            },
+            search: function() {
+              // custom minLength
+              const term = extractLast(this.value)
+              if (term.length < 2) {
+                return false
+              }
+            },
+            focus: function() {
+              // prevent value inserted on focus
+              return false
+            },
+            select: function(_event, ui) {
+              const terms = split(this.value)
+              // remove the current input
+              terms.pop()
+              // add the selected item
+              terms.push(ui.item.value)
+              // add placeholder to get the comma-and-space at the end
+              terms.push('')
+
+              this.value = terms.join(', ')
+
+              return false
+            }
+          })
       }
     }) // end prompt declaration
   }

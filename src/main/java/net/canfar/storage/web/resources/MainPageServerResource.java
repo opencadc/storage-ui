@@ -68,6 +68,7 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 import net.canfar.storage.StorageItemCSVWriter;
@@ -75,7 +76,6 @@ import net.canfar.storage.StorageItemWriter;
 import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.FolderItem;
 import net.canfar.storage.web.view.FreeMarkerConfiguration;
-import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import org.restlet.data.MediaType;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -157,8 +157,6 @@ public class MainPageServerResource extends StorageItemServerResource {
                                        final VOSURI startNextPageURI)
             throws Exception {
         final Map<String, Object> dataModel = new HashMap<>();
-        final AccessControlClient accessControlClient =
-                getContextAttribute(StorageApplication.ACCESS_CONTROL_CLIENT_KEY);
 
         dataModel.put("initialRows", initialRows);
 
@@ -182,7 +180,8 @@ public class MainPageServerResource extends StorageItemServerResource {
         dataModel.put("vospaceServices", getVOSpaceServiceList());
 
         // HttpPrincipal username will be pulled from current user
-        final String httpUsername = accessControlClient.getCurrentHttpPrincipalUsername(getCurrentUser());
+        final Set<String> currentUserIDs = AuthenticationUtil.getUseridsFromSubject();
+        final String httpUsername = currentUserIDs.isEmpty() ? null : currentUserIDs.toArray(new String[0])[0];
 
         if (httpUsername != null) {
             dataModel.put("username", httpUsername);
