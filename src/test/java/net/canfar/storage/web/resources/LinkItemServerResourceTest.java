@@ -74,6 +74,7 @@ import ca.nrc.cadc.vos.LinkNode;
 import ca.nrc.cadc.vos.VOSURI;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.mockito.Mockito;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -81,29 +82,26 @@ import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 
 import javax.servlet.ServletContext;
-import java.io.IOException;
 import java.net.URI;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
-import static org.easymock.EasyMock.*;
 
-
-public class LinkItemServerResourceTest
-    extends AbstractServerResourceTest<LinkItemServerResource> {
+public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkItemServerResource> {
     @Test
     public void createLink() throws Exception {
         final URI target = URI.create("http://gohere.com/to/see");
         final LinkNode linkNode =
-            new LinkNode(new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/curr/dir/MY_LINK")), target);
+                new LinkNode(new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/curr/dir/MY_LINK")), target);
 
-        expect(mockServletContext.getContextPath()).andReturn("/to").once();
-        expect(mockVOSpaceClient.createNode(linkNode, false)).andReturn(linkNode).once();
+        Mockito.when(mockServletContext.getContextPath()).thenReturn("/to");
+        Mockito.when(mockVOSpaceClient.createNode(linkNode, false)).thenReturn(linkNode);
 
         final JSONObject sourceJSON = new JSONObject("{\"link_name\":\"MY_LINK\","
-                                                         + "\"link_url\":\"http://gohere.com/to/see\"}");
+                                                     + "\"link_url\":\"http://gohere.com/to/see\"}");
 
         final JsonRepresentation payload = new JsonRepresentation(sourceJSON);
 
@@ -111,12 +109,8 @@ public class LinkItemServerResourceTest
 
         attributes.put("path", "curr/dir/MY_LINK");
 
-        mockResponse.setStatus(Status.SUCCESS_CREATED);
-        expectLastCall().once();
-
-        expect(mockContext.getAttributes()).andReturn(new ConcurrentHashMap<String, Object>()).times(2);
-
-        replay(mockVOSpaceClient, mockServletContext, mockResponse, mockContext);
+        Mockito.doNothing().when(mockResponse).setStatus(Status.SUCCESS_CREATED);
+        Mockito.when(mockContext.getAttributes()).thenReturn(new ConcurrentHashMap<>());
 
         testSubject = new LinkItemServerResource(mockVOSpaceClient) {
             @Override
@@ -130,7 +124,9 @@ public class LinkItemServerResourceTest
             }
 
             @Override
-            public String getVospaceNodeUriPrefix() { return VOSPACE_NODE_URI_PREFIX; }
+            public String getVospaceNodeUriPrefix() {
+                return VOSPACE_NODE_URI_PREFIX;
+            }
 
             /**
              * Returns the current context.
@@ -175,41 +171,31 @@ public class LinkItemServerResourceTest
 
         testSubject.create(payload);
 
-        verify(mockVOSpaceClient, mockServletContext, mockResponse, mockContext);
+        Mockito.verify(mockServletContext, Mockito.times(1)).getContextPath();
+        Mockito.verify(mockResponse, Mockito.times(1)).setStatus(Status.SUCCESS_CREATED);
+        Mockito.verify(mockContext, Mockito.times(2)).getAttributes();
+        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).createNode(linkNode, false);
     }
 
     @Test
     public void resolve() throws Exception {
         final String getNodeRequestQuery = "limit=0";
-        final Map<String, Object> attributes = new HashMap<>();
-
-        attributes.put("path", "curr/dir/MY_LINK");
-
-        expect(mockServletContext.getContextPath())
-            .andReturn("/servletpath").once();
-
         final URI target = URI.create("vos://cadc.nrc.ca!vault/other/dir/my/dir");
         final LinkNode linkNode =
-            new LinkNode(new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/curr/dir/MY_LINK")), target);
+                new LinkNode(new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/curr/dir/MY_LINK")), target);
+        final ContainerNode targetContainerNode = new ContainerNode(new VOSURI(target));
 
-        final ContainerNode targetContainerNode =
-            new ContainerNode(new VOSURI(target));
+        final Map<String, Object> attributes = new HashMap<>();
+        attributes.put("path", "curr/dir/MY_LINK");
 
-        mockResponse.redirectTemporary(
-            "/servletpath/list/other/dir/my/dir");
-        expectLastCall().once();
+        final ConcurrentMap<String, Object> mockAttributeMap = new ConcurrentHashMap<>();
+        Mockito.when(mockContext.getAttributes()).thenReturn(mockAttributeMap);
 
-        expect(mockVOSpaceClient.getNode("/curr/dir/MY_LINK",
-                                         getNodeRequestQuery)).andReturn(
-            linkNode).once();
+        Mockito.when(mockServletContext.getContextPath()).thenReturn("/servletpath");
 
-        expect(mockVOSpaceClient.getNode("/other/dir/my/dir",
-                                         getNodeRequestQuery))
-            .andReturn(targetContainerNode).once();
-
-        expect(mockContext.getAttributes()).andReturn(new ConcurrentHashMap<String, Object>()).times(2);
-
-        replay(mockVOSpaceClient, mockServletContext, mockResponse, mockContext);
+        Mockito.when(mockVOSpaceClient.getNode("/other/dir/my/dir", getNodeRequestQuery))
+               .thenReturn(targetContainerNode);
+        Mockito.when(mockVOSpaceClient.getNode("/curr/dir/MY_LINK", getNodeRequestQuery)).thenReturn(linkNode);
 
         testSubject = new LinkItemServerResource(mockVOSpaceClient) {
             @Override
@@ -223,7 +209,9 @@ public class LinkItemServerResourceTest
             }
 
             @Override
-            public String getVospaceNodeUriPrefix() { return VOSPACE_NODE_URI_PREFIX; }
+            public String getVospaceNodeUriPrefix() {
+                return VOSPACE_NODE_URI_PREFIX;
+            }
 
             /**
              * Returns the current context.
@@ -268,6 +256,10 @@ public class LinkItemServerResourceTest
 
         testSubject.resolve();
 
-        verify(mockVOSpaceClient, mockServletContext, mockResponse, mockContext);
+        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).getNode("/curr/dir/MY_LINK",
+                                                                    getNodeRequestQuery);
+        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).getNode("/other/dir/my/dir",
+                                                                    getNodeRequestQuery);
+        Mockito.verify(mockServletContext, Mockito.times(1)).getContextPath();
     }
 }

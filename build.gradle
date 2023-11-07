@@ -33,13 +33,12 @@ dependencies {
     implementation 'org.restlet.jee:org.restlet.ext.json:[2.4.3,2.4.99)'
 
     testImplementation 'junit:junit:[4.12,5.0)'
-    testImplementation 'org.easymock:easymock:[4.2, 5.0)'
     testImplementation 'org.opencadc:cadc-web-test:[2.1.0,3.0.0)'
     testImplementation 'org.mockito:mockito-core:[3.9.0,4.0.0)'
     testImplementation 'org.seleniumhq.selenium:selenium-java:[3.14,4.0)'
 }
 
-sourceCompatibility = '1.8'
+sourceCompatibility = '11'
 
 war {
     archiveName 'storage.war'

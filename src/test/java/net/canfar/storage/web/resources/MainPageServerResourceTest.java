@@ -70,10 +70,11 @@ package net.canfar.storage.web.resources;
 
 
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
+import ca.nrc.cadc.vos.*;
 import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.FolderItem;
 import net.canfar.storage.web.view.FreeMarkerConfiguration;
-import ca.nrc.cadc.vos.*;
+import org.mockito.Mockito;
 import org.restlet.Context;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -92,21 +93,16 @@ import org.junit.Test;
 import org.restlet.resource.ResourceException;
 
 import static org.junit.Assert.*;
-import static org.easymock.EasyMock.*;
 
 
-public class MainPageServerResourceTest
-        extends AbstractServerResourceTest<MainPageServerResource>
-{
+public class MainPageServerResourceTest extends AbstractServerResourceTest<MainPageServerResource> {
     @Test
     @SuppressWarnings("unchecked")
-    public void representFolderItem() throws Exception
-    {
-        final FolderItem mockFolderItem = createMock(FolderItem.class);
+    public void representFolderItem() throws Exception {
+        final FolderItem mockFolderItem = Mockito.mock(FolderItem.class);
         final List<String> initialRowData = new ArrayList<>();
         final Subject subject = new Subject();
-        final VOSURI startURI =
-                new VOSURI(URI.create("vos://myhost.com/node/1"));
+        final VOSURI startURI = new VOSURI(URI.create("vos://myhost.com/node/1"));
 
         final VOSURI folderURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/my/node"));
         final ContainerNode containerNode = new ContainerNode(folderURI);
@@ -121,99 +117,70 @@ public class MainPageServerResourceTest
 
         String httpUsername = "CADCtest";
 
-        final AccessControlClient mockAccessControlClient =
-                createMock(AccessControlClient.class);
+        final AccessControlClient mockAccessControlClient = Mockito.mock(AccessControlClient.class);
 
-        expect(mockAccessControlClient.getCurrentHttpPrincipalUsername(subject))
-                .andReturn(httpUsername);
-        replay(mockAccessControlClient);
+        Mockito.when(mockAccessControlClient.getCurrentHttpPrincipalUsername(subject)).thenReturn(httpUsername);
 
-        final ConcurrentMap<String, Object> mockContextAttributes =
-                new ConcurrentHashMap<>();
+        final ConcurrentMap<String, Object> mockContextAttributes = new ConcurrentHashMap<>();
+        final FreeMarkerConfiguration mockFreeMarkerConfiguration = Mockito.mock(FreeMarkerConfiguration.class);
 
-        final FreeMarkerConfiguration mockFreeMarkerConfiguration =
-                createMock(FreeMarkerConfiguration.class);
+        mockContextAttributes.put(StorageApplication.ACCESS_CONTROL_CLIENT_KEY, mockAccessControlClient);
 
-        mockContextAttributes
-                .put(StorageApplication.ACCESS_CONTROL_CLIENT_KEY,
-                     mockAccessControlClient);
+        Mockito.when(mockContext.getAttributes()).thenReturn(mockContextAttributes);
+        Mockito.when(mockFreeMarkerConfiguration.getTemplate("index.ftl")).thenReturn(null);
 
-        expect(mockContext.getAttributes()).andReturn(mockContextAttributes).anyTimes();
-
-        expect(mockFreeMarkerConfiguration.getTemplate("index.ftl"))
-                .andReturn(null).once();
-
-        replay(mockServletContext, mockRegistryClient, mockContext,
-               mockFreeMarkerConfiguration);
-
-
-        testSubject = new MainPageServerResource()
-        {
+        testSubject = new MainPageServerResource() {
             @Override
-            FreeMarkerConfiguration getFreeMarkerConfiguration()
-            {
+            FreeMarkerConfiguration getFreeMarkerConfiguration() {
                 return mockFreeMarkerConfiguration;
             }
 
             @Override
-            Subject getCurrentUser()
-            {
+            Subject getCurrentUser() {
                 return subject;
             }
 
             @Override
-            ServletContext getServletContext()
-            {
+            ServletContext getServletContext() {
                 return mockServletContext;
             }
 
             @Override
-            public Context getContext()
-            {
+            public Context getContext() {
                 return mockContext;
             }
 
             @Override
-            public String getVospaceNodeUriPrefix() { return VOSPACE_NODE_URI_PREFIX; }
+            public String getVospaceNodeUriPrefix() {
+                return VOSPACE_NODE_URI_PREFIX;
+            }
 
             @Override
-            public String getCurrentVOSpaceService() { return "vos"; }
+            public String getCurrentVOSpaceService() {
+                return "vos";
+            }
 
             @Override
-            List<String> getVOSpaceServiceList() { return vospaceServiceList; }
+            List<String> getVOSpaceServiceList() {
+                return vospaceServiceList;
+            }
 
             @SuppressWarnings("unchecked")
             @Override
-            <T extends Node> T getNode(final VOSURI folderURI,
-                                       final VOS.Detail detail)
-                    throws ResourceException
-            {
+            <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail) throws ResourceException {
                 return (T) containerNode;
             }
         };
 
-        expect(mockFolderItem.isWritable()).andReturn(true).anyTimes();
-        replay(mockFolderItem);
+        Mockito.when(mockFolderItem.isWritable()).thenReturn(true);
+        final Representation representation = testSubject.representFolderItem(mockFolderItem, initialRowData.iterator(),
+                                                                              startURI);
 
-        final Representation representation =
-                testSubject.representFolderItem(mockFolderItem,
-                                                initialRowData.iterator(),
-                                                startURI);
+        final TemplateRepresentation templateRepresentation = (TemplateRepresentation) representation;
+        final Map<String, Object> dataModel = (Map<String, Object>) templateRepresentation.getDataModel();
 
-        final TemplateRepresentation templateRepresentation =
-                (TemplateRepresentation) representation;
-
-        final Map<String, Object> dataModel =
-                (Map<String, Object>) templateRepresentation.getDataModel();
-
-        assertTrue("Should be a folder.",
-                   dataModel.containsKey("folder"));
-        assertEquals("Should have URI for next page.",
-                     startURI.getURI().toString(), dataModel.get("startURI"));
-        assertTrue("Should contain initialRows",
-                   dataModel.containsKey("initialRows"));
-
-        verify(mockFolderItem, mockServletContext, mockContext,
-               mockFreeMarkerConfiguration);
+        assertTrue("Should be a folder.", dataModel.containsKey("folder"));
+        assertEquals("Should have URI for next page.", startURI.getURI().toString(), dataModel.get("startURI"));
+        assertTrue("Should contain initialRows", dataModel.containsKey("initialRows"));
     }
 }

@@ -78,28 +78,24 @@ import org.restlet.resource.Put;
 import java.net.URI;
 
 
-public class LinkItemServerResource extends StorageItemServerResource
-{
+public class LinkItemServerResource extends StorageItemServerResource {
     /**
      * Empty constructor needed for Restlet to manage it.
      */
-    public LinkItemServerResource()
-    {
+    public LinkItemServerResource() {
     }
 
-    LinkItemServerResource(final VOSpaceClient voSpaceClient)
-    {
+    LinkItemServerResource(final VOSpaceClient voSpaceClient) {
         super(voSpaceClient);
     }
 
     /**
      * Resolve the current link, and redirect to the endpoint.
      *
-     * @throws Exception        Bubble errors to the top.
+     * @throws Exception Bubble errors to the top.
      */
     @Get
-    public void resolve() throws Exception
-    {
+    public void resolve() throws Exception {
         resolveLink();
     }
 
@@ -107,13 +103,12 @@ public class LinkItemServerResource extends StorageItemServerResource
      * Create a link node at this location.  The current path is the name of
      * the link to create.
      *
-     * @param payload       The JSON payload in the form of:
-     *                      <code>{"link_name": name, "link_url": url}</code>
-     * @throws Exception    To bubble up any errors.
+     * @param payload The JSON payload in the form of:
+     *                <code>{"link_name": name, "link_url": url}</code>
+     * @throws Exception To bubble up any errors.
      */
     @Put("json")
-    public void create(final JsonRepresentation payload) throws Exception
-    {
+    public void create(final JsonRepresentation payload) throws Exception {
         final JSONObject jsonObject = payload.getJsonObject();
 
         createLink(URI.create(jsonObject.getString("link_url")));

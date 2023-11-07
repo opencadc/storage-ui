@@ -72,26 +72,22 @@ import ca.nrc.cadc.ac.client.GMSClient;
 import net.canfar.storage.AbstractUnitTest;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
+import org.mockito.Mockito;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 
-import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 
-import static org.easymock.EasyMock.createMock;
 
-abstract class AbstractServerResourceTest<T extends SecureServerResource>
-        extends AbstractUnitTest<T>
-{
-    final VOSpaceClient mockVOSpaceClient = createMock(VOSpaceClient.class);
-    final GMSClient mockGMSClient = createMock(GMSClient.class);
-    final Response mockResponse = createMock(Response.class);
-    final Request mockRequest = createMock(Request.class);
-    final RegistryClient mockRegistryClient = createMock(RegistryClient.class);
-    final ServletContext mockServletContext =
-            createMock(ServletContext.class);
-    final Context mockContext = createMock(Context.class);
+abstract class AbstractServerResourceTest<T extends SecureServerResource> extends AbstractUnitTest<T> {
+    final VOSpaceClient mockVOSpaceClient = Mockito.mock(VOSpaceClient.class);
+    final GMSClient mockGMSClient = Mockito.mock(GMSClient.class);
+    final Response mockResponse = Mockito.mock(Response.class);
+    final Request mockRequest = Mockito.mock(Request.class);
+    final RegistryClient mockRegistryClient = Mockito.mock(RegistryClient.class);
+    final ServletContext mockServletContext = Mockito.mock(ServletContext.class);
+    final Context mockContext = Mockito.mock(Context.class);
 
     // for testing only
     static final String VOSPACE_NODE_URI_PREFIX = "vos://cadc.nrc.ca!vault";

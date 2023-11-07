@@ -68,13 +68,11 @@
 
 package net.canfar.storage.web.resources;
 
-import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.util.StringUtil;
 import ca.nrc.cadc.vos.*;
 import ca.nrc.cadc.vos.client.ClientRecursiveSetNode;
 import ca.nrc.cadc.vos.client.VOSpaceClient;
 import net.canfar.storage.web.StorageItemFactory;
-import net.canfar.storage.web.URIExtractor;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
 import net.canfar.storage.web.config.VOSpaceServiceConfigMgr;
 import net.canfar.storage.web.restlet.StorageApplication;
@@ -83,7 +81,6 @@ import net.canfar.storage.web.view.StorageItem;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
-import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
@@ -98,12 +95,10 @@ import java.util.Set;
 
 public class StorageItemServerResource extends SecureServerResource {
 
-    static final String IVO_GMS_PROPERTY_PREFIX = "ivo://cadc.nrc.ca/gms?";
+    private static final String IVO_GMS_PROPERTY_PREFIX = "ivo://cadc.nrc.ca/gms?";
 
     // Page size for the initial page display.
     private static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
-    private static final URIExtractor URI_EXTRACTOR = new URIExtractor();
-
     StorageItemFactory storageItemFactory;
     VOSpaceClient voSpaceClient;
 
@@ -152,11 +147,10 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     private void initialize(final VOSpaceClient voSpaceClient) {
-
         final URI filesMetaServiceID = getContextAttribute(StorageApplication.FILES_META_SERVICE_SERVICE_ID_KEY);
         final URI filesMetaServiceStandardID =
                 getContextAttribute(StorageApplication.FILES_META_SERVICE_STANDARD_ID_KEY);
-        this.storageItemFactory = new StorageItemFactory(URI_EXTRACTOR, getRegistryClient(),
+        this.storageItemFactory = new StorageItemFactory(getRegistryClient(),
                                                          (getServletContext() == null)
                                                          ? StorageApplication.DEFAULT_CONTEXT_PATH
                                                          : getServletContext().getContextPath(),
@@ -203,40 +197,6 @@ public class StorageItemServerResource extends SecureServerResource {
 
     final <T extends Node> T getCurrentNode(final VOS.Detail detail) {
         return getNode(getCurrentItemURI(), detail);
-    }
-
-    final <T extends Node> T getCurrentNode(final VOS.Detail detail, final int limit) {
-        return getNode(getCurrentItemURI(), detail, limit);
-    }
-
-    /**
-     * @param uri URI to look up.
-     * @param <T> Type to translate to.
-     * @return Translated Node to StorageItem.
-     *
-     * @throws IOException For any problems.
-     */
-    @SuppressWarnings("unchecked")
-    final <T extends StorageItem> T getStorageItem(final URI uri) throws IOException {
-        try {
-            return (T) storageItemFactory.translate(getNode(new VOSURI(uri),
-                                                            VOS.Detail.max));
-        } catch (ResourceException re) {
-            final Throwable cause = re.getCause();
-            if (cause instanceof IllegalStateException) {
-                final Throwable illegalStateCause = cause.getCause();
-                if ((illegalStateCause instanceof NodeNotFoundException)
-                    || (illegalStateCause instanceof ResourceNotFoundException)) {
-                    throw new FileNotFoundException(re.getMessage());
-                } else {
-                    throw new ResourceException(re);
-                }
-            } else if ((cause instanceof NodeNotFoundException) || (cause instanceof ResourceNotFoundException)) {
-                throw new FileNotFoundException(re.getMessage());
-            } else {
-                throw new ResourceException(re);
-            }
-        }
     }
 
     <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail, final int limit)
@@ -439,14 +399,6 @@ public class StorageItemServerResource extends SecureServerResource {
     void createNode(final Node newNode) throws Exception {
         executeSecurely((PrivilegedExceptionAction<Void>) () -> {
             voSpaceClient.createNode(newNode, false);
-            return null;
-        });
-    }
-
-    @Delete
-    public void deleteNode() throws Exception {
-        executeSecurely((PrivilegedExceptionAction<Void>) () -> {
-            voSpaceClient.deleteNode(getCurrentPath());
             return null;
         });
     }

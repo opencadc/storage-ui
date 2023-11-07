@@ -75,8 +75,7 @@ import java.net.URI;
 import java.util.Date;
 
 
-public class FolderItem extends StorageItem
-{
+public class FolderItem extends StorageItem {
     private final int childCount;
 
 
@@ -84,8 +83,7 @@ public class FolderItem extends StorageItem
                       boolean publicFlag, boolean lockedFlag,
                       GroupURI[] writeGroupURIs, GroupURI[] readGroupURIs, String owner,
                       boolean readableFlag, final boolean writableFlag,
-                      final int childCount, String targetURL)
-    {
+                      final int childCount, String targetURL) {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
               writeGroupURIs, readGroupURIs, owner, readableFlag, writableFlag, targetURL);
 
@@ -93,19 +91,16 @@ public class FolderItem extends StorageItem
     }
 
 
-    public boolean isRoot()
-    {
+    public boolean isRoot() {
         return uri.isRoot();
     }
 
     @Override
-    public String getItemIconCSS()
-    {
+    public String getItemIconCSS() {
         return "glyphicon-folder-" + (isReadable() ? "open" : "close");
     }
 
-    public int getChildCount()
-    {
+    public int getChildCount() {
         return childCount;
     }
 }

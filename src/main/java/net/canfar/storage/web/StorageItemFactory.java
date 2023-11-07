@@ -93,7 +93,6 @@ import org.apache.log4j.Logger;
 public class StorageItemFactory {
     private static final Logger log = Logger.getLogger(StorageItemFactory.class);
 
-    private final URIExtractor uriExtractor;
     private final RegistryClient registryClient;
     private final String contextPath;
     private final URI filesMetaServiceID;
@@ -101,11 +100,10 @@ public class StorageItemFactory {
     private final String vospaceServiceName;
 
 
-    public StorageItemFactory(final URIExtractor uriExtractor, final RegistryClient registryClient,
+    public StorageItemFactory(final RegistryClient registryClient,
                               final String contextPath, final URI filesMetaServiceID,
                               final URI filesMetaServiceStandardID,
                               final String vospaceServiceName) {
-        this.uriExtractor = uriExtractor;
         this.registryClient = registryClient;
         this.contextPath = contextPath;
         this.filesMetaServiceID = filesMetaServiceID;
@@ -202,7 +200,7 @@ public class StorageItemFactory {
         final String writeGroupValues = node.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE);
         GroupURI[] writeGroupURIs = null;
         try {
-            writeGroupURIs = uriExtractor.extract(writeGroupValues);
+            writeGroupURIs = URIExtractor.extract(writeGroupValues);
         } catch (Exception iae) {
             log.warn("Unable to extract group, skipping...: " + writeGroupValues, iae);
         }
@@ -210,7 +208,7 @@ public class StorageItemFactory {
         final String readGroupValues = node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
         GroupURI[] readGroupURIs = null;
         try {
-            readGroupURIs = uriExtractor.extract(readGroupValues);
+            readGroupURIs = URIExtractor.extract(readGroupValues);
         } catch (Exception iae) {
             log.warn("Unable to extract group, skipping...: " + readGroupValues, iae);
         }

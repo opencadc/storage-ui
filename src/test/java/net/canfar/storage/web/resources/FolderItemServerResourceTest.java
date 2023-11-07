@@ -77,8 +77,8 @@ import ca.nrc.cadc.uws.ExecutionPhase;
 import ca.nrc.cadc.vos.*;
 
 import ca.nrc.cadc.vos.client.ClientTransfer;
-import org.easymock.IAnswer;
 import org.json.JSONObject;
+import org.mockito.Mockito;
 import org.restlet.Context;
 import org.restlet.Response;
 
@@ -100,22 +100,18 @@ import org.junit.Assert;
 import org.junit.Test;
 import org.restlet.resource.ResourceException;
 
-import static org.easymock.EasyMock.*;
 import static org.junit.Assert.*;
 
 
-public class FolderItemServerResourceTest
-    extends AbstractServerResourceTest<FolderItemServerResource> {
+public class FolderItemServerResourceTest extends AbstractServerResourceTest<FolderItemServerResource> {
     @Test
     public void create() throws Exception {
         final VOSURI folderURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/my/node"));
         final ContainerNode containerNode = new ContainerNode(folderURI);
 
-        expect(mockServletContext.getContextPath()).andReturn("/teststorage").once();
-
-        expect(mockContext.getAttributes()).andReturn(new ConcurrentHashMap<String, Object>()).times(2);
-
-        replay(mockServletContext, mockContext);
+        Mockito.when(mockServletContext.getContextPath()).thenReturn("/teststorage");
+        Mockito.when(mockContext.getAttributes()).thenReturn(new ConcurrentHashMap<>());
+        Mockito.when(mockVOSpaceClient.createNode(containerNode, false)).thenReturn(containerNode);
 
         testSubject = new FolderItemServerResource(mockVOSpaceClient) {
             @Override
@@ -163,17 +159,15 @@ public class FolderItemServerResourceTest
             }
         };
 
-        expect(mockVOSpaceClient.createNode(containerNode, false))
-            .andReturn(containerNode).once();
-
-        mockResponse.setStatus(Status.SUCCESS_CREATED);
-        expectLastCall().once();
-
-        replay(mockVOSpaceClient, mockResponse);
+        Mockito.doNothing().when(mockResponse).setStatus(Status.SUCCESS_CREATED);
 
         testSubject.create();
 
-        verify(mockVOSpaceClient, mockResponse, mockServletContext, mockContext);
+        Mockito.verify(mockResponse, Mockito.times(1)).setStatus(Status.SUCCESS_CREATED);
+        Mockito.verify(mockServletContext, Mockito.times(1)).getContextPath();
+        Mockito.verify(mockContext, Mockito.times(2)).getAttributes();
+        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).createNode(containerNode,
+                                                                       false);
     }
 
     @Test
@@ -181,9 +175,9 @@ public class FolderItemServerResourceTest
         long folderSize = 123456789L;
         long quota = 9876543210L;
         String expectedRemainingSize = new FileSizeRepresentation()
-            .getSizeHumanReadable(quota - folderSize);
+                .getSizeHumanReadable(quota - folderSize);
         NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long
-            .toString(folderSize));
+                .toString(folderSize));
         this.retrieveQuota(quota, expectedRemainingSize, prop);
     }
 
@@ -191,32 +185,22 @@ public class FolderItemServerResourceTest
     public void retrieveNotEnoughQuota() throws Exception {
         long folderSize = 9876543210L;
         long quota = 123456789L;
-        String expectedRemainingSize = new FileSizeRepresentation()
-            .getSizeHumanReadable(0);
-        NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long
-            .toString(folderSize));
+        final String expectedRemainingSize = new FileSizeRepresentation().getSizeHumanReadable(0);
+        final NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long.toString(folderSize));
         this.retrieveQuota(quota, expectedRemainingSize, prop);
     }
 
     private void retrieveQuota(long quota, final String expectedRemainingSize,
-                               final NodeProperty folderSizeNodeProp)
-        throws Exception {
-        String expectedQuota = new FileSizeRepresentation()
-            .getSizeHumanReadable(quota);
-
+                               final NodeProperty folderSizeNodeProp) throws Exception {
+        final String expectedQuota = new FileSizeRepresentation().getSizeHumanReadable(quota);
         final VOSURI folderURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/my/node"));
-        List<NodeProperty> properties = new ArrayList<>();
+        final List<NodeProperty> properties = new ArrayList<>();
         properties.add(folderSizeNodeProp);
-        NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long
-            .toString(quota));
+
+        final NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long.toString(quota));
         properties.add(prop);
 
         final ContainerNode containerNode = new ContainerNode(folderURI, properties);
-
-        expect(mockServletContext.getContextPath()).andReturn("/teststorage")
-                                                   .once();
-
-        replay(mockServletContext);
 
         testSubject = new FolderItemServerResource() {
             @Override
@@ -240,18 +224,20 @@ public class FolderItemServerResourceTest
             }
 
             @Override
-            public String getVospaceNodeUriPrefix() { return VOSPACE_NODE_URI_PREFIX; }
+            public String getVospaceNodeUriPrefix() {
+                return VOSPACE_NODE_URI_PREFIX;
+            }
 
             @SuppressWarnings("unchecked")
             @Override
-            <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail)
-                throws ResourceException {
+            <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail) throws ResourceException {
                 return (T) containerNode;
             }
         };
 
         Representation jsonRep = testSubject.retrieveQuota();
-        StringWriter swriter = new StringWriter();
+
+        final StringWriter swriter = new StringWriter();
         jsonRep.write(swriter);
         String[] kvps = swriter.getBuffer().toString().split(",");
         assertEquals("Should only contain two properties", kvps.length, 2);
@@ -286,61 +272,30 @@ public class FolderItemServerResourceTest
         final String srcNodeName = "/my/source_node";
         final String destNodeName = "/my/dest_node";
 
-        final VOSURI destination =
-            new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + destNodeName));
-        final ContainerNode mockDestinationNode = createMock(ContainerNode.class);
+        final VOSURI destination = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + destNodeName));
+        final ContainerNode mockDestinationNode = new ContainerNode(destination);
 
-        expect(mockDestinationNode.getUri()).andReturn(destination)
-                                            .once();
-        replay(mockDestinationNode);
-
-        final Transfer mockTransfer = createMock(Transfer.class);
-        replay(mockTransfer);
-
-        final ContainerNode mockContainerNode = createMock(ContainerNode.class);
-        expect(mockContainerNode.getUri()).andReturn(new VOSURI("vos://cadc.nrc.ca/TEST")).anyTimes();
-        replay(mockContainerNode);
+        final Transfer mockTransfer = Mockito.mock(Transfer.class);
 
         // Need mock ClientTransfer object as well.
-        final ClientTransfer mockClientTransfer = createMock(ClientTransfer.class);
+        final ClientTransfer mockClientTransfer = Mockito.mock(ClientTransfer.class);
 
         // Override runTransfer & setMonitor methods
         mockClientTransfer.setMonitor(true);
-        expectLastCall().andAnswer(new IAnswer<Void>() {
-            @Override
-            public Void answer() {
-                return null;
-            }
-        });
-
         mockClientTransfer.runTransfer();
-        expectLastCall().andAnswer(new IAnswer<Void>() {
-            @Override
-            public Void answer() {
-                return null;
-            }
-        });
 
         // Return an empty error message with getServerError() in order to
         // signal that the move succeeded
-        ErrorSummary es = new ErrorSummary("", ErrorType.TRANSIENT);
-        expect(mockClientTransfer.getServerError()).andReturn(es).once();
-        expect(mockClientTransfer.getPhase()).andReturn(ExecutionPhase.COMPLETED).anyTimes();
+        final ErrorSummary es = new ErrorSummary("", ErrorType.TRANSIENT);
+
+        Mockito.when(mockClientTransfer.getServerError()).thenReturn(es);
+        Mockito.when(mockClientTransfer.getPhase()).thenReturn(ExecutionPhase.COMPLETED);
 
         // Set up return code in response
-        mockResponse.setStatus(Status.SUCCESS_OK);
-
-        expectLastCall().once();
-        expect(mockContext.getAttributes()).andReturn(new ConcurrentHashMap<String, Object>()).times(2);
-
-        replay(mockResponse, mockClientTransfer, mockContext);
-
-        expect(mockVOSpaceClient.createTransfer(mockTransfer)).andReturn(mockClientTransfer).once();
-        replay(mockVOSpaceClient);
-
-
-        expect(mockServletContext.getContextPath()).andReturn("/teststorage").once();
-        replay(mockServletContext);
+        Mockito.doNothing().when(mockResponse).setStatus(Status.SUCCESS_OK);
+        Mockito.when(mockContext.getAttributes()).thenReturn(new ConcurrentHashMap<>());
+        Mockito.when(mockVOSpaceClient.createTransfer(mockTransfer)).thenReturn(mockClientTransfer);
+        Mockito.when(mockServletContext.getContextPath()).thenReturn("/teststorage");
 
 
         testSubject = new FolderItemServerResource(mockVOSpaceClient) {
@@ -380,12 +335,13 @@ public class FolderItemServerResourceTest
             }
 
             @Override
-            public String getVospaceNodeUriPrefix() { return VOSPACE_NODE_URI_PREFIX; }
+            public String getVospaceNodeUriPrefix() {
+                return VOSPACE_NODE_URI_PREFIX;
+            }
 
             @SuppressWarnings("unchecked")
             @Override
-            <T extends Node> T getNode(VOSURI folderURI, VOS.Detail detail)
-                throws ResourceException {
+            <T extends Node> T getNode(VOSURI folderURI, VOS.Detail detail) throws ResourceException {
                 return (T) mockDestinationNode;
             }
 
@@ -397,18 +353,16 @@ public class FolderItemServerResourceTest
 
 
         final JSONObject sourceJSON = new JSONObject("{\"destNode\":\"" + destNodeName + "\","
-                                                         + "\"srcNodes\":\"" + srcNodeName + "\"}");
+                                                     + "\"srcNodes\":\"" + srcNodeName + "\"}");
 
         final JsonRepresentation payload = new JsonRepresentation(sourceJSON);
 
-        try {
-            testSubject.moveToFolder(payload);
-        } catch (Exception expected ) {
+        testSubject.moveToFolder(payload);
 
-        }
-
-        verify(mockVOSpaceClient, mockResponse, mockServletContext, mockContext,
-               mockClientTransfer, mockDestinationNode, mockTransfer, mockContainerNode);
-
+        Mockito.verify(mockClientTransfer, Mockito.times(1)).getServerError();
+        Mockito.verify(mockServletContext, Mockito.times(1)).getContextPath();
+        Mockito.verify(mockContext, Mockito.times(2)).getAttributes();
+        Mockito.verify(mockResponse, Mockito.times(1)).setStatus(Status.SUCCESS_OK);
+        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).createTransfer(mockTransfer);
     }
 }

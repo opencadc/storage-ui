@@ -90,7 +90,6 @@ import java.net.URL;
 public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory> {
     @Test
     public void translate() throws Exception {
-        final URIExtractor uriExtractor = new URIExtractor();
         final RegistryClient mockRegistryClient = Mockito.mock(RegistryClient.class);
         final DataNode mockDataNode = Mockito.mock(DataNode.class);
         final String contextPath = "/warehouse";
@@ -110,7 +109,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
                                                       URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
                                                       AuthMethod.COOKIE)).thenReturn(serviceURL);
 
-        testSubject = new StorageItemFactory(uriExtractor, mockRegistryClient, contextPath,
+        testSubject = new StorageItemFactory(mockRegistryClient, contextPath,
                                              URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
                                              URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
                             "vault");
@@ -133,7 +132,6 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
 
     @Test
     public void translateTargetFallback() throws Exception {
-        final URIExtractor uriExtractor = new URIExtractor();
         final RegistryClient mockRegistryClient = Mockito.mock(RegistryClient.class);
         final DataNode mockDataNode = Mockito.mock(DataNode.class);
         final String contextPath = "/warehouse";
@@ -156,7 +154,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         Mockito.when(mockRegistryClient.getServiceURL(vosuri.getServiceURI(), Standards.VOSPACE_SYNC_21,
                                                       AuthMethod.ANON)).thenReturn(serviceURL);
 
-        testSubject = new StorageItemFactory(uriExtractor, mockRegistryClient, contextPath,
+        testSubject = new StorageItemFactory(mockRegistryClient, contextPath,
                                              URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
                                              URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
                             "vault");
@@ -182,7 +180,6 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
 
     @Test
     public void translateNoGroups() throws Exception {
-        final URIExtractor uriExtractor = new URIExtractor();
         final RegistryClient mockRegistryClient = Mockito.mock(RegistryClient.class);
         final DataNode mockDataNode = Mockito.mock(DataNode.class);
         final String contextPath = "/warehouse";
@@ -203,10 +200,10 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         Mockito.when(mockRegistryClient.getServiceURL(vosuri.getServiceURI(), Standards.VOSPACE_SYNC_21,
                                                       AuthMethod.ANON)).thenReturn(serviceURL);
 
-        testSubject = new StorageItemFactory(uriExtractor, mockRegistryClient, contextPath,
+        testSubject = new StorageItemFactory(mockRegistryClient, contextPath,
                                              URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
                                              URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
-                            "vault");
+                                             "vault");
 
         final StorageItem storageItemResult = testSubject.translate(mockDataNode);
         Assert.assertEquals("Wrong target URL.",

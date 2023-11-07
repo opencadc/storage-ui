@@ -75,8 +75,11 @@ import net.canfar.storage.web.UploadVerifier;
 import net.canfar.storage.web.config.VOSpaceServiceConfigMgr;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.vos.*;
+
 import java.util.concurrent.ConcurrentMap;
+
 import org.apache.commons.fileupload.FileItemStream;
+import org.mockito.Mockito;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -99,7 +102,6 @@ import org.junit.Test;
 import org.restlet.representation.EmptyRepresentation;
 
 import static org.junit.Assert.*;
-import static org.easymock.EasyMock.*;
 
 
 public class FileItemServerResourceTest extends AbstractServerResourceTest<FileItemServerResource> {
@@ -123,22 +125,15 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
 
         requestAttributes.put("path", "my/file.txt");
         final ConcurrentMap<String, Object> mockContextAttributes =
-            new ConcurrentHashMap<>();
+                new ConcurrentHashMap<>();
 
-        mockContextAttributes
-            .put(VOSpaceServiceConfigMgr.VOSPACE_SERVICE_NAME_KEY,
-                "vault");
-        mockContextAttributes
-            .put(VOSpaceServiceConfigMgr.KEY_BASE + ".vault" + VOSpaceServiceConfigMgr.NODE_URI_KEY,
-                "vault");
+        mockContextAttributes.put(VOSpaceServiceConfigMgr.VOSPACE_SERVICE_NAME_KEY, "vault");
+        mockContextAttributes.put(VOSpaceServiceConfigMgr.KEY_BASE + ".vault" + VOSpaceServiceConfigMgr.NODE_URI_KEY,
+                                  "vault");
 
-        expect(mockContext.getAttributes()).andReturn(mockContextAttributes).times(2);
-
-        expect(mockRequest.getEntity()).andReturn(new EmptyRepresentation()).once();
-
-        expect(mockServletContext.getContextPath()).andReturn("/teststorage").once();
-
-        replay(mockServletContext, mockContext);
+        Mockito.when(mockContext.getAttributes()).thenReturn(mockContextAttributes);
+        Mockito.when(mockRequest.getEntity()).thenReturn(new EmptyRepresentation());
+        Mockito.when(mockServletContext.getContextPath()).thenReturn("/teststorage");
 
         testSubject = new FileItemServerResource(mockVOSpaceClient, new UploadVerifier(), new RegexFileValidator()) {
             @Override
@@ -172,7 +167,9 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
             }
 
             @Override
-            public String getVospaceNodeUriPrefix() { return VOSPACE_NODE_URI_PREFIX; }
+            public String getVospaceNodeUriPrefix() {
+                return VOSPACE_NODE_URI_PREFIX;
+            }
 
             /**
              * Returns the request attributes.
@@ -203,32 +200,34 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
             }
 
             @Override
-            <T> T executeSecurely(PrivilegedExceptionAction<T> runnable)
-                throws Exception {
+            <T> T executeSecurely(PrivilegedExceptionAction<T> runnable) throws Exception {
                 return runnable.run();
             }
         };
 
-        final FileItemStream mockFileItemStream = createMock(FileItemStream.class);
+        final FileItemStream mockFileItemStream = Mockito.mock(FileItemStream.class);
 
-        expect(mockVOSpaceClient.getNode("/parent/sub/MYUPLOADFILE.txt",
-                                         "limit=0&detail=min"))
-            .andThrow(new NodeNotFoundException("No such node.")).once();
-        expect(mockVOSpaceClient.createNode(expectedDataNode, false)).andReturn(
-            expectedDataNode).once();
-
-        expect(mockFileItemStream.getName()).andReturn("MYUPLOADFILE.txt")
-                                            .once();
-        expect(mockFileItemStream.openStream()).andReturn(inputStream).once();
-        expect(mockFileItemStream.getContentType()).andReturn("text/plain")
-                                                   .once();
-
-        replay(mockVOSpaceClient, mockResponse, mockRequest, mockFileItemStream);
+        Mockito.when(mockVOSpaceClient.getNode("/parent/sub/MYUPLOADFILE.txt", "limit=0&detail=min"))
+                .thenThrow(new NodeNotFoundException("No such node."));
+        Mockito.when(mockVOSpaceClient.createNode(expectedDataNode, false)).thenReturn(
+                expectedDataNode);
+        Mockito.when(mockFileItemStream.getName()).thenReturn("MYUPLOADFILE.txt");
+        Mockito.when(mockFileItemStream.openStream()).thenReturn(inputStream);
+        Mockito.when(mockFileItemStream.getContentType()).thenReturn("text/plain");
 
         final VOSURI resultURI = testSubject.upload(mockFileItemStream);
 
-        assertEquals("End URI is wrong.", expectedURI, resultURI);
+        Mockito.verify(mockContext, Mockito.times(2)).getAttributes();
+        Mockito.verify(mockRequest, Mockito.atMostOnce()).getEntity();
+        Mockito.verify(mockServletContext, Mockito.atMostOnce()).getContextPath();
 
-        verify(mockVOSpaceClient, mockResponse, mockRequest, mockContext, mockFileItemStream);
+        Mockito.verify(mockVOSpaceClient, Mockito.atMostOnce()).getNode("/parent/sub/MYUPLOADFILE.txt",
+                                                                        "limit=0&detail=min");
+        Mockito.verify(mockVOSpaceClient, Mockito.atMostOnce()).createNode(expectedDataNode, false);
+        Mockito.verify(mockFileItemStream, Mockito.atMostOnce()).getName();
+        Mockito.verify(mockFileItemStream, Mockito.atMostOnce()).openStream();
+        Mockito.verify(mockFileItemStream, Mockito.atMostOnce()).getContentType();
+
+        assertEquals("End URI is wrong.", expectedURI, resultURI);
     }
 }

@@ -68,33 +68,31 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
+import ca.nrc.cadc.auth.AuthorizationToken;
+import ca.nrc.cadc.auth.AuthorizationTokenPrincipal;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.web.SubjectGenerator;
 import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.web.RestletPrincipalExtractor;
 
-import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
+import org.restlet.data.Cookie;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
-import org.restlet.resource.ResourceException;
 import org.restlet.resource.ServerResource;
 
 import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.IOException;
+import java.net.URI;
+import java.util.Collections;
 import java.util.Map;
 
 
 class SecureServerResource extends ServerResource {
-    private final SubjectGenerator subjectGenerator;
-
-    @Override
-    protected void doInit() throws ResourceException {
-
-    }
+    static final String FIRST_PARTY_COOKIE_NAME = "oidc_access_token";
 
     @SuppressWarnings("unchecked")
     <T> T getRequestAttribute(final String attributeName) {
@@ -106,15 +104,6 @@ class SecureServerResource extends ServerResource {
         return (T) getContext().getAttributes().get(attributeName);
     }
 
-    SecureServerResource() {
-        this(new SubjectGenerator());
-    }
-
-    SecureServerResource(final SubjectGenerator subjectGenerator) {
-        this.subjectGenerator = subjectGenerator;
-    }
-
-
     Subject getCurrentUser() {
         final Request request = getRequest();
         return AuthenticationUtil.getSubject(new RestletPrincipalExtractor(request));
@@ -125,7 +114,29 @@ class SecureServerResource extends ServerResource {
     }
 
     Subject generateVOSpaceUser() throws IOException {
-        return subjectGenerator.generate(new RestletPrincipalExtractor(getRequest()));
+        final Cookie firstPartyCookie =
+                getRequest().getCookies().getFirst(SecureServerResource.FIRST_PARTY_COOKIE_NAME);
+        final Subject subject = AuthenticationUtil.getCurrentSubject();
+
+        if (firstPartyCookie != null) {
+            final String cookieValue = firstPartyCookie.getValue();
+            subject.getPrincipals().add(new AuthorizationTokenPrincipal(AuthenticationUtil.AUTHORIZATION_HEADER,
+                                                                        AuthenticationUtil.CHALLENGE_TYPE_BEARER
+                                                                        + " " + cookieValue));
+            subject.getPublicCredentials().add(
+                    new AuthorizationToken(AuthenticationUtil.CHALLENGE_TYPE_BEARER, cookieValue,
+                                           Collections.singletonList(
+                                                   URI.create(getRequest().getResourceRef().toString()).getHost())));
+
+            if (!subject.getPrincipals(AuthorizationTokenPrincipal.class).isEmpty()) {
+                // Ensure it's clean first.
+                subject.getPublicCredentials(AuthMethod.class)
+                       .forEach(authMethod -> subject.getPublicCredentials().remove(authMethod));
+                subject.getPublicCredentials().add(AuthMethod.TOKEN);
+            }
+        }
+
+        return subject;
     }
 
     ServletContext getServletContext() {

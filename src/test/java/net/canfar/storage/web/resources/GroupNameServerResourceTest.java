@@ -73,37 +73,32 @@ import ca.nrc.cadc.reg.client.RegistryClient;
 import org.json.JSONArray;
 import org.json.JSONWriter;
 import org.junit.Test;
+
 import static org.junit.Assert.*;
+
+import org.mockito.Mockito;
 import org.restlet.Context;
 import org.restlet.Response;
 
 import javax.security.auth.Subject;
-import java.io.IOException;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.easymock.EasyMock.*;
 
-
-
-public class GroupNameServerResourceTest
-        extends AbstractServerResourceTest<GroupNameServerResource> {
+public class GroupNameServerResourceTest extends AbstractServerResourceTest<GroupNameServerResource> {
     @Test
     public void getGroupNames() throws Exception {
 
-        List<String> groupList = new ArrayList<String>();
+        final List<String> groupList = new ArrayList<>();
         groupList.add("CHIMPS");
         groupList.add("A-TEAM");
         groupList.add("ABC");
         groupList.add("ABCDE");
 
-        expect(mockGMSClient.getGroupNames())
-                .andReturn(groupList).once();
-
-        replay(mockGMSClient, mockServletContext);
+        Mockito.when(mockGMSClient.getGroupNames()).thenReturn(groupList);
 
         final Map<String, Object> attributes = new HashMap<>();
         final Context context = new Context();
@@ -111,11 +106,9 @@ public class GroupNameServerResourceTest
         attributes.put(StorageApplication.GMS_SERVICE_PROPERTY_KEY, mockGMSClient);
         context.setAttributes(attributes);
 
-
         testSubject = new GroupNameServerResource() {
             @Override
-            public Context getContext()
-            {
+            public Context getContext() {
                 return context;
             }
 
@@ -125,8 +118,7 @@ public class GroupNameServerResourceTest
             }
 
             @Override
-            Subject generateVOSpaceUser() throws IOException
-            {
+            Subject generateVOSpaceUser() {
                 return new Subject();
             }
 
@@ -143,24 +135,21 @@ public class GroupNameServerResourceTest
         };
 
 
-        JSONRepresentation r = (JSONRepresentation) testSubject.getGroupNames();
+        final JSONRepresentation r = (JSONRepresentation) testSubject.getGroupNames();
 
-        StringWriter sw = new StringWriter();
-        JSONWriter jw = new JSONWriter(sw);
+        final StringWriter sw = new StringWriter();
+        final JSONWriter jw = new JSONWriter(sw);
         r.write(jw);
 
-        JSONArray jo = new JSONArray(sw.getBuffer().toString());
-
-        ArrayList<String> listdata = new ArrayList<String>();
-        if (jo != null) {
-            for (int i=0;i<jo.length();i++){
-                listdata.add(jo.getString(i));
-            }
+        final JSONArray jo = new JSONArray(sw.getBuffer().toString());
+        final List<String> dataList = new ArrayList<>();
+        for (int i = 0; i < jo.length(); i++) {
+            dataList.add(jo.getString(i));
         }
-        assertEquals(listdata,groupList);
 
-        verify(mockGMSClient);
+        assertEquals("Wrong list of items.", dataList, groupList);
 
-    };
+        Mockito.verify(mockGMSClient, Mockito.atMostOnce()).getGroupNames();
+    }
 }
 

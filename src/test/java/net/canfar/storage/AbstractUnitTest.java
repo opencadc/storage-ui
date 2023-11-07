@@ -68,7 +68,6 @@
 
 package net.canfar.storage;
 
-public abstract class AbstractUnitTest<T>
-{
+public abstract class AbstractUnitTest<T> {
     protected T testSubject;
 }

@@ -68,42 +68,47 @@
 
 package net.canfar.storage;
 
+import ca.nrc.cadc.date.DateUtil;
 import net.canfar.storage.web.view.FolderItem;
 import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.gms.GroupURI;
 import org.restlet.engine.header.StringWriter;
 
 import java.io.Writer;
 import java.net.URI;
+import java.util.Calendar;
 
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import static org.easymock.EasyMock.*;
 
 
-public class StorageItemCSVWriterTest extends AbstractStorageItemWriterTest<StorageItemCSVWriter> {
+public class StorageItemCSVWriterTest extends AbstractUnitTest<StorageItemCSVWriter> {
 
     @Test
-    public void write() throws Exception {
+    public void write() {
         final Writer writer = new StringWriter();
         testSubject = new StorageItemCSVWriter(writer);
 
+        final Calendar lastModifiedCalendar = Calendar.getInstance(DateUtil.UTC);
+        lastModifiedCalendar.set(2007, Calendar.SEPTEMBER, 18, 1, 13, 0);
+        lastModifiedCalendar.set(Calendar.MILLISECOND, 0);
+
+        final GroupURI[] readGroupURIs = new GroupURI[] {
+            new GroupURI(URI.create("ivo://opencadc.org/gms?read_group_1"))
+        };
+
         final FolderItem mockFolderItem =
-                mockStorageItem("node1", "18.86MB", null, "read_group_1",
-                                "2007-09-18 - 01:13", false, false,
-                                FolderItem.class, "folder_css",
-                                new VOSURI(URI.create("vos://ca.nrc.cadc!vault/ME/NODE_DIR")),
-                                "/list/ME/NODE_DIR", true, true, "test_owner");
-
-        replay(mockFolderItem);
-
+                new FolderItem(new VOSURI(URI.create("vos://ca.nrc.cadc!vault/ME/NODE_DIR/node1")), (long) (18.86D * 1024L * 1024L),
+                               lastModifiedCalendar.getTime(), false, false, null, readGroupURIs,
+                               "test_owner", true, true, 0,
+                               "/list/ME/NODE_DIR");
+//
         testSubject.write(mockFolderItem);
 
-        verify(mockFolderItem);
-
         assertEquals("Wrong CSV Line.",
-                     "\"\",\"node1\",\"18.86MB\",\"2007-09-18 - 01:13\",,\"read_group_1\",\"false\",\"false\"," +
-                     "\"folder_css\",\"/ME/NODE_DIR\",\"vos://ca.nrc.cadc!vault/ME/NODE_DIR\",\"/list/ME/NODE_DIR\"," +
+                     "\"\",\"node1\",\"18.86 MB\",\"2007-09-18  -  01:13:00\",\"\",\"read_group_1\",\"false\",\"false\"," +
+                     "\"glyphicon-folder-open\",\"/ME/NODE_DIR/node1\",\"vos://ca.nrc.cadc!vault/ME/NODE_DIR/node1\",\"/list/ME/NODE_DIR\"," +
                      "\"true\",\"true\",\"test_owner\"\n",
                      writer.toString());
     }
