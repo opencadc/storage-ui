@@ -69,27 +69,24 @@
 package net.canfar.storage.web.view;
 
 import org.opencadc.gms.GroupURI;
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.VOSURI;
 
-import java.net.URI;
+import java.nio.file.Path;
 import java.util.Date;
 
 
-public class FileItem extends StorageItem
-{
+public class FileItem extends StorageItem {
     public FileItem(VOSURI uri, long sizeInBytes, Date lastModified,
                     boolean publicFlag, boolean lockedFlag,
                     GroupURI[] writeGroupURIs, GroupURI[] readGroupURIs, String owner,
-                    boolean readableFlag, boolean writableFlag, final String targetURL)
-    {
+                    boolean readableFlag, boolean writableFlag, final Path targetPath) {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-              writeGroupURIs, readGroupURIs, owner, readableFlag, writableFlag, targetURL);
+              writeGroupURIs, readGroupURIs, owner, readableFlag, writableFlag, targetPath);
     }
 
 
     @Override
-    public String getItemIconCSS()
-    {
+    public String getItemIconCSS() {
         return "glyphicon-file";
     }
 }

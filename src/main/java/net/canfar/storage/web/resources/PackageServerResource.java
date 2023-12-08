@@ -70,14 +70,12 @@ package net.canfar.storage.web.resources;
 
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.client.ClientTransfer;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import org.opencadc.vospace.client.ClientTransfer;
+import org.opencadc.vospace.client.VOSpaceClient;
 import net.canfar.storage.web.restlet.JSONRepresentation;
-import ca.nrc.cadc.vos.Direction;
-import ca.nrc.cadc.vos.Protocol;
-import ca.nrc.cadc.vos.Transfer;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.View;
+import org.opencadc.vospace.VOS;
+import org.opencadc.vospace.View;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -88,6 +86,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONWriter;
+import org.opencadc.vospace.transfer.Direction;
+import org.opencadc.vospace.transfer.Protocol;
+import org.opencadc.vospace.transfer.Transfer;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
@@ -96,7 +97,7 @@ import org.restlet.resource.Post;
 
 
 public class PackageServerResource extends StorageItemServerResource {
-    private static Logger log = Logger.getLogger(PackageServerResource.class);
+    private static final Logger LOGGER = Logger.getLogger(PackageServerResource.class);
 
     /**
      * Empty constructor needed for Restlet to manage it.
@@ -104,12 +105,12 @@ public class PackageServerResource extends StorageItemServerResource {
     public PackageServerResource() {
     }
 
-    PackageServerResource(final VOSpaceClient voSpaceClient) {
-        super(voSpaceClient);
+    PackageServerResource(final VOSpaceClient voSpaceClient, final VOSpaceServiceConfig serviceConfig) {
+        super(voSpaceClient, serviceConfig);
     }
 
     @Get("json")
-    public Representation notSupported() throws Exception {
+    public Representation notSupported() {
         getResponse().setStatus(Status.CLIENT_ERROR_METHOD_NOT_ALLOWED);
         return new JSONRepresentation() {
             @Override
@@ -125,7 +126,7 @@ public class PackageServerResource extends StorageItemServerResource {
     @Post("json")
     public Representation getPackage(final JsonRepresentation payload) throws Exception {
         final JSONObject jsonObject = payload.getJsonObject();
-        log.debug("getPackage input: " + jsonObject);
+        LOGGER.debug("getPackage input: " + jsonObject);
 
         List<URI> targetList = new ArrayList<>();
         final Set<String> keySet = jsonObject.keySet();
@@ -161,13 +162,13 @@ public class PackageServerResource extends StorageItemServerResource {
             Transfer transfer = new Transfer(Direction.pullFromVoSpace);
             transfer.getTargets().addAll(targetList);
 
-            List<Protocol> protocols = new ArrayList<Protocol>();
+            final List<Protocol> protocols = new ArrayList<>();
             protocols.add(new Protocol(VOS.PROTOCOL_HTTPS_GET));
             transfer.getProtocols().addAll(protocols);
 
             // Add package view to request using responseFormat provided
-            View packageView = new View(new URI(Standards.PKG_10.toString()));
-            packageView.getParameters().add(new View.Parameter(new URI(VOS.PROPERTY_URI_FORMAT), responseFormat));
+            final View packageView = new View(new URI(Standards.PKG_10.toString()));
+            packageView.getParameters().add(new View.Parameter(VOS.PROPERTY_URI_FORMAT, responseFormat));
             transfer.setView(packageView);
 
             transfer.version = VOS.VOSPACE_21;
@@ -175,7 +176,7 @@ public class PackageServerResource extends StorageItemServerResource {
             final ClientTransfer ct = voSpaceClient.createTransfer(transfer);
             // There should be one protocol in the transfer, with an endpoint
             // like '/vault/pkg/{jobid}/run'.
-            String packageEndpoint = ct.getTransfer().getProtocols().get(0).getEndpoint();
+            final String packageEndpoint = ct.getTransfer().getProtocols().get(0).getEndpoint();
 
             if (StringUtil.hasLength(packageEndpoint)) {
                 getResponse().setStatus(Status.SUCCESS_OK);

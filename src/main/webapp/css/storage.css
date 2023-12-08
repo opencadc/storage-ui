@@ -340,3 +340,39 @@ div.dropzone  a {
 #total-progress {
   margin-top: 10px;
 }
+
+/* Theme specific */
+
+body.theme-src {
+  font-family: 'Helvetica Neue', Helvetica, Arial, serif;
+  line-height: 1.5;
+  color: #6d6d6d !important;
+}
+
+body.theme-src nav.navbar-branding {
+  border-bottom: 0.2em solid rgb(109, 109, 109);
+}
+
+body.theme-src h2 {
+  color: rgb(42, 46, 101);
+}
+
+body.theme-src span.display-name {
+  font-size: 1.5em;
+}
+
+body.theme-src ul.navbar-nav {
+  margin: 0; 
+  margin-top: 22px;
+  float: none;
+}
+
+body.theme-src div.navbar-header {
+  margin-top: 0;
+}
+
+body.theme-src ul.navbar-nav > li > a:hover {
+  background-position: 0;
+}
+
+/* End Theme specific */

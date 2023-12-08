@@ -71,6 +71,7 @@ package net.canfar.storage.web.resources;
 
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.accesscontrol.AccessControlUtil;
+import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.util.StringUtil;
 import net.canfar.storage.web.restlet.StorageApplication;
@@ -82,24 +83,17 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 
-import java.security.AccessControlException;
 
-
-public class AccessControlServerResource extends SecureServerResource
-{
+public class AccessControlServerResource extends SecureServerResource {
     @Post
-    public void login(final Representation payload) throws Exception
-    {
+    public void login(final Representation payload) throws Exception {
         final Form form = new Form(payload);
-        final AccessControlClient accessControlClient =
-                (AccessControlClient) getContext().getAttributes().get(
-                    StorageApplication.ACCESS_CONTROL_CLIENT_KEY);
+        final AccessControlClient accessControlClient = getAccessControlClient();
 
         final String username = form.getFirstValue("username");
         final String passwordString = form.getFirstValue("password");
 
-        if (StringUtil.hasText(username) && StringUtil.hasText(passwordString))
-        {
+        if (StringUtil.hasText(username) && StringUtil.hasText(passwordString)) {
             final String cookieValue =
                     accessControlClient.login(username,
                                               passwordString.toCharArray());
@@ -121,20 +115,15 @@ public class AccessControlServerResource extends SecureServerResource
                     contextPath
                     + (contextPath.endsWith("/") ? "" : "/") + "list"
                     + form.getFirstValue("redirectPath"));
-        }
-        else
-        {
-            throw new AccessControlException("Login denied");
+        } else {
+            throw new NotAuthenticatedException("Login denied");
         }
     }
 
     @Delete
-    public void logout() throws Exception
-    {
-        for (final Cookie cookie : getRequest().getCookies())
-        {
-            if (cookie.getName().equals(AccessControlUtil.SSO_COOKIE_NAME))
-            {
+    public void logout() throws Exception {
+        for (final Cookie cookie : getRequest().getCookies()) {
+            if (cookie.getName().equals(AccessControlUtil.SSO_COOKIE_NAME)) {
                 getResponse().getCookieSettings().add(
                         new CookieSetting(0,
                                           AccessControlUtil.SSO_COOKIE_NAME,

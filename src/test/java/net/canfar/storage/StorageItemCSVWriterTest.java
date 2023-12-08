@@ -70,12 +70,13 @@ package net.canfar.storage;
 
 import ca.nrc.cadc.date.DateUtil;
 import net.canfar.storage.web.view.FolderItem;
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.VOSURI;
 import org.opencadc.gms.GroupURI;
 import org.restlet.engine.header.StringWriter;
 
 import java.io.Writer;
 import java.net.URI;
+import java.nio.file.Path;
 import java.util.Calendar;
 
 import org.junit.Test;
@@ -102,8 +103,8 @@ public class StorageItemCSVWriterTest extends AbstractUnitTest<StorageItemCSVWri
                 new FolderItem(new VOSURI(URI.create("vos://ca.nrc.cadc!vault/ME/NODE_DIR/node1")), (long) (18.86D * 1024L * 1024L),
                                lastModifiedCalendar.getTime(), false, false, null, readGroupURIs,
                                "test_owner", true, true, 0,
-                               "/list/ME/NODE_DIR");
-//
+                               Path.of("/list/ME/NODE_DIR"));
+
         testSubject.write(mockFolderItem);
 
         assertEquals("Wrong CSV Line.",

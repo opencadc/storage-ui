@@ -11,18 +11,9 @@
     </div>
 
     <div id="canfar_navbar_collapse" class="collapse navbar-collapse">
-
       <ul id="navbar_list" class="nav navbar-nav pull-right">
-        <!-- Uncomment this to have a language switcher. -->
-        <!--<li class="dropdown">-->
-        <!--<a href="/en" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"><span class="text-success">en</span> <span class="caret"></span></a>-->
-        <!--<ul class="dropdown-menu list-unstyled">-->
-        <!---->
-        <!--</ul>-->
-        <!--</li>-->
         <li class="dropdown"><#include "_login.ftl"></li>
       </ul>
-
     </div>
   </div>
 </nav>

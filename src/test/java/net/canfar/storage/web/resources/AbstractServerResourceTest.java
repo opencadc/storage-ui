@@ -71,7 +71,7 @@ package net.canfar.storage.web.resources;
 import ca.nrc.cadc.ac.client.GMSClient;
 import net.canfar.storage.AbstractUnitTest;
 import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import org.opencadc.vospace.client.VOSpaceClient;
 import org.mockito.Mockito;
 import org.restlet.Context;
 import org.restlet.Request;

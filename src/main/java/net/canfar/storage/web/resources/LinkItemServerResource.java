@@ -68,7 +68,11 @@
 
 package net.canfar.storage.web.resources;
 
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import net.canfar.storage.web.StorageItemFactory;
+import net.canfar.storage.web.config.StorageConfiguration;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import org.opencadc.vospace.client.VOSpaceClient;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
@@ -79,14 +83,18 @@ import java.net.URI;
 
 
 public class LinkItemServerResource extends StorageItemServerResource {
+
     /**
-     * Empty constructor needed for Restlet to manage it.
+     * Needed to be supported by Restlet.
      */
     public LinkItemServerResource() {
     }
 
-    LinkItemServerResource(final VOSpaceClient voSpaceClient) {
-        super(voSpaceClient);
+    LinkItemServerResource(StorageConfiguration storageConfiguration,
+                           VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+                           StorageItemFactory storageItemFactory, VOSpaceClient voSpaceClient,
+                           VOSpaceServiceConfig serviceConfig) {
+        super(storageConfiguration, voSpaceServiceConfigManager, storageItemFactory, voSpaceClient, serviceConfig);
     }
 
     /**

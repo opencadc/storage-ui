@@ -70,18 +70,20 @@ package net.canfar.storage.web.resources;
 
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
+import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.*;
-import ca.nrc.cadc.vos.client.ClientTransfer;
-import ca.nrc.cadc.vos.client.VOSClientUtil;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import net.canfar.storage.PathUtils;
 import net.canfar.storage.web.*;
+import net.canfar.storage.web.config.StorageConfiguration;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
 import net.canfar.storage.web.restlet.JSONRepresentation;
 
 import javax.security.auth.Subject;
+
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -90,10 +92,25 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONWriter;
+import org.opencadc.vospace.DataNode;
+import org.opencadc.vospace.Node;
+import org.opencadc.vospace.NodeNotFoundException;
+import org.opencadc.vospace.NodeProperty;
+import org.opencadc.vospace.VOS;
+import org.opencadc.vospace.VOSURI;
+import org.opencadc.vospace.View;
+import org.opencadc.vospace.client.ClientTransfer;
+import org.opencadc.vospace.client.VOSClientUtil;
+import org.opencadc.vospace.client.VOSpaceClient;
+import org.opencadc.vospace.server.Utils;
+import org.opencadc.vospace.transfer.Direction;
+import org.opencadc.vospace.transfer.Protocol;
+import org.opencadc.vospace.transfer.Transfer;
 import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.ext.servlet.ServletUtils;
 import org.restlet.representation.Representation;
+import org.restlet.resource.Get;
 import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
@@ -102,15 +119,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
-import java.security.PrivilegedExceptionAction;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 
 public class FileItemServerResource extends StorageItemServerResource {
 
-    private static final Logger log =
-        Logger.getLogger(FileItemServerResource.class);
+    private static final Logger LOGGER = Logger.getLogger(FileItemServerResource.class);
 
     private static final int BUFFER_SIZE = 8192;
     private static final String UPLOAD_FILE_KEY = "upload";
@@ -119,9 +138,12 @@ public class FileItemServerResource extends StorageItemServerResource {
     private final FileValidator fileValidator;
 
 
-    FileItemServerResource(final VOSpaceClient voSpaceClient, final UploadVerifier uploadVerifier,
-                           final FileValidator fileValidator) {
-        super(voSpaceClient);
+    FileItemServerResource(StorageConfiguration storageConfiguration,
+                           VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+                           StorageItemFactory storageItemFactory, VOSpaceClient voSpaceClient,
+                           VOSpaceServiceConfig serviceConfig, UploadVerifier uploadVerifier,
+                           FileValidator fileValidator) {
+        super(storageConfiguration, voSpaceServiceConfigManager, storageItemFactory, voSpaceClient, serviceConfig);
         this.uploadVerifier = uploadVerifier;
         this.fileValidator = fileValidator;
     }
@@ -131,6 +153,42 @@ public class FileItemServerResource extends StorageItemServerResource {
         this.fileValidator = new RegexFileValidator();
     }
 
+    @Get
+    public void download() throws Exception {
+        final DataNode dataNode = getNode(getCurrentPath(), null, null);
+        download(dataNode);
+    }
+
+    void download(final DataNode dataNode) throws Exception {
+        final Subject subject = getCurrentSubject();
+        final VOSURI dataNodeVOSURI = toURI(dataNode);
+        final AuthMethod authMethod = AuthenticationUtil.getAuthMethodFromCredentials(subject);
+        final URL baseURL = getRegistryClient().getServiceURL(dataNodeVOSURI.getServiceURI(),
+                                                              Standards.VOSPACE_FILES_20, authMethod);
+
+        // Special handling for tokenized pre-auth URLs
+        if (Objects.requireNonNull(authMethod) == AuthMethod.TOKEN) {
+            final Set<AuthorizationToken> accessTokens = subject.getPublicCredentials(AuthorizationToken.class);
+            if (accessTokens.isEmpty()) {
+                redirectSeeOther(baseURL + dataNodeVOSURI.getPath());
+            } else {
+                redirectSeeOther(toEndpoint(dataNodeVOSURI.getURI()));
+            }
+        } else {
+            redirectSeeOther(baseURL + dataNodeVOSURI.getPath());
+        }
+        LOGGER.debug("Download URL: " + baseURL);
+    }
+
+    String toEndpoint(final URI downloadURI) {
+        final Transfer transfer = new Transfer(downloadURI, Direction.pullFromVoSpace);
+        transfer.setView(new View(VOS.VIEW_DEFAULT));
+        transfer.getProtocols().add(new Protocol(VOS.PROTOCOL_HTTPS_GET));
+        transfer.version = VOS.VOSPACE_21;
+
+        final ClientTransfer ct = voSpaceClient.createTransfer(transfer);
+        return ct.getTransfer().getEndpoint();
+    }
 
     @Post
     @Put
@@ -168,14 +226,14 @@ public class FileItemServerResource extends StorageItemServerResource {
      */
     protected void upload(final FileItemIterator fileItemIterator) throws Exception {
         boolean inheritParentPermissions = false;
-        VOSURI newNodeURI = null;
+        Path newNodePath = null;
 
         try {
             while (fileItemIterator.hasNext()) {
                 final FileItemStream nextFileItemStream = fileItemIterator.next();
 
                 if (nextFileItemStream.getFieldName().startsWith(UPLOAD_FILE_KEY)) {
-                    newNodeURI = upload(nextFileItemStream);
+                    newNodePath = upload(nextFileItemStream);
                 } else if (nextFileItemStream.getFieldName().equals("inheritPermissionsCheckBox")) {
                     inheritParentPermissions = true;
                 }
@@ -185,7 +243,7 @@ public class FileItemServerResource extends StorageItemServerResource {
         }
 
         if (inheritParentPermissions) {
-            setInheritedPermissions(newNodeURI);
+            setInheritedPermissions(newNodePath);
         }
     }
 
@@ -193,31 +251,30 @@ public class FileItemServerResource extends StorageItemServerResource {
      * Perform the actual upload.
      *
      * @param fileItemStream The upload file item stream.
-     * @return The URI to the new node.
-     *
+     * @return The Path to the new Node.
      * @throws IOException If anything goes wrong.
      */
-    VOSURI upload(final FileItemStream fileItemStream) throws Exception {
+    Path upload(final FileItemStream fileItemStream) throws Exception {
         final String filename = fileItemStream.getName();
 
         if (fileValidator.validateFileName(filename)) {
-            final String path = getCurrentItemURI().getPath() + "/" + filename;
-            final DataNode dataNode = new DataNode(toURI(path));
+            final DataNode dataNode = new DataNode(filename);
+            PathUtils.augmentParents(Path.of(getCurrentPath().toString(), filename), dataNode);
 
             // WebRT 19564: Add content type to the response of uploaded items.
-            final List<NodeProperty> properties = new ArrayList<>();
+            final Set<NodeProperty> properties = new HashSet<>();
 
             properties.add(new NodeProperty(VOS.PROPERTY_URI_TYPE, fileItemStream.getContentType()));
             properties.add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH,
                                             Long.toString(getRequest().getEntity().getSize())));
 
-            dataNode.setProperties(properties);
+            dataNode.getProperties().addAll(properties);
 
             try (final InputStream inputStream = fileItemStream.openStream()) {
                 upload(inputStream, dataNode);
             }
 
-            return dataNode.getUri();
+            return PathUtils.toPath(dataNode);
         } else {
             throw new ResourceException(new IllegalArgumentException(
                     String.format("Invalid file name: %s -- File name must match %s.", filename,
@@ -241,7 +298,7 @@ public class FileItemServerResource extends StorageItemServerResource {
             // rather than looking for a NodeNotFoundException as expected, and
             // return the 409 code, while maintaining backward compatibility with the catch below.
             // jenkinsd 2016.07.25
-            getNode(dataNode.getUri(), VOS.Detail.min);
+            getNode(Path.of(Utils.getPath(dataNode)), null);
         } catch (ResourceException e) {
             final Throwable cause = e.getCause();
             if (cause instanceof IllegalStateException) {
@@ -290,23 +347,19 @@ public class FileItemServerResource extends StorageItemServerResource {
         final RegistryClient registryClient = new RegistryClient();
         final Subject subject = AuthenticationUtil.getCurrentSubject();
         final AuthMethod am = AuthenticationUtil.getAuthMethodFromCredentials(subject);
+        final VOSURI dataNodeVOSURI = toURI(dataNode);
 
-        final URL baseURL = registryClient
-            .getServiceURL(dataNode.getUri().getServiceURI(),
-                Standards.VOSPACE_TRANSFERS_20, am);
-        log.debug("uploadURL: " + baseURL);
+        final URL baseURL = registryClient.getServiceURL(dataNodeVOSURI.getServiceURI(),
+                                                         Standards.VOSPACE_TRANSFERS_20, am);
+        LOGGER.debug("uploadURL: " + baseURL);
 
         final List<Protocol> protocols = new ArrayList<>();
-        protocols.add(new Protocol(VOS.PROTOCOL_HTTP_PUT, baseURL.toString(), null));
-        protocols.add(new Protocol(VOS.PROTOCOL_HTTPS_PUT, baseURL.toString(), null));
-        if (!AuthMethod.ANON.equals(am)) {
-            Protocol httpsAuth = new Protocol(VOS.PROTOCOL_HTTPS_PUT);
-            httpsAuth.setSecurityMethod(Standards.getSecurityMethod(am));
-            protocols.add(httpsAuth);
-        }
+        final Protocol httpsAuth = new Protocol(VOS.PROTOCOL_HTTPS_PUT);
+        httpsAuth.setSecurityMethod(Standards.getSecurityMethod(am));
+        protocols.add(httpsAuth);
 
-        final Transfer transfer = new Transfer(dataNode.getUri().getURI(), Direction.pushToVoSpace);
-        transfer.setView(new View(URI.create(VOS.VIEW_DEFAULT)));
+        final Transfer transfer = new Transfer(dataNodeVOSURI.getURI(), Direction.pushToVoSpace);
+        transfer.setView(new View(VOS.VIEW_DEFAULT));
         transfer.getProtocols().addAll(protocols);
         transfer.version = VOS.VOSPACE_21;
 
@@ -318,7 +371,7 @@ public class FileItemServerResource extends StorageItemServerResource {
         // Check uws job status
         VOSClientUtil.checkTransferFailure(ct);
 
-        final Node uploadedNode = getNode(dataNode.getUri(), VOS.Detail.properties);
+        final Node uploadedNode = getNode(Path.of(dataNodeVOSURI.getPath()), VOS.Detail.properties);
         uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(), uploadedNode);
         uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(), uploadedNode);
 
@@ -328,12 +381,9 @@ public class FileItemServerResource extends StorageItemServerResource {
     /**
      * Parse the representation into a Map for easier access to Form elements.
      *
-     * @return Map of field names to File Items, or empty Map.
-     * Never null.
-     *
-     * @throws Exception If the Upload could not be parsed.
+     * @return Map of field names to File Items, or empty Map.  Never null.
      */
-    private ServletFileUpload parseRepresentation() throws Exception {
+    private ServletFileUpload parseRepresentation() {
         // 1/ Create a factory for disk-based file items
         final DiskFileItemFactory factory = new DiskFileItemFactory();
         factory.setSizeThreshold(1000240);

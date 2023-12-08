@@ -68,49 +68,73 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.*;
-import ca.nrc.cadc.vos.client.ClientRecursiveSetNode;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import net.canfar.storage.PathUtils;
+import net.canfar.storage.web.config.StorageConfiguration;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import org.opencadc.gms.GroupURI;
+import org.opencadc.vospace.*;
+import org.opencadc.vospace.client.ClientRecursiveSetNode;
+import org.opencadc.vospace.client.VOSpaceClient;
 import net.canfar.storage.web.StorageItemFactory;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import net.canfar.storage.web.config.VOSpaceServiceConfigMgr;
 import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.StorageItem;
 
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
+import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
 import java.io.*;
 import java.net.URI;
-import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.security.*;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 public class StorageItemServerResource extends SecureServerResource {
-
-    private static final String IVO_GMS_PROPERTY_PREFIX = "ivo://cadc.nrc.ca/gms?";
-
     // Page size for the initial page display.
     private static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
     StorageItemFactory storageItemFactory;
     VOSpaceClient voSpaceClient;
 
-    private String vospaceUserHome;
-    private String vospaceNodeUriPrefix;
-    private String vospaceServiceName;
-    protected VOSpaceServiceConfigMgr vospaceServiceServiceMgr;
+    VOSpaceServiceConfig currentService;
+    private final VOSpaceServiceConfigManager voSpaceServiceConfigManager;
 
     /**
      * Empty constructor needed for Restlet to manage it.  Needs to be public.
      */
     public StorageItemServerResource() {
+        this.voSpaceServiceConfigManager = new VOSpaceServiceConfigManager(this.getStorageConfiguration());
+    }
+
+    /**
+     * Only used for testing as no Request is coming through to initialize it as it would in Production.
+     * @param storageConfiguration          The StorageConfiguration object.
+     * @param voSpaceServiceConfigManager   The VOSpaceServiceConfigManager object.
+     * @param storageItemFactory            The StorageItemFactory object.
+     * @param voSpaceClient                 The VOSpaceClient object.
+     * @param serviceConfig                 The current VOSpace Service.
+     */
+    StorageItemServerResource(StorageConfiguration storageConfiguration,
+                              VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+                              StorageItemFactory storageItemFactory,
+                              VOSpaceClient voSpaceClient, VOSpaceServiceConfig serviceConfig) {
+        super(storageConfiguration);
+        this.voSpaceServiceConfigManager = voSpaceServiceConfigManager;
+        this.storageItemFactory = storageItemFactory;
+        this.voSpaceClient = voSpaceClient;
+        this.currentService = serviceConfig;
     }
 
     /**
@@ -118,8 +142,11 @@ public class StorageItemServerResource extends SecureServerResource {
      *
      * @param voSpaceClient The VOSpace Client to use.
      */
-    StorageItemServerResource(final VOSpaceClient voSpaceClient) {
-        initialize(voSpaceClient);
+    StorageItemServerResource(final VOSpaceClient voSpaceClient, final VOSpaceServiceConfig serviceConfig) {
+        this();
+        this.currentService = serviceConfig;
+        this.voSpaceClient = voSpaceClient;
+        initializeStorageItemFactory();
     }
 
 
@@ -132,43 +159,33 @@ public class StorageItemServerResource extends SecureServerResource {
     @Override
     protected void doInit() throws ResourceException {
         super.doInit();
-        StorageApplication sa = (StorageApplication) getApplication();
-        this.vospaceServiceServiceMgr = sa.getVospaceServiceConfigMgr();
-
-        this.vospaceServiceName = getCurrentVOSpaceService();
-        this.vospaceServiceServiceMgr.currentServiceName = this.vospaceServiceName;
-
-        VOSpaceServiceConfig vospaceServiceConfig = this.vospaceServiceServiceMgr.getServiceConfig(this.vospaceServiceName);
-        this.vospaceNodeUriPrefix = vospaceServiceConfig.getNodeResourceID().toString();
-
-        this.vospaceUserHome = vospaceServiceConfig.homeDir;
-
-        initialize(new VOSpaceClient(vospaceServiceConfig.getResourceID()));
+        this.currentService = this.voSpaceServiceConfigManager.getServiceConfig(getCurrentVOSpaceService());
+        this.voSpaceClient = new VOSpaceClient(this.currentService.getResourceID());
+        initializeStorageItemFactory();
     }
 
-    private void initialize(final VOSpaceClient voSpaceClient) {
-        final URI filesMetaServiceID = getContextAttribute(StorageApplication.FILES_META_SERVICE_SERVICE_ID_KEY);
-        final URI filesMetaServiceStandardID =
-                getContextAttribute(StorageApplication.FILES_META_SERVICE_STANDARD_ID_KEY);
-        this.storageItemFactory = new StorageItemFactory(getRegistryClient(),
-                                                         (getServletContext() == null)
+    private void initializeStorageItemFactory() {
+        final ServletContext servletContext = getServletContext();
+        this.storageItemFactory = new StorageItemFactory((servletContext == null)
                                                          ? StorageApplication.DEFAULT_CONTEXT_PATH
-                                                         : getServletContext().getContextPath(),
-                                                         filesMetaServiceID, filesMetaServiceStandardID,
-                                                          vospaceServiceName);
-        this.voSpaceClient = voSpaceClient;
+                                                         : servletContext.getContextPath(),
+                                                         this.currentService);
     }
 
-    String getCurrentPath()  {
-        final String pathInRequest = getRequestAttribute("path");
-        return "/" + ((pathInRequest == null) ? "" : pathInRequest);
+    Path getCurrentPath()  {
+        if (getRequestAttributes().containsKey("path")) {
+            final String pathInRequest = getRequestAttribute("path");
+            return Path.of(pathInRequest);
+        } else {
+            return Path.of("");
+        }
     }
 
     String getCurrentVOSpaceService() {
-        final String vospaceService = getRequestAttribute("svc");
         final String ret;
 
-        if (StringUtil.hasLength(vospaceService)) {
+        if (getRequestAttributes().containsKey("svc")) {
+            final String vospaceService = getRequestAttribute("svc");
             if (getVOSpaceServiceList().contains(vospaceService.toLowerCase())) {
                 ret = vospaceService;
             } else {
@@ -177,18 +194,22 @@ public class StorageItemServerResource extends SecureServerResource {
             }
         } else {
             // no svc parameter found - return the current default
-            ret = vospaceServiceServiceMgr.getDefaultServiceName();
+            ret = this.voSpaceServiceConfigManager.getDefaultServiceName();
         }
 
         return ret;
     }
 
     List<String> getVOSpaceServiceList() {
-        return this.vospaceServiceServiceMgr.getServiceList();
+        return this.voSpaceServiceConfigManager.getServiceList();
     }
 
     VOSURI getCurrentItemURI() {
-        return toURI(getCurrentPath());
+        return new VOSURI(URI.create(this.currentService.getNodeResourceID() + getCurrentPath().toString()));
+    }
+
+    String getCurrentName() {
+        return getCurrentPath().getFileName().toString();
     }
 
     private <T extends Node> T getCurrentNode() {
@@ -196,44 +217,55 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     final <T extends Node> T getCurrentNode(final VOS.Detail detail) {
-        return getNode(getCurrentItemURI(), detail);
+        return getNode(getCurrentPath(), detail);
     }
 
-    <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail, final int limit)
+    @SuppressWarnings("unchecked")
+    <T extends Node> T getNode(final Path nodePath, final VOS.Detail detail, final Integer limit)
             throws ResourceException {
-        final String query = "limit=" + limit + ((detail == null)
-                                                 ? ""
-                                                 : "&detail="
-                                                   + detail.name());
+        final Map<String, Object> queryPayload = new HashMap<>();
+        if (limit != null) {
+            queryPayload.put("limit", limit);
+        }
+
+        if (detail != null) {
+            queryPayload.put("detail", detail.name());
+        }
+
+        final String query = queryPayload.entrySet().stream()
+                                         .map(entry -> entry.getKey() + "=" + entry.getValue())
+                                         .collect(Collectors.joining("&"));
 
         try {
-            return executeSecurely(new PrivilegedExceptionAction<T>() {
-                /**
-                 * Performs the computation.  This method will be called by
-                 * {@code AccessController.doPrivileged} after enabling privileges.
-                 *
-                 * @return a class-dependent value that may represent the results of the
-                 * computation.  Each class that implements
-                 * {@code PrivilegedExceptionAction} should document what
-                 * (if anything) this value represents.
-                 * @throws Exception an exceptional condition has occurred.  Each class
-                 *                   that implements {@code PrivilegedExceptionAction} should
-                 *                   document the exceptions that its run method can throw.
-                 * @see AccessController#doPrivileged(PrivilegedExceptionAction)
-                 * @see AccessController#doPrivileged(PrivilegedExceptionAction, AccessControlContext)
-                 */
-                @Override
-                @SuppressWarnings("unchecked")
-                public T run() throws Exception {
-                    return (T) voSpaceClient.getNode(folderURI.getPath(), query);
-                }
-            });
+            final T currentNode = executeSecurely(() -> (T) voSpaceClient.getNode(nodePath.toString(), query));
+            if (currentNode != null) {
+                PathUtils.augmentParents(nodePath, currentNode);
+            }
+            return currentNode;
+        } catch (IllegalArgumentException e) {
+            // Very specific hack to try again without the (possibly) unsupported limit parameter.
+            if (limit != null
+                && e.getMessage().startsWith("OptionNotSupported")) {
+                return getNode(nodePath, detail, null);
+            } else {
+                throw new ResourceException(e);
+            }
+        } catch (RuntimeException runtimeException) {
+            // Working around a bug where the RegistryClient improperly handles an unauthenticated request.
+            if (runtimeException.getCause() != null
+                && (runtimeException.getCause() instanceof IOException)
+                && runtimeException.getCause().getCause() != null
+                && (runtimeException.getCause().getCause() instanceof NotAuthenticatedException)) {
+                throw new ResourceException(runtimeException.getCause().getCause());
+            } else {
+                throw runtimeException;
+            }
         } catch (Exception e) {
             throw new ResourceException(e);
         }
     }
 
-    <T extends Node> T getNode(final VOSURI folderURI, final VOS.Detail detail) throws ResourceException {
+    <T extends Node> T getNode(final Path nodePath, final VOS.Detail detail) throws ResourceException {
         final int pageSize;
 
         if ((detail == VOS.Detail.max) || (detail == VOS.Detail.raw)) {
@@ -242,21 +274,22 @@ public class StorageItemServerResource extends SecureServerResource {
             pageSize = 0;
         }
 
-        return getNode(folderURI, detail, pageSize);
+        return getNode(nodePath, detail, pageSize);
     }
 
-    VOSURI toURI(final String path) {
-        try {
-            return new VOSURI(new URI(getVospaceNodeUriPrefix() + path));
-        } catch (URISyntaxException e) {
-            throw new ResourceException(new IllegalArgumentException("Invalid name: " + path));
-        }
+    VOSURI toURI(final Path path) {
+        return new VOSURI(URI.create(this.currentService.getNodeResourceID() + path.toString()));
     }
 
-    void setInheritedPermissions(final VOSURI newNodeURI) throws Exception {
+    VOSURI toURI(final Node node) {
+        final Path path = PathUtils.toPath(node);
+        return toURI(path);
+    }
+
+    void setInheritedPermissions(final Path nodePath) throws Exception {
         final ContainerNode parentNode = getCurrentNode();
-        final Node newNode = getNode(newNodeURI, null);
-        final List<NodeProperty> newNodeProperties = newNode.getProperties();
+        final Node newNode = getNode(nodePath, null);
+        final Set<NodeProperty> newNodeProperties = newNode.getProperties();
 
         // Clean slate.
         newNodeProperties.remove(new NodeProperty(VOS.PROPERTY_URI_GROUPREAD, ""));
@@ -315,7 +348,7 @@ public class StorageItemServerResource extends SecureServerResource {
         } else {
             try {
                 final VOSURI vosURI = new VOSURI(targetURI);
-                final Node targetNode = getNode(vosURI, null);
+                final Node targetNode = getNode(Path.of(vosURI.getPath()), null);
 
                 if (targetNode == null) {
                     throw new NodeNotFoundException("No target found or broken link for node: " + linkNode.getName());
@@ -324,7 +357,7 @@ public class StorageItemServerResource extends SecureServerResource {
                         endPoint = resolveLink((LinkNode) targetNode);
                     } else {
                         final StorageItem storageItem = storageItemFactory.translate(targetNode);
-                        endPoint = URI.create(storageItem.getTargetURL());
+                        endPoint = URI.create(storageItem.getTargetPath());
                     }
                 }
             } catch (IllegalArgumentException e) {
@@ -343,19 +376,16 @@ public class StorageItemServerResource extends SecureServerResource {
      *
      * @param newNode The Node whose permissions are to be recursively set
      */
-    private void setNodeRecursiveSecure(final Node newNode) throws IOException {
+    private void setNodeRecursiveSecure(final Node newNode) throws Exception {
         try {
-            Subject.doAs(generateVOSpaceUser(), new PrivilegedExceptionAction<Void>() {
-                @Override
-                public Void run() {
-                    final ClientRecursiveSetNode rj = voSpaceClient.setNodeRecursive(newNode);
+            Subject.doAs(getCurrentSubject(), (PrivilegedExceptionAction<Void>) () -> {
+                final ClientRecursiveSetNode rj = voSpaceClient.setNodeRecursive(toURI(newNode), newNode);
 
-                    // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
-                    rj.setMonitor(false);
-                    rj.run();
+                // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
+                rj.setMonitor(false);
+                rj.run();
 
-                    return null;
-                }
+                return null;
             });
         } catch (PrivilegedActionException pae) {
             throw new IOException(pae.getException());
@@ -369,12 +399,9 @@ public class StorageItemServerResource extends SecureServerResource {
      * @param newNode The newly created Node.
      */
     private void setNodeSecure(final Node newNode) throws Exception {
-        executeSecurely(new PrivilegedExceptionAction<Void>() {
-            @Override
-            public Void run() {
-                voSpaceClient.setNode(newNode);
-                return null;
-            }
+        executeSecurely((PrivilegedExceptionAction<Void>) () -> {
+            voSpaceClient.setNode(toURI(newNode), newNode);
+            return null;
         });
     }
 
@@ -384,8 +411,11 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     private LinkNode toLinkNode(final URI target) {
-        final VOSURI linkNodeURI = toURI(getCurrentPath());
-        return new LinkNode(linkNodeURI, target);
+        final Path path = getCurrentPath();
+        final LinkNode linkNode = new LinkNode(path.getFileName().toString(), target);
+        PathUtils.augmentParents(path, linkNode);
+
+        return linkNode;
     }
 
     void createFolder() throws Exception {
@@ -393,36 +423,41 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     private ContainerNode toContainerNode() {
-        return new ContainerNode(getCurrentItemURI());
+        final ContainerNode containerNode = new ContainerNode(getCurrentName());
+        PathUtils.augmentParents(getCurrentPath(), containerNode);
+
+        return containerNode;
     }
 
     void createNode(final Node newNode) throws Exception {
         executeSecurely((PrivilegedExceptionAction<Void>) () -> {
-            voSpaceClient.createNode(newNode, false);
+            voSpaceClient.createNode(toURI(newNode), newNode, false);
             return null;
         });
     }
 
     <T> T executeSecurely(final PrivilegedExceptionAction<T> runnable) throws Exception {
         try {
-            return Subject.doAs(generateVOSpaceUser(), runnable);
+            return executeSecurely(getCurrentSubject(), runnable);
         } catch (PrivilegedActionException e) {
             throw e.getException();
         }
     }
 
-    private void setNodeProperty(final List<NodeProperty> nodeProperties, final String propertyName,
-                                 final String propertyValue) {
-        nodeProperties.remove(new NodeProperty(propertyName, ""));
-
-        if (!StringUtil.hasLength(propertyValue)) {
-            final NodeProperty np = new NodeProperty(propertyName, "");
-
-            np.setMarkedForDeletion(true);
-            nodeProperties.add(np);
-        } else {
-            nodeProperties.add(new NodeProperty(propertyName, propertyValue));
+    <T> T executeSecurely(final Subject subject, final PrivilegedExceptionAction<T> runnable) throws Exception {
+        try {
+            return Subject.doAs(subject, runnable);
+        } catch (PrivilegedActionException e) {
+            throw e.getException();
         }
+    }
+
+    @Delete
+    public void deleteNode() throws Exception {
+        executeSecurely((PrivilegedExceptionAction<Void>) () -> {
+            voSpaceClient.deleteNode(getCurrentPath().toString());
+            return null;
+        });
     }
 
     @Post("json")
@@ -431,47 +466,36 @@ public class StorageItemServerResource extends SecureServerResource {
 
         // limit=0, detail=min so should only get the current node
         final Node currentNode = getCurrentNode(VOS.Detail.properties);
-        final List<NodeProperty> nodeProperties = currentNode.getProperties();
         final Set<String> keySet = jsonObject.keySet();
 
         if (keySet.contains("publicPermission")) {
-            final String parameterValue = Boolean.toString(jsonObject.get("publicPermission").equals("on"));
-            final NodeProperty np = currentNode.findProperty(VOS.PROPERTY_URI_ISPUBLIC);
-
-            if ((np != null) && !np.getPropertyValue().equals(parameterValue)) {
-                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_ISPUBLIC, parameterValue);
-            }
+            currentNode.isPublic = jsonObject.get("publicPermission").equals("on");
+        } else {
+            currentNode.isPublic = false;
+            currentNode.clearIsPublic = true;
         }
 
-        if (keySet.contains("readGroup")) {
-            final String parameterValue =
-                    StringUtil.hasLength((String) jsonObject.get("readGroup"))
-                    ? IVO_GMS_PROPERTY_PREFIX + jsonObject.get("readGroup")
-                    : "";
-
-            final NodeProperty np = currentNode.findProperty(VOS.PROPERTY_URI_GROUPREAD);
-            if (((np != null) && !np.getPropertyValue().equals(parameterValue))
-                || ((np == null) && StringUtil.hasLength(parameterValue))) {
-                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPREAD, parameterValue);
-            }
+        currentNode.getReadOnlyGroup().clear();
+        if (keySet.contains("readGroup") && StringUtil.hasText(jsonObject.getString("readGroup"))) {
+            final GroupURI newReadGroupURI =
+                    new GroupURI(storageConfiguration.getGroupURI(jsonObject.getString("readGroup")));
+            currentNode.getReadOnlyGroup().add(newReadGroupURI);
+        } else {
+            currentNode.clearReadOnlyGroups = true;
         }
 
-        if (keySet.contains("writeGroup")) {
-            final String parameterValue =
-                    StringUtil.hasLength((String) jsonObject.get("writeGroup"))
-                    ? IVO_GMS_PROPERTY_PREFIX + jsonObject.get("writeGroup")
-                    : "";
-
-            final NodeProperty np = currentNode.findProperty(VOS.PROPERTY_URI_GROUPWRITE);
-            if (((np != null) && !np.getPropertyValue().equals(parameterValue))
-                || ((np == null) && StringUtil.hasLength(parameterValue))) {
-                setNodeProperty(nodeProperties, VOS.PROPERTY_URI_GROUPWRITE, parameterValue);
-            }
+        currentNode.getReadWriteGroup().clear();
+        if (keySet.contains("writeGroup") && StringUtil.hasText(jsonObject.getString("writeGroup"))) {
+            final GroupURI newReadWriteGroupURI =
+                    new GroupURI(storageConfiguration.getGroupURI(jsonObject.getString("writeGroup")));
+            currentNode.getReadWriteGroup().add(newReadWriteGroupURI);
+        } else {
+            currentNode.clearReadWriteGroups = true;
         }
 
         // Recursively set permissions if requested
-        if (jsonObject.keySet().contains("recursive")) {
-            if (jsonObject.get("recursive").toString().equals("on")) {
+        if (keySet.contains("recursive")) {
+            if (jsonObject.get("recursive").equals("on")) {
                 setNodeRecursiveSecure(currentNode);
                 getResponse().setStatus(Status.SUCCESS_ACCEPTED);
             }
@@ -481,13 +505,4 @@ public class StorageItemServerResource extends SecureServerResource {
             getResponse().setStatus(Status.SUCCESS_OK);
         }
     }
-
-    public String getVospaceNodeUriPrefix() {
-        return vospaceNodeUriPrefix;
-    }
-
-    public String getVospaceUserHome() {
-        return vospaceUserHome;
-    }
-
 }

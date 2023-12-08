@@ -76,15 +76,20 @@
                         <input id="currentFolderName" name="currentFolderName" type="hidden" value="${folder.name}"/>
                       </form>
                     </li>
+<#if features.batchUpload>
                     <li>
                       <a id="uploadfolder">
                         <span class="glyphicon glyphicon-cloud-upload"></span>&nbsp;Upload Folder</a></li>
+</#if>
                     <li>
                       <a id="new_vospace_link"><span class="glyphicon glyphicon-link"></span>&nbsp;VOSpace Link</a></li>
+<#if features.externalLinks>
                     <li>
                       <a id="new_external_link"><span class="glyphicon glyphicon-link"></span>&nbsp;External Link</a></li>
+</#if>
                   </ul>
                 </li>
+<#if features.batchDownload>
                 <li class="disabled dropdown multi-select-function-container">
                   <a disabled="disabled" class="disabled dropdown-toggle multi-select-function" id="download" role="button" name="download" type="button" aria-expanded="false" data-toggle="dropdown" title="Download selected items.">
                     <span class="glyphicon glyphicon-cloud-download"></span>&nbsp;Download&nbsp;<span class="caret"></span></a>
@@ -95,6 +100,7 @@
                     <li><a class="download-download-manager"><span class="glyphicon glyphicon-download-alt"></span>&nbsp;Download Manager</a></li>
                   </ul>
                 </li>
+</#if>
 </#if>
 <#if !isRoot>
                 <#-- Disabled by default -->

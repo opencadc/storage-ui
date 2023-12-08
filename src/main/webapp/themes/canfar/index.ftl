@@ -64,7 +64,7 @@ jenkinsd 2017.04.04
 <script type="application/javascript"
         src="${contextPath}js/jquery.min.js"></script>
 
-<#include "_application_header.shtml">
+<#include "/canfar/includes/_application_header.shtml">
 
 <div class="container-fluid">
 

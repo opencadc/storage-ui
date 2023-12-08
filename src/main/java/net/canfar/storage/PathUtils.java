@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2017.                            (c) 2017.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,48 +66,39 @@
  ************************************************************************
  */
 
-package net.canfar;
+package net.canfar.storage;
 
-import ca.nrc.cadc.net.ResourceNotFoundException;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import freemarker.template.TemplateModelException;
-import net.canfar.storage.web.restlet.StorageApplication;
-import net.canfar.storage.web.view.FreeMarkerConfiguration;
+import org.opencadc.vospace.ContainerNode;
+import org.opencadc.vospace.Node;
+import org.opencadc.vospace.server.Utils;
 
-import org.restlet.Context;
+import java.io.File;
+import java.nio.file.Path;
+import java.util.Arrays;
 
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
+public class PathUtils {
 
-
-public class CANFARStorageApplication extends StorageApplication {
-    private static final URI DEFAULT_APP_ROOT_REGISTRY_KEY = URI.create("ivo://cadc.nrc.ca/canfar-dashboard");
-
-
-    public CANFARStorageApplication(final Context context) {
-        super(context);
-    }
-
-    @Override
-    public FreeMarkerConfiguration createFreemarkerConfig() {
-        final FreeMarkerConfiguration freeMarkerConfiguration = super.createFreemarkerConfig();
-
-        try {
-            final URL webHost = getWebHost();
-
-            freeMarkerConfiguration.setSharedVariable("mode", System.getProperty("org.opencadc.vosui.mode", "prod"));
-            freeMarkerConfiguration.setSharedVariable("canfarWebHost", webHost.toString());
-            freeMarkerConfiguration.addTemplateLoader(new CANFARURLTemplateLoader(webHost));
-        } catch (IOException | ResourceNotFoundException | TemplateModelException e) {
-            throw new IllegalArgumentException(e);
+    /**
+     * Augment the parents of the given node, using elements from the node's path.
+     * @param nodePath  The Path of the node, NOT its parent.
+     * @param node      The Node to update.
+     */
+    public static void augmentParents(final Path nodePath, final Node node) {
+        Node currNode = node;
+        Path currPath = nodePath.getParent();
+        for (; (currPath != null) && (currPath.getRoot() != currPath); currPath = currPath.getParent()) {
+            final ContainerNode containerNode = new ContainerNode(currPath.getFileName().toString());
+            currNode.parent = containerNode;
+            currNode = containerNode;
         }
-
-        return freeMarkerConfiguration;
     }
 
-    private URL getWebHost() throws IOException, ResourceNotFoundException {
-        final RegistryClient registryClient = new RegistryClient();
-        return registryClient.getAccessURL(RegistryClient.Query.APPLICATIONS, DEFAULT_APP_ROOT_REGISTRY_KEY);
+    public static Path toPath(final Node node) {
+        final String[] pathElements = Utils.getPath(node).split("/");
+        if (pathElements.length > 1) {
+            return Path.of(File.separator + pathElements[0], Arrays.copyOfRange(pathElements, 1, pathElements.length));
+        } else {
+            return Path.of(File.separator + pathElements[0]);
+        }
     }
 }

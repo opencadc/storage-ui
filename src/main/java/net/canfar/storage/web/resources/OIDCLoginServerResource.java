@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2017.                            (c) 2017.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,44 +66,17 @@
  ************************************************************************
  */
 
-package net.canfar;
+package net.canfar.storage.web.resources;
 
-import freemarker.cache.URLTemplateLoader;
+import org.restlet.Response;
+import org.restlet.data.Status;
+import org.restlet.resource.Get;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
-
-public class CANFARURLTemplateLoader extends URLTemplateLoader {
-    private final Map<String, URI> foreignTemplates = new HashMap<>();
-
-
-    public CANFARURLTemplateLoader(final URL webHost) {
-        foreignTemplates.put("_application_header.shtml",
-                             URI.create(webHost.getProtocol() + "://"
-                                        + webHost.getHost()
-                                        + (webHost.getPort() > 0 ? ":" + webHost.getPort() : "")
-                                        + "/canfar/includes/_application_header.shtml"));
-    }
-
-    /**
-     * Given a template name (plus potential locale decorations) retrieves
-     * an URL that points the template source.
-     *
-     * @param name the name of the sought template, including the locale
-     *             decorations.
-     * @return an URL that points to the template source, or null if it can
-     * determine that the template source does not exist.
-     */
-    @Override
-    protected URL getURL(final String name) {
-        try {
-            return foreignTemplates.get(name).toURL();
-        } catch (MalformedURLException ioException) {
-            throw new IllegalArgumentException(ioException.getMessage(), ioException);
-        }
+public class OIDCLoginServerResource extends SecureServerResource {
+    @Get
+    public void sendToAuthorization() throws Exception {
+        final Response response = getResponse();
+        response.setStatus(Status.REDIRECTION_FOUND);
+        response.setLocationRef(getOIDCClient().getAuthorizationURL().toExternalForm());
     }
 }

@@ -68,15 +68,18 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.ac.client.GMSClient;
+import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.auth.AuthorizationTokenPrincipal;
+import ca.nrc.cadc.auth.IdentityManager;
 import ca.nrc.cadc.reg.client.RegistryClient;
+import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.restlet.StorageApplication;
-import net.canfar.web.RestletPrincipalExtractor;
 
-import org.restlet.Request;
+import org.opencadc.token.Client;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.Status;
@@ -89,14 +92,29 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 
 class SecureServerResource extends ServerResource {
-    static final String FIRST_PARTY_COOKIE_NAME = "oidc_access_token";
+    final StorageConfiguration storageConfiguration;
+
+    public SecureServerResource() {
+        this(new StorageConfiguration());
+    }
+
+    /**
+     * Full constructor.  Useful for testing, or overriding default configuration.
+     * @param storageConfiguration          The main configuration.
+     */
+    SecureServerResource(final StorageConfiguration storageConfiguration) {
+        this.storageConfiguration = storageConfiguration;
+    }
 
     @SuppressWarnings("unchecked")
     <T> T getRequestAttribute(final String attributeName) {
-        return (T) getRequestAttributes().get(attributeName);
+        final Map<String, Object> requestAttributes = getRequestAttributes();
+        final Object o = requestAttributes.get(attributeName);
+        return (o == null) ? null : (T) getRequestAttributes().get(attributeName);
     }
 
     @SuppressWarnings("unchecked")
@@ -104,39 +122,46 @@ class SecureServerResource extends ServerResource {
         return (T) getContext().getAttributes().get(attributeName);
     }
 
-    Subject getCurrentUser() {
-        final Request request = getRequest();
-        return AuthenticationUtil.getSubject(new RestletPrincipalExtractor(request));
-    }
-
     RegistryClient getRegistryClient() {
-        return (RegistryClient) getContext().getAttributes().get(StorageApplication.REGISTRY_CLIENT_KEY);
+        return new RegistryClient();
     }
 
-    Subject generateVOSpaceUser() throws IOException {
+    Subject getCurrentSubject() throws Exception {
         final Cookie firstPartyCookie =
-                getRequest().getCookies().getFirst(SecureServerResource.FIRST_PARTY_COOKIE_NAME);
+                getRequest().getCookies().getFirst(StorageConfiguration.FIRST_PARTY_COOKIE_NAME);
         final Subject subject = AuthenticationUtil.getCurrentSubject();
 
-        if (firstPartyCookie != null) {
-            final String cookieValue = firstPartyCookie.getValue();
-            subject.getPrincipals().add(new AuthorizationTokenPrincipal(AuthenticationUtil.AUTHORIZATION_HEADER,
-                                                                        AuthenticationUtil.CHALLENGE_TYPE_BEARER
-                                                                        + " " + cookieValue));
-            subject.getPublicCredentials().add(
-                    new AuthorizationToken(AuthenticationUtil.CHALLENGE_TYPE_BEARER, cookieValue,
-                                           Collections.singletonList(
-                                                   URI.create(getRequest().getResourceRef().toString()).getHost())));
+        if (firstPartyCookie != null && storageConfiguration.isOIDCConfigured()) {
+            try {
+                final String accessToken = getOIDCClient().getAccessToken(firstPartyCookie.getValue());
 
-            if (!subject.getPrincipals(AuthorizationTokenPrincipal.class).isEmpty()) {
-                // Ensure it's clean first.
-                subject.getPublicCredentials(AuthMethod.class)
-                       .forEach(authMethod -> subject.getPublicCredentials().remove(authMethod));
-                subject.getPublicCredentials().add(AuthMethod.TOKEN);
+                subject.getPrincipals().add(new AuthorizationTokenPrincipal(AuthenticationUtil.AUTHORIZATION_HEADER,
+                                                                            AuthenticationUtil.CHALLENGE_TYPE_BEARER
+                                                                            + " " + accessToken));
+                subject.getPublicCredentials().add(
+                        new AuthorizationToken(AuthenticationUtil.CHALLENGE_TYPE_BEARER, accessToken,
+                                               Collections.singletonList(
+                                                       URI.create(getRequest().getResourceRef().toString()).getHost())));
+
+                if (!subject.getPrincipals(AuthorizationTokenPrincipal.class).isEmpty()) {
+                    // Ensure it's clean first.
+                    subject.getPublicCredentials(AuthMethod.class)
+                           .forEach(authMethod -> subject.getPublicCredentials().remove(authMethod));
+                    subject.getPublicCredentials().add(AuthMethod.TOKEN);
+
+                    return AuthenticationUtil.getIdentityManager().validate(subject);
+                }
+            } catch (NoSuchElementException noSuchElementException) {
+                // No Asset found
             }
         }
 
         return subject;
+    }
+
+    protected String getDisplayName() throws Exception {
+        final IdentityManager identityManager = AuthenticationUtil.getIdentityManager();
+        return identityManager.toDisplayString(getCurrentSubject());
     }
 
     ServletContext getServletContext() {
@@ -155,8 +180,20 @@ class SecureServerResource extends ServerResource {
             ? StorageApplication.DEFAULT_CONTEXT_PATH : getServletContext().getContextPath();
     }
 
-    protected String getPath() {
-        return getRequest().getResourceRef().getPath();
+    protected StorageConfiguration getStorageConfiguration() {
+        return this.storageConfiguration;
+    }
+
+    Client getOIDCClient() throws IOException {
+        return this.storageConfiguration.getOIDCClient();
+    }
+
+    GMSClient getGMSClient() {
+        return storageConfiguration.getGMSClient();
+    }
+
+    AccessControlClient getAccessControlClient() {
+        return storageConfiguration.getAccessControlClient();
     }
 
     /**

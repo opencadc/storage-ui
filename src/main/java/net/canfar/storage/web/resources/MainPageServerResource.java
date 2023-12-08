@@ -69,13 +69,18 @@
 package net.canfar.storage.web.resources;
 
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.*;
+import net.canfar.storage.PathUtils;
+import net.canfar.storage.web.StorageItemFactory;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import org.opencadc.vospace.*;
 import net.canfar.storage.StorageItemCSVWriter;
 import net.canfar.storage.StorageItemWriter;
+import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.FolderItem;
 import net.canfar.storage.web.view.FreeMarkerConfiguration;
-import ca.nrc.cadc.accesscontrol.AccessControlClient;
+import org.opencadc.vospace.client.VOSpaceClient;
 import org.restlet.data.MediaType;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -84,24 +89,48 @@ import org.restlet.resource.ResourceException;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.file.Path;
 import java.util.*;
 
 
 public class MainPageServerResource extends StorageItemServerResource {
+    /**
+     * Needed to be supported by Restlet.
+     */
+    public MainPageServerResource() {
+    }
+
+    MainPageServerResource(StorageConfiguration storageConfiguration,
+                           VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+                           StorageItemFactory storageItemFactory, VOSpaceClient voSpaceClient,
+                           VOSpaceServiceConfig serviceConfig) {
+        super(storageConfiguration, voSpaceServiceConfigManager, storageItemFactory, voSpaceClient, serviceConfig);
+    }
 
     @Get
     public Representation represent() throws Exception {
-        final ContainerNode currentNode = getCurrentNode(getCurrentPath().equals("/")
+        final ContainerNode currentNode = getCurrentNode(getCurrentPath().toString().equals("/")
                                                          ? VOS.Detail.raw : VOS.Detail.max);
         return representContainerNode(currentNode);
     }
 
 
     private Representation representContainerNode(final ContainerNode containerNode) throws Exception {
-        final List<Node> childNodes = containerNode.getNodes();
-        final Iterator<String> initialRows = new Iterator<String>() {
-            final Iterator<Node> childNodeIterator = childNodes.iterator();
+        final Path parentPath = PathUtils.toPath(containerNode);
+        final VOSURI startNextPageURI;
+        final Iterator<Node> childNodeIterator;
+        if (currentService.supportsPaging()) {
+            final List<Node> childNodes = containerNode.getNodes();
+            childNodeIterator = childNodes.iterator();
+            startNextPageURI = childNodes.isEmpty() ? null : toURI(childNodes.get(childNodes.size() - 1));
+        } else {
+            childNodeIterator = containerNode.childIterator == null
+                                ? containerNode.getNodes().iterator()
+                                : containerNode.childIterator;
+            startNextPageURI = null;
+        }
 
+        final Iterator<String> initialRows = new Iterator<>() {
             @Override
             public boolean hasNext() {
                 return childNodeIterator.hasNext();
@@ -113,39 +142,19 @@ public class MainPageServerResource extends StorageItemServerResource {
                 final StorageItemWriter storageItemWriter = new StorageItemCSVWriter(writer);
 
                 try {
-                    storageItemWriter.write(storageItemFactory.translate(childNodeIterator.next()));
+                    final Node nextChild = childNodeIterator.next();
+                    PathUtils.augmentParents(Path.of(parentPath.toString(), nextChild.getName()), nextChild);
+
+                    storageItemWriter.write(storageItemFactory.translate(nextChild));
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
 
                 return writer.toString();
             }
-
-            /**
-             * Removes from the underlying collection the last element returned
-             * by this iterator (optional operation).  This method can be called
-             * only once per call to {@link #next}.  The behavior of an iterator
-             * is unspecified if the underlying collection is modified while the
-             * iteration is in progress in any way other than by calling this
-             * method.
-             *
-             * @throws UnsupportedOperationException if the {@code remove}
-             *                                       operation is not supported by this iterator
-             * @throws IllegalStateException         if the {@code next} method has not
-             *                                       yet been called, or the {@code remove} method has already
-             *                                       been called after the last call to the {@code next}
-             *                                       method
-             * {@link UnsupportedOperationException} and performs no other action.
-             */
-            @Override
-            public void remove() {
-                childNodeIterator.remove();
-            }
         };
 
-        final VOSURI startNextPageURI = childNodes.isEmpty() ? null : childNodes.get(childNodes.size() - 1).getUri();
         final FolderItem folderItem = storageItemFactory.getFolderItemView(containerNode);
-
         return representFolderItem(folderItem, initialRows, startNextPageURI);
     }
 
@@ -154,14 +163,9 @@ public class MainPageServerResource extends StorageItemServerResource {
     }
 
     Representation representFolderItem(final FolderItem folderItem, final Iterator<String> initialRows,
-                                       final VOSURI startNextPageURI)
-            throws Exception {
+                                       final VOSURI startNextPageURI) throws Exception {
         final Map<String, Object> dataModel = new HashMap<>();
-        final AccessControlClient accessControlClient =
-                getContextAttribute(StorageApplication.ACCESS_CONTROL_CLIENT_KEY);
-
         dataModel.put("initialRows", initialRows);
-
 
         // Explicitly set whether folder is writable or not, handling null situation as equal to false
         dataModel.put("folderWritable", folderItem.isWritable());
@@ -173,7 +177,7 @@ public class MainPageServerResource extends StorageItemServerResource {
 
         // Add the current VOSpace service name so that navigation links can be rendered correctly
         String vospaceSvcName = getCurrentVOSpaceService();
-        String nodePrefixURI = getVospaceNodeUriPrefix();
+        String nodePrefixURI = this.currentService.getNodeResourceID().toString();
         dataModel.put("vospaceSvcPath", vospaceSvcName + "/");
         dataModel.put("vospaceSvcName", vospaceSvcName);
         dataModel.put("vospaceNodePrefixURI", nodePrefixURI);
@@ -182,35 +186,38 @@ public class MainPageServerResource extends StorageItemServerResource {
         dataModel.put("vospaceServices", getVOSpaceServiceList());
 
         // HttpPrincipal username will be pulled from current user
-        final String httpUsername = accessControlClient.getCurrentHttpPrincipalUsername(getCurrentUser());
+//        final String httpUsername = accessControlClient.getCurrentHttpPrincipalUsername(
+//                AuthenticationUtil.getCurrentSubject());
+        final String httpUsername = getDisplayName();
 
         if (httpUsername != null) {
             dataModel.put("username", httpUsername);
 
             try {
                 // Check to see if home directory exists
-                String userHomeBase = getVospaceUserHome();
+                final String userHomeBase = this.currentService.homeDir;
                 if (StringUtil.hasLength(userHomeBase)) {
-                    // Be a bit resilient when it comes to how the
-                    // home directory is declared.
-                    String userHome = userHomeBase.endsWith("/") ? userHomeBase + httpUsername
-                                                                 : userHomeBase + "/" + httpUsername;
-
-                    if (!userHomeBase.startsWith("/")) {
-                        userHome = "/" + userHome;
-                    }
-
-                    getNode(new VOSURI(getVospaceNodeUriPrefix() + userHome), VOS.Detail.min);
-                    dataModel.put("homeDir", userHome);
+                    final Path userHomePath = Path.of(userHomeBase, httpUsername);
+                    getNode(userHomePath, null, 0);
+                    dataModel.put("homeDir", userHomePath.toString());
                 }
-            }
-            catch (ResourceException re)
-            {
+            } catch (ResourceException re) {
                 // Ignore this as there is no 'home' VOSpace defined in org.opencadc.vosui.properties
             }
         }
 
-        return new TemplateRepresentation("index.ftl", getFreeMarkerConfiguration(), dataModel,
-                                          MediaType.TEXT_HTML);
+        final StorageConfiguration storageConfiguration = getStorageConfiguration();
+        dataModel.put("logoURL", storageConfiguration.getLogoURL());
+
+        final Map<String, Boolean> featureMap = new HashMap<>();
+        featureMap.put("batchDownload", currentService.supportsBatchDownloads());
+        featureMap.put("batchUpload", currentService.supportsBatchUploads());
+        featureMap.put("externalLinks", currentService.supportsExternalLinks());
+        featureMap.put("paging", currentService.supportsPaging());
+
+        dataModel.put("features", featureMap);
+
+        return new TemplateRepresentation(String.format("themes/%s/index.ftl", storageConfiguration.getThemeName()),
+                                          getFreeMarkerConfiguration(), dataModel, MediaType.TEXT_HTML);
     }
 }

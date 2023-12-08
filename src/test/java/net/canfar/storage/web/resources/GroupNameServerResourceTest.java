@@ -67,6 +67,7 @@
  */
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.ac.client.GMSClient;
 import net.canfar.storage.web.restlet.JSONRepresentation;
 import net.canfar.storage.web.restlet.StorageApplication;
 import ca.nrc.cadc.reg.client.RegistryClient;
@@ -100,26 +101,20 @@ public class GroupNameServerResourceTest extends AbstractServerResourceTest<Grou
 
         Mockito.when(mockGMSClient.getGroupNames()).thenReturn(groupList);
 
-        final Map<String, Object> attributes = new HashMap<>();
-        final Context context = new Context();
-
-        attributes.put(StorageApplication.GMS_SERVICE_PROPERTY_KEY, mockGMSClient);
-        context.setAttributes(attributes);
-
         testSubject = new GroupNameServerResource() {
-            @Override
-            public Context getContext() {
-                return context;
-            }
-
             @Override
             RegistryClient getRegistryClient() {
                 return mockRegistryClient;
             }
 
             @Override
-            Subject generateVOSpaceUser() {
+            Subject getCurrentSubject() {
                 return new Subject();
+            }
+
+            @Override
+            GMSClient getGMSClient() {
+                return mockGMSClient;
             }
 
             /**
@@ -133,7 +128,6 @@ public class GroupNameServerResourceTest extends AbstractServerResourceTest<Grou
             }
 
         };
-
 
         final JSONRepresentation r = (JSONRepresentation) testSubject.getGroupNames();
 

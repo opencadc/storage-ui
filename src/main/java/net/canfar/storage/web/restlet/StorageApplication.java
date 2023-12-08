@@ -68,60 +68,28 @@
 
 package net.canfar.storage.web.restlet;
 
-import ca.nrc.cadc.ac.client.GMSClient;
-import ca.nrc.cadc.accesscontrol.AccessControlClient;
-
-import ca.nrc.cadc.auth.PrincipalExtractor;
-import ca.nrc.cadc.config.ApplicationConfiguration;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.web.SubjectGenerator;
-import net.canfar.storage.web.config.VOSpaceServiceConfigMgr;
 import net.canfar.storage.web.resources.*;
 import net.canfar.storage.web.view.FreeMarkerConfiguration;
-import net.canfar.web.RestletPrincipalExtractor;
 
 import org.apache.log4j.Logger;
 import org.restlet.*;
-import org.restlet.data.Protocol;
-import org.restlet.data.Reference;
-import org.restlet.resource.Directory;
-import org.restlet.resource.ResourceException;
 import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
 
-import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
-import java.net.URI;
-import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class StorageApplication extends Application {
-    private static final Logger log =
-        Logger.getLogger(StorageApplication.class);
+    private static final Logger log = Logger.getLogger(StorageApplication.class);
 
     // Public properties are made available in the Context.
-    public static final String REGISTRY_CLIENT_KEY = "org.opencadc.registry.client";
-    public static final String ACCESS_CONTROL_CLIENT_KEY = "org.opencadc.ac.client";
     public static final String FREEMARKER_CONFIG_KEY = "org.opencadc.vospace.freemarker-config";
     public static final String SERVLET_CONTEXT_ATTRIBUTE_KEY = "org.restlet.ext.servlet.ServletContext";
-    public static final String DEFAULT_CONTEXT_PATH = "/storage/";
-    private static final String DEFAULT_GMS_SERVICE_ID = "ivo://cadc.nrc.ca/gms";
-    public static final String GMS_SERVICE_PROPERTY_KEY = "org.opencadc.gms.service_id";
+    public static final String DEFAULT_CONTEXT_PATH = "/storage";
 
-    // For those wishing to make use of the meta files service for a more readable download link on files.
-    public static final String FILES_META_SERVICE_SERVICE_ID_KEY = "org.opencadc.vospace.files_meta_service_id";
-    public static final String FILES_META_SERVICE_STANDARD_ID_KEY = "org.opencadc.vospace.files_meta_standard_id";
-    public static final String DEFAULT_FILES_META_SERVICE_SERVICE_ID = "ivo://cadc.nrc.ca/files";
-    public static final String DEFAULT_FILES_META_SERVICE_STANDARD_ID =
-        "vos://cadc.nrc.ca~vospace/CADC/std/archive#file-1.0";
-
-    private static final String DEFAULT_CONFIG_FILE_PATH = System.getProperty("user.home") + "/config/org.opencadc.vosui.properties";
-
-    private final ApplicationConfiguration applicationConfiguration;
-    private final VOSpaceServiceConfigMgr vospaceServiceConfigMgr;
 
     /**
      * Constructor.
@@ -134,13 +102,11 @@ public class StorageApplication extends Application {
     public StorageApplication(Context context) {
         super(context);
         setStatusService(new VOSpaceStatusService());
-        this.applicationConfiguration = new ApplicationConfiguration(DEFAULT_CONFIG_FILE_PATH);
-        this.vospaceServiceConfigMgr = new VOSpaceServiceConfigMgr(this.applicationConfiguration);
     }
 
 
     /**
-     * Creates a inbound root Restlet that will receive all incoming calls. In
+     * Creates an inbound root Restlet that will receive all incoming calls. In
      * general, instances of Router, Filter or Finder classes will be used as
      * initial application Restlet. The default implementation returns null by
      * default. This method is intended to be overridden by subclasses.
@@ -153,24 +119,14 @@ public class StorageApplication extends Application {
         log.debug("context: " + context);
 
         // These values don't change per page load
-        context.getAttributes().put(REGISTRY_CLIENT_KEY, createRegistryClient());
-        context.getAttributes().put(ACCESS_CONTROL_CLIENT_KEY, createAccessControlClient());
-        context.getAttributes().put(GMS_SERVICE_PROPERTY_KEY, createGMSClient());
         context.getAttributes().put(FREEMARKER_CONFIG_KEY, createFreemarkerConfig());
-        context.getAttributes().put(FILES_META_SERVICE_SERVICE_ID_KEY,
-                                    URI.create(applicationConfiguration.lookup(FILES_META_SERVICE_SERVICE_ID_KEY,
-                                                                       DEFAULT_FILES_META_SERVICE_SERVICE_ID)));
-        context.getAttributes().put(FILES_META_SERVICE_STANDARD_ID_KEY,
-                                    URI.create(applicationConfiguration.lookup(FILES_META_SERVICE_STANDARD_ID_KEY,
-                                        DEFAULT_FILES_META_SERVICE_STANDARD_ID)));
 
         final ServletContext servletContext = getServletContext();
-        final String contextPath = (servletContext == null) ? DEFAULT_CONTEXT_PATH : "/";
+        final String contextPath = (servletContext == null) ? StorageApplication.DEFAULT_CONTEXT_PATH : "";
         final Router router = new Router(context);
 
-        router.attach(contextPath + "ac/authenticate", AccessControlServerResource.class);
-
-        router.attach(contextPath + "groups", GroupNameServerResource.class);
+        router.attach(contextPath + "/ac/authenticate", AccessControlServerResource.class);
+        router.attach(contextPath + "/groups", GroupNameServerResource.class);
 
         final Map<String, Variable> routeVariables = new HashMap<>();
         routeVariables.put("svc", new Variable(Variable.TYPE_ALPHA_DIGIT));
@@ -178,30 +134,34 @@ public class StorageApplication extends Application {
 
         // Build a set of links for each configured storage service
 
-        // backward-compatible routes (pre use of {svc}
+        // backward-compatible routes (pre use of {svc})
         // Allow for an empty path to be the root.
-        router.attach(contextPath + "list", MainPageServerResource.class);
-        router.attach(contextPath + "list/", MainPageServerResource.class);
+        router.attach(contextPath + "/list", MainPageServerResource.class);
+        router.attach(contextPath + "/list/", MainPageServerResource.class);
 
-        router.attach(contextPath + "page", PageServerResource.class);
-        final TemplateRoute pageRoute = router.attach(contextPath + "page/{path}",
-            PageServerResource.class);
+        router.attach(contextPath + "/page", PageServerResource.class);
+        final TemplateRoute pageRoute = router.attach(contextPath + "/page{path}",
+                                                      PageServerResource.class);
 
         // Generic endpoint for files, folders, or links.
-        final TemplateRoute itemRoute = router.attach(contextPath + "item/{path}",
-            StorageItemServerResource.class);
-        final TemplateRoute folderRoute = router.attach(contextPath + "folder/{path}",
-            FolderItemServerResource.class);
-        final TemplateRoute fileRoute = router.attach(contextPath + "file/{path}",
-            FileItemServerResource.class);
-        final TemplateRoute linkRoute = router.attach(contextPath + "link/{path}",
-            LinkItemServerResource.class);
-        final TemplateRoute listRoute = router.attach(contextPath + "list/{path}",
-            MainPageServerResource.class);
-        final TemplateRoute nodeRoute = router.attach(contextPath + "access/{path}",
-            NodeServerResource.class);
-        final TemplateRoute rawRoute = router.attach(contextPath + "raw/{path}",
-            MainPageServerResource.class);
+        final TemplateRoute itemRoute = router.attach(contextPath + "/item{path}",
+                                                      StorageItemServerResource.class);
+        final TemplateRoute folderRoute = router.attach(contextPath + "/folder{path}",
+                                                        FolderItemServerResource.class);
+        final TemplateRoute fileRoute = router.attach(contextPath + "/file{path}",
+                                                      FileItemServerResource.class);
+        final TemplateRoute linkRoute = router.attach(contextPath + "/link{path}",
+                                                      LinkItemServerResource.class);
+        final TemplateRoute listRoute = router.attach(contextPath + "/list{path}",
+                                                      MainPageServerResource.class);
+        final TemplateRoute nodeRoute = router.attach(contextPath + "/access{path}",
+                                                      NodeServerResource.class);
+        final TemplateRoute rawRoute = router.attach(contextPath + "/raw{path}",
+                                                     MainPageServerResource.class);
+        final TemplateRoute oidcCallbackRoute = router.attach(contextPath + "/oidc-callback",
+                                                              OIDCCallbackServerResource.class);
+        final TemplateRoute oidcLoginRoute = router.attach(contextPath + "/oidc-login",
+                                                              OIDCLoginServerResource.class);
 
         itemRoute.getTemplate().getVariables().putAll(routeVariables);
         folderRoute.getTemplate().getVariables().putAll(routeVariables);
@@ -211,33 +171,37 @@ public class StorageApplication extends Application {
         listRoute.getTemplate().getVariables().putAll(routeVariables);
         rawRoute.getTemplate().getVariables().putAll(routeVariables);
         nodeRoute.getTemplate().getVariables().putAll(routeVariables);
+        oidcCallbackRoute.getTemplate().getVariables().putAll(routeVariables);
+        oidcLoginRoute.getTemplate().getVariables().putAll(routeVariables);
 
         // Support for routes with {svc} in URL
-        router.attach(contextPath + "{svc}/page", PageServerResource.class);
-        final TemplateRoute svcPageRoute = router.attach(contextPath + "{svc}/page/{path}",
-            PageServerResource.class);
+        router.attach(contextPath + "/{svc}/page", PageServerResource.class);
+        final TemplateRoute svcPageRoute = router.attach(contextPath + "/{svc}/page{path}",
+                                                         PageServerResource.class);
 
         // Allow for an empty path to be the root.
-        final TemplateRoute svcListRouteNoPath = router.attach(contextPath +  "{svc}/list", MainPageServerResource.class);
-        final TemplateRoute svcListRouteNoPath2 = router.attach(contextPath +  "{svc}/list/", MainPageServerResource.class);
+        final TemplateRoute svcListRouteNoPath = router.attach(
+                contextPath + "/{svc}/list", MainPageServerResource.class);
+        final TemplateRoute svcListRouteNoPath2 = router.attach(
+                contextPath + "/{svc}/list/", MainPageServerResource.class);
 
         // Generic endpoint for files, folders, or links.
-        final TemplateRoute svcItemRoute = router.attach(contextPath + "{svc}/item/{path}",
-            StorageItemServerResource.class);
-        final TemplateRoute svcFolderRoute = router.attach(contextPath + "{svc}/folder/{path}",
-            FolderItemServerResource.class);
-        final TemplateRoute svcFileRoute = router.attach(contextPath + "{svc}/file/{path}",
-            FileItemServerResource.class);
-        final TemplateRoute svcLinkRoute = router.attach(contextPath + "{svc}/link/{path}",
-            LinkItemServerResource.class);
-        final TemplateRoute svcListRoute = router.attach(contextPath + "{svc}/list/{path}",
-            MainPageServerResource.class);
-        final TemplateRoute svcNodeRoute = router.attach(contextPath + "{svc}/access/{path}",
-            NodeServerResource.class);
-        final TemplateRoute svcRawRoute = router.attach(contextPath + "{svc}/raw/{path}",
-            MainPageServerResource.class);
-        final TemplateRoute pkgRawRoute = router.attach(contextPath + "{svc}/pkg",
-            PackageServerResource.class);
+        final TemplateRoute svcItemRoute = router.attach(contextPath + "/{svc}/item{path}",
+                                                         StorageItemServerResource.class);
+        final TemplateRoute svcFolderRoute = router.attach(contextPath + "/{svc}/folder{path}",
+                                                           FolderItemServerResource.class);
+        final TemplateRoute svcFileRoute = router.attach(contextPath + "/{svc}/file{path}",
+                                                         FileItemServerResource.class);
+        final TemplateRoute svcLinkRoute = router.attach(contextPath + "/{svc}/link{path}",
+                                                         LinkItemServerResource.class);
+        final TemplateRoute svcListRoute = router.attach(contextPath + "/{svc}/list{path}",
+                                                         MainPageServerResource.class);
+        final TemplateRoute svcNodeRoute = router.attach(contextPath + "/{svc}/access{path}",
+                                                         NodeServerResource.class);
+        final TemplateRoute svcRawRoute = router.attach(contextPath + "/{svc}/raw{path}",
+                                                        MainPageServerResource.class);
+        final TemplateRoute pkgRawRoute = router.attach(contextPath + "/{svc}/pkg",
+                                                        PackageServerResource.class);
 
 
         // Set route variables to all the templates
@@ -258,20 +222,6 @@ public class StorageApplication extends Application {
         return router;
     }
 
-    private RegistryClient createRegistryClient() {
-        return new RegistryClient();
-    }
-
-    private AccessControlClient createAccessControlClient() {
-        return new AccessControlClient(URI.create(applicationConfiguration.lookup(StorageApplication.GMS_SERVICE_PROPERTY_KEY,
-                                                                          StorageApplication.DEFAULT_GMS_SERVICE_ID)));
-    }
-
-    private GMSClient createGMSClient() {
-        return new GMSClient(URI.create(applicationConfiguration.lookup(StorageApplication.GMS_SERVICE_PROPERTY_KEY,
-                                                                StorageApplication.DEFAULT_GMS_SERVICE_ID)));
-    }
-
     private ServletContext getServletContext() {
         return (ServletContext) getContext().getAttributes().get(StorageApplication.SERVLET_CONTEXT_ATTRIBUTE_KEY);
     }
@@ -287,73 +237,4 @@ public class StorageApplication extends Application {
 
         return freeMarkerConfiguration;
     }
-
-
-    public static void main(final String[] args) throws Exception {
-        final Component component = new Component();
-        final Application application = new StorageApplication(component.getContext().createChildContext()) {
-            /**
-             * Creates a inbound root Restlet that will receive all incoming calls. In
-             * general, instances of Router, Filter or Finder classes will be used as
-             * initial application Restlet. The default implementation returns null by
-             * default. This method is intended to be overridden by subclasses.
-             *
-             * @return The inbound root Restlet.
-             */
-            @Override
-            public Restlet createInboundRoot() {
-                final Context context = getContext();
-                final Router router = (Router) super.createInboundRoot();
-                final String[] staticDirs = {"js", "css", "scripts", "fonts", "themes"};
-
-                router.attachDefault(MainPageServerResource.class);
-
-                for (final String dir : staticDirs) {
-                    final Reference dirReference = new Reference(URI.create("clap://class/META-INF/resources/" + dir));
-                    router.attach(DEFAULT_CONTEXT_PATH + dir + "/", new Directory(context, dirReference));
-                }
-
-                return router;
-            }
-
-            void handleInParent(final Request request, final Response response) {
-                super.handle(request, response);
-            }
-
-            @Override
-            public void handle(final Request request, final Response response) {
-                final SubjectGenerator subjectGenerator = new SubjectGenerator();
-                final PrincipalExtractor principalExtractor = new RestletPrincipalExtractor(request);
-
-                try {
-                    final Subject subject = subjectGenerator.generate(principalExtractor);
-
-                    Subject.doAs(subject, new PrivilegedExceptionAction<Object>() {
-                        @Override
-                        public Object run() {
-                            handleInParent(request, response);
-                            return null;
-                        }
-                    });
-                } catch (Exception e) {
-                    throw new ResourceException(e);
-                }
-            }
-        };
-
-        final Server server = new Server(Protocol.HTTP, 8080, application);
-
-        component.getDefaultHost().attachDefault(application);
-
-        component.getServers().add(server);
-        component.getClients().add(Protocol.FILE);
-        component.getClients().add(Protocol.CLAP);
-
-        component.start();
-    }
-
-    public VOSpaceServiceConfigMgr getVospaceServiceConfigMgr() {
-        return vospaceServiceConfigMgr;
-    }
-
 }

@@ -69,55 +69,55 @@
 
 package net.canfar.storage.web;
 
-import ca.nrc.cadc.auth.AuthMethod;
+import net.canfar.storage.PathUtils;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import org.opencadc.gms.GroupURI;
+import org.opencadc.vospace.NodeProperty;
 import net.canfar.storage.AbstractUnitTest;
-import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.StorageItem;
-import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import ca.nrc.cadc.vos.DataNode;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.DataNode;
+import org.opencadc.vospace.VOS;
+import org.opencadc.vospace.VOSURI;
 
 import org.junit.Test;
 import org.junit.Assert;
-import org.mockito.*;
 
 import java.net.URI;
-import java.net.URL;
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory> {
     @Test
-    public void translate() throws Exception {
-        final RegistryClient mockRegistryClient = Mockito.mock(RegistryClient.class);
-        final DataNode mockDataNode = Mockito.mock(DataNode.class);
+    public void translate() {
+        final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
+        final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
+        PathUtils.augmentParents(Path.of(testDataNodeURI.getPath()), testDataNode);
+
         final String contextPath = "/warehouse";
-        final VOSURI vosuri = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
-        final String writeGroupURIs = "ivo://cadc.nrc.ca/gms/mygroups?GROUP1";
-        final String readGroupURIs = "ivo://cadc.nrc.ca/gms/mygroups?GROUP2 ivo://cadc.nrc.ca/gms/mygroups?GROUP3";
-        final URL serviceURL = new URL("https://www.site.com/myservice");
+        final Set<GroupURI> writeGroupURIs =
+                Collections.singleton(new GroupURI(URI.create("ivo://cadc.nrc.ca/gms/mygroups?GROUP1")));
+        final Set<GroupURI> readGroupURIs = new HashSet<>();
+        readGroupURIs.add(new GroupURI(URI.create("ivo://cadc.nrc.ca/gms/mygroups?GROUP2")));
+        readGroupURIs.add(new GroupURI(URI.create("ivo://cadc.nrc.ca/gms/mygroups?GROUP3")));
 
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE)).thenReturn(writeGroupURIs);
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD)).thenReturn(readGroupURIs);
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH)).thenReturn("88000");
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_READABLE)).thenReturn("true");
+        testDataNode.getReadOnlyGroup().addAll(readGroupURIs);
+        testDataNode.getReadWriteGroup().addAll(writeGroupURIs);
+        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "88000"));
+        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
-        Mockito.when(mockDataNode.getUri()).thenReturn(vosuri);
+        final VOSpaceServiceConfig testServiceConfig =
+                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
+                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
 
-        Mockito.when(mockRegistryClient.getServiceURL(URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
-                                                      URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
-                                                      AuthMethod.COOKIE)).thenReturn(serviceURL);
+        testSubject = new StorageItemFactory(contextPath, testServiceConfig);
 
-        testSubject = new StorageItemFactory(mockRegistryClient, contextPath,
-                                             URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
-                                             URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
-                            "vault");
-
-        final StorageItem storageItemResult = testSubject.translate(mockDataNode);
+        final StorageItem storageItemResult = testSubject.translate(testDataNode);
         Assert.assertEquals("Wrong target URL.",
-                            "https://www.site.com/myservice/vault/myroot/path/file.txt",
-                            storageItemResult.getTargetURL());
+                            "/warehouse/vault/file/myroot/path/file.txt",
+                            storageItemResult.getTargetPath());
 
         final String readGroupNames = "GROUP2 GROUP3";
         Assert.assertEquals("Wrong Read groups.", readGroupNames, storageItemResult.getReadGroupNames());
@@ -131,41 +131,33 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
     }
 
     @Test
-    public void translateTargetFallback() throws Exception {
-        final RegistryClient mockRegistryClient = Mockito.mock(RegistryClient.class);
-        final DataNode mockDataNode = Mockito.mock(DataNode.class);
+    public void translateTargetFallback() {
+        final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
+        final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
+        PathUtils.augmentParents(Path.of(testDataNodeURI.getPath()), testDataNode);
+
         final String contextPath = "/warehouse";
-        final VOSURI vosuri = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
-        final String writeGroupURIs = "ivo://cadc.nrc.ca/gms/mygroups?GROUP1";
-        final String readGroupURIs = "ivo://cadc.nrc.ca/gms/mygroups?GROUP2 ivo://cadc.nrc.ca/gms/mygroups?GROUP3";
-        final URL serviceURL = new URL("https://www.oldsite.com/oldservice");
+        final Set<GroupURI> writeGroupURIs =
+                Collections.singleton(new GroupURI(URI.create("ivo://cadc.nrc.ca/gms/mygroups?GROUP1")));
+        final Set<GroupURI> readGroupURIs = new HashSet<>();
+        readGroupURIs.add(new GroupURI(URI.create("ivo://cadc.nrc.ca/gms/mygroups?GROUP2")));
+        readGroupURIs.add(new GroupURI(URI.create("ivo://cadc.nrc.ca/gms/mygroups?GROUP3")));
 
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE)).thenReturn(writeGroupURIs);
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD)).thenReturn(readGroupURIs);
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH)).thenReturn("88000");
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_READABLE)).thenReturn("true");
+        testDataNode.getReadOnlyGroup().addAll(readGroupURIs);
+        testDataNode.getReadWriteGroup().addAll(writeGroupURIs);
+        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "88000"));
+        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
-        Mockito.when(mockDataNode.getUri()).thenReturn(vosuri);
+        final VOSpaceServiceConfig testServiceConfig =
+                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
+                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
 
-        Mockito.when(mockRegistryClient.getServiceURL(URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
-                                                      URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
-                                                      AuthMethod.COOKIE)).thenThrow(new IllegalArgumentException());
+        testSubject = new StorageItemFactory(contextPath, testServiceConfig);
 
-        Mockito.when(mockRegistryClient.getServiceURL(vosuri.getServiceURI(), Standards.VOSPACE_SYNC_21,
-                                                      AuthMethod.ANON)).thenReturn(serviceURL);
-
-        testSubject = new StorageItemFactory(mockRegistryClient, contextPath,
-                                             URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
-                                             URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
-                            "vault");
-
-        final StorageItem storageItemResult = testSubject.translate(mockDataNode);
+        final StorageItem storageItemResult = testSubject.translate(testDataNode);
         Assert.assertEquals("Wrong target URL.",
-                            "https://www.oldsite.com/oldservice?target=vos%3A%2F%2Fcadc.nrc" +
-                                ".ca%7Evault%2Fmyroot%2Fpath%2Ffile" +
-                                ".txt&direction=pullFromVoSpace&protocol=ivo%3A%2F%2Fivoa" +
-                                ".net%2Fvospace%2Fcore%23httpget/vault/myroot/path/file.txt",
-                            storageItemResult.getTargetURL());
+                            "/warehouse/vault/file/myroot/path/file.txt",
+                            storageItemResult.getTargetPath());
 
         final String readGroupNames = "GROUP2 GROUP3";
         Assert.assertEquals("Wrong Read groups.", readGroupNames, storageItemResult.getReadGroupNames());
@@ -179,39 +171,26 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
     }
 
     @Test
-    public void translateNoGroups() throws Exception {
-        final RegistryClient mockRegistryClient = Mockito.mock(RegistryClient.class);
-        final DataNode mockDataNode = Mockito.mock(DataNode.class);
+    public void translateNoGroups() {
+        final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
+        final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
+        PathUtils.augmentParents(Path.of(testDataNodeURI.getPath()), testDataNode);
+
         final String contextPath = "/warehouse";
-        final VOSURI vosuri = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
-        final URL serviceURL = new URL("https://www.oldsite.com/oldservice");
 
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE)).thenReturn("");
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD)).thenReturn("");
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH)).thenReturn("88000");
-        Mockito.when(mockDataNode.getPropertyValue(VOS.PROPERTY_URI_READABLE)).thenReturn("true");
+        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "88000"));
+        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
-        Mockito.when(mockDataNode.getUri()).thenReturn(vosuri);
+        final VOSpaceServiceConfig testServiceConfig =
+                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
+                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
 
-        Mockito.when(mockRegistryClient.getServiceURL(URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
-                                                      URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
-                                                      AuthMethod.COOKIE)).thenThrow(new IllegalArgumentException());
+        testSubject = new StorageItemFactory(contextPath, testServiceConfig);
 
-        Mockito.when(mockRegistryClient.getServiceURL(vosuri.getServiceURI(), Standards.VOSPACE_SYNC_21,
-                                                      AuthMethod.ANON)).thenReturn(serviceURL);
-
-        testSubject = new StorageItemFactory(mockRegistryClient, contextPath,
-                                             URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_SERVICE_ID),
-                                             URI.create(StorageApplication.DEFAULT_FILES_META_SERVICE_STANDARD_ID),
-                                             "vault");
-
-        final StorageItem storageItemResult = testSubject.translate(mockDataNode);
+        final StorageItem storageItemResult = testSubject.translate(testDataNode);
         Assert.assertEquals("Wrong target URL.",
-                            "https://www.oldsite.com/oldservice?target=vos%3A%2F%2Fcadc.nrc" +
-                                ".ca%7Evault%2Fmyroot%2Fpath%2Ffile" +
-                                ".txt&direction=pullFromVoSpace&protocol=ivo%3A%2F%2Fivoa" +
-                                ".net%2Fvospace%2Fcore%23httpget/vault/myroot/path/file.txt",
-                            storageItemResult.getTargetURL());
+                            "/warehouse/vault/file/myroot/path/file.txt",
+                            storageItemResult.getTargetPath());
 
         Assert.assertEquals("Wrong Read groups.", "", storageItemResult.getReadGroupNames());
         Assert.assertEquals("Wrong Write groups.", "", storageItemResult.getWriteGroupNames());

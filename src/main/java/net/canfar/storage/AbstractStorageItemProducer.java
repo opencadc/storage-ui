@@ -68,103 +68,85 @@
 
 package net.canfar.storage;
 
+import ca.nrc.cadc.io.ResourceIterator;
 import ca.nrc.cadc.net.NetUtil;
-import ca.nrc.cadc.vos.ContainerNode;
-import ca.nrc.cadc.vos.Node;
-import ca.nrc.cadc.vos.VOS;
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import org.opencadc.vospace.ContainerNode;
+import org.opencadc.vospace.Node;
+import org.opencadc.vospace.VOS;
+import org.opencadc.vospace.VOSURI;
+import org.opencadc.vospace.client.VOSpaceClient;
 import net.canfar.storage.web.StorageItemFactory;
 
 import javax.security.auth.Subject;
-import java.security.AccessController;
+import java.io.IOException;
+import java.nio.file.Path;
 import java.security.PrivilegedExceptionAction;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
-abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
-        implements StorageItemProducer
-{
+abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implements StorageItemProducer {
     private VOSURI current;
-    private final int pageSize;
+    private final Integer pageSize;
     private final VOSURI folderURI;
     private final Subject user;
     private final T storageItemWriter;
     private final StorageItemFactory storageItemFactory;
+    private final VOSpaceServiceConfig serviceConfig;
     private final VOSpaceClient voSpaceClient;
 
 
-    AbstractStorageItemProducer(int pageSize, VOSURI folderURI,
+    AbstractStorageItemProducer(Integer pageSize, VOSURI folderURI,
                                 final VOSURI startURI,
                                 final T storageItemWriter,
                                 final Subject user,
                                 final StorageItemFactory storageItemFactory,
-                                final VOSpaceClient voSpaceClient)
-    {
+                                final VOSpaceServiceConfig serviceConfig,
+                                final VOSpaceClient voSpaceClient) {
         this.pageSize = pageSize;
         this.folderURI = folderURI;
         this.current = startURI;
         this.storageItemWriter = storageItemWriter;
         this.user = user;
         this.storageItemFactory = storageItemFactory;
+        this.serviceConfig = serviceConfig;
         this.voSpaceClient = voSpaceClient;
     }
 
 
-    String getQuery()
-    {
+    String getQuery() {
+        final Map<String, String> queryPayload = new HashMap<>();
         final VOS.Detail detail = folderURI.isRoot()
                                   ? VOS.Detail.raw : VOS.Detail.max;
+        queryPayload.put("detail", detail.name());
 
-        return "detail=" + detail.name() + "&limit="
-               + ((pageSize > 0) ? pageSize : 300)
-               + ((current == null)
-                  ? "" : "&uri=" + NetUtil.encode(current.toString()));
-    }
-
-    private List<Node> nextPage() throws Exception
-    {
-        final List<Node> nodes =
-                Subject.doAs(user, new PrivilegedExceptionAction<List<Node>>()
-                {
-                    /**
-                     * Performs the computation.  This method will be called by
-                     * {@code AccessController.doPrivileged} after enabling privileges.
-                     *
-                     * @return a class-dependent value that may represent the results of the
-                     * computation.  Each class that implements
-                     * {@code PrivilegedExceptionAction} should document what
-                     * (if anything) this value represents.
-                     * @throws Exception an exceptional condition has occurred.  Each class
-                     *                   that implements {@code PrivilegedExceptionAction} should
-                     *                   document the exceptions that its run method can throw.
-                     * @see AccessController#doPrivileged(PrivilegedExceptionAction)
-                     */
-                    @Override
-                    public List<Node> run() throws Exception
-                    {
-                        return ((ContainerNode) voSpaceClient.getNode(
-                                folderURI.getPath(), getQuery())).getNodes();
-                    }
-                });
-
-        return (current == null) ? nodes : (nodes.size() > 1)
-                                           ? nodes.subList(1, nodes.size())
-                                           : null;
-    }
-
-    private boolean writePage(final List<Node> page) throws Exception
-    {
-        if (page == null)
-        {
-            return false;
+        if (this.pageSize != null) {
+            queryPayload.put("limit", this.pageSize.toString());
         }
-        else
-        {
-            for (final Node n : page)
-            {
+
+        queryPayload.put("uri", (current == null) ? "" : NetUtil.encode(current.toString()));
+
+        return queryPayload.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
+                           .collect(Collectors.joining("&"));
+    }
+
+    private ResourceIterator<Node> nextPage() throws Exception {
+        return Subject.doAs(user, (PrivilegedExceptionAction<ResourceIterator<Node>>) () ->
+                ((ContainerNode) voSpaceClient.getNode(folderURI.getPath(), getQuery())).childIterator);
+    }
+
+    private boolean writePage(final ResourceIterator<Node> page) throws IOException {
+        if (!page.hasNext()) {
+            return false;
+        } else {
+            while (page.hasNext()) {
+                final Node n = page.next();
+                PathUtils.augmentParents(Path.of(folderURI.getPath(), n.getName()), n);
                 this.storageItemWriter.write(storageItemFactory.translate(n));
-                this.current = n.getUri();
+                this.current = this.serviceConfig.toURI(n);
             }
 
             return true;
@@ -172,23 +154,18 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter>
     }
 
     @Override
-    public VOSURI getLastWrittenURI()
-    {
+    public VOSURI getLastWrittenURI() {
         return this.current;
     }
 
     @Override
-    public boolean writePage() throws Exception
-    {
+    public boolean writePage() throws Exception {
         return writePage(nextPage());
     }
 
-    void writePages() throws Exception
-    {
+    void writePages() throws Exception {
         boolean hasMore = writePage();
-
-        while (hasMore)
-        {
+        while (hasMore) {
             hasMore = writePage();
         }
     }

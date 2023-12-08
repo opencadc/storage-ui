@@ -72,7 +72,7 @@ import net.canfar.storage.AbstractUnitTest;
 import net.canfar.storage.web.resources.StorageItemServerResource;
 import net.canfar.storage.web.view.FileItem;
 import net.canfar.storage.web.view.StorageItem;
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.VOSURI;
 import org.junit.Assert;
 import org.junit.Test;
 

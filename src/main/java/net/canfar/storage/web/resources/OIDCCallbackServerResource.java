@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2016.                            (c) 2016.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,83 +66,49 @@
  ************************************************************************
  */
 
-package net.canfar.storage.web;
+package net.canfar.storage.web.resources;
 
-import ca.nrc.cadc.util.HexUtil;
-import ca.nrc.cadc.util.StringUtil;
-import org.opencadc.vospace.Node;
-import org.opencadc.vospace.NodeProperty;
-import org.opencadc.vospace.VOS;
-import net.canfar.storage.UploadVerificationFailedException;
+import net.canfar.storage.web.config.StorageConfiguration;
+import org.opencadc.token.Client;
+import org.restlet.Response;
+import org.restlet.data.CookieSetting;
+import org.restlet.data.Status;
+import org.restlet.resource.Get;
+import org.restlet.util.Series;
 
-import java.net.URI;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 
-public class UploadVerifier {
-
-    /**
-     * Verify that each byte is accounted for on the server side.
-     *
-     * @param byteCount The count of bytes.
-     * @param node      The node to verify.
-     * @throws UploadVerificationFailedException Any upload error, such as bad filename.
-     */
-    public void verifyByteCount(final long byteCount, final Node node)
-            throws UploadVerificationFailedException {
-        if (byteCount < 0) {
-            throw new IllegalArgumentException("The given byte count cannot be a negative value.");
-        } else if (node == null) {
-            throw new IllegalArgumentException("The given Node cannot be null.");
-        }
-
-        final NodeProperty contentLengthProperty = node.getProperty(VOS.PROPERTY_URI_CONTENTLENGTH);
-        final long contentLength = contentLengthProperty == null
-                                   ? 0L
-                                   : Long.parseLong(contentLengthProperty.getValue());
-
-        if (byteCount != contentLength) {
-            throw new UploadVerificationFailedException("** ERROR ** - Upload did not succeed: "
-                                                        + String.format("File length counted [%d] does not "
-                                                                        + "match what the service said it "
-                                                                        + "should be [%d]", byteCount,
-                                                                        contentLength));
-        }
+/**
+ * OpenID Connect callback for Authorization Code flow.
+ */
+public class OIDCCallbackServerResource extends SecureServerResource {
+    @Get("json")
+    public void callback() throws Exception {
+        final Client oidcClient = getOIDCClient();
+        final byte[] encryptedKey = oidcClient.setAccessToken(getRequest().getResourceRef().toUri());
+        setCookie(encryptedKey);
+        redirectToCallback();
     }
 
-    /**
-     * Verify the given MD5.
-     * <p>
-     * Note that the given MD5 will be converted to a Hex string, and then
-     * the string will be compared to what the returned Node provided.
-     *
-     * @param calculatedMD5 The byte array of the calculated MD5.
-     * @param node          The node to verify against.
-     * @throws UploadVerificationFailedException Any upload error, such as bad filename.
-     */
-    public void verifyMD5(final byte[] calculatedMD5, final Node node) throws UploadVerificationFailedException {
-        if (calculatedMD5 == null) {
-            throw new IllegalArgumentException("The calculated MD5 cannot be null.");
-        } else if (node == null) {
-            throw new IllegalArgumentException("The given Node cannot be null.");
-        }
+    void setCookie(final byte[] encryptedKey) {
+        final Series<CookieSetting> cookieSettingSeries = new Series<>(CookieSetting.class);
+        final CookieSetting cookieSetting = new CookieSetting(StorageConfiguration.FIRST_PARTY_COOKIE_NAME,
+                                                              new String(encryptedKey,
+                                                                         StandardCharsets.ISO_8859_1));
+        final Response response = getResponse();
 
-        final NodeProperty MD5Property = node.getProperty(VOS.PROPERTY_URI_CONTENTMD5);
-        final String serverMD5String = MD5Property == null
-                                       ? null
-                                       : MD5Property.getValue();
+        cookieSetting.setAccessRestricted(true);
+        cookieSetting.setSecure(true);
+        cookieSetting.setPath("/");
+        cookieSettingSeries.add(cookieSetting);
+        response.setCookieSettings(cookieSettingSeries);
+    }
 
-        if (!StringUtil.hasLength(serverMD5String)) {
-            throw new UploadVerificationFailedException("** ERROR YOUR UPLOAD DID NOT SUCCEED ** "
-                                                        + "MD5 checksum was not produced by "
-                                                        + "service!  This was not expected, please "
-                                                        + "contact canfarhelp@nrc-cnrc.gc.ca for "
-                                                        + "assistance.");
-        } else {
-            if (!URI.create("md5:" + HexUtil.toHex(calculatedMD5)).equals(URI.create(serverMD5String))) {
-                throw new UploadVerificationFailedException(
-                        "** ERROR ** - Upload did not succeed: "
-                        + "MD5 checksum failed.");
-            }
-        }
+    void redirectToCallback() throws IOException {
+        final Response response = getResponse();
+        response.setStatus(Status.REDIRECTION_FOUND);
+        response.setLocationRef(getOIDCClient().getCallbackURL().toExternalForm());
     }
 }
