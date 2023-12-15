@@ -19,25 +19,50 @@ running this UI.
 To configure the VOSpace implementation User Storage should use, the org.opencadc.vosui.properties file should 
 contain the following entries:
 
-`org.opencadc.vosui.service.name = <service_name>`
+```properties
+# Properties required for interacting with a VOSpace web service
+# Default vospace service to display and query
+org.opencadc.vosui.service.default = <service_name>
 
-`# The resource id of the VOSpace web service to use`
-`org.opencadc.vosui.<service_name>.service.resourceid = <URI that identifies the VOSPace web service>`
+# For each backend service available (used in a pulldown on the page)
+org.opencadc.vosui.service.name = <service_name>
 
-`# Base URI to use as node identifier`
-`org.opencadc.vosui.<service_name>.node.resourceid = <URI that is the base of node identifiers>`
+# The resource id of the VOSpace web service to use
+org.opencadc.vosui.<service_name>.service.resourceid = <URI that identifies the VOSPace web service>
 
-`# Base home directory for authenticated users`
-`org.opencadc.vosui.<service_name>.user.home = <relative path, starting with '/'>`
+# Base URI to use as node identifier
+org.opencadc.vosui.<service_name>.node.resourceid = <URI that is the base of node identifiers>
 
-Note: replace <service_name> with the name of the VOSpace implementation in all cases, ie `vault` or `cavern`.
+# Base home directory for authenticated users
+org.opencadc.vosui.<service_name>.user.home = <relative path, starting with '/'>
 
-### File service implementation 
-To configure the File service org.opencadc.vosui.properties should contain the following entry:
+# Features for this service.
+# batchDownload: true/false - Whether the batch downloadManager service is available for batch downloads.
+# batchUpload: true/false - Whether the batch downloadManager service is available for batch downloads.
+# externalLinks: false - Whether this service supports creating hyperlinks (external to the system), such as http(s) links or ftp links.  File systems do not support this.
+# paging: false - Whether this VOSpace service supports the limit=<int> and startURI=<uri> features.
+org.opencadc.vosui.<service_name>.service.features.batchDownload = <true / false>
+org.opencadc.vosui.<service_name>.service.features.batchUpload = <true / false>
+org.opencadc.vosui.<service_name>.service.features.externalLinks = <true / false>
+org.opencadc.vosui.<service_name>.service.features.paging = <true / false>
 
-`# Files service for returning content`
-`org.opencadc.vospace.files_meta_service_id = <URI resource ID of Files service>`
+# Note: replace <service_name> with the name of the VOSpace implementation in all cases, ie `vault` or `cavern`.
+# END: For each backend service available (used in a pulldown on the page)
 
+org.opencadc.vosui.gms.service_id = ivo://cadc.nrc.ca/gms
+org.opencadc.vosui.theme.name = canfar
+
+# For OpenID Connect support.
+org.opencadc.vosui.oidc.clientID = <openid connect client id>
+org.opencadc.vosui.oidc.clientSecret = <openid connect client secret>
+org.opencadc.vosui.oidc.redirectURI = <uri to callback to AFTER successful login from the OpenID Connect Provider>
+org.opencadc.vosui.oidc.callbackURI = <uri to callback to AFTER successful login and AFTER the redirectURI>
+org.opencadc.vosui.oidc.scope = <space separated scopes to send to the OpenID Connect provider>
+
+# Token cache for storing tokens with OpenID Connect.  Specify URL here.
+org.opencadc.vosui.tokenCache.url = redis://localhost:6379
+# END: For OpenID Connect support.
+```
 
 ### Running
 
@@ -62,7 +87,9 @@ To produce a running embedded Tomcat container running on port `8080`, with a de
 
 Pass your own Registry settings into the `JAVA_OPTS` environment variable to use your own VOSpace service:
 
-`docker run --rm -d -p 8080:8080 -e CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry host>" tomcat:9-jdk11-openjdk-slim`
+```
+docker run --rm -d -p 8080:8080 -e CATALINA_OPTS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry host>" tomcat:9-jdk11-openjdk-slim
+```
 
 To specify the Service ID (often called Resource ID) of your services.  The User Storage Interface relies on two services:
 
@@ -81,10 +108,9 @@ Then, in your browser, look at <a href="http://localhost:8080/storage/list">http
 
 #### Running with Docker
 
-See the [Docker repository](https://hub.docker.com/r/opencadc/storage/)
+See the [OpenCADC Docker repository](https://images.opencadc.org/harbor/projects/7/repositories/storage-ui)
 
-It uses the lightweight Tomcat 9.0 java container that was built using Debian slim Linux found here:
-[https://hub.docker.com/_/tomcat/](https://hub.docker.com/_/tomcat/)
+It extends the [OpenCADC Tomcat container](https://github.com/opencadc/docker-base/tree/master/cadc-tomcat)
 
 ##### Running with Docker for your environment
 
@@ -98,16 +124,10 @@ FROM tomcat:9-jdk11-openjdk-slim
 ENV JAVA_OPTS "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5555 -Djava.security.egd=file:/dev/./urandom -Djsse.enableSNIExtension=false -Dca.nrc.cadc.reg.client.RegistryClient.host=<your host for IVOA Registry lookup>"
 ```
 
-Then build it:
+Then package it:
 
 `docker build -t user_storage_ui .`
 
 Then run it:
 
 `docker run --name storage -d -p 8080:8080 -p 5555:5555 user_storage_ui`
-
-Or mount your own built `war`:
-
-`docker run --name storage -d -p 8080:8080 -p 5555:5555 -v $(pwd)/build/libs:/usr/local/tomcat/webapps user_storage_ui`
-
-Then, in your browser, [look at http://localhost:8080/storage/list](http://localhost:8080/storage/list).

@@ -138,10 +138,6 @@ public class StorageConfiguration {
         return lookup(StorageConfigurationKey.THEME_NAME, "canfar");
     }
 
-    public String getLogoURL() {
-        return lookup(StorageConfigurationKey.LOGO_URL);
-    }
-
     public String getOIDCClientID() {
         return lookup(StorageConfigurationKey.OIDC_CLIENT_ID);
     }
@@ -237,7 +233,6 @@ public class StorageConfiguration {
         DEFAULT_SERVICE_NAME("org.opencadc.vosui.service.default", true),
         SERVICE_NAME("org.opencadc.vosui.service.name", true),
         GMS_SERVICE_URI("org.opencadc.vosui.gms.service_id", true),
-        LOGO_URL("org.opencadc.vosui.logo.url", true),
         THEME_NAME("org.opencadc.vosui.theme.name", false),
         TOKEN_CACHE_URL("org.opencadc.vosui.tokenCache.url", false),
         OIDC_CLIENT_ID("org.opencadc.vosui.oidc.clientID", false),

@@ -61,8 +61,7 @@ directory for that user actually exists -->
 <!-- jQuery needs to be loaded before the application header.  I don't know why.
 jenkinsd 2017.04.04
 -->
-<script type="application/javascript"
-        src="${contextPath}js/jquery.min.js"></script>
+<script type="application/javascript" src="${contextPath}js/jquery.min.js"></script>
 
 <#include "/canfar/includes/_application_header.shtml">
 

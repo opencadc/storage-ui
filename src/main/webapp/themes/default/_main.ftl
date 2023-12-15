@@ -34,7 +34,7 @@
                 <li class="dropdown divider-vertical">
                   <a title="Select VOSpace Service" class="dropdown-toggle" role="button" id="svcdropdown" name="svcdropdown"
                      aria-expanded="false" data-toggle="dropdown">
-                    <span class="glyphicon glyphicon-hdd" /> ${vospaceSvcName} <span class="caret" /></a>
+                    <span class="glyphicon glyphicon-hdd"></span> ${vospaceSvcName} <span class="caret"></span></a>
                   <ul class="dropdown-menu">
                       <#list vospaceServices as vospaceSvc>
                         <li>

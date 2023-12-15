@@ -207,7 +207,6 @@ public class MainPageServerResource extends StorageItemServerResource {
         }
 
         final StorageConfiguration storageConfiguration = getStorageConfiguration();
-        dataModel.put("logoURL", storageConfiguration.getLogoURL());
 
         final Map<String, Boolean> featureMap = new HashMap<>();
         featureMap.put("batchDownload", currentService.supportsBatchDownloads());

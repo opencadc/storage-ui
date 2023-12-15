@@ -129,7 +129,6 @@ public class VOSpaceStatusService extends StatusService {
             // in case this is a permissions issue
             dataModel.put("requestedFolder", requestedResource);
             dataModel.put("vospaceSvcPath", currentService.getName() + "/");
-            dataModel.put("logoURL", storageConfiguration.getLogoURL());
 
             return new TemplateRepresentation(String.format("themes/%s/error.ftl", storageConfiguration.getThemeName()),
                                               (FreeMarkerConfiguration) curContext.getAttributes()
