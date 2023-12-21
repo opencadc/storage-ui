@@ -94,6 +94,7 @@ import javax.servlet.ServletContext;
 import java.io.*;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.*;
 import java.util.HashMap;
 import java.util.List;
@@ -175,9 +176,9 @@ public class StorageItemServerResource extends SecureServerResource {
     Path getCurrentPath()  {
         if (getRequestAttributes().containsKey("path")) {
             final String pathInRequest = getRequestAttribute("path");
-            return Path.of(pathInRequest);
+            return Paths.get(pathInRequest);
         } else {
-            return Path.of("");
+            return Paths.get("");
         }
     }
 
@@ -348,7 +349,7 @@ public class StorageItemServerResource extends SecureServerResource {
         } else {
             try {
                 final VOSURI vosURI = new VOSURI(targetURI);
-                final Node targetNode = getNode(Path.of(vosURI.getPath()), null);
+                final Node targetNode = getNode(Paths.get(vosURI.getPath()), null);
 
                 if (targetNode == null) {
                     throw new NodeNotFoundException("No target found or broken link for node: " + linkNode.getName());

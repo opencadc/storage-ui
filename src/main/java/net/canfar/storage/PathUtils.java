@@ -74,6 +74,7 @@ import org.opencadc.vospace.server.Utils;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 public class PathUtils {
@@ -96,9 +97,9 @@ public class PathUtils {
     public static Path toPath(final Node node) {
         final String[] pathElements = Utils.getPath(node).split("/");
         if (pathElements.length > 1) {
-            return Path.of(File.separator + pathElements[0], Arrays.copyOfRange(pathElements, 1, pathElements.length));
+            return Paths.get(File.separator + pathElements[0], Arrays.copyOfRange(pathElements, 1, pathElements.length));
         } else {
-            return Path.of(File.separator + pathElements[0]);
+            return Paths.get(File.separator + pathElements[0]);
         }
     }
 }

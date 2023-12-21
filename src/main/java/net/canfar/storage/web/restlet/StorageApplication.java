@@ -68,6 +68,8 @@
 
 package net.canfar.storage.web.restlet;
 
+import freemarker.cache.URLTemplateLoader;
+import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.resources.*;
 import net.canfar.storage.web.view.FreeMarkerConfiguration;
 
@@ -78,6 +80,8 @@ import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
 
 import javax.servlet.ServletContext;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -234,6 +238,24 @@ public class StorageApplication extends Application {
     public FreeMarkerConfiguration createFreemarkerConfig() {
         final FreeMarkerConfiguration freeMarkerConfiguration = new FreeMarkerConfiguration();
         freeMarkerConfiguration.addDefault(getServletContext());
+
+        final StorageConfiguration storageConfiguration = new StorageConfiguration();
+        if (storageConfiguration.getThemeName().equalsIgnoreCase("canfar")) {
+            final Map<String, URL> uriTemplateLoader = new HashMap<>();
+            try {
+                uriTemplateLoader.put("themes/canfar/canfar-application-header",
+                                      new URL("https://www.canfar.net/canfar/includes/_application_header.shtml"));
+            } catch (MalformedURLException urlException) {
+                // Should NEVER happen.
+                throw new IllegalStateException(urlException.getMessage(), urlException);
+            }
+            freeMarkerConfiguration.addTemplateLoader(new URLTemplateLoader() {
+                @Override
+                protected URL getURL(String name) {
+                    return uriTemplateLoader.get(name);
+                }
+            });
+        }
 
         return freeMarkerConfiguration;
     }

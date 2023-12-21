@@ -120,6 +120,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -259,7 +260,7 @@ public class FileItemServerResource extends StorageItemServerResource {
 
         if (fileValidator.validateFileName(filename)) {
             final DataNode dataNode = new DataNode(filename);
-            PathUtils.augmentParents(Path.of(getCurrentPath().toString(), filename), dataNode);
+            PathUtils.augmentParents(Paths.get(getCurrentPath().toString(), filename), dataNode);
 
             // WebRT 19564: Add content type to the response of uploaded items.
             final Set<NodeProperty> properties = new HashSet<>();
@@ -298,7 +299,7 @@ public class FileItemServerResource extends StorageItemServerResource {
             // rather than looking for a NodeNotFoundException as expected, and
             // return the 409 code, while maintaining backward compatibility with the catch below.
             // jenkinsd 2016.07.25
-            getNode(Path.of(Utils.getPath(dataNode)), null);
+            getNode(Paths.get(Utils.getPath(dataNode)), null);
         } catch (ResourceException e) {
             final Throwable cause = e.getCause();
             if (cause instanceof IllegalStateException) {
@@ -371,7 +372,7 @@ public class FileItemServerResource extends StorageItemServerResource {
         // Check uws job status
         VOSClientUtil.checkTransferFailure(ct);
 
-        final Node uploadedNode = getNode(Path.of(dataNodeVOSURI.getPath()), VOS.Detail.properties);
+        final Node uploadedNode = getNode(Paths.get(dataNodeVOSURI.getPath()), VOS.Detail.properties);
         uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(), uploadedNode);
         uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(), uploadedNode);
 

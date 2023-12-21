@@ -77,6 +77,7 @@ import org.restlet.engine.header.StringWriter;
 import java.io.Writer;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Calendar;
 
 import org.junit.Test;
@@ -103,7 +104,7 @@ public class StorageItemCSVWriterTest extends AbstractUnitTest<StorageItemCSVWri
                 new FolderItem(new VOSURI(URI.create("vos://ca.nrc.cadc!vault/ME/NODE_DIR/node1")), (long) (18.86D * 1024L * 1024L),
                                lastModifiedCalendar.getTime(), false, false, null, readGroupURIs,
                                "test_owner", true, true, 0,
-                               Path.of("/list/ME/NODE_DIR"));
+                               Paths.get("/list/ME/NODE_DIR"));
 
         testSubject.write(mockFolderItem);
 

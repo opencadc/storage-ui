@@ -81,6 +81,7 @@ import net.canfar.storage.web.StorageItemFactory;
 import javax.security.auth.Subject;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.PrivilegedExceptionAction;
 import java.util.HashMap;
 import java.util.List;
@@ -144,7 +145,7 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implemen
         } else {
             while (page.hasNext()) {
                 final Node n = page.next();
-                PathUtils.augmentParents(Path.of(folderURI.getPath(), n.getName()), n);
+                PathUtils.augmentParents(Paths.get(folderURI.getPath(), n.getName()), n);
                 this.storageItemWriter.write(storageItemFactory.translate(n));
                 this.current = this.serviceConfig.toURI(n);
             }

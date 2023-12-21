@@ -84,6 +84,7 @@ import org.junit.Assert;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -94,7 +95,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
     public void translate() {
         final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
         final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
-        PathUtils.augmentParents(Path.of(testDataNodeURI.getPath()), testDataNode);
+        PathUtils.augmentParents(Paths.get(testDataNodeURI.getPath()), testDataNode);
 
         final String contextPath = "/warehouse";
         final Set<GroupURI> writeGroupURIs =
@@ -134,7 +135,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
     public void translateTargetFallback() {
         final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
         final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
-        PathUtils.augmentParents(Path.of(testDataNodeURI.getPath()), testDataNode);
+        PathUtils.augmentParents(Paths.get(testDataNodeURI.getPath()), testDataNode);
 
         final String contextPath = "/warehouse";
         final Set<GroupURI> writeGroupURIs =
@@ -174,7 +175,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
     public void translateNoGroups() {
         final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
         final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
-        PathUtils.augmentParents(Path.of(testDataNodeURI.getPath()), testDataNode);
+        PathUtils.augmentParents(Paths.get(testDataNodeURI.getPath()), testDataNode);
 
         final String contextPath = "/warehouse";
 

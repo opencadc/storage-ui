@@ -90,6 +90,7 @@ import org.restlet.resource.ResourceException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 
@@ -130,7 +131,7 @@ public class MainPageServerResource extends StorageItemServerResource {
             startNextPageURI = null;
         }
 
-        final Iterator<String> initialRows = new Iterator<>() {
+        final Iterator<String> initialRows = new Iterator<String>() {
             @Override
             public boolean hasNext() {
                 return childNodeIterator.hasNext();
@@ -143,7 +144,7 @@ public class MainPageServerResource extends StorageItemServerResource {
 
                 try {
                     final Node nextChild = childNodeIterator.next();
-                    PathUtils.augmentParents(Path.of(parentPath.toString(), nextChild.getName()), nextChild);
+                    PathUtils.augmentParents(Paths.get(parentPath.toString(), nextChild.getName()), nextChild);
 
                     storageItemWriter.write(storageItemFactory.translate(nextChild));
                 } catch (Exception e) {
@@ -197,7 +198,7 @@ public class MainPageServerResource extends StorageItemServerResource {
                 // Check to see if home directory exists
                 final String userHomeBase = this.currentService.homeDir;
                 if (StringUtil.hasLength(userHomeBase)) {
-                    final Path userHomePath = Path.of(userHomeBase, httpUsername);
+                    final Path userHomePath = Paths.get(userHomeBase, httpUsername);
                     getNode(userHomePath, null, 0);
                     dataModel.put("homeDir", userHomePath.toString());
                 }
@@ -205,8 +206,6 @@ public class MainPageServerResource extends StorageItemServerResource {
                 // Ignore this as there is no 'home' VOSpace defined in org.opencadc.vosui.properties
             }
         }
-
-        final StorageConfiguration storageConfiguration = getStorageConfiguration();
 
         final Map<String, Boolean> featureMap = new HashMap<>();
         featureMap.put("batchDownload", currentService.supportsBatchDownloads());
@@ -216,7 +215,7 @@ public class MainPageServerResource extends StorageItemServerResource {
 
         dataModel.put("features", featureMap);
 
-        return new TemplateRepresentation(String.format("themes/%s/index.ftl", storageConfiguration.getThemeName()),
+        return new TemplateRepresentation(String.format("themes/%s/index.ftl", getStorageConfiguration().getThemeName()),
                                           getFreeMarkerConfiguration(), dataModel, MediaType.TEXT_HTML);
     }
 }

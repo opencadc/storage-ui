@@ -80,6 +80,7 @@ import net.canfar.storage.web.view.*;
 import javax.security.auth.Subject;
 import java.net.URI;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Principal;
 import java.text.ParseException;
 import java.util.Date;
@@ -115,7 +116,7 @@ public class StorageItemFactory {
     private Path getTarget(final Node node) {
         final String endpoint = StorageItemFactory.NODE_TYPE_ENDPOINT_MAPPING.get(node.getClass().getName());
         final String path = PathUtils.toPath(node).toString();
-        return Path.of(contextPath, serviceConfig.getName(), endpoint, path);
+        return Paths.get(contextPath, serviceConfig.getName(), endpoint, path);
     }
 
     /**
@@ -154,8 +155,8 @@ public class StorageItemFactory {
         final boolean publicFlag = node.isPublic != null && node.isPublic;
         final boolean lockedFlag = node.isLocked != null && node.isLocked;
 
-        final GroupURI[] writeGroupURIs = node.getReadWriteGroup().toArray(GroupURI[]::new);
-        final GroupURI[] readGroupURIs = node.getReadOnlyGroup().toArray(GroupURI[]::new);
+        final GroupURI[] writeGroupURIs = node.getReadWriteGroup().toArray(new GroupURI[0]);
+        final GroupURI[] readGroupURIs = node.getReadOnlyGroup().toArray(new GroupURI[0]);
         final String readableFlagValue = node.getPropertyValue(VOS.PROPERTY_URI_READABLE);
 
         // Default to readable if the flag is missing.  Any interaction will then be left up to the backend API.
