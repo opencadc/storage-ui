@@ -1,24 +1,22 @@
 package net.canfar.storage.web.view;
 
 import org.opencadc.gms.GroupURI;
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.VOSURI;
 
-import java.net.URI;
+import java.nio.file.Path;
 import java.util.Date;
 
 
 /**
  * Representation of a Link in VOSpace.
  */
-public class LinkItem extends StorageItem
-{
+public class LinkItem extends StorageItem {
     public LinkItem(VOSURI uri, long sizeInBytes, Date lastModified,
                     boolean publicFlag, boolean lockedFlag,
                     GroupURI[] writeGroupURIs, GroupURI[] readGroupURIs,
-                    String owner, boolean readableFlag, boolean writableFlag, String targetURL)
-    {
+                    String owner, boolean readableFlag, boolean writableFlag, Path targetPath) {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-                writeGroupURIs, readGroupURIs, owner, readableFlag, writableFlag, targetURL);
+              writeGroupURIs, readGroupURIs, owner, readableFlag, writableFlag, targetPath);
     }
 
 
@@ -29,11 +27,11 @@ public class LinkItem extends StorageItem
 
     /**
      * Links have no size.
-     * @return      String '--'.
+     *
+     * @return String '--'.
      */
     @Override
-    public String getSizeHumanReadable()
-    {
+    public String getSizeHumanReadable() {
         return NO_SIZE_DISPLAY;
     }
 }

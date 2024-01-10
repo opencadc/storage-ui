@@ -84,8 +84,7 @@ import java.util.Set;
  * Principal Extractor implementation using a Restlet Request.
  * * Created by hjeeves on 2017-01-11.
  */
-public class RestletPrincipalExtractor implements PrincipalExtractor
-{
+public class RestletPrincipalExtractor implements PrincipalExtractor {
     private static final Logger log =
             Logger.getLogger(RestletPrincipalExtractor.class);
 
@@ -95,55 +94,35 @@ public class RestletPrincipalExtractor implements PrincipalExtractor
     private SSOCookieCredential cookieCredential;
 
     /**
-     * Hidden no-arg constructor for testing.
-     */
-    RestletPrincipalExtractor()
-    {
-        this.request = null;
-    }
-
-    /**
      * Create this extractor from the given Restlet Request.
      *
      * @param req The Restlet Request.
      */
-    public RestletPrincipalExtractor(final Request req)
-    {
+    public RestletPrincipalExtractor(final Request req) {
         this.request = req;
     }
 
-    private void init()
-    {
-        if (!initialized)
-        {
+    private void init() {
+        if (!initialized) {
             final Series<Cookie> requestCookies = getRequest().getCookies();
             final Series<Cookie> cookies = new Series<>(Cookie.class);
 
-            if (requestCookies != null)
-            {
+            if (requestCookies != null) {
                 cookies.addAll(requestCookies);
             }
 
-            for (final Cookie ssoCookie : cookies)
-            {
+            for (final Cookie ssoCookie : cookies) {
                 if (SSOCookieManager.DEFAULT_SSO_COOKIE_NAME.equals(
                         ssoCookie.getName())
-                    && StringUtil.hasText(ssoCookie.getValue()))
-                {
-                    final SSOCookieManager ssoCookieManager =
-                            new SSOCookieManager();
-
-                    try
-                    {
+                    && StringUtil.hasText(ssoCookie.getValue())) {
+                    try {
                         cookieCredential = new
                                 SSOCookieCredential(ssoCookie.getValue(),
                                                     NetUtil.getDomainName(
                                                             getRequest()
                                                                     .getResourceRef()
                                                                     .toUrl()));
-                    }
-                    catch (IOException | InvalidSignedTokenException e)
-                    {
+                    } catch (IOException | InvalidSignedTokenException e) {
                         log.info("Cannot use SSO Cookie. Reason: "
                                  + e.getMessage());
                     }
@@ -156,14 +135,12 @@ public class RestletPrincipalExtractor implements PrincipalExtractor
     }
 
     @Override
-    public X509CertificateChain getCertificateChain()
-    {
+    public X509CertificateChain getCertificateChain() {
         return null;
     }
 
     @Override
-    public Set<Principal> getPrincipals()
-    {
+    public Set<Principal> getPrincipals() {
         init();
 
         final Set<Principal> principals = new HashSet<>();
@@ -174,19 +151,16 @@ public class RestletPrincipalExtractor implements PrincipalExtractor
         return principals;
     }
 
-    private void addCookiePrincipal(final Set<Principal> principals)
-    {
+    private void addCookiePrincipal(final Set<Principal> principals) {
         init();
 
-        if (cookieCredential != null)
-        {
+        if (cookieCredential != null) {
             principals.add(new CookiePrincipal(SSOCookieManager.DEFAULT_SSO_COOKIE_NAME,
-                cookieCredential.getSsoCookieValue()));
+                                               cookieCredential.getSsoCookieValue()));
         }
     }
 
-    public Request getRequest()
-    {
+    public Request getRequest() {
         return request;
     }
 }

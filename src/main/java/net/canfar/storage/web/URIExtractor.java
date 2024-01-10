@@ -78,13 +78,14 @@ import java.util.List;
 
 
 public class URIExtractor {
-    public GroupURI[] extract(final String groupPropertyValue) {
+    public static GroupURI[] extract(final String groupPropertyValue) {
         final List<GroupURI> uris = new ArrayList<>();
-        Arrays.stream(extractAsStrings(groupPropertyValue)).map(s -> new GroupURI(URI.create(s))).forEach(uris::add);
+        Arrays.stream(URIExtractor.extractAsStrings(groupPropertyValue))
+              .map(s -> new GroupURI(URI.create(s))).forEach(uris::add);
         return uris.toArray(new GroupURI[0]);
     }
 
-    public String[] extractAsStrings(final String groupPropertyValue) {
+    public static String[] extractAsStrings(final String groupPropertyValue) {
         return StringUtil.hasLength(groupPropertyValue) ? groupPropertyValue.split(" ") : new String[0];
     }
 }

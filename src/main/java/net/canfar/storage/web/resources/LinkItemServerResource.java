@@ -68,7 +68,11 @@
 
 package net.canfar.storage.web.resources;
 
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import net.canfar.storage.web.StorageItemFactory;
+import net.canfar.storage.web.config.StorageConfiguration;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import org.opencadc.vospace.client.VOSpaceClient;
 import org.json.JSONObject;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
@@ -78,28 +82,28 @@ import org.restlet.resource.Put;
 import java.net.URI;
 
 
-public class LinkItemServerResource extends StorageItemServerResource
-{
+public class LinkItemServerResource extends StorageItemServerResource {
+
     /**
-     * Empty constructor needed for Restlet to manage it.
+     * Needed to be supported by Restlet.
      */
-    public LinkItemServerResource()
-    {
+    public LinkItemServerResource() {
     }
 
-    LinkItemServerResource(final VOSpaceClient voSpaceClient)
-    {
-        super(voSpaceClient);
+    LinkItemServerResource(StorageConfiguration storageConfiguration,
+                           VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+                           StorageItemFactory storageItemFactory, VOSpaceClient voSpaceClient,
+                           VOSpaceServiceConfig serviceConfig) {
+        super(storageConfiguration, voSpaceServiceConfigManager, storageItemFactory, voSpaceClient, serviceConfig);
     }
 
     /**
      * Resolve the current link, and redirect to the endpoint.
      *
-     * @throws Exception        Bubble errors to the top.
+     * @throws Exception Bubble errors to the top.
      */
     @Get
-    public void resolve() throws Exception
-    {
+    public void resolve() throws Exception {
         resolveLink();
     }
 
@@ -107,13 +111,12 @@ public class LinkItemServerResource extends StorageItemServerResource
      * Create a link node at this location.  The current path is the name of
      * the link to create.
      *
-     * @param payload       The JSON payload in the form of:
-     *                      <code>{"link_name": name, "link_url": url}</code>
-     * @throws Exception    To bubble up any errors.
+     * @param payload The JSON payload in the form of:
+     *                <code>{"link_name": name, "link_url": url}</code>
+     * @throws Exception To bubble up any errors.
      */
     @Put("json")
-    public void create(final JsonRepresentation payload) throws Exception
-    {
+    public void create(final JsonRepresentation payload) throws Exception {
         final JSONObject jsonObject = payload.getJsonObject();
 
         createLink(URI.create(jsonObject.getString("link_url")));

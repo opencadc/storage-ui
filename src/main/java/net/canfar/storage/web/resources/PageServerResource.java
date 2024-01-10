@@ -68,8 +68,9 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.VOSURI;
 import net.canfar.storage.CSVStorageItemProducer;
 import net.canfar.storage.StorageItemCSVWriter;
 
@@ -77,6 +78,7 @@ import org.restlet.data.MediaType;
 import org.restlet.representation.Representation;
 import org.restlet.representation.WriterRepresentation;
 import org.restlet.resource.Get;
+import org.restlet.resource.ResourceException;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
@@ -84,37 +86,56 @@ import java.io.Writer;
 import java.net.URI;
 
 
-public class PageServerResource extends StorageItemServerResource
-{
+public class PageServerResource extends StorageItemServerResource {
     @Get
-    public Representation represent() throws Exception
-    {
+    public Representation represent() throws Exception {
         final String startURIParameterValue = getQueryValue("startURI");
         final String pageSizeParameterValue = getQueryValue("pageSize");
         final VOSURI startURI = StringUtil.hasLength(startURIParameterValue)
                                 ? new VOSURI(URI.create(startURIParameterValue))
                                 : null;
-        final int pageSize = StringUtil.hasLength(pageSizeParameterValue)
-                             ? Integer.parseInt(pageSizeParameterValue) : 1000;
-        final Subject currentSubject = generateVOSpaceUser();
+        final Integer pageSize = StringUtil.hasLength(pageSizeParameterValue) ? Integer.parseInt(pageSizeParameterValue)
+                                                                              : null;
+        final Subject currentSubject = getCurrentSubject();
 
-        return new WriterRepresentation(MediaType.TEXT_CSV)
-        {
+        return new WriterRepresentation(MediaType.TEXT_CSV) {
             @Override
-            public void write(final Writer writer) throws IOException
-            {
+            public void write(final Writer writer) {
                 final CSVStorageItemProducer csvNodeProducer =
                         new CSVStorageItemProducer(pageSize, getCurrentItemURI(), startURI,
                                                    new StorageItemCSVWriter(writer), currentSubject, storageItemFactory,
-                                                   voSpaceClient);
+                                                   currentService, voSpaceClient);
 
-                try
-                {
+                try {
                     csvNodeProducer.writePage();
-                }
-                catch (Exception e)
-                {
-                    throw new IOException(e);
+                } catch (IllegalArgumentException e) {
+                    // Very specific hack to try again without the (possibly) unsupported limit parameter.
+                    if (pageSize != null
+                        && e.getMessage().startsWith("OptionNotSupported")) {
+                        final CSVStorageItemProducer pagelessProducer =
+                                new CSVStorageItemProducer(null, getCurrentItemURI(), startURI,
+                                                           new StorageItemCSVWriter(writer), currentSubject,
+                                                           storageItemFactory, currentService, voSpaceClient);
+                        try {
+                            pagelessProducer.writePage();
+                        } catch (Exception innerException) {
+                            throw new ResourceException(innerException);
+                        }
+                    } else {
+                        throw new ResourceException(e);
+                    }
+                } catch (RuntimeException runtimeException) {
+                    // Working around a bug where the RegistryClient improperly handles an unauthenticated request.
+                    if (runtimeException.getCause() != null
+                        && (runtimeException.getCause() instanceof IOException)
+                        && runtimeException.getCause().getCause() != null
+                        && (runtimeException.getCause().getCause() instanceof NotAuthenticatedException)) {
+                        throw new ResourceException(runtimeException.getCause().getCause());
+                    } else {
+                        throw runtimeException;
+                    }
+                } catch (Exception e) {
+                    throw new ResourceException(e);
                 }
             }
         };

@@ -93,6 +93,8 @@ public class FreeMarkerConfiguration extends Configuration {
         try {
             final String servletPath = servletContext.getContextPath();
 
+            // Ensure the contextPath ends with a slash for backward compatible expectations of the
+            // FreeMarker files when they append a path to it.
             setSharedVariable("contextPath", servletPath + (servletPath.endsWith("/") ? "" : "/"));
             addTemplateLoader(new WebappTemplateLoader(servletContext));
         } catch (TemplateModelException e) {

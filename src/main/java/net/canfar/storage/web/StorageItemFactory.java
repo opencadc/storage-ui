@@ -68,97 +68,55 @@
 
 package net.canfar.storage.web;
 
+import net.canfar.storage.PathUtils;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
 import org.opencadc.gms.GroupURI;
-import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.date.DateUtil;
-import ca.nrc.cadc.net.NetUtil;
-import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.*;
+import org.opencadc.vospace.*;
 import net.canfar.storage.web.view.*;
 
 import javax.security.auth.Subject;
 import java.net.URI;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Principal;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
+import org.opencadc.vospace.server.Utils;
 
 
 public class StorageItemFactory {
     private static final Logger log = Logger.getLogger(StorageItemFactory.class);
 
-    private final URIExtractor uriExtractor;
-    private final RegistryClient registryClient;
     private final String contextPath;
-    private final URI filesMetaServiceID;
-    private final URI filesMetaServiceStandardID;
-    private final String vospaceServiceName;
+    private final VOSpaceServiceConfig serviceConfig;
+
+    private static final Map<String, String> NODE_TYPE_ENDPOINT_MAPPING = new HashMap<>();
+
+    static {
+        StorageItemFactory.NODE_TYPE_ENDPOINT_MAPPING.put(LinkNode.class.getName(), "link");
+        StorageItemFactory.NODE_TYPE_ENDPOINT_MAPPING.put(DataNode.class.getName(), "file");
+        StorageItemFactory.NODE_TYPE_ENDPOINT_MAPPING.put(ContainerNode.class.getName(), "list");
+    }
 
 
-    public StorageItemFactory(final URIExtractor uriExtractor, final RegistryClient registryClient,
-                              final String contextPath, final URI filesMetaServiceID,
-                              final URI filesMetaServiceStandardID,
-                              final String vospaceServiceName) {
-        this.uriExtractor = uriExtractor;
-        this.registryClient = registryClient;
+    public StorageItemFactory(final String contextPath, final VOSpaceServiceConfig serviceConfig) {
         this.contextPath = contextPath;
-        this.filesMetaServiceID = filesMetaServiceID;
-        this.filesMetaServiceStandardID = filesMetaServiceStandardID;
-        this.vospaceServiceName = vospaceServiceName;
+        this.serviceConfig = serviceConfig;
     }
 
-    private String getTarget(final DataNode dataNode) {
-        // This is used for the /files endpoint, for viewing files in the browser
-        // (Downloading is a different mechanism)
-        final VOSURI dataNodeURI = dataNode.getUri();
-
-        return String.format("%s/%s%s", lookupMetaServiceURLString(dataNodeURI), this.vospaceServiceName,
-                             dataNodeURI.getPath());
-    }
-
-    private String lookupMetaServiceURLString(final VOSURI nodeURI) {
-
-        try {
-            return registryClient.getServiceURL(filesMetaServiceID, filesMetaServiceStandardID,
-                                                AuthMethod.COOKIE).toExternalForm();
-        } catch (IllegalArgumentException iae) {
-            // Revert back to old Service URL if the new meta service is not supported.
-            //
-            final String query = "?target=" + NetUtil.encode(nodeURI.toString())
-                + "&direction=" + Direction.pullFromVoSpaceValue
-                + "&protocol=" + NetUtil.encode(VOS.PROTOCOL_HTTP_GET);
-
-            return (registryClient.getServiceURL(nodeURI.getServiceURI(), Standards.VOSPACE_SYNC_21,
-                                                 AuthMethod.ANON).toExternalForm() + query);
-        }
-    }
-
-    private String getTarget(final ContainerNode containerNode) {
-        final String target;
-        if (StringUtil.hasLength(this.vospaceServiceName)) {
-            target = contextPath + (contextPath.endsWith("/") ? "" : "/") + this.vospaceServiceName + "/list"
-                + containerNode.getUri().getPath();
-        } else {
-            target = contextPath + (contextPath.endsWith("/") ? "" : "/") + "list" + containerNode.getUri().getPath();
-        }
-        return target;
-    }
-
-    private String getTarget(final LinkNode linkNode) {
-        final String target;
-        if (StringUtil.hasLength(this.vospaceServiceName)) {
-            target = contextPath + (contextPath.endsWith("/") ? "" : "/") + this.vospaceServiceName + "/link"
-                + linkNode.getUri().getPath();
-        } else {
-            target = contextPath + (contextPath.endsWith("/") ? "" : "/") + "link" + linkNode.getUri().getPath();
-        }
-        return target;
+    private Path getTarget(final Node node) {
+        final String endpoint = StorageItemFactory.NODE_TYPE_ENDPOINT_MAPPING.get(node.getClass().getName());
+        final String path = PathUtils.toPath(node).toString();
+        return Paths.get(contextPath, serviceConfig.getName(), endpoint, path);
     }
 
     /**
@@ -191,53 +149,44 @@ public class StorageItemFactory {
      */
     public StorageItem translate(final Node node) {
         final StorageItem nextItem;
-        final VOSURI nodeURI = node.getUri();
-        final boolean isRoot = nodeURI.isRoot();
+        final boolean isRoot = Utils.isRoot(Utils.getPath(node));
         final Date lastModifiedDate = isRoot ? null : parseDate(node);
 
-        final boolean publicFlag = Boolean.parseBoolean(node.getPropertyValue(VOS.PROPERTY_URI_ISPUBLIC));
-        final String lockedFlagValue = node.getPropertyValue(VOS.PROPERTY_URI_ISLOCKED);
-        final boolean lockedFlag = StringUtil.hasText(lockedFlagValue) && Boolean.parseBoolean(lockedFlagValue);
+        final boolean publicFlag = node.isPublic != null && node.isPublic;
+        final boolean lockedFlag = node.isLocked != null && node.isLocked;
 
-        final String writeGroupValues = node.getPropertyValue(VOS.PROPERTY_URI_GROUPWRITE);
-        GroupURI[] writeGroupURIs = null;
-        try {
-            writeGroupURIs = uriExtractor.extract(writeGroupValues);
-        } catch (Exception iae) {
-            log.warn("Unable to extract group, skipping...: " + writeGroupValues, iae);
-        }
-
-        final String readGroupValues = node.getPropertyValue(VOS.PROPERTY_URI_GROUPREAD);
-        GroupURI[] readGroupURIs = null;
-        try {
-            readGroupURIs = uriExtractor.extract(readGroupValues);
-        } catch (Exception iae) {
-            log.warn("Unable to extract group, skipping...: " + readGroupValues, iae);
-        }
-
+        final GroupURI[] writeGroupURIs = node.getReadWriteGroup().toArray(new GroupURI[0]);
+        final GroupURI[] readGroupURIs = node.getReadOnlyGroup().toArray(new GroupURI[0]);
         final String readableFlagValue = node.getPropertyValue(VOS.PROPERTY_URI_READABLE);
-        final boolean readableFlag = StringUtil.hasLength(readableFlagValue) && Boolean.parseBoolean(readableFlagValue);
+
+        // Default to readable if the flag is missing.  Any interaction will then be left up to the backend API.
+        final boolean readableFlag = !StringUtil.hasLength(readableFlagValue)
+                                     || (StringUtil.hasLength(readableFlagValue)
+                                         && Boolean.parseBoolean(readableFlagValue));
 
         final Subject currentAuthenticatedUser = AuthenticationUtil.getCurrentSubject();
         final Set<Principal> principals = (currentAuthenticatedUser == null)
-            ? new HashSet<>() : currentAuthenticatedUser.getPrincipals();
+                                          ? new HashSet<>() : currentAuthenticatedUser.getPrincipals();
         final boolean writableFlag;
-        final VOSURI parentURI = node.getUri().getParentURI();
+        final boolean parentIsRoot = node.parent == null || Utils.isRoot(Utils.getPath(node.parent));
 
-        if (((parentURI != null) && parentURI.isRoot()) && (!principals.isEmpty())) {
+        if (parentIsRoot && (!principals.isEmpty())) {
             writableFlag = true;
         } else {
             final String writableFlagValue = node.getPropertyValue(VOS.PROPERTY_URI_WRITABLE);
             writableFlag = StringUtil.hasLength(writableFlagValue) && Boolean.parseBoolean(writableFlagValue);
         }
 
-        final String owner = node.getPropertyValue(VOS.PROPERTY_URI_CREATOR);
+        final String owner = node.ownerDisplay;
 
-        final String totalChildCountValue = node.getPropertyValue("ivo://ivoa.net/vospace/core#childCount");
-        final int totalChildCount = StringUtil.hasLength(totalChildCountValue) ? Integer.parseInt(totalChildCountValue)
-            : -1;
+        final VOSURI nodeURI = serviceConfig.toURI(node);
 
         if (node instanceof ContainerNode) {
+            final String totalChildCountValue =
+                    node.getPropertyValue(URI.create("ivo://ivoa.net/vospace/core#childCount"));
+            final int totalChildCount = StringUtil.hasLength(totalChildCountValue)
+                                        ? Integer.parseInt(totalChildCountValue)
+                                        : -1;
             final ContainerNode containerNode = (ContainerNode) node;
             final String sizeInString = containerNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH);
             final long sizeInBytes = sizeInString == null ? -1L : Long.parseLong(sizeInString);
@@ -246,12 +195,12 @@ public class StorageItemFactory {
                                       getTarget(containerNode));
         } else if (node instanceof LinkNode) {
             nextItem = new LinkItem(nodeURI, -1L, lastModifiedDate, publicFlag, lockedFlag, writeGroupURIs,
-                                    readGroupURIs, owner, readableFlag, writableFlag, getTarget((LinkNode) node));
+                                    readGroupURIs, owner, readableFlag, writableFlag, getTarget(node));
         } else {
             final long sizeInBytes = Long.parseLong(node.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH));
 
             nextItem = new FileItem(nodeURI, sizeInBytes, lastModifiedDate, publicFlag, lockedFlag, writeGroupURIs,
-                                    readGroupURIs, owner, readableFlag, writableFlag, getTarget((DataNode) node));
+                                    readGroupURIs, owner, readableFlag, writableFlag, getTarget(node));
         }
 
         return nextItem;

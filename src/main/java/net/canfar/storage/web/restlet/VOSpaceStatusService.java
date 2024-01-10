@@ -73,13 +73,17 @@ import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.net.ResourceAlreadyExistsException;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.util.StringUtil;
-import ca.nrc.cadc.vos.*;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import org.opencadc.vospace.*;
+import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.view.FreeMarkerConfiguration;
 
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.MediaType;
+import org.restlet.data.Method;
 import org.restlet.data.Status;
 import org.restlet.ext.freemarker.TemplateRepresentation;
 import org.restlet.representation.Representation;
@@ -88,7 +92,7 @@ import org.restlet.resource.ResourceException;
 import org.restlet.service.StatusService;
 
 import java.io.FileNotFoundException;
-import java.security.AccessControlException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -97,10 +101,19 @@ import java.util.Map;
  * Translate Exceptions into HTTP Statuses.
  */
 public class VOSpaceStatusService extends StatusService {
+    private final StorageConfiguration storageConfiguration = new StorageConfiguration();
+    private final VOSpaceServiceConfigManager voSpaceServiceConfigManager =
+            new VOSpaceServiceConfigManager(storageConfiguration);
+    private final static int[] PLAIN_TEXT_STATUS_CODES = new int[] {
+            Status.CLIENT_ERROR_BAD_REQUEST.getCode(),
+            Status.CLIENT_ERROR_PRECONDITION_FAILED.getCode()
+    };
 
     @Override
     public Representation toRepresentation(final Status status, final Request request, final Response response) {
-        if (status.getCode() == Status.CLIENT_ERROR_BAD_REQUEST.getCode()) {
+        final VOSpaceServiceConfig currentService =
+                this.voSpaceServiceConfigManager.getServiceConfig(getCurrentVOSpaceService(request));
+        if (isPlainTextMessageStatus(status)) {
             response.setStatus(status);
             return new StringRepresentation(status.getReasonPhrase(), MediaType.TEXT_PLAIN);
         } else {
@@ -110,24 +123,42 @@ public class VOSpaceStatusService extends StatusService {
             final String pathInRequest = (String) request.getAttributes().get("path");
             final String requestedResource = "/" + ((pathInRequest == null) ? "" : pathInRequest);
 
-            dataModel.put("errorMessage", status.toString());
+            dataModel.put("errorMessage", status);
 
             // requestedFolder in login.ftl will allow login to this node
             // in case this is a permissions issue
             dataModel.put("requestedFolder", requestedResource);
+            dataModel.put("vospaceSvcPath", currentService.getName() + "/");
 
-            // Add the current VOSpace service name so that navigation links can be rendered correctly
-            StorageApplication sa = (StorageApplication) StorageApplication.getCurrent();
-            String vospaceSvcName = sa.getVospaceServiceConfigMgr().currentServiceName;
-            dataModel.put("vospaceSvcPath", vospaceSvcName + "/");
-
-            return new TemplateRepresentation("error.ftl",
+            return new TemplateRepresentation(String.format("themes/%s/error.ftl", storageConfiguration.getThemeName()),
                                               (FreeMarkerConfiguration) curContext.getAttributes()
                                                                                   .get(StorageApplication.FREEMARKER_CONFIG_KEY),
                                               dataModel, MediaType.TEXT_HTML);
         }
     }
 
+    private boolean isPlainTextMessageStatus(final Status status) {
+        return Arrays.stream(VOSpaceStatusService.PLAIN_TEXT_STATUS_CODES).anyMatch(value -> value == status.getCode());
+    }
+
+    String getCurrentVOSpaceService(final Request request) {
+        final String ret;
+
+        if (request.getAttributes().containsKey("svc")) {
+            final String vospaceService = request.getAttributes().get("svc").toString();
+            if (this.voSpaceServiceConfigManager.getServiceList().contains(vospaceService.toLowerCase())) {
+                ret = vospaceService;
+            } else {
+                String errMsg = "service not found in vosui configuration: " + vospaceService;
+                throw new IllegalArgumentException(errMsg);
+            }
+        } else {
+            // no svc parameter found - return the current default
+            ret = this.voSpaceServiceConfigManager.getDefaultServiceName();
+        }
+
+        return ret;
+    }
 
     /**
      * Returns a status for a given exception or error.
@@ -152,14 +183,20 @@ public class VOSpaceStatusService extends StatusService {
             // get converted to a helpful message about how they need to be removed
             // further up the chain in the restlet code.
             String thrownMessage = throwable.getMessage().replace("\n", "");
-            status = new Status(Status.CLIENT_ERROR_BAD_REQUEST.getCode(), thrownMessage, thrownMessage);
+            final int statusCode;
+            if (Method.DELETE.equals(request.getMethod()) && thrownMessage.contains("not empty")) {
+                statusCode = Status.CLIENT_ERROR_PRECONDITION_FAILED.getCode();
+            } else {
+                statusCode = Status.CLIENT_ERROR_BAD_REQUEST.getCode();
+            }
+            status = new Status(statusCode, thrownMessage, thrownMessage);
         } else if ((throwable instanceof FileNotFoundException) || (throwable instanceof NodeNotFoundException)
                    || (throwable instanceof ResourceNotFoundException)) {
             status = Status.CLIENT_ERROR_NOT_FOUND;
-        } else if (throwable instanceof AccessControlException) {
-            status = Status.CLIENT_ERROR_FORBIDDEN;
         } else if (throwable instanceof NotAuthenticatedException) {
             status = Status.CLIENT_ERROR_UNAUTHORIZED;
+        } else if (throwable instanceof SecurityException) {
+            status = Status.CLIENT_ERROR_FORBIDDEN;
         } else if (throwable instanceof ResourceAlreadyExistsException
                 || throwable instanceof NodeAlreadyExistsException) {
             status = Status.CLIENT_ERROR_CONFLICT;

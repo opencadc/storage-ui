@@ -71,7 +71,7 @@ package net.canfar.storage.web.view;
 import org.opencadc.gms.GroupURI;
 
 import ca.nrc.cadc.date.DateUtil;
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.VOSURI;
 import net.canfar.storage.FileSizeRepresentation;
 
 import org.apache.log4j.Logger;
@@ -80,6 +80,7 @@ import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.BCStyle;
 import org.bouncycastle.asn1.x500.style.IETFUtils;
 
+import java.nio.file.Path;
 import java.text.DateFormat;
 import java.util.Arrays;
 import java.util.Date;
@@ -102,7 +103,7 @@ public abstract class StorageItem {
 
     // This is NOT guaranteed writable for the ROOT page, only on subsequent pages.
     private final boolean writableFlag;
-    private final String targetURL;
+    private final Path targetPath;
 
     final VOSURI uri;
 
@@ -112,7 +113,7 @@ public abstract class StorageItem {
 
     StorageItem(VOSURI uri, long sizeInBytes, Date lastModified, boolean publicFlag, boolean lockedFlag,
                 GroupURI[] writeGroupURIs, GroupURI[] readGroupURIs, final String owner, boolean readableFlag,
-                boolean writableFlag, String targetURL) {
+                boolean writableFlag, Path targetPath) {
         this.uri = uri;
         this.name = getURI().getName();
         this.sizeInBytes = sizeInBytes;
@@ -124,7 +125,7 @@ public abstract class StorageItem {
         this.owner = owner;
         this.readableFlag = readableFlag;
         this.writableFlag = writableFlag;
-        this.targetURL = targetURL;
+        this.targetPath = targetPath;
     }
 
 
@@ -223,7 +224,7 @@ public abstract class StorageItem {
 
     public abstract String getItemIconCSS();
 
-    public String getTargetURL() {
-        return targetURL;
+    public String getTargetPath() {
+        return targetPath.toString();
     }
 }

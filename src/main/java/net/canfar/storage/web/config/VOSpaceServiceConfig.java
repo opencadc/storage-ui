@@ -68,17 +68,24 @@
 package net.canfar.storage.web.config;
 
 import ca.nrc.cadc.util.StringUtil;
+import net.canfar.storage.PathUtils;
+import org.opencadc.vospace.Node;
+import org.opencadc.vospace.VOSURI;
+
 import java.net.URI;
+import java.nio.file.Path;
 
 public class VOSpaceServiceConfig {
-    private String name;
-    private URI resourceID;
-    private URI nodeResourceID;
+    private final String name;
+    private final URI resourceID;
+    private final URI nodeResourceID;
+
+    private final Features features;
 
     // Default provided, can be overridden
     public String homeDir;
 
-    public VOSpaceServiceConfig(String name, URI resourceID, URI nodeResourceID) {
+    public VOSpaceServiceConfig(String name, URI resourceID, URI nodeResourceID, final Features features) {
 
         // Validation for required properties
         if (!StringUtil.hasLength(name)) {
@@ -94,21 +101,86 @@ public class VOSpaceServiceConfig {
         this.name = name;
         this.resourceID = resourceID;
         this.nodeResourceID = nodeResourceID;
+        this.features = features;
 
         // Set default for optional properties
         this.homeDir = "/";
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public URI getResourceID() {
-        return resourceID;
+        return this.resourceID;
     }
 
     public URI getNodeResourceID() {
-        return nodeResourceID;
+        return this.nodeResourceID;
     }
 
+    public final boolean supportsBatchDownloads() {
+        return this.features.supportsBatchDownloads;
+    }
+
+    public final boolean supportsBatchUploads() {
+        return this.features.supportsBatchUploads;
+    }
+
+    public final boolean supportsExternalLinks() {
+        return this.features.supportsExternalLinks;
+    }
+
+    public final boolean supportsPaging() {
+        return this.features.supportsPaging;
+    }
+
+    public VOSURI toURI(final String path) {
+        return new VOSURI(URI.create(this.nodeResourceID + path));
+    }
+
+    public VOSURI toURI(final Node node) {
+        final Path path = PathUtils.toPath(node);
+        return toURI(path.toString());
+    }
+
+
+    /**
+     * Features that require flags to disable it, or is generally optional.  Some Cavern style VOSpace services do not
+     * support pagination (i.e. limit={number}&startURI={pageStartURI}), for example.
+     */
+    public static final class Features {
+        private boolean supportsBatchDownloads = false;
+        private boolean supportsBatchUploads = false;
+        private boolean supportsExternalLinks = false;
+        private boolean supportsPaging = false;
+
+        public Features() {
+
+        }
+
+        Features(boolean supportsBatchDownloads, boolean supportsBatchUploads, boolean supportsExternalLinks,
+                 boolean supportsPaging) {
+            this.supportsBatchDownloads = supportsBatchDownloads;
+            this.supportsBatchUploads = supportsBatchUploads;
+            this.supportsExternalLinks = supportsExternalLinks;
+            this.supportsPaging = supportsPaging;
+        }
+
+        public void supportsBatchDownloads() {
+            this.supportsBatchDownloads = true;
+        }
+
+        public void supportsBatchUploads() {
+            this.supportsBatchUploads = true;
+        }
+
+        public void supportsExternalLinks() {
+            this.supportsExternalLinks = true;
+        }
+
+        public void supportsPaging() {
+            this.supportsPaging = true;
+        }
+    }
 }

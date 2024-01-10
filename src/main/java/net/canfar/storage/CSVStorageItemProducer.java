@@ -68,24 +68,23 @@
 
 package net.canfar.storage;
 
-import ca.nrc.cadc.vos.VOSURI;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import org.opencadc.vospace.VOSURI;
+import org.opencadc.vospace.client.VOSpaceClient;
 import net.canfar.storage.web.StorageItemFactory;
 
 import javax.security.auth.Subject;
 
 
-public class CSVStorageItemProducer
-        extends AbstractStorageItemProducer<StorageItemCSVWriter>
-{
-    public CSVStorageItemProducer(int pageSize, VOSURI folderURI, VOSURI startURI,
+public class CSVStorageItemProducer extends AbstractStorageItemProducer<StorageItemCSVWriter> {
+    public CSVStorageItemProducer(Integer pageSize, VOSURI folderURI, VOSURI startURI,
                                   final StorageItemCSVWriter nodeWriter,
                                   final Subject user,
                                   final StorageItemFactory storageItemFactory,
-                                  final VOSpaceClient voSpaceClient)
-    {
+                                  final VOSpaceServiceConfig serviceConfig,
+                                  final VOSpaceClient voSpaceClient) {
         super(pageSize, folderURI, startURI, nodeWriter, user,
-              storageItemFactory, voSpaceClient);
+              storageItemFactory, serviceConfig, voSpaceClient);
     }
 
 
@@ -94,21 +93,17 @@ public class CSVStorageItemProducer
      * to create a thread, starting the thread causes the object's
      * <code>run</code> method to be called in that separately executing
      * thread.
-     *
+     * <p>
      * The general contract of the method <code>run</code> is that it may
      * take any action whatsoever.
      *
      * @see Thread#run()
      */
     @Override
-    public void run()
-    {
-        try
-        {
+    public void run() {
+        try {
             writePages();
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }

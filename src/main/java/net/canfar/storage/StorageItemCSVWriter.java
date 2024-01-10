@@ -73,7 +73,6 @@ import com.opencsv.CSVWriter;
 
 import net.canfar.storage.web.view.StorageItem;
 
-import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
@@ -102,10 +101,10 @@ public class StorageItemCSVWriter implements StorageItemWriter {
         // Name [1]
         row.add(storageItem.getName());
 
-        // File size in human readable format. [2]
+        // File size in human-readable format. [2]
         row.add(storageItem.getSizeHumanReadable());
 
-        // Last Modified in human readable format. [3]
+        // Last Modified in human-readable format. [3]
         row.add(storageItem.getLastModifiedHumanReadable());
 
         // Write Group Names [4]
@@ -132,7 +131,7 @@ public class StorageItemCSVWriter implements StorageItemWriter {
         row.add(storageItem.getURI().toString());
 
         // Link for click action. [11]
-        row.add(storageItem.getTargetURL());
+        row.add(storageItem.getTargetPath());
 
         // Readable flag.  [12]
         row.add(Boolean.toString(storageItem.isReadable()));

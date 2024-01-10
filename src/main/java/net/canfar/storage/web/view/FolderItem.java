@@ -69,14 +69,13 @@
 package net.canfar.storage.web.view;
 
 import org.opencadc.gms.GroupURI;
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.VOSURI;
 
-import java.net.URI;
+import java.nio.file.Path;
 import java.util.Date;
 
 
-public class FolderItem extends StorageItem
-{
+public class FolderItem extends StorageItem {
     private final int childCount;
 
 
@@ -84,28 +83,24 @@ public class FolderItem extends StorageItem
                       boolean publicFlag, boolean lockedFlag,
                       GroupURI[] writeGroupURIs, GroupURI[] readGroupURIs, String owner,
                       boolean readableFlag, final boolean writableFlag,
-                      final int childCount, String targetURL)
-    {
+                      final int childCount, Path targetPath) {
         super(uri, sizeInBytes, lastModified, publicFlag, lockedFlag,
-              writeGroupURIs, readGroupURIs, owner, readableFlag, writableFlag, targetURL);
+              writeGroupURIs, readGroupURIs, owner, readableFlag, writableFlag, targetPath);
 
         this.childCount = childCount;
     }
 
 
-    public boolean isRoot()
-    {
+    public boolean isRoot() {
         return uri.isRoot();
     }
 
     @Override
-    public String getItemIconCSS()
-    {
+    public String getItemIconCSS() {
         return "glyphicon-folder-" + (isReadable() ? "open" : "close");
     }
 
-    public int getChildCount()
-    {
+    public int getChildCount() {
         return childCount;
     }
 }

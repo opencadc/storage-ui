@@ -67,7 +67,7 @@
  */
 package net.canfar.storage;
 
-import ca.nrc.cadc.vos.VOSURI;
+import org.opencadc.vospace.VOSURI;
 
 public interface StorageItemProducer extends Runnable
 {

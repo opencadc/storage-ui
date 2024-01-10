@@ -21,7 +21,8 @@ function fileManager(
   contextPath,
   useDefaultLogin,
   vospaceServicePath,
-  vosNodePrefixURI
+  vosNodePrefixURI,
+  features
 ) {
   // function to retrieve GET params
   $.urlParam = function(name) {
@@ -40,7 +41,8 @@ function fileManager(
     var json = null
     type = typeof type === 'undefined' ? 'user' : type
 
-    var url
+    let url
+    let userconfig
 
     if (type === 'user') {
       if ($.urlParam('config') !== 0) {
@@ -131,8 +133,6 @@ function fileManager(
 
   var $fileInfo = $('#fileInfo')
   var fileRoot
-  var baseURL
-  var fullexpandedFolder
   var expandedFolder
   var makeEditIcon = function(path, elementAttributes) {
     return (
@@ -188,7 +188,7 @@ function fileManager(
         orderable: false,
         className: 'select-checkbox',
         searchable: false,
-        render: function(data, type, full) {
+        render: function(data, _type, full) {
           var renderedValue
 
           if (full.length > 10) {
@@ -210,7 +210,7 @@ function fileManager(
       },
       {
         targets: 1,
-        render: function(data, type, full) {
+        render: function(data, _type, full) {
           if (full.length > 10) {
             var itemNameDisplay =
               '<span class="glyphicon ' + full[8] + '"></span>&nbsp;&nbsp;'
@@ -276,7 +276,7 @@ function fileManager(
       {
         targets: [6],
         searchable: false,
-        render: function(data, type, full) {
+        render: function(_data, _type, full) {
           return full[14]
         }
       }
@@ -293,7 +293,7 @@ function fileManager(
     .attr('aria-valuemax', _totalDataCount + '')
   // .text(lg.loading_data);
 
-  var toggleButtonSet = function(_disabledFlag, selector, selectClass) {
+  const toggleButtonSet = function(_disabledFlag, selector, selectClass) {
     var $selectorContainers = $(selector)
 
     // These elements will toggle regardless of permissions
@@ -386,7 +386,7 @@ function fileManager(
     return errMsg
   }
 
-  $dt.on('select', function(event, dataTablesAPI, type) {
+  $dt.on('select', function(_event, _dataTablesAPI, type) {
     if (type === ROW_SELECT_TYPE) {
       var selectedRows = $dt.rows({
         selected: true
@@ -425,17 +425,15 @@ function fileManager(
     $dt.search($(this).val()).draw()
   })
 
-  var getPage = function(_data, _callback) {
+  const getPage = (_data, _callback) => {
     $.get({
       url: url,
       dataType: 'text',
       data: _data
-    }).done(function(csvData) {
-      _callback(csvData)
-    })
+    }).done((csvData) => _callback(csvData))
   }
 
-  var loadComplete = function() {
+  const loadComplete = function() {
     $('div.progress')
       .removeClass('active')
       .children('div.beacon-progress')
@@ -445,19 +443,21 @@ function fileManager(
       .empty()
   }
 
-  var load = function(_callback) {
-    getPage(requestData, function(csvData) {
-      _callback(csvData)
-    })
+  /**
+   * Load pages from the backend.
+   * @param {function} _callback On success callback function.
+   */
+  const load = function(_callback) {
+    getPage(requestData, (csvData) => _callback(csvData))
   }
 
-  var successCallback = function(csvData) {
-    var data = $.csv.toArrays(csvData)
-    var dl = data.length
+  const successCallback = function(csvData) {
+    const data = $.csv.toArrays(csvData)
+    const dl = data.length
 
     if (dl > 0) {
-      for (var di = 0; di < dl; di++) {
-        var nextRow = data[di]
+      for (let di = 0; di < dl; di++) {
+        const nextRow = data[di]
         $dt.row.add(nextRow)
 
         _startURI = nextRow[10]
@@ -472,24 +472,27 @@ function fileManager(
     }
   }
 
-  load(successCallback)
+  if (_startURI) {
+    load(successCallback)
+  } else {
+    loadComplete()
+  }
 
   /**
    * Page refresh.  Used after write operations to show updated state.
    */
-  var refreshPage = function() {
+  const refreshPage = function() {
     window.location.reload(true)
   }
 
   // <head> included files collector
-  var HEAD_included_files = []
-  var userconfig
+  const HEAD_included_files = []
 
   /**
    * function to load a given css file into header
    * if not already included
    */
-  var loadCSS = function(href) {
+  const loadCSS = function(href) {
     // we check if already included
     if ($.inArray(href, HEAD_included_files) == -1) {
       var cssLink = $(
@@ -505,7 +508,7 @@ function fileManager(
    * function to load a given js file into header
    * if not already included
    */
-  var loadJS = function(src) {
+  const loadJS = function(src) {
     // we check if already included
     if ($.inArray(src, HEAD_included_files) == -1) {
       var jsLink = $("<script type='text/javascript' src='" + src + "'>")
@@ -2069,7 +2072,6 @@ function fileManager(
   // Link or move the current item to specified dir and returns the new name.
   // Called by clicking the "VOSpace Link" menu item or the "Move" button.
   var processItem = function(params, srcNodeList) {
-    var srcNodes = ''
     var fullName = ''
     var itemTree = new ItemTree()
     var itemLayer
@@ -2295,18 +2297,18 @@ function fileManager(
     var unsuccessful = {}
     var totalCompleteCount = 0
 
-    var doDelete = function() {
-      for (var p = 0; p < deleteCount; p++) {
-        var path = paths[p]
+    const doDelete = function(_e) {
+      for (let p = 0; p < deleteCount; p++) {
+        const path = paths[p]
 
         $.ajax({
-          type: 'DELETE',
+          method: 'DELETE',
           url: contextPath + vospaceServicePath + config.options.itemConnector + path,
-          async: false,
+          async: false,   // Important as async will hang.
           success: function() {
             successful.push(path)
           },
-          error: function(jqXHR, textStatus, errorThrown) {
+          error: function(jqXHR, _textStatus, _errorThrown) {
             switch (jqXHR.status) {
               case 400:
                 unsuccessful[path] = lg.INVALID_ACTION
@@ -2317,8 +2319,11 @@ function fileManager(
               case  403:
                 unsuccessful[path] = lg.ERROR_WRITING_PERM
                 break
-              case  404:
+              case 404:
                 unsuccessful[path] = lg.ERROR_NO_SUCH_ITEM
+                break
+              case 412:
+                unsuccessful[path] = jqXHR.responseText
                 break
               case 500:
                 unsuccessful[path] = lg.ERROR_SERVER
@@ -3147,12 +3152,6 @@ function fileManager(
       fileRoot = fileRoot.replace(/\/\//g, '/')
     }
 
-    if (config.options.baseUrl === false) {
-      baseURL = window.location.protocol + '//' + window.location.host
-    } else {
-      baseURL = config.options.baseUrl
-    }
-
     if ($.urlParam('exclusiveFolder') !== 0) {
       fileRoot += $.urlParam('exclusiveFolder')
       if (fileRoot.charAt(fileRoot.length - 1) !== '/') {
@@ -3163,10 +3162,8 @@ function fileManager(
 
     if ($.urlParam('expandedFolder') !== 0) {
       expandedFolder = $.urlParam('expandedFolder')
-      fullexpandedFolder = fileRoot + expandedFolder
     } else {
       expandedFolder = ''
-      fullexpandedFolder = null
     }
 
     var $itemOptions = $('#itemOptions')

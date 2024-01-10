@@ -54,7 +54,7 @@ jenkinsd 2017.04.04
 -->
 <script src="${contextPath}js/jquery.min.js"></script>
 
-<#include "_application_header.shtml">
+<#include "canfar-application-header">
 
 <div class="container-fluid">
     <div id="errorDisplayDiv" class="errorDisplay" >

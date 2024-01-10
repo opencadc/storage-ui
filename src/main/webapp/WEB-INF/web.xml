@@ -52,17 +52,12 @@
 
         <init-param>
             <param-name>org.restlet.application</param-name>
-            <param-value>net.canfar.CANFARStorageApplication</param-value>
+            <param-value>net.canfar.storage.web.restlet.StorageApplication</param-value>
         </init-param>
 
         <init-param>
             <param-name>org.restlet.clients</param-name>
             <param-value>HTTP FILE</param-value>
-        </init-param>
-
-        <init-param>
-            <param-name>org.opencadc.vospace.service_id</param-name>
-            <param-value>ivo://cadc.nrc.ca/vault</param-value>
         </init-param>
     </servlet>
 

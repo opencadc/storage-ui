@@ -69,12 +69,16 @@
 package net.canfar.storage.web.resources;
 
 
-import ca.nrc.cadc.util.Log4jInit;
-import ca.nrc.cadc.vos.*;
-import ca.nrc.cadc.vos.VOS.Detail;
-import ca.nrc.cadc.vos.client.ClientTransfer;
-import ca.nrc.cadc.vos.client.VOSClientUtil;
-import ca.nrc.cadc.vos.client.VOSpaceClient;
+import net.canfar.storage.web.StorageItemFactory;
+import net.canfar.storage.web.config.StorageConfiguration;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import org.opencadc.vospace.transfer.Transfer;
+import org.opencadc.vospace.*;
+import org.opencadc.vospace.VOS.Detail;
+import org.opencadc.vospace.client.ClientTransfer;
+import org.opencadc.vospace.client.VOSClientUtil;
+import org.opencadc.vospace.client.VOSpaceClient;
 import net.canfar.storage.FileSizeRepresentation;
 import net.canfar.storage.web.restlet.JSONRepresentation;
 
@@ -82,7 +86,6 @@ import java.net.URI;
 import java.security.*;
 import java.util.Set;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -98,7 +101,7 @@ import javax.security.auth.Subject;
 
 
 public class FolderItemServerResource extends StorageItemServerResource {
-    private static Logger log = Logger.getLogger(FolderItemServerResource.class);
+    private static final Logger LOGGER = Logger.getLogger(FolderItemServerResource.class);
 
     /**
      * Empty constructor needed for Restlet to manage it.
@@ -106,8 +109,11 @@ public class FolderItemServerResource extends StorageItemServerResource {
     public FolderItemServerResource() {
     }
 
-    FolderItemServerResource(final VOSpaceClient voSpaceClient) {
-        super(voSpaceClient);
+    FolderItemServerResource(StorageConfiguration storageConfiguration,
+                             VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+                             StorageItemFactory storageItemFactory, VOSpaceClient voSpaceClient,
+                             VOSpaceServiceConfig serviceConfig) {
+        super(storageConfiguration, voSpaceServiceConfigManager, storageItemFactory, voSpaceClient, serviceConfig);
     }
 
     @Put
@@ -117,55 +123,52 @@ public class FolderItemServerResource extends StorageItemServerResource {
     }
 
     @Get("json")
-    public Representation retrieveQuota() throws Exception {
+    public Representation retrieveQuota() {
         final FileSizeRepresentation fileSizeRepresentation = new FileSizeRepresentation();
         final Node node = getCurrentNode(Detail.properties);
         final long folderSize = getPropertyValue(node, VOS.PROPERTY_URI_CONTENTLENGTH);
         final long quota = getPropertyValue(node, VOS.PROPERTY_URI_QUOTA);
 
 
-        final String quotaString = new FileSizeRepresentation()
-            .getSizeHumanReadable(quota);
-        final String remainingSizeString =
-            fileSizeRepresentation.getSizeHumanReadable(
+        final String quotaString = new FileSizeRepresentation().getSizeHumanReadable(quota);
+        final String remainingSizeString = fileSizeRepresentation.getSizeHumanReadable(
                 ((quota - folderSize) > 0) ? (quota - folderSize) : 0);
 
         if (folderSize != 0 && quota != 0) {
             return new JSONRepresentation() {
                 @Override
                 public void write(final JSONWriter jsonWriter)
-                    throws JSONException {
+                        throws JSONException {
                     jsonWriter.object()
-                        .key("size").value(remainingSizeString)
-                        .key("quota").value(quotaString)
-                        .endObject();
+                              .key("size").value(remainingSizeString)
+                              .key("quota").value(quotaString)
+                              .endObject();
                 }
             };
         } else {
             return new JSONRepresentation() {
                 @Override
                 public void write(final JSONWriter jsonWriter)
-                    throws JSONException {
+                        throws JSONException {
                     jsonWriter.object()
-                        .key("msg").value("quota not reported by VOSpace service")
-                        .endObject();
+                              .key("msg").value("quota not reported by VOSpace service")
+                              .endObject();
                 }
             };
         }
     }
 
-    private long getPropertyValue(final Node node, final String propertyURI) {
-        final NodeProperty property = node.findProperty(propertyURI);
-        return (property == null) ? 0L
-            : Long.parseLong(property.getPropertyValue());
+    private long getPropertyValue(final Node node, final URI propertyURI) {
+        final NodeProperty property = node.getProperty(propertyURI);
+        return (property == null) ? 0L : Long.parseLong(property.getValue());
     }
 
     @Post("json")
     public void moveToFolder(final JsonRepresentation payload) throws Exception {
         final JSONObject jsonObject = payload.getJsonObject();
-        log.debug("moveToFolder input: " + jsonObject);
+        LOGGER.debug("moveToFolder input: " + jsonObject);
 
-        final ContainerNode currentNode = getCurrentNode(VOS.Detail.min);
+        final ContainerNode currentNode = getCurrentNode(null);
         final Set<String> keySet = jsonObject.keySet();
 
         if (keySet.contains("srcNodes")) {
@@ -174,10 +177,10 @@ public class FolderItemServerResource extends StorageItemServerResource {
 
             // iterate over each srcNode & call clientTransfer
             for (final String srcNode : srcNodes) {
-                final VOSURI srcURI = new VOSURI(URI.create(getVospaceNodeUriPrefix() + srcNode));
-                final VOSURI destURI = currentNode.getUri();
-                log.debug("moving " + srcURI.toString() + " to " + destURI.toString());
-                move(srcURI, destURI);
+                final VOSURI sourceURI = new VOSURI(URI.create(this.currentService.getNodeResourceID() + srcNode));
+                final VOSURI destinationURI = toURI(currentNode);
+                LOGGER.debug("moving " + sourceURI + " to " + destinationURI.toString());
+                move(sourceURI, destinationURI);
             }
             // move() will throw an exception if there is a problem
             getResponse().setStatus(Status.SUCCESS_OK);
@@ -188,27 +191,25 @@ public class FolderItemServerResource extends StorageItemServerResource {
         return new Transfer(source.getURI(), destination.getURI(), false);
     }
 
-    private void move(final VOSURI source, final VOSURI destination) throws Exception
-    {
+    private void move(final VOSURI source, final VOSURI destination) throws Exception {
         // According to ivoa.net VOSpace 2.1 spec, a move is handled using
         // a transfer. keepBytes = false. destination URI is the Direction.
         final Transfer transfer = getTransfer(source, destination);
 
         try {
-            Subject.doAs(generateVOSpaceUser(),
+            Subject.doAs(getCurrentSubject(),
                          (PrivilegedExceptionAction<Void>) () -> {
-                             final ClientTransfer clientTransfer =
-                                 voSpaceClient.createTransfer(
-                                     transfer);
+                             final ClientTransfer clientTransfer = voSpaceClient.createTransfer(transfer);
                              clientTransfer.setMonitor(true);
                              clientTransfer.runTransfer();
-                             log.debug("transfer run complete");
+
+                             LOGGER.debug("transfer run complete");
                              VOSClientUtil.checkTransferFailure(clientTransfer);
-                             log.debug("no errors in transfer");
+                             LOGGER.debug("no errors in transfer");
                              return null;
                          });
         } catch (PrivilegedActionException e) {
-            log.debug("error in transfer.", e);
+            LOGGER.debug("error in transfer.", e);
             throw e.getException();
         }
     }

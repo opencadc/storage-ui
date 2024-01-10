@@ -73,13 +73,12 @@ import java.io.IOException;
 import net.canfar.storage.web.view.StorageItem;
 
 
-public interface StorageItemWriter
-{
+public interface StorageItemWriter {
     /**
      * Write out a StorageItem as per the implementation.
      *
-     * @param storageItem       The storage item to write out.
-     * @throws IOException      If the writing fails.
+     * @param storageItem The storage item to write out.
+     * @throws IOException If the writing fails.
      */
     void write(final StorageItem storageItem) throws IOException;
 }

@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2016.                            (c) 2016.
+ *  (c) 2023.                            (c) 2023.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -66,55 +66,49 @@
  ************************************************************************
  */
 
-package net.canfar.storage;
+package net.canfar.storage.web.resources;
 
-import net.canfar.storage.web.view.StorageItem;
-import ca.nrc.cadc.vos.VOSURI;
+import net.canfar.storage.web.config.StorageConfiguration;
+import org.opencadc.token.Client;
+import org.restlet.Response;
+import org.restlet.data.CookieSetting;
+import org.restlet.data.Status;
+import org.restlet.resource.Get;
+import org.restlet.util.Series;
 
-import static org.easymock.EasyMock.*;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 
 
-public abstract class AbstractStorageItemWriterTest<T extends StorageItemWriter>
-        extends AbstractUnitTest<T> {
+/**
+ * OpenID Connect callback for Authorization Code flow.
+ */
+public class OIDCCallbackServerResource extends SecureServerResource {
+    @Get("json")
+    public void callback() throws Exception {
+        final Client oidcClient = getOIDCClient();
+        final byte[] encryptedKey = oidcClient.setAccessToken(getRequest().getResourceRef().toUri());
+        setCookie(encryptedKey);
+        redirectToCallback();
+    }
 
-    <T2 extends StorageItem> T2 mockStorageItem(final String name,
-                                                final String sizeHumanReadable,
-                                                final String writeGroups,
-                                                final String readGroups,
-                                                final String dateHumanReadable,
-                                                final boolean isPublic,
-                                                final boolean isLocked,
-                                                final Class<T2> type,
-                                                final String itemCSS,
-                                                final VOSURI uri,
-                                                final String linkURI,
-                                                final boolean isReadable,
-                                                final Boolean isWritable,
-                                                final String owner)
-            throws Exception {
-        final T2 mockStorageItem = createMock(type);
+    void setCookie(final byte[] encryptedKey) {
+        final Series<CookieSetting> cookieSettingSeries = new Series<>(CookieSetting.class);
+        final CookieSetting cookieSetting = new CookieSetting(StorageConfiguration.FIRST_PARTY_COOKIE_NAME,
+                                                              new String(encryptedKey,
+                                                                         StandardCharsets.ISO_8859_1));
+        final Response response = getResponse();
 
-        expect(mockStorageItem.getName()).andReturn(name).once();
-        expect(mockStorageItem.getSizeHumanReadable()).andReturn(
-                sizeHumanReadable).once();
-        expect(mockStorageItem.getLastModifiedHumanReadable()).andReturn(
-                dateHumanReadable).once();
-        expect(mockStorageItem.getWriteGroupNames()).andReturn(writeGroups).
-                                                                                   once();
-        expect(mockStorageItem.getReadGroupNames()).andReturn(readGroups).
-                                                                                 once();
+        cookieSetting.setAccessRestricted(true);
+        cookieSetting.setSecure(true);
+        cookieSetting.setPath("/");
+        cookieSettingSeries.add(cookieSetting);
+        response.setCookieSettings(cookieSettingSeries);
+    }
 
-        // Hidden on main UI.
-        expect(mockStorageItem.isPublic()).andReturn(isPublic).once();
-        expect(mockStorageItem.isLocked()).andReturn(isLocked).once();
-        expect(mockStorageItem.getItemIconCSS()).andReturn(itemCSS).once();
-        expect(mockStorageItem.getPath()).andReturn(uri.getPath()).once();
-        expect(mockStorageItem.getURI()).andReturn(uri).once();
-        expect(mockStorageItem.getTargetURL()).andReturn(linkURI).once();
-        expect(mockStorageItem.isReadable()).andReturn(isReadable).once();
-        expect(mockStorageItem.isWritable()).andReturn(isWritable).once();
-        expect(mockStorageItem.getOwnerCN()).andReturn(owner).once();
-
-        return mockStorageItem;
+    void redirectToCallback() throws IOException {
+        final Response response = getResponse();
+        response.setStatus(Status.REDIRECTION_FOUND);
+        response.setLocationRef(getOIDCClient().getCallbackURL().toExternalForm());
     }
 }
