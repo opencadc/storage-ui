@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns="http://java.sun.com/xml/ns/javaee"
-         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
-         id="WebApp_ID" version="3.0">
+<web-app xmlns="http://xmlns.jcp.org/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_3_1.xsd"
+         version="3.1">
+
+    <display-name>Storage UI</display-name>
 
     <!-- Here just for development. -->
     <context-param>
@@ -21,7 +23,6 @@
     </filter-mapping>
 
     <servlet>
-        <load-on-startup>1</load-on-startup>
         <servlet-name>logControl</servlet-name>
         <servlet-class>ca.nrc.cadc.log.LogControlServlet</servlet-class>
         <init-param>
@@ -31,8 +32,9 @@
         <init-param>
             <param-name>logLevelPackages</param-name>
             <param-value>
-                ca.nrc.cadc.beacon
                 ca.nrc.cadc.vos
+                net.canfar
+                org.opencadc.token
             </param-value>
         </init-param>
         <init-param>
