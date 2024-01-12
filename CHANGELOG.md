@@ -1,6 +1,6 @@
 # Storage User Interface
 
-## December 8, 2023
+## January 12, 2024
 * OpenID Connect compliant with Authorization Code flow
 * Feature flag to disable some features (Batch download/upload, ZIP Download, Create External Links, Supports Paginated downloads)
 
