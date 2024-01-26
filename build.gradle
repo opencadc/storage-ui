@@ -119,10 +119,10 @@ idea {
             systemProperty 'user.password', project.intTest_user_password
         }
 
-        if (!project.hasProperty('intTest_test_directory')) {
-            System.err.println("Please set the intTest_test_directory property (-PintTest_test_directory=vos://...).")
+        if (project.hasProperty('intTest_test_directory_name')) {
+            systemProperty 'test.directory.name', project.intTest_test_directory_name
         } else {
-            systemProperty 'test.directory', project.intTest_test_directory
+            logger.info("Using " + System.getProperty("user.name") + " as the test directory.")
         }
 
         if (project.hasProperty('intTest_alt_home_directory')) {
