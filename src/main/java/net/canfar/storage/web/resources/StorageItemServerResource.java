@@ -178,7 +178,8 @@ public class StorageItemServerResource extends SecureServerResource {
             final String pathInRequest = getRequestAttribute("path");
             return Paths.get(pathInRequest);
         } else {
-            return Paths.get("");
+            // Assume root.
+            return Paths.get("/");
         }
     }
 

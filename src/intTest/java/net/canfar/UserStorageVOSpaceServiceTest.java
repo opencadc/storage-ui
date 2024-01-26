@@ -37,14 +37,13 @@ import org.junit.Test;
 
 
 public class UserStorageVOSpaceServiceTest extends UserStorageBaseTest {
-    private static final Logger log =
-        Logger.getLogger(UserStorageVOSpaceServiceTest.class);
+    private static final Logger log = Logger.getLogger(UserStorageVOSpaceServiceTest.class);
 
     static {
         Log4jInit.setLevel("ca.nrc.cadc", Level.DEBUG);
     }
 
-    public UserStorageVOSpaceServiceTest() throws Exception {
+    public UserStorageVOSpaceServiceTest() {
         super();
     }
 
@@ -60,31 +59,36 @@ public class UserStorageVOSpaceServiceTest extends UserStorageBaseTest {
     }
 
     private void testVOSpaceServiceSwitch() throws Exception {
-        UserStorageBrowserPage userStoragePage = goTo(testDirectory, null, UserStorageBrowserPage.class);
+        FolderPage userStoragePage = goTo("/", null, FolderPage.class);
 
-        // Login test - credentials should be in the gradle build file.
         // Need to do this to have access to Home button
         userStoragePage = loginTest(userStoragePage);
 
         // Nav to home - should be using vault home dir by default
-        userStoragePage = userStoragePage.navToHome();
+        userStoragePage.navToHome();
+
+        userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
 
         // check folder name
-        userStoragePage.waitForHeaderText(testDirectory);
+        userStoragePage.waitForHeaderText(testDirectoryPath);
 
         // go to root
         userStoragePage = userStoragePage.navToRoot();
 
-        // switch to alternate VOSpace Service (defined in build.gradle)
-        userStoragePage = userStoragePage.switchVOSpaceService(altVOSpaceSvc);
+        if (StringUtil.hasText(altVOSpaceSvc)) {
+            // switch to alternate VOSpace Service (defined in build.gradle)
+            userStoragePage = userStoragePage.switchVOSpaceService(altVOSpaceSvc);
 
-        // Nav to home - should be using vault home dir by default
-        userStoragePage = userStoragePage.navToHome();
+            // Nav to home - should be using vault home dir by default
+            userStoragePage = userStoragePage.navToHome();
 
-        // check folder name (defined in build.gradle)
-        log.info(altHomeDir);
-        userStoragePage.waitForHeaderText(altHomeDir);
+            // check folder name (defined in build.gradle)
+            log.info(altHomeDir);
+            userStoragePage.waitForHeaderText(altHomeDir);
 
-        log.debug("testVOSpaceServiceSwitch completed");
+            log.debug("testVOSpaceServiceSwitch completed");
+        } else {
+            log.debug("testVOSpaceServiceSwitch completed without switching (no alternate set).");
+        }
     }
 }

@@ -44,7 +44,7 @@ public class UserStorageNavTest extends UserStorageBaseTest {
         Log4jInit.setLevel("ca.nrc.cadc", Level.DEBUG);
     }
 
-    public UserStorageNavTest() throws Exception {
+    public UserStorageNavTest() {
         super();
     }
 
@@ -60,12 +60,18 @@ public class UserStorageNavTest extends UserStorageBaseTest {
     }
 
     private void navUserStorage() throws Exception {
-        log.info("Visiting: " + webURL + testDirectory);
+        log.info("Visiting: " + webURL + testDirectoryPath);
 
         final String workingDirectoryName = UserStorageNavTest.class.getSimpleName() + "_" + generateAlphaNumeric();
-        UserStorageBrowserPage userStoragePage = goTo(testDirectory, null, UserStorageBrowserPage.class);
 
-        String[] testDirPath = parseTestDirPath(testDirectory);
+        FolderPage userStoragePage = goTo("/", null, FolderPage.class);
+
+        // Need to do this to have access to Home button
+        loginTest(userStoragePage);
+
+        userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
+
+        String[] testDirPath = parseTestDirPath(testDirectoryPath);
 
         if (userStoragePage.isMainPage()) {
             userStoragePage.waitForStorageLoad();
@@ -74,11 +80,8 @@ public class UserStorageNavTest extends UserStorageBaseTest {
         // Not sure if this is useful - TODO
         verifyTrue(userStoragePage.isDefaultSort());
 
-        // Login test - credentials should be in the gradle build file.
-        userStoragePage = loginTest(userStoragePage);
-
         // Test adding a directory & deleting it
-        int rowCount = userStoragePage.getTableRowCount();
+        userStoragePage.getTableRowCount();
 
         // Create a temp test folder
         userStoragePage = userStoragePage.createNewFolder(workingDirectoryName);
@@ -128,18 +131,19 @@ public class UserStorageNavTest extends UserStorageBaseTest {
 
         userStoragePage.enterSearch(workingDirectoryName);
         // Nav back into working dir
-        userStoragePage = userStoragePage.clickFolder(workingDirectoryName);
+        userStoragePage.clickFolder(workingDirectoryName);
         log.debug("gone back into working directory");
 
         // Go back to home directory where test was started.
 
         // Nav up one level to start cleanup
-        userStoragePage = userStoragePage.navToHome();
-        log.debug("gone to home directory");
+        userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
 
-        userStoragePage = cleanup(userStoragePage, workingDirectoryName);
+        final StoragePage storagePage = userStoragePage.doLogout(false);
 
-        userStoragePage.doLogout();
+        if (storagePage.isError()) {
+            log.warn("Found error on page: " + storagePage.getErrorMessage());
+        }
 
         log.debug("UserStorageNavTest completed");
     }

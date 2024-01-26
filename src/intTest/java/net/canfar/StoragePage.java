@@ -1,10 +1,9 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2016.                            (c) 2016.
+ *  (c) 2024.                            (c) 2024.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -67,51 +66,30 @@
  ************************************************************************
  */
 
-package net.canfar.storage.web.resources;
+package net.canfar;
 
-import ca.nrc.cadc.ac.client.GMSClient;
-import net.canfar.storage.web.restlet.JSONRepresentation;
+import ca.nrc.cadc.util.StringUtil;
+import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.FindBy;
 
-import org.json.JSONException;
-import org.json.JSONWriter;
-import org.opencadc.gms.IvoaGroupClient;
-import org.restlet.representation.Representation;
-import org.restlet.resource.Get;
+public abstract class StoragePage extends AbstractTestWebPage {
+    @FindBy(id = "errorDisplayDiv")
+    private WebElement errorDisplayMessageDiv;
 
-import javax.security.auth.Subject;
+    public StoragePage(WebDriver driver) throws Exception {
+        super(driver);
 
-import java.security.*;
-import java.util.Collections;
-import java.util.List;
+        // Waiting for three seconds is terrible, but I can't find a way to ensure the page is waiting to be reloaded.
+        waitFor(3000L);
+    }
 
+    protected boolean isError() {
+        return errorDisplayMessageDiv != null && StringUtil.hasText(errorDisplayMessageDiv.getText());
+    }
 
-public class GroupNameServerResource extends SecureServerResource {
-
-    @Get("json")
-    public Representation getGroupNames() throws Exception {
-        final GMSClient gmsClient = getGMSClient();
-        final Subject voSpaceUser = getCurrentSubject();
-
-        return new JSONRepresentation() {
-            @Override
-            public void write(final JSONWriter writer) throws JSONException {
-                try {
-                    final List<String> groupNames =
-                            Subject.doAs(voSpaceUser,
-                                         (PrivilegedExceptionAction<List<String>>) gmsClient::getGroupNames);
-
-                    Collections.sort(groupNames);
-
-                    writer.array();
-                    for (final String s : groupNames) {
-                        writer.value(s);
-                    }
-
-                    writer.endArray();
-                } catch (PrivilegedActionException e) {
-                    throw new JSONException(e.getException());
-                }
-            }
-        };
+    protected String getErrorMessage() {
+        return errorDisplayMessageDiv.getText();
     }
 }

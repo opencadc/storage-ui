@@ -53,7 +53,7 @@ ext {
     // VOSpace service values. Change alt_vospace_service if necessary
     // to match a configured service in org.opencadc.vosui.properties
     intTest_default_vospace_service = 'vault'
-    intTest_alt_vospace_service = 'arc'
+//    intTest_alt_vospace_service = 'arc'
 }
 
 sourceSets {
@@ -101,6 +101,12 @@ idea {
             systemProperty 'web.app.url', project.intTest_web_app_url
         }
 
+        if (!project.hasProperty('intTest_resource_id')) {
+            System.err.println("Please set the intTest_resource_id property (-PintTest_resource_id=ivo://...).")
+        } else {
+            systemProperty 'resource.id', project.intTest_resource_id
+        }
+
         if (!project.hasProperty('intTest_user_name')) {
             System.err.println("Please set the intTest_user_name property (-PintTest_user_name=cadcuser).")
         } else {
@@ -108,15 +114,15 @@ idea {
         }
 
         if (!project.hasProperty('intTest_user_password')) {
-            System.err.println("Please set the intTest_user_password property (-intTest_user_password=1234pw).")
+            System.err.println("Please set the intTest_user_password property (-PintTest_user_password=1234pw).")
         } else {
             systemProperty 'user.password', project.intTest_user_password
         }
 
-        if (project.hasProperty('intTest_directory')) {
-            systemProperty 'test.directory', project.intTest_directory
+        if (!project.hasProperty('intTest_test_directory')) {
+            System.err.println("Please set the intTest_test_directory property (-PintTest_test_directory=vos://...).")
         } else {
-            logger.info("Using default directory in VOSpace.")
+            systemProperty 'test.directory', project.intTest_test_directory
         }
 
         if (project.hasProperty('intTest_alt_home_directory')) {
@@ -126,7 +132,17 @@ idea {
         }
 
         systemProperty 'test.default_vospace', project.intTest_default_vospace_service
-        systemProperty 'test.alt_vospace', project.intTest_alt_vospace_service
+
+        if (project.hasProperty('intTest_alt_vospace_service')) {
+            systemProperty 'test.alt_vospace', project.intTest_alt_vospace_service
+        } else {
+            logger.info("No alternate VOSpace backend configured.")
+        }
+
+        // This needs to be explicitly transferred.  Unclear why.
+        // jenkinsd 2024.01.25
+        //
+        systemProperty 'ca.nrc.cadc.reg.client.RegistryClient.host', System.getProperty('ca.nrc.cadc.reg.client.RegistryClient.host')
 
         maxParallelForks = 1
     }

@@ -58,18 +58,18 @@ public class UserStoragePermissionsTest extends UserStorageBaseTest {
     }
 
     private void browseUserStorage() throws Exception {
-        System.out.println("Visiting: " + webURL);
+        System.out.println("Visiting: " + webURL + testDirectoryPath);
 
         // Go to root test directory
         final String workingDirectoryName = UserStoragePermissionsTest.class.getSimpleName() + "_" + generateAlphaNumeric();
-        UserStorageBrowserPage userStoragePage = goTo(testDirectory, null, UserStorageBrowserPage.class);
 
-        if (userStoragePage.isMainPage()) {
-            userStoragePage.waitForStorageLoad();
-        }
+        FolderPage userStoragePage = goTo("/", null, FolderPage.class);
 
-        // Login test - credentials should be in the gradle build file.
-        userStoragePage = loginTest(userStoragePage);
+        // Need to do this to have access to Home button
+        loginTest(userStoragePage);
+
+        userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
+        userStoragePage.waitForStorageLoad();
 
         // Create a folder, and run tests in there
         // This will be deleted at the end of this test suite
@@ -118,8 +118,8 @@ public class UserStoragePermissionsTest extends UserStorageBaseTest {
 
         // Don't change anything, verify that the correct message is displayed
         userStoragePage.clickEditIconForFirstRow();
-        userStoragePage = userStoragePage.clickButtonAndWait(UserStorageBrowserPage.SAVE);
-        userStoragePage = userStoragePage.clickButtonAndWait(UserStorageBrowserPage.CANCEL);
+        userStoragePage = userStoragePage.clickButtonAndWait(FolderPage.SAVE);
+        userStoragePage = userStoragePage.clickButtonAndWait(FolderPage.CANCEL);
         userStoragePage = userStoragePage.setReadGroup("", true);
 
         verifyTrue(userStoragePage.isPermissionDataForRow(1, parentWriteGroup, "", false));
@@ -137,25 +137,25 @@ public class UserStoragePermissionsTest extends UserStorageBaseTest {
         // Test response to invalid autocomplete selection
         userStoragePage.clickEditIconForFirstRow();
         // last parameter says 'don't confirm anything'
-        userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT, invalidGroupName,
-            false);
-        verifyTrue(userStoragePage.isGroupError(UserStorageBrowserPage.READ_GROUP_DIV));
+        userStoragePage = userStoragePage.setGroupOnly(FolderPage.READ_GROUP_INPUT, invalidGroupName,
+                                                       false);
+        verifyTrue(userStoragePage.isGroupError(FolderPage.READ_GROUP_DIV));
 
         // Enter correct one in order to close the prompt
-        userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.READ_GROUP_INPUT,
-            readGroupName, true);
+        userStoragePage = userStoragePage.setGroupOnly(FolderPage.READ_GROUP_INPUT,
+                                                       readGroupName, true);
         verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
         // Test response to invalid autocomplete selection
         userStoragePage.clickEditIconForFirstRow();
         // second parameter says 'don't confirm anything'
-        userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT,
-            invalidGroupName, false);
-        verifyTrue(userStoragePage.isGroupError(UserStorageBrowserPage.WRITE_GROUP_DIV));
+        userStoragePage = userStoragePage.setGroupOnly(FolderPage.WRITE_GROUP_INPUT,
+                                                       invalidGroupName, false);
+        verifyTrue(userStoragePage.isGroupError(FolderPage.WRITE_GROUP_DIV));
 
             // Enter correct one in order to close the prompt
-        userStoragePage = userStoragePage.setGroupOnly(UserStorageBrowserPage.WRITE_GROUP_INPUT,
-            writeGroupName, true);
+        userStoragePage = userStoragePage.setGroupOnly(FolderPage.WRITE_GROUP_INPUT,
+                                                       writeGroupName, true);
         verifyTrue(userStoragePage.isPermissionDataForRow(1, writeGroupName, readGroupName, false));
 
         // Toggle public permissions to set them
@@ -177,8 +177,8 @@ public class UserStoragePermissionsTest extends UserStorageBaseTest {
 
         userStoragePage = userStoragePage.navUpLevel();
 
-        userStoragePage = userStoragePage.applyRecursivePermissions(UserStorageBrowserPage.WRITE_GROUP_INPUT,
-            "cadcsw");
+        userStoragePage = userStoragePage.applyRecursivePermissions(FolderPage.WRITE_GROUP_INPUT,
+                                                                    "cadcsw");
         verifyTrue(userStoragePage.isPermissionDataForRow(1, "cadcsw", readGroupName, false));
 
         userStoragePage = userStoragePage.clickFolder(tempTestFolder);
@@ -190,9 +190,7 @@ public class UserStoragePermissionsTest extends UserStorageBaseTest {
         // go up to testDirectory folder
         userStoragePage = userStoragePage.navUpLevel();
 
-        userStoragePage = cleanup(userStoragePage, workingDirectoryName);
-
-        userStoragePage.doLogout();
+        userStoragePage.doLogout(false);
 
         log.info("UserStoragePermissionsTest completed");
     }

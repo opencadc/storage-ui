@@ -58,10 +58,15 @@ public class UserStorageQuotaDisplayTest extends UserStorageBaseTest {
     }
 
     private void quotaDisplayTest() throws Exception {
-        log.info("Visiting: " + webURL +  testDirectory);
+        log.info("Visiting: " + webURL + testDirectoryPath);
+
+        FolderPage userStoragePage = goTo("/", null, FolderPage.class);
+
+        // Need to do this to have access to Home button
+        loginTest(userStoragePage);
 
         // Go to test directory
-        UserStorageBrowserPage userStoragePage = goTo(testDirectory, null, UserStorageBrowserPage.class);
+        userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
 
         // Will be located in whatever has been designated the test directory in build.gradle
         // quota should be displayed here, but not in root directory.

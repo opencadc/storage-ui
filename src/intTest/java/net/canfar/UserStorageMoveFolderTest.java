@@ -64,14 +64,17 @@ public class UserStorageMoveFolderTest extends UserStorageBaseTest {
     }
 
     private void moveFolderTest() throws Exception {
-        log.info("Visiting: " + webURL + testDirectory);
+        log.info("Visiting: " + webURL + testDirectoryPath);
 
         final String workingDirectoryName = UserStorageMoveFolderTest.class.getSimpleName() + "_" + generateAlphaNumeric();
-        UserStorageBrowserPage userStoragePage = goTo(testDirectory, null, UserStorageBrowserPage.class);
-        String[] testPath = parseTestDirPath(testDirectory);
 
-        // Login test - credentials should be in the gradle build file.
-        userStoragePage = loginTest(userStoragePage);
+        FolderPage userStoragePage = goTo("/", null, FolderPage.class);
+
+        // Need to do this to have access to Home button
+        loginTest(userStoragePage);
+
+        userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
+        final String[] testPath = UserStorageBaseTest.parseTestDirPath(testDirectoryPath);
 
         // Create a temp test folder, and run tests in there
         // This will be deleted at the end of this test suite
@@ -132,10 +135,9 @@ public class UserStorageMoveFolderTest extends UserStorageBaseTest {
         verifyTrue(userStoragePage.getTableRowCount() == 2);
 
         userStoragePage = userStoragePage.navUpLevel();
-        cleanup(userStoragePage, workingDirectoryName);
 
         log.debug("Logout");
-        userStoragePage.doLogout();
+        userStoragePage.doLogout(false);
 
         System.out.println("MoveFolderTest completed");
     }

@@ -75,8 +75,11 @@ import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.auth.AuthorizationTokenPrincipal;
 import ca.nrc.cadc.auth.IdentityManager;
+import ca.nrc.cadc.auth.SSOCookieCredential;
+import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import net.canfar.storage.web.config.StorageConfiguration;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
 import net.canfar.storage.web.restlet.StorageApplication;
 
 import org.opencadc.token.Client;
@@ -93,6 +96,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 
 class SecureServerResource extends ServerResource {
@@ -104,7 +108,8 @@ class SecureServerResource extends ServerResource {
 
     /**
      * Full constructor.  Useful for testing, or overriding default configuration.
-     * @param storageConfiguration          The main configuration.
+     *
+     * @param storageConfiguration The main configuration.
      */
     SecureServerResource(final StorageConfiguration storageConfiguration) {
         this.storageConfiguration = storageConfiguration;
@@ -154,6 +159,27 @@ class SecureServerResource extends ServerResource {
             } catch (NoSuchElementException noSuchElementException) {
                 // No Asset found
             }
+        } else {
+            // Ensure the valid backend Domains is added in.
+            // TODO: Is this insecure?  It seems like a bit of a bastardization, but the assumption is that if the
+            // TODO: caller has a cookie, then they must be valid, right?
+            // TODO: jenkinsd 2024.01.24
+            //
+            final Set<SSOCookieCredential> cookieCredentialSet =
+                    subject.getPublicCredentials(SSOCookieCredential.class);
+            if (!cookieCredentialSet.isEmpty()) {
+                final SSOCookieCredential firstCredential = cookieCredentialSet.stream().findFirst().get();
+                final VOSpaceServiceConfigManager voSpaceServiceConfigManager =
+                        new VOSpaceServiceConfigManager(this.storageConfiguration);
+                voSpaceServiceConfigManager.getServiceList().forEach(serviceName -> {
+                    final String domain = voSpaceServiceConfigManager.getServiceConfig(serviceName)
+                                                                     .getResourceID().getHost();
+
+                    subject.getPublicCredentials().add(new SSOCookieCredential(firstCredential.getSsoCookieValue(),
+                                                                               domain,
+                                                                               firstCredential.getExpiryDate()));
+                });
+            }
         }
 
         return subject;
@@ -177,7 +203,7 @@ class SecureServerResource extends ServerResource {
      */
     String getContextPath() {
         return (getServletContext() == null)
-            ? StorageApplication.DEFAULT_CONTEXT_PATH : getServletContext().getContextPath();
+               ? StorageApplication.DEFAULT_CONTEXT_PATH : getServletContext().getContextPath();
     }
 
     protected StorageConfiguration getStorageConfiguration() {
