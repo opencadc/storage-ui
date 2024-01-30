@@ -4,7 +4,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2016.                            (c) 2016.
+ *  (c) 2024.                            (c) 2024.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -69,11 +69,13 @@
 
 package net.canfar.storage.web.resources;
 
-import ca.nrc.cadc.ac.client.GMSClient;
 import net.canfar.storage.web.restlet.JSONRepresentation;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONWriter;
+import org.opencadc.gms.GroupURI;
 import org.opencadc.gms.IvoaGroupClient;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
@@ -83,22 +85,22 @@ import javax.security.auth.Subject;
 import java.security.*;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 public class GroupNameServerResource extends SecureServerResource {
+    private static final Logger LOGGER = LogManager.getLogger(GroupNameServerResource.class);
+
 
     @Get("json")
     public Representation getGroupNames() throws Exception {
-        final GMSClient gmsClient = getGMSClient();
         final Subject voSpaceUser = getCurrentSubject();
 
         return new JSONRepresentation() {
             @Override
             public void write(final JSONWriter writer) throws JSONException {
                 try {
-                    final List<String> groupNames =
-                            Subject.doAs(voSpaceUser,
-                                         (PrivilegedExceptionAction<List<String>>) gmsClient::getGroupNames);
+                    final List<String> groupNames = queryGroupNames(voSpaceUser);
 
                     Collections.sort(groupNames);
 
@@ -113,5 +115,21 @@ public class GroupNameServerResource extends SecureServerResource {
                 }
             }
         };
+    }
+
+    final List<String> queryGroupNames(final Subject voSpaceUser) throws PrivilegedActionException {
+        return Subject.doAs(voSpaceUser, (PrivilegedExceptionAction<List<String>>) () -> {
+            if (storageConfiguration.isOIDCConfigured()) {
+                LOGGER.debug("Getting only Group Names that user is a member of.");
+                final IvoaGroupClient ivoaGroupClient = new IvoaGroupClient();
+                return ivoaGroupClient.getMemberships(storageConfiguration.getGMSServiceURI())
+                                      .stream()
+                                      .map(GroupURI::getName)
+                                      .collect(Collectors.toList());
+            } else {
+                LOGGER.debug("Getting all Group Names.");
+                return storageConfiguration.getGMSClient().getGroupNames();
+            }
+        });
     }
 }

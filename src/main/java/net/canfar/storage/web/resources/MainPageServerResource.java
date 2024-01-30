@@ -225,7 +225,7 @@ public class MainPageServerResource extends StorageItemServerResource {
 
         dataModel.put("features", featureMap);
 
-        return new TemplateRepresentation(String.format("themes/%s/index.ftl", getStorageConfiguration().getThemeName()),
+        return new TemplateRepresentation(String.format("themes/%s/index.ftl", storageConfiguration.getThemeName()),
                                           getFreeMarkerConfiguration(), dataModel, MediaType.TEXT_HTML);
     }
 }

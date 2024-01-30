@@ -138,7 +138,7 @@ public class UploadVerifier {
                                                         + "contact canfarhelp@nrc-cnrc.gc.ca for "
                                                         + "assistance.");
         } else {
-            if (!URI.create("md5:" + HexUtil.toHex(calculatedMD5)).equals(URI.create(serverMD5String))) {
+            if (!HexUtil.toHex(calculatedMD5).equals(serverMD5String)) {
                 throw new UploadVerificationFailedException(
                         "** ERROR ** - Upload did not succeed: "
                         + "MD5 checksum failed.");

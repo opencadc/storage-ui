@@ -125,7 +125,7 @@ public class StorageConfiguration {
         return lookupStringArray(StorageConfigurationKey.SERVICE_NAME);
     }
 
-    URI getGMSServiceURI() {
+    public URI getGMSServiceURI() {
         final String gmsService = lookup(StorageConfigurationKey.GMS_SERVICE_URI);
         return URI.create(gmsService);
     }

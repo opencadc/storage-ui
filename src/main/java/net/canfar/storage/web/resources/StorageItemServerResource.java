@@ -116,7 +116,7 @@ public class StorageItemServerResource extends SecureServerResource {
      * Empty constructor needed for Restlet to manage it.  Needs to be public.
      */
     public StorageItemServerResource() {
-        this.voSpaceServiceConfigManager = new VOSpaceServiceConfigManager(this.getStorageConfiguration());
+        this.voSpaceServiceConfigManager = new VOSpaceServiceConfigManager(storageConfiguration);
     }
 
     /**

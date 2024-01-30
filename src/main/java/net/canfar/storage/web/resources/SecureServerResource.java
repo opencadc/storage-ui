@@ -206,10 +206,6 @@ class SecureServerResource extends ServerResource {
                ? StorageApplication.DEFAULT_CONTEXT_PATH : getServletContext().getContextPath();
     }
 
-    protected StorageConfiguration getStorageConfiguration() {
-        return this.storageConfiguration;
-    }
-
     Client getOIDCClient() throws IOException {
         return this.storageConfiguration.getOIDCClient();
     }
