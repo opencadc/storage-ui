@@ -68,13 +68,13 @@
 
 package net.canfar;
 
+import junit.framework.AssertionFailedError;
 import org.apache.log4j.Logger;
 import org.openqa.selenium.*;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import ca.nrc.cadc.web.selenium.AbstractTestWebPage;
 
 import ca.nrc.cadc.util.StringUtil;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -83,10 +83,8 @@ import java.util.Arrays;
 import java.util.List;
 
 
-public class UserStorageBrowserPage extends AbstractTestWebPage {
-
-    private static final Logger log =
-        Logger.getLogger(UserStorageBrowserPage.class);
+public class FolderPage extends StoragePage {
+    private static final Logger log = Logger.getLogger(FolderPage.class);
 
 
     // Strings for matching against prompt messages and buttons
@@ -126,11 +124,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     private static final By LOGIN_FORM_BY = By.id("loginForm");
     private static final By MOVE_TO_BUTTON_BY = By.cssSelector("button.jqibutton:nth-child(1)");
     private static final By PROGRESS_BAR_BY = By.className("beacon-progress");
-
-    // Error Page: is generated using a different template
-    // at the same endpoint: /storage/list
-    private static final By ERROR_DISPLAY = By.id("errorDisplayDiv");
-
     public static final String READ_GROUP_DIV = "readGroupDiv";
     public static final String WRITE_GROUP_DIV = "writeGroupDiv";
     public static final String READ_GROUP_INPUT = "readGroup";
@@ -201,7 +194,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     private WebElement moredetailsButton;
 
 
-    public UserStorageBrowserPage(final WebDriver driver) throws Exception {
+    public FolderPage(final WebDriver driver) throws Exception {
         super(driver);
 
         // Waiting for three seconds is terrible, but I can't find a way to ensure the page is waiting to be reloaded.
@@ -226,21 +219,32 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     }
 
     // Transition functions
-    protected UserStorageBrowserPage clickButtonAndWait(final String promptText) throws Exception {
+    protected FolderPage clickButtonAndWait(final String promptText) throws Exception {
         final By buttonBy = By.xpath("//button[contains(text(),\"" + promptText + "\")]");
-        return clickButtonAndWait(buttonBy);
+        return (FolderPage) clickButtonAndWait(buttonBy);
     }
 
-    protected UserStorageBrowserPage clickButtonAndWait(final WebElement buttonElement) throws Exception {
+    protected StoragePage clickButtonAndWait(final WebElement buttonElement, final boolean expectSuccess)
+            throws Exception {
         click(buttonElement);
-        final UserStorageBrowserPage nextPage = new UserStorageBrowserPage(this.driver);
-        nextPage.waitForStorageLoad();
 
-        return nextPage;
+        if (expectSuccess) {
+            final FolderPage nextPage = new FolderPage(this.driver);
+            nextPage.waitForStorageLoad();
+
+            return nextPage;
+        } else {
+            return new ErrorPage(this.driver);
+        }
     }
 
-    protected UserStorageBrowserPage clickButtonAndWait(final By buttonBy) throws Exception {
-        return clickButtonAndWait(find(buttonBy));
+    protected FolderPage clickButtonAndWait(final By buttonBy) throws Exception {
+        return (FolderPage) clickButtonAndWait(buttonBy, true);
+    }
+
+    protected StoragePage clickButtonAndWait(final By buttonBy, final boolean expectSuccess)
+            throws Exception {
+        return clickButtonAndWait(find(buttonBy), expectSuccess);
     }
 
     public void clickButtonWithClass(String promptText, String className) throws Exception {
@@ -256,7 +260,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         sendKeys(searchFilter, searchString);
     }
 
-    public UserStorageBrowserPage doLogin(String username, String password) throws Exception {
+    public FolderPage doLogin(String username, String password) throws Exception {
         click(LOGIN_DROPDOWN_BY);
 
         waitForElementVisible(USERNAME_INPUT_BY);
@@ -265,22 +269,27 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         sendKeys(find(USERNAME_INPUT_BY), username);
         sendKeys(find(PASSWORD_INPUT_BY), password);
 
-        final UserStorageBrowserPage authPage = clickButtonAndWait(LOGIN_SUBMIT_BUTTON_BY);
+        final FolderPage authPage = clickButtonAndWait(LOGIN_SUBMIT_BUTTON_BY);
         authPage.waitForStorageLoad();
 
         return authPage;
     }
 
-    public UserStorageBrowserPage doLogout() throws Exception {
+    public StoragePage doLogout() throws Exception {
+        return doLogout(true);
+    }
+
+    public StoragePage doLogout(final boolean expectSuccess) throws Exception {
         waitForElementClickable(USER_ACTIONS_LINK_BY);
         click(USER_ACTIONS_LINK_BY);
 
         waitForElementClickable(LOGOUT_LINK_BY);
-        return clickButtonAndWait(LOGOUT_LINK_BY);
+
+        return clickButtonAndWait(LOGOUT_LINK_BY, expectSuccess);
     }
 
     // Folder Related Transition functions
-    public UserStorageBrowserPage clickFolder(String folderName) throws Exception {
+    public FolderPage clickFolder(String folderName) throws Exception {
         final String currentHeaderText = getHeaderText().equals("ROOT") ? "" : getHeaderText();
         final By folderBy = By.xpath("//*/td/a[contains(text(),'" + folderName + "')]");
 
@@ -290,7 +299,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
 
         final WebElement folder = find(folderBy);
 
-        final UserStorageBrowserPage nextPage = clickButtonAndWait(folder);
+        final FolderPage nextPage = (FolderPage) clickButtonAndWait(folder, true);
         nextPage.waitForStorageLoad();
         nextPage.waitForHeaderText(currentHeaderText + "/" + folderName);
 
@@ -299,7 +308,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
 
 
     // CRUD for folders
-    protected UserStorageBrowserPage createNewFolder(final String folderName) throws Exception {
+    protected FolderPage createNewFolder(final String folderName) throws Exception {
         openNewMenu();
 
         waitForElementVisible(NEW_FOLDER_BY);
@@ -312,7 +321,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         final WebElement createFolderButton = find(By.xpath("//button[contains(text(),\"Create Folder\")]"));
         click(createFolderButton);
 
-        final UserStorageBrowserPage nextPage = confirmJqiMsg("success");
+        final FolderPage nextPage = confirmJqiMsg("success");
         nextPage.waitForStorageLoad();
 
         return nextPage;
@@ -364,15 +373,15 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     }
 
 
-    public UserStorageBrowserPage startMove() throws Exception {
+    public FolderPage startMove() throws Exception {
         if (!isDisabled(moveButton)) {
             click(moveButton);
         }
 
-        return new UserStorageBrowserPage(driver);
+        return new FolderPage(driver);
     }
 
-    public UserStorageBrowserPage doMove() throws Exception {
+    public FolderPage doMove() throws Exception {
         waitForElementPresent(MOVE_TO_BUTTON_BY);
         waitForElementVisible(MOVE_TO_BUTTON_BY);
         click(MOVE_TO_BUTTON_BY);
@@ -387,36 +396,36 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
 
         // confirm folder move
         confirmJQIColourMessage(SUCCESSFUL);
-        final UserStorageBrowserPage nextPage = clickButtonAndWait(CLOSE);
+        final FolderPage nextPage = clickButtonAndWait(CLOSE);
         nextPage.waitForStorageLoad();
 
         return nextPage;
     }
 
 
-    public UserStorageBrowserPage startVOSpaceLink() throws Exception {
+    public FolderPage startVOSpaceLink() throws Exception {
         openNewMenu();
         waitForElementVisible(NEW_VOSPACE_LINK_BY);
         click(NEW_VOSPACE_LINK_BY);
-        return new UserStorageBrowserPage(driver);
+        return new FolderPage(driver);
     }
 
-    public UserStorageBrowserPage doVOSpaceLink() throws Exception {
+    public FolderPage doVOSpaceLink() throws Exception {
         final String currentHeaderText = getHeaderText();
 
         clickButton(LINK);
         confirmJQIMessageText(LINK_OK);
-        final UserStorageBrowserPage nextPage = clickButtonAndWait(OK);
+        final FolderPage nextPage = clickButtonAndWait(OK);
         nextPage.waitForStorageLoad();
 
         return nextPage;
     }
 
 
-    public UserStorageBrowserPage deleteFolder() throws Exception {
-        final String currentHeaderText = getHeaderText();
-
-        if (!isDisabled(deleteButton)) {
+    public FolderPage deleteFolder() throws Exception {
+        if (isDisabled(deleteButton)) {
+            throw new AssertionFailedError("Delete button is disabled.");
+        } else {
             click(deleteButton);
         }
 
@@ -426,16 +435,16 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
 
         // confirm folder delete
         confirmJQIColourMessage(SUCCESSFUL);
-        final UserStorageBrowserPage nextPage = clickButtonAndWait(CLOSE);
+        final FolderPage nextPage = clickButtonAndWait(CLOSE);
         nextPage.waitForStorageLoad();
 
         return nextPage;
     }
 
-    public UserStorageBrowserPage switchVOSpaceService(final String serviceName) throws Exception {
+    public FolderPage switchVOSpaceService(final String serviceName) throws Exception {
         click(vospaceSvcMenu);
         WebElement anchor = find(By.xpath("//*[@id=\"vos_" + serviceName + "\"]"));
-        return clickButtonAndWait(anchor);
+        return(FolderPage) clickButtonAndWait(anchor, true);
     }
 
     // Permissions functions
@@ -452,15 +461,15 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     }
 
 
-    protected UserStorageBrowserPage setReadGroup(final String newGroup, final boolean isModifyNode) throws Exception {
+    protected FolderPage setReadGroup(final String newGroup, final boolean isModifyNode) throws Exception {
         return setGroup(READ_GROUP_INPUT, newGroup, isModifyNode);
     }
 
-    protected UserStorageBrowserPage setWriteGroup(final String newGroup, final boolean isModifyNode) throws Exception {
+    protected FolderPage setWriteGroup(final String newGroup, final boolean isModifyNode) throws Exception {
         return setGroup(WRITE_GROUP_INPUT, newGroup, isModifyNode);
     }
 
-    UserStorageBrowserPage setGroup(final String idToFind, final String newGroup, final boolean isModifyNode)
+    FolderPage setGroup(final String idToFind, final String newGroup, final boolean isModifyNode)
         throws Exception {
         clickEditIconForFirstRow();
         final By idToFindBy = By.id(idToFind);
@@ -479,7 +488,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         clickButton(SAVE);
 
         final String confirmationBoxMsg = isModifyNode ? MODIFIED : NOT_MODIFIED;
-        final UserStorageBrowserPage nextPage = confirmJqiMsg(confirmationBoxMsg);
+        final FolderPage nextPage = confirmJqiMsg(confirmationBoxMsg);
         nextPage.waitForStorageLoad();
 
         return nextPage;
@@ -492,13 +501,13 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
      * @param message
      * @throws Exception
      */
-    protected UserStorageBrowserPage confirmJqiMsg(String message) throws Exception {
+    protected FolderPage confirmJqiMsg(String message) throws Exception {
         System.out.println(String.format("Confirming '%s'", message));
         confirmJQIMessageText(message);
         return clickButtonAndWait(OK);
     }
 
-    protected UserStorageBrowserPage setGroupOnly(final String idToFind, final String newGroup, final boolean confirm)
+    protected FolderPage setGroupOnly(final String idToFind, final String newGroup, final boolean confirm)
         throws Exception {
         waitForElementPresent(PUBLIC_CHECKBOX_BY);
         waitForElementVisible(PUBLIC_CHECKBOX_BY);
@@ -523,7 +532,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         // show up if an invalid group has been sent in.
         if (confirm) {
             clickButton(SAVE);
-            final UserStorageBrowserPage newPage = confirmJqiMsg(MODIFIED);
+            final FolderPage newPage = confirmJqiMsg(MODIFIED);
             newPage.waitForStorageLoad();
 
             return newPage;
@@ -533,7 +542,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     }
 
 
-    protected UserStorageBrowserPage togglePublicAttributeForRow() throws Exception {
+    protected FolderPage togglePublicAttributeForRow() throws Exception {
         clickEditIconForFirstRow();
 
         waitForElementPresent(PUBLIC_CHECKBOX_BY);
@@ -543,14 +552,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         waitForAjaxFinished();
         clickButton(SAVE);
 
-        final UserStorageBrowserPage nextPage = confirmJqiMsg(SUCCESSFUL);
+        final FolderPage nextPage = confirmJqiMsg(SUCCESSFUL);
         nextPage.waitForStorageLoad();
 
         return nextPage;
     }
 
 
-    protected UserStorageBrowserPage applyRecursivePermissions(final String idToFind, final String newGroup)
+    protected FolderPage applyRecursivePermissions(final String idToFind, final String newGroup)
         throws Exception {
         clickEditIconForFirstRow();
         waitForElementPresent(RECURSIVE_CHECKBOX_BY);
@@ -567,7 +576,7 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         waitForAjaxFinished();
         clickButton(SAVE);
 
-        final UserStorageBrowserPage nextPage = confirmJqiMsg(SUBMITTED);
+        final FolderPage nextPage = confirmJqiMsg(SUBMITTED);
         nextPage.waitForStorageLoad();
 
         return nextPage;
@@ -588,12 +597,11 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
     }
 
     // Navigation functions
-    public UserStorageBrowserPage navToRoot() throws Exception {
-        final UserStorageBrowserPage rootPage = clickButtonAndWait(rootButton);
-        return rootPage;
+    public FolderPage navToRoot() throws Exception {
+        return (FolderPage) clickButtonAndWait(rootButton, true);
     }
 
-    public UserStorageBrowserPage navUpLevel() throws Exception {
+    public FolderPage navUpLevel() throws Exception {
         final String expectedHeaderText;
         final String currentHeaderText = getHeaderText();
 
@@ -615,14 +623,14 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         waitForElementPresent(LEVEL_UP_BY);
         waitForElementVisible(LEVEL_UP_BY);
 
-        final UserStorageBrowserPage nextPage = clickButtonAndWait(LEVEL_UP_BY);
+        final FolderPage nextPage = clickButtonAndWait(LEVEL_UP_BY);
         nextPage.waitForHeaderText(expectedHeaderText);
         nextPage.waitForStorageLoad();
 
         return nextPage;
     }
 
-    public UserStorageBrowserPage navToHome() throws Exception {
+    public FolderPage navToHome() throws Exception {
         waitForElementPresent(HOME_DIR_BY);
         return clickButtonAndWait(HOME_DIR_BY);
     }
@@ -681,14 +689,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         }
     }
 
-    // Permissions Data
-    public PermissionsFormData getValuesFromEditIcon() throws Exception {
-        WebElement editIcon = find(By.xpath(String.format(EDIT_ICON_BY_TEMPLATE, "1")));
-
-        return new PermissionsFormData(editIcon.getAttribute("data-readgroup"),
-                                       editIcon.getAttribute("data-writegroup"));
-    }
-
     boolean isLoggedIn() throws Exception {
         try {
             waitForElementPresent(ACCESS_ACTIONS_DROPDOWN_BY);
@@ -702,49 +702,6 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
 
     private boolean isDisabled(WebElement webEl) {
         return webEl.getAttribute("class").contains("disabled");
-    }
-
-    public boolean isReadAccess() {
-        // need to check class of these buttons, look for 'disabled' in there
-        return isDisabled(downloadButton) &&
-            isDisabled(newdropdownButton) &&
-            !isDisabled(searchFilter) &&
-            !isDisabled(levelUpButton) &&
-            !isDisabled(rootButton);
-    }
-
-    public boolean isSubFolder(String folderName) throws Exception {
-        // Check number of elements in button bar
-        // Check state of buttons
-        boolean baseTest = getHeaderText().contains(folderName) &&
-            levelUpButton.isDisplayed() &&
-            deleteButton.isDisplayed() &&
-            rootButton.isDisplayed() &&
-            newdropdownButton.isDisplayed() &&
-            moredetailsButton.isDisplayed();
-
-
-        if (isLoggedIn()) {
-            baseTest = baseTest && isHomeDirButtonDisplayed();
-        }
-
-        return baseTest;
-    }
-
-    public boolean isRootFolder() throws Exception {
-        // navigation buttons are NOT displayed in root
-        // folder. This will change as functionality is added
-        // Currently the navbar only has one child, and it's ID is
-        waitForElementPresent(NAVBAR_ELEMENTS_BY);
-
-        if (isLoggedIn()) {
-            return getHeaderText().contains(ROOT_FOLDER_NAME)
-                && isHomeDirButtonDisplayed()
-                && navbarButtonList.findElements(By.xpath("//*[@id=\"navbar-functions\"]/ul/li")).size() == 2;
-        } else {
-            return getHeaderText().contains(ROOT_FOLDER_NAME)
-                && navbarButtonList.findElements(By.xpath("//*[@id=\"navbar-functions\"]/ul/li")).size() == 1;
-        }
     }
 
     public boolean isHomeDirButtonDisplayed() throws Exception {
@@ -910,35 +867,5 @@ public class UserStorageBrowserPage extends AbstractTestWebPage {
         // jqifade modal div will be up sometimes for longer than it takes
         // for the scripts to click through. Wait for it to go away
         waitForElementInvisible(By.className("jqifade"));
-    }
-
-
-    // Error Page access
-    public boolean verifyErrorMessage(String message) throws Exception {
-        try {
-            final WebElement errorDisplayDiv = waitForElementPresent(ERROR_DISPLAY);
-            return errorDisplayDiv.getText().contains(message);
-        } catch (NoSuchElementException e) {
-            return false;
-        }
-    }
-}
-
-
-final class PermissionsFormData {
-    String readGroup;
-    String writeGroup;
-
-    PermissionsFormData(String readGroup, String writeGroup) {
-        this.readGroup = readGroup;
-        this.writeGroup = writeGroup;
-    }
-
-    boolean hasReadGroup() {
-        return StringUtil.hasText(readGroup);
-    }
-
-    boolean hasWriteGroup() {
-        return StringUtil.hasText(writeGroup);
     }
 }

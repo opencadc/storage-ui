@@ -68,9 +68,9 @@
 
 package net.canfar.storage;
 
-import ca.nrc.cadc.io.ResourceIterator;
 import ca.nrc.cadc.net.NetUtil;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import org.apache.commons.collections.iterators.EmptyIterator;
 import org.opencadc.vospace.ContainerNode;
 import org.opencadc.vospace.Node;
 import org.opencadc.vospace.VOS;
@@ -80,10 +80,11 @@ import net.canfar.storage.web.StorageItemFactory;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.PrivilegedExceptionAction;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -128,18 +129,35 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implemen
             queryPayload.put("limit", this.pageSize.toString());
         }
 
-        queryPayload.put("uri", (current == null) ? "" : NetUtil.encode(current.toString()));
+        if (current != null) {
+            queryPayload.put("uri", NetUtil.encode(current.toString()));
+        }
 
         return queryPayload.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
                            .collect(Collectors.joining("&"));
     }
 
-    private ResourceIterator<Node> nextPage() throws Exception {
-        return Subject.doAs(user, (PrivilegedExceptionAction<ResourceIterator<Node>>) () ->
-                ((ContainerNode) voSpaceClient.getNode(folderURI.getPath(), getQuery())).childIterator);
+    private Iterator<Node> nextPage() throws Exception {
+        return Subject.doAs(user, (PrivilegedExceptionAction<Iterator<Node>>) () -> {
+            final ContainerNode pageNode = ((ContainerNode) voSpaceClient.getNode(folderURI.getPath(), getQuery()));
+            final List<Node> childNodes = pageNode.getNodes();
+
+            // If the child count is one or zero, then this page contains the requested startURI only, or nothing.  If
+            // it only contains the startURI, then the next page will as well, and this will become an endless request
+            // of pages.
+            // jenkinsd 2024.01.25
+            //
+            if (childNodes.size() < 2 && this.current != null) {
+                return Collections.emptyIterator();
+            } else {
+                return pageNode.childIterator == null
+                       ? pageNode.getNodes().iterator()
+                       : pageNode.childIterator;
+            }
+        });
     }
 
-    private boolean writePage(final ResourceIterator<Node> page) throws IOException {
+    private boolean writePage(final Iterator<Node> page) throws IOException {
         if (!page.hasNext()) {
             return false;
         } else {

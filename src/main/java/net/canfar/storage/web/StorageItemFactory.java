@@ -189,7 +189,7 @@ public class StorageItemFactory {
                                         : -1;
             final ContainerNode containerNode = (ContainerNode) node;
             final String sizeInString = containerNode.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH);
-            final long sizeInBytes = sizeInString == null ? -1L : Long.parseLong(sizeInString);
+            final long sizeInBytes = StringUtil.hasText(sizeInString) ? Long.parseLong(sizeInString) : -1L;
             nextItem = new FolderItem(nodeURI, sizeInBytes, lastModifiedDate, publicFlag, lockedFlag, writeGroupURIs,
                                       readGroupURIs, owner, readableFlag, writableFlag, totalChildCount,
                                       getTarget(containerNode));
@@ -197,7 +197,8 @@ public class StorageItemFactory {
             nextItem = new LinkItem(nodeURI, -1L, lastModifiedDate, publicFlag, lockedFlag, writeGroupURIs,
                                     readGroupURIs, owner, readableFlag, writableFlag, getTarget(node));
         } else {
-            final long sizeInBytes = Long.parseLong(node.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH));
+            final String sizeInString = node.getPropertyValue(VOS.PROPERTY_URI_CONTENTLENGTH);
+            final long sizeInBytes = StringUtil.hasText(sizeInString) ? Long.parseLong(sizeInString) : -1L;
 
             nextItem = new FileItem(nodeURI, sizeInBytes, lastModifiedDate, publicFlag, lockedFlag, writeGroupURIs,
                                     readGroupURIs, owner, readableFlag, writableFlag, getTarget(node));

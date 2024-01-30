@@ -121,11 +121,12 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 
 public class FileItemServerResource extends StorageItemServerResource {
@@ -137,6 +138,12 @@ public class FileItemServerResource extends StorageItemServerResource {
 
     private final UploadVerifier uploadVerifier;
     private final FileValidator fileValidator;
+
+    private final static AuthMethod[] PROTOCOL_AUTH_METHODS = new AuthMethod[] {
+            AuthMethod.ANON,
+            AuthMethod.CERT,
+            AuthMethod.COOKIE
+    };
 
 
     FileItemServerResource(StorageConfiguration storageConfiguration,
@@ -354,10 +361,11 @@ public class FileItemServerResource extends StorageItemServerResource {
                                                          Standards.VOSPACE_TRANSFERS_20, am);
         LOGGER.debug("uploadURL: " + baseURL);
 
-        final List<Protocol> protocols = new ArrayList<>();
-        final Protocol httpsAuth = new Protocol(VOS.PROTOCOL_HTTPS_PUT);
-        httpsAuth.setSecurityMethod(Standards.getSecurityMethod(am));
-        protocols.add(httpsAuth);
+        final List<Protocol> protocols = Arrays.stream(FileItemServerResource.PROTOCOL_AUTH_METHODS).map(authMethod -> {
+            final Protocol httpsAuth = new Protocol(VOS.PROTOCOL_HTTPS_PUT);
+            httpsAuth.setSecurityMethod(Standards.getSecurityMethod(authMethod));
+            return httpsAuth;
+        }).collect(Collectors.toList());
 
         final Transfer transfer = new Transfer(dataNodeVOSURI.getURI(), Direction.pushToVoSpace);
         transfer.setView(new View(VOS.VIEW_DEFAULT));

@@ -110,8 +110,10 @@ public class MainPageServerResource extends StorageItemServerResource {
 
     @Get
     public Representation represent() throws Exception {
-        final ContainerNode currentNode = getCurrentNode(getCurrentPath().toString().equals("/")
-                                                         ? VOS.Detail.raw : VOS.Detail.max);
+        final String pathString = getCurrentPath().toString();
+        final VOS.Detail detail = (!StringUtil.hasText(pathString) || pathString.trim().equals("/"))
+                                  ? VOS.Detail.raw : VOS.Detail.max;
+        final ContainerNode currentNode = getCurrentNode(detail);
         return representContainerNode(currentNode);
     }
 
@@ -122,8 +124,16 @@ public class MainPageServerResource extends StorageItemServerResource {
         final Iterator<Node> childNodeIterator;
         if (currentService.supportsPaging()) {
             final List<Node> childNodes = containerNode.getNodes();
-            childNodeIterator = childNodes.iterator();
-            startNextPageURI = childNodes.isEmpty() ? null : toURI(childNodes.get(childNodes.size() - 1));
+            if (childNodes.isEmpty()) {
+                startNextPageURI = null;
+                childNodeIterator = Collections.emptyIterator();
+            } else {
+                final Node nextNode = childNodes.get(childNodes.size() - 1);
+                nextNode.parent = containerNode;
+                PathUtils.augmentParents(PathUtils.toPath(nextNode), nextNode);
+                startNextPageURI = childNodes.isEmpty() ? null : toURI(nextNode);
+                childNodeIterator = childNodes.iterator();
+            }
         } else {
             childNodeIterator = containerNode.childIterator == null
                                 ? containerNode.getNodes().iterator()
@@ -215,7 +225,7 @@ public class MainPageServerResource extends StorageItemServerResource {
 
         dataModel.put("features", featureMap);
 
-        return new TemplateRepresentation(String.format("themes/%s/index.ftl", getStorageConfiguration().getThemeName()),
+        return new TemplateRepresentation(String.format("themes/%s/index.ftl", storageConfiguration.getThemeName()),
                                           getFreeMarkerConfiguration(), dataModel, MediaType.TEXT_HTML);
     }
 }

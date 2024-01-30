@@ -128,13 +128,11 @@ public class FolderItemServerResource extends StorageItemServerResource {
         final Node node = getCurrentNode(Detail.properties);
         final long folderSize = getPropertyValue(node, VOS.PROPERTY_URI_CONTENTLENGTH);
         final long quota = getPropertyValue(node, VOS.PROPERTY_URI_QUOTA);
-
-
         final String quotaString = new FileSizeRepresentation().getSizeHumanReadable(quota);
         final String remainingSizeString = fileSizeRepresentation.getSizeHumanReadable(
                 ((quota - folderSize) > 0) ? (quota - folderSize) : 0);
 
-        if (folderSize != 0 && quota != 0) {
+        if (quota != 0) {
             return new JSONRepresentation() {
                 @Override
                 public void write(final JSONWriter jsonWriter)

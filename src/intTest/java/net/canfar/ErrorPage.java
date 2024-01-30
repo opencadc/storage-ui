@@ -1,4 +1,3 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
@@ -67,69 +66,12 @@
  ************************************************************************
  */
 
-package net.canfar.storage.web.resources;
+package net.canfar;
 
-import net.canfar.storage.web.restlet.JSONRepresentation;
+import org.openqa.selenium.WebDriver;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.json.JSONException;
-import org.json.JSONWriter;
-import org.opencadc.gms.GroupURI;
-import org.opencadc.gms.IvoaGroupClient;
-import org.restlet.representation.Representation;
-import org.restlet.resource.Get;
-
-import javax.security.auth.Subject;
-
-import java.security.*;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
-
-
-public class GroupNameServerResource extends SecureServerResource {
-    private static final Logger LOGGER = LogManager.getLogger(GroupNameServerResource.class);
-
-
-    @Get("json")
-    public Representation getGroupNames() throws Exception {
-        final Subject voSpaceUser = getCurrentSubject();
-
-        return new JSONRepresentation() {
-            @Override
-            public void write(final JSONWriter writer) throws JSONException {
-                try {
-                    final List<String> groupNames = queryGroupNames(voSpaceUser);
-
-                    Collections.sort(groupNames);
-
-                    writer.array();
-                    for (final String s : groupNames) {
-                        writer.value(s);
-                    }
-
-                    writer.endArray();
-                } catch (PrivilegedActionException e) {
-                    throw new JSONException(e.getException());
-                }
-            }
-        };
-    }
-
-    final List<String> queryGroupNames(final Subject voSpaceUser) throws PrivilegedActionException {
-        return Subject.doAs(voSpaceUser, (PrivilegedExceptionAction<List<String>>) () -> {
-            if (storageConfiguration.isOIDCConfigured()) {
-                LOGGER.debug("Getting only Group Names that user is a member of.");
-                final IvoaGroupClient ivoaGroupClient = new IvoaGroupClient();
-                return ivoaGroupClient.getMemberships(storageConfiguration.getGMSServiceURI())
-                                      .stream()
-                                      .map(GroupURI::getName)
-                                      .collect(Collectors.toList());
-            } else {
-                LOGGER.debug("Getting all Group Names.");
-                return storageConfiguration.getGMSClient().getGroupNames();
-            }
-        });
+public class ErrorPage extends StoragePage {
+    public ErrorPage(WebDriver driver) throws Exception {
+        super(driver);
     }
 }
