@@ -1,5 +1,9 @@
 # Storage User Interface
 
+## January 30, 2024
+* Support for IAM Group querying
+* MD5 property checking fix
+
 ## December 8, 2023
 * OpenID Connect compliant with Authorization Code flow
 * Feature flag to disable some features (Batch download/upload, ZIP Download, Create External Links, Supports Paginated downloads)
