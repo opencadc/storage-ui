@@ -68,7 +68,6 @@
 
 package net.canfar.storage.web.resources;
 
-import ca.nrc.cadc.ac.client.GMSClient;
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
@@ -76,7 +75,6 @@ import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.auth.AuthorizationTokenPrincipal;
 import ca.nrc.cadc.auth.IdentityManager;
 import ca.nrc.cadc.auth.SSOCookieCredential;
-import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
@@ -208,10 +206,6 @@ class SecureServerResource extends ServerResource {
 
     Client getOIDCClient() throws IOException {
         return this.storageConfiguration.getOIDCClient();
-    }
-
-    GMSClient getGMSClient() {
-        return storageConfiguration.getGMSClient();
     }
 
     AccessControlClient getAccessControlClient() {

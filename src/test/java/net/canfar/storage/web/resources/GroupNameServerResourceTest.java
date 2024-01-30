@@ -67,9 +67,8 @@
  */
 package net.canfar.storage.web.resources;
 
-import ca.nrc.cadc.ac.client.GMSClient;
+import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.restlet.JSONRepresentation;
-import net.canfar.storage.web.restlet.StorageApplication;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import org.json.JSONArray;
 import org.json.JSONWriter;
@@ -78,21 +77,19 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 import org.mockito.Mockito;
-import org.restlet.Context;
+import org.opencadc.gms.IvoaGroupClient;
 import org.restlet.Response;
 
 import javax.security.auth.Subject;
 import java.io.StringWriter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 
 public class GroupNameServerResourceTest extends AbstractServerResourceTest<GroupNameServerResource> {
+
     @Test
     public void getGroupNames() throws Exception {
-
         final List<String> groupList = new ArrayList<>();
         groupList.add("CHIMPS");
         groupList.add("A-TEAM");
@@ -101,7 +98,12 @@ public class GroupNameServerResourceTest extends AbstractServerResourceTest<Grou
 
         Mockito.when(mockGMSClient.getGroupNames()).thenReturn(groupList);
 
-        testSubject = new GroupNameServerResource() {
+        final StorageConfiguration storageConfiguration = Mockito.mock(StorageConfiguration.class);
+
+        Mockito.when(storageConfiguration.isOIDCConfigured()).thenReturn(false);
+        Mockito.when(storageConfiguration.getGMSClient()).thenReturn(mockGMSClient);
+
+        testSubject = new GroupNameServerResource(storageConfiguration) {
             @Override
             RegistryClient getRegistryClient() {
                 return mockRegistryClient;
@@ -113,8 +115,8 @@ public class GroupNameServerResourceTest extends AbstractServerResourceTest<Grou
             }
 
             @Override
-            GMSClient getGMSClient() {
-                return mockGMSClient;
+            IvoaGroupClient getIvoaGroupClient() {
+                return null;
             }
 
             /**
@@ -143,6 +145,8 @@ public class GroupNameServerResourceTest extends AbstractServerResourceTest<Grou
 
         assertEquals("Wrong list of items.", dataList, groupList);
 
+        Mockito.verify(storageConfiguration, Mockito.times(1)).isOIDCConfigured();
+        Mockito.verify(storageConfiguration, Mockito.times(1)).getGMSClient();
         Mockito.verify(mockGMSClient, Mockito.atMostOnce()).getGroupNames();
     }
 }

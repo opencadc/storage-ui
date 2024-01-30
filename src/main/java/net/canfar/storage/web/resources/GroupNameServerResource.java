@@ -69,6 +69,7 @@
 
 package net.canfar.storage.web.resources;
 
+import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.restlet.JSONRepresentation;
 
 import org.apache.logging.log4j.LogManager;
@@ -91,6 +92,13 @@ import java.util.stream.Collectors;
 public class GroupNameServerResource extends SecureServerResource {
     private static final Logger LOGGER = LogManager.getLogger(GroupNameServerResource.class);
 
+    public GroupNameServerResource() {
+        super();
+    }
+
+    GroupNameServerResource(StorageConfiguration storageConfiguration) {
+        super(storageConfiguration);
+    }
 
     @Get("json")
     public Representation getGroupNames() throws Exception {
@@ -121,7 +129,7 @@ public class GroupNameServerResource extends SecureServerResource {
         return Subject.doAs(voSpaceUser, (PrivilegedExceptionAction<List<String>>) () -> {
             if (storageConfiguration.isOIDCConfigured()) {
                 LOGGER.debug("Getting only Group Names that user is a member of.");
-                final IvoaGroupClient ivoaGroupClient = new IvoaGroupClient();
+                final IvoaGroupClient ivoaGroupClient = getIvoaGroupClient();
                 return ivoaGroupClient.getMemberships(storageConfiguration.getGMSServiceURI())
                                       .stream()
                                       .map(GroupURI::getName)
@@ -131,5 +139,9 @@ public class GroupNameServerResource extends SecureServerResource {
                 return storageConfiguration.getGMSClient().getGroupNames();
             }
         });
+    }
+
+    IvoaGroupClient getIvoaGroupClient() {
+        return new IvoaGroupClient();
     }
 }
