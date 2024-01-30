@@ -144,11 +144,6 @@ public class MainPageServerResourceTest extends AbstractServerResourceTest<MainP
             }
 
             @Override
-            protected StorageConfiguration getStorageConfiguration() {
-                return mockStorageConfiguration;
-            }
-
-            @Override
             protected Client getOIDCClient() {
                 return mockOIDCConfiguration;
             }
