@@ -3,11 +3,9 @@
 
 name: Storage UI build
 
-on:
-  push:
-    branches: [ master, github-actions ]
+on: 
   pull_request:
-    branches: [ master ]
+  push:
 
 jobs:
   build:
