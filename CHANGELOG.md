@@ -4,9 +4,11 @@
 * Support for IAM Group querying
 * MD5 property checking fix
 
+## January 12, 2024
+* Feature flag to disable some features (Batch download/upload, ZIP Download, Create External Links, Supports Paginated downloads)
+
 ## December 8, 2023
 * OpenID Connect compliant with Authorization Code flow
-* Feature flag to disable some features (Batch download/upload, ZIP Download, Create External Links, Supports Paginated downloads)
 
 ## March 29, 2023
 * Add Shell Script download
