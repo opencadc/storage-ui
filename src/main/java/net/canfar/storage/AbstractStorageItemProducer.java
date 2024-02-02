@@ -70,7 +70,6 @@ package net.canfar.storage;
 
 import ca.nrc.cadc.net.NetUtil;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import org.apache.commons.collections.iterators.EmptyIterator;
 import org.opencadc.vospace.ContainerNode;
 import org.opencadc.vospace.Node;
 import org.opencadc.vospace.VOS;
