@@ -171,8 +171,7 @@ public class FileItemServerResource extends StorageItemServerResource {
         final Subject subject = getCurrentSubject();
         final VOSURI dataNodeVOSURI = toURI(dataNode);
         final AuthMethod authMethod = AuthenticationUtil.getAuthMethodFromCredentials(subject);
-        final URL baseURL = getRegistryClient().getServiceURL(dataNodeVOSURI.getServiceURI(),
-                                                              Standards.VOSPACE_FILES_20, authMethod);
+        final URL baseURL = lookupDownloadEndpoint(dataNodeVOSURI.getServiceURI(), authMethod);
 
         // Special handling for tokenized pre-auth URLs
         if (Objects.requireNonNull(authMethod) == AuthMethod.TOKEN) {
@@ -186,6 +185,36 @@ public class FileItemServerResource extends StorageItemServerResource {
             redirectSeeOther(baseURL + dataNodeVOSURI.getPath());
         }
         LOGGER.debug("Download URL: " + baseURL);
+    }
+
+    /**
+     * Check both the new prototype and old Files service lookup endpoints.
+     * @param serviceURI    The URI that identifies the Service to use.
+     * @param authMethod    The AuthMethod interface to pick out.
+     * @return  URL, never null.
+     * @throws IllegalStateException if no URL can be found.
+     */
+    private URL lookupDownloadEndpoint(final URI serviceURI, final AuthMethod authMethod) {
+        final URI[] downloadEndpointStandards = new URI[] {
+                Standards.VOSPACE_FILES,
+                Standards.VOSPACE_FILES_20
+        };
+
+        for (final URI uri : downloadEndpointStandards) {
+            final URL serviceURL = lookupDownloadEndpoint(serviceURI, uri, authMethod);
+            if (serviceURL != null) {
+                return serviceURL;
+            }
+        }
+
+        throw new IllegalStateException("Incomplete configuration in the registry.  No endpoint for "
+                                        + serviceURI + " could be found from ("
+                                        + Arrays.toString(downloadEndpointStandards) + ")");
+    }
+
+    private URL lookupDownloadEndpoint(final URI serviceURI, final URI capabilityStandardURI,
+                                       final AuthMethod authMethod) {
+        return getRegistryClient().getServiceURL(serviceURI, capabilityStandardURI, authMethod);
     }
 
     String toEndpoint(final URI downloadURI) {

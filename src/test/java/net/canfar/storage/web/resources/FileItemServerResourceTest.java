@@ -73,6 +73,7 @@ import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.net.ResourceNotFoundException;
+import ca.nrc.cadc.reg.Standards;
 import net.canfar.storage.web.RegexFileValidator;
 import net.canfar.storage.web.StorageItemFactory;
 import net.canfar.storage.web.UploadOutputStreamWrapper;
@@ -82,6 +83,7 @@ import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import org.opencadc.vospace.*;
 
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.concurrent.ConcurrentMap;
@@ -123,17 +125,23 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
         testUser.getPublicCredentials().add(
                 new AuthorizationToken(AuthenticationUtil.CHALLENGE_TYPE_BEARER, "MYACCESSTOKEN",
                                        Collections.singletonList("site.org")));
+        final URI vaultURI = URI.create("ivo://example.org/vault");
 
         final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
-                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
+                new VOSpaceServiceConfig("vault", vaultURI, URI.create("vos://example.org~vault"),
+                                         new VOSpaceServiceConfig.Features());
+        final URL downloadURL = new URL("https://myopencadc.site.org/vault/fileendpoint");
+
+        Mockito.when(mockRegistryClient.getServiceURL(vaultURI, Standards.VOSPACE_FILES, AuthMethod.TOKEN))
+               .thenReturn(downloadURL);
+
         testSubject = new FileItemServerResource(null, null,
                                                  new StorageItemFactory("/teststorage", testServiceConfig),
                                                  null, testServiceConfig, new UploadVerifier(),
                                                  new RegexFileValidator()) {
             @Override
             String toEndpoint(URI downloadURI) {
-                return "https://myopencadc.site.org/vault/fileendpoint/preauth:MYACCESSTOKEN/parent/sub/MYDOWNLOADFILE.txt";
+                return downloadURL.toExternalForm() + "/preauth:MYACCESSTOKEN/parent/sub/MYDOWNLOADFILE.txt";
             }
 
             @Override
@@ -155,8 +163,11 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
         testSubject.download(testDataNode);
 
         assertEquals("Wrong download endpoint",
-                     "https://myopencadc.site.org/vault/fileendpoint/preauth:MYACCESSTOKEN/parent/sub/MYDOWNLOADFILE.txt",
+                     downloadURL.toExternalForm() + "/preauth:MYACCESSTOKEN/parent/sub/MYDOWNLOADFILE.txt",
                      redirectEndpoint.toString());
+
+        Mockito.verify(mockRegistryClient, Mockito.times(1)).getServiceURL(vaultURI,
+                                                                           Standards.VOSPACE_FILES, AuthMethod.TOKEN);
     }
 
     @Test
@@ -255,7 +266,7 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
         final FileItemStream mockFileItemStream = Mockito.mock(FileItemStream.class);
 
         Mockito.when(mockVOSpaceClient.getNode("/parent/sub/MYUPLOADFILE.txt", "limit=0"))
-                .thenThrow(new ResourceNotFoundException("No such node."));
+               .thenThrow(new ResourceNotFoundException("No such node."));
         Mockito.when(mockVOSpaceClient.createNode(expectedURI, expectedDataNode, false)).thenReturn(
                 expectedDataNode);
         Mockito.when(mockFileItemStream.getName()).thenReturn("MYUPLOADFILE.txt");

@@ -69,6 +69,7 @@
 package net.canfar.storage.web.resources;
 
 import ca.nrc.cadc.auth.NotAuthenticatedException;
+import ca.nrc.cadc.net.RemoteServiceException;
 import ca.nrc.cadc.util.StringUtil;
 import net.canfar.storage.PathUtils;
 import net.canfar.storage.web.config.StorageConfiguration;
@@ -251,6 +252,17 @@ public class StorageItemServerResource extends SecureServerResource {
                 return getNode(nodePath, detail, null);
             } else {
                 throw new ResourceException(e);
+            }
+        } catch (RemoteServiceException remoteServiceException) {
+            // For Cavern backend systems, some kind of authenticated access is required, and a RemoteServiceException
+            // is thrown as a result, which results in a 500 Server Error.  Catch it here to re-map it as an
+            // authentication problem and encourage the User to sign in.
+            // jenkinsd 2024.02.03
+            //
+            if (remoteServiceException.getMessage().contains("PosixMapperClient.augment(Subject)")) {
+                throw new NotAuthenticatedException("Nobody is authenticated.");
+            } else {
+                throw remoteServiceException;
             }
         } catch (RuntimeException runtimeException) {
             // Working around a bug where the RegistryClient improperly handles an unauthenticated request.
