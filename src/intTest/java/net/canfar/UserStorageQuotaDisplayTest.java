@@ -43,21 +43,12 @@ public class UserStorageQuotaDisplayTest extends UserStorageBaseTest {
         Log4jInit.setLevel("ca.nrc.cadc", Level.INFO);
     }
 
-    public UserStorageQuotaDisplayTest() throws Exception {
+    public UserStorageQuotaDisplayTest() {
         super();
     }
 
     @Test
-    public void runTest() throws Exception {
-        try {
-            quotaDisplayTest();
-        } catch (Exception e) {
-            captureScreenShot(UserStorageQuotaDisplayTest.class.getName() + ".quotaDisplayTest");
-            throw e;
-        }
-    }
-
-    private void quotaDisplayTest() throws Exception {
+    public void displayQuota() throws Exception {
         log.info("Visiting: " + webURL + testDirectoryPath);
 
         FolderPage userStoragePage = goTo("/", null, FolderPage.class);

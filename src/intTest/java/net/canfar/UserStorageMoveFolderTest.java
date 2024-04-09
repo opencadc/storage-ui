@@ -49,21 +49,12 @@ public class UserStorageMoveFolderTest extends UserStorageBaseTest {
         Log4jInit.setLevel("ca.nrc.cadc", Level.DEBUG);
     }
 
-    public UserStorageMoveFolderTest() throws Exception {
+    public UserStorageMoveFolderTest() {
         super();
     }
 
     @Test
-    public void runTest() throws Exception {
-        try {
-            moveFolderTest();
-        } catch (Exception e) {
-            captureScreenShot(UserStorageMoveFolderTest.class.getName() + ".moveFolderTest");
-            throw e;
-        }
-    }
-
-    private void moveFolderTest() throws Exception {
+    public void moveFolderTest() throws Exception {
         log.info("Visiting: " + webURL + testDirectoryPath);
 
         final String workingDirectoryName = UserStorageMoveFolderTest.class.getSimpleName() + "_" + generateAlphaNumeric();

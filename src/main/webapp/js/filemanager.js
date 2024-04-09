@@ -1162,17 +1162,21 @@ function fileManager(
     })
   }
 
-  var setSrcNodes = function() {
-    var selectedItems = $(
+  /**
+   * Obtain an array of paths to move.
+   * @returns []
+   */
+  const setSrcNodes = function() {
+    const selectedItems = $(
       'tr.selected > td:nth-child(5) > span.glyphicon-pencil > a'
     )
-    var selectedPaths = []
+    const selectedPaths = []
 
-    $(selectedItems).each(function(index, item) {
+    $(selectedItems).each((_index, item) => {
       selectedPaths.push($(item).data('path'))
     })
 
-    return selectedPaths.length > 0 ? selectedPaths.join(',') : ''
+    return selectedPaths
   }
 
   var setLinker = function() {
@@ -1183,11 +1187,12 @@ function fileManager(
       })
   }
 
-  var setMover = function() {
+  const setMover = function() {
     $('#move')
       .off()
       .click(function() {
-        var srcNodeList = setSrcNodes()
+        // Array of paths
+        const srcNodeList = setSrcNodes()
         if (srcNodeList.length > 0) {
           moveItem(srcNodeList)
         }
@@ -1895,8 +1900,12 @@ function fileManager(
     processItem(params, '')
   } // end linkItem
 
-  // Move the current item to specified dir and returns the new name.
-  // Called by clicking the "Move" button.
+
+  /**
+   * Move the current item to specified dir and returns the new name.
+   * Called by clicking the "Move" button.
+   * @param {[]} srcNodeList 
+   */
   var moveItem = function(srcNodeList) {
     var params = {
       bCancelName: 'bCancelMoveto',
@@ -2069,8 +2078,13 @@ function fileManager(
     } //end if value == true
   } // end doLink
 
-  // Link or move the current item to specified dir and returns the new name.
-  // Called by clicking the "VOSpace Link" menu item or the "Move" button.
+
+  /**
+   * Link or move the current item to specified dir and returns the new name.
+   * Called by clicking the "VOSpace Link" menu item or the "Move" button.
+   * @param {{}} params 
+   * @param {[]} srcNodeList 
+   */
   var processItem = function(params, srcNodeList) {
     var fullName = ''
     var itemTree = new ItemTree()
@@ -2200,7 +2214,7 @@ function fileManager(
     // name of root node is an empty string
     buildItemLayer(itemRequest, updateItemTree)
 
-    var msg =
+    let msg =
       '<div class="mMoveto">' +
       params['promptMsg'] +
       '<span class="spinnerSpan"></span></div> ' +
@@ -2219,10 +2233,11 @@ function fileManager(
       '</div>' +
       '<input type="text" class="hidden" name="destNode" id="destNode">' +
       '<input type="text" class="hidden" name="selectedNodeURI" id="selectedNodeURI">' +
-      '<input type="text" class="hidden" name="itemName" id="itemName">' +
-      '<input type="text" class="hidden" name="srcNodes" id="srcNodes" value="' +
-      srcNodeList +
-      '">'
+      '<input type="text" class="hidden" name="itemName" id="itemName">'
+
+    for (const srcNode of srcNodeList) {
+      msg += `<input type="text" class="hidden" name="srcNodes" value="${srcNode}">`
+    }
 
     var btns = []
     btns.push({
