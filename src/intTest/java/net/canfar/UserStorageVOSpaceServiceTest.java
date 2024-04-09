@@ -47,18 +47,8 @@ public class UserStorageVOSpaceServiceTest extends UserStorageBaseTest {
         super();
     }
 
-
     @Test
-    public void runTest() throws Exception {
-        try {
-            testVOSpaceServiceSwitch();
-        } catch (Exception e) {
-            captureScreenShot(UserStorageVOSpaceServiceTest.class.getName() + ".testVOSpaceServiceSwitch");
-            throw e;
-        }
-    }
-
-    private void testVOSpaceServiceSwitch() throws Exception {
+    public void voSpaceServiceSwitch() throws Exception {
         FolderPage userStoragePage = goTo("/", null, FolderPage.class);
 
         // Need to do this to have access to Home button

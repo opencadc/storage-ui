@@ -266,11 +266,17 @@ public class StorageItemServerResource extends SecureServerResource {
             }
         } catch (RuntimeException runtimeException) {
             // Working around a bug where the RegistryClient improperly handles an unauthenticated request.
-            if (runtimeException.getCause() != null
-                && (runtimeException.getCause() instanceof IOException)
-                && runtimeException.getCause().getCause() != null
-                && (runtimeException.getCause().getCause() instanceof NotAuthenticatedException)) {
-                throw new ResourceException(runtimeException.getCause().getCause());
+            if (runtimeException.getCause() != null) {
+                if (runtimeException.getCause() instanceof IOException
+                    && runtimeException.getCause().getCause() != null
+                    && (runtimeException.getCause().getCause() instanceof NotAuthenticatedException)) {
+                    throw new ResourceException(runtimeException.getCause().getCause());
+                } else if (runtimeException.getCause().getMessage().contains("PosixMapperClient.augment(Subject)")) {
+                    // More hacks for the base call being unauthenticated.
+                    throw new NotAuthenticatedException("Nobody is authenticated.");
+                } else {
+                    throw runtimeException;
+                }
             } else {
                 throw runtimeException;
             }

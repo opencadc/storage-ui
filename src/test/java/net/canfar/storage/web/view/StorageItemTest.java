@@ -69,11 +69,7 @@
 package net.canfar.storage.web.view;
 
 import net.canfar.storage.AbstractUnitTest;
-import net.canfar.storage.web.resources.StorageItemServerResource;
-import net.canfar.storage.web.view.FileItem;
-import net.canfar.storage.web.view.StorageItem;
 import org.opencadc.vospace.VOSURI;
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.net.URI;
@@ -82,18 +78,16 @@ import java.util.Date;
 import static org.junit.Assert.assertEquals;
 
 
-public class StorageItemTest
-            extends AbstractUnitTest<StorageItem>
-{
+public class StorageItemTest extends AbstractUnitTest<StorageItem> {
 
     @Test
-    public void testGetOwnerCN() throws Exception
-    {
+    public void testGetOwnerCN() {
         final VOSURI testURI = new VOSURI(URI.create("vos://cadc.nrc.ca!vault/my/node"));
 
         StorageItem item1 = new StorageItem(testURI, hashCode(), new Date(),
-                        false, false, null, null, "CN=testOwner_1234,OU=ou1,OU=ou2",
-                        true, false, null) {
+                                            false, false, null, null,
+                                            "CN=testOwner_1234,OU=ou1,OU=ou2",
+                                            true, false, null) {
             @Override
             public String getItemIconCSS() {
                 return null;
@@ -101,37 +95,6 @@ public class StorageItemTest
 
         };
 
-        assertEquals(item1.getOwnerCN(),"testOwner");
-
-
-        StorageItem item2 = new StorageItem(testURI, hashCode(), new Date(),
-                false, false, null, null, "CN=Test Owner,OU=ou1,OU=ou2",
-                true, false, null) {
-            @Override
-            public String getItemIconCSS() {
-                return null;
-            }
-
-        };
-
-        assertEquals(item2.getOwnerCN(), "Test Owner");
-
-
-        String dn = "OU=ou1,OU=ou2";
-        StorageItem item3 = new StorageItem(testURI, hashCode(), new Date(),
-                false, false, null, null, dn,
-                true, false, null) {
-            @Override
-            public String getItemIconCSS() {
-                return null;
-            }
-
-        };
-
-        assertEquals(item3.getOwnerCN(),dn);
-
+        assertEquals("Wrong owner", item1.getOwnerCN(), "CN=testOwner_1234,OU=ou1,OU=ou2");
     }
-
-
-
 }

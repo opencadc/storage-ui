@@ -73,6 +73,7 @@ import net.canfar.storage.web.StorageItemFactory;
 import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
 import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import org.json.JSONArray;
 import org.opencadc.vospace.transfer.Transfer;
 import org.opencadc.vospace.*;
 import org.opencadc.vospace.VOS.Detail;
@@ -84,6 +85,9 @@ import net.canfar.storage.web.restlet.JSONRepresentation;
 
 import java.net.URI;
 import java.security.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.log4j.Logger;
@@ -170,8 +174,17 @@ public class FolderItemServerResource extends StorageItemServerResource {
         final Set<String> keySet = jsonObject.keySet();
 
         if (keySet.contains("srcNodes")) {
-            final String srcNodeStr = (String) jsonObject.get("srcNodes");
-            final String[] srcNodes = srcNodeStr.split(",");
+            final Object srcNodeObject = jsonObject.get("srcNodes");
+            final String[] srcNodes;
+            if (srcNodeObject instanceof JSONArray) {
+                final List<String> srcNodePaths = new ArrayList<>();
+                for (final Object o : (JSONArray) srcNodeObject) {
+                    srcNodePaths.add(o.toString());
+                }
+                srcNodes = srcNodePaths.toArray(new String[0]);
+            } else {
+                srcNodes = new String[] {srcNodeObject.toString()};
+            }
 
             // iterate over each srcNode & call clientTransfer
             for (final String srcNode : srcNodes) {

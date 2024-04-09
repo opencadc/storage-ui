@@ -42,22 +42,12 @@ public class UserStoragePermissionsTest extends UserStorageBaseTest {
     private static final Logger log =
         Logger.getLogger(UserStoragePermissionsTest.class);
 
-    public UserStoragePermissionsTest() throws Exception {
+    public UserStoragePermissionsTest() {
         super();
     }
 
-
     @Test
-    public void runTest() throws Exception {
-        try {
-            browseUserStorage();
-        } catch (Exception e) {
-            captureScreenShot(UserStoragePermissionsTest.class.getName() + ".browseUserStorage");
-            throw e;
-        }
-    }
-
-    private void browseUserStorage() throws Exception {
+    public void modifyPermissions() throws Exception {
         System.out.println("Visiting: " + webURL + testDirectoryPath);
 
         // Go to root test directory

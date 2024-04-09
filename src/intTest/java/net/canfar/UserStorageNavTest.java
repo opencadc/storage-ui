@@ -48,18 +48,8 @@ public class UserStorageNavTest extends UserStorageBaseTest {
         super();
     }
 
-
     @Test
-    public void runTest() throws Exception {
-        try {
-            navUserStorage();
-        } catch (Exception e) {
-            captureScreenShot(UserStorageNavTest.class.getName() + ".navUserStorage");
-            throw e;
-        }
-    }
-
-    private void navUserStorage() throws Exception {
+    public void navUserStorage() throws Exception {
         log.info("Visiting: " + webURL + testDirectoryPath);
 
         final String workingDirectoryName = UserStorageNavTest.class.getSimpleName() + "_" + generateAlphaNumeric();
