@@ -74,31 +74,6 @@ import net.canfar.storage.UploadVerificationFailedException;
 
 
 public class UploadVerifier {
-
-    /**
-     * Verify that each byte is accounted for on the server side.
-     *
-     * @param calculatedByteCount The count of bytes.
-     * @param serverByteCount      The server reported byte count.
-     * @throws UploadVerificationFailedException Any upload error, such as bad filename.
-     */
-    public void verifyByteCount(final long calculatedByteCount, final long serverByteCount)
-            throws UploadVerificationFailedException {
-        if (calculatedByteCount < 0) {
-            throw new IllegalArgumentException("The given byte count cannot be a negative value.");
-        } else if (serverByteCount < 0) {
-            throw new IllegalArgumentException("The server byte count cannot be a negative value.");
-        }
-
-        if (calculatedByteCount != serverByteCount) {
-            throw new UploadVerificationFailedException("** ERROR ** - Upload did not succeed: "
-                                                        + String.format("File length counted [%d] does not "
-                                                                        + "match what the service said it "
-                                                                        + "should be [%d]", calculatedByteCount,
-                                                                        serverByteCount));
-        }
-    }
-
     /**
      * Verify the given MD5.
      * <p>

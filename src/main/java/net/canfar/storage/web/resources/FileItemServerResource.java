@@ -395,8 +395,6 @@ public class FileItemServerResource extends StorageItemServerResource {
         // Check uws job status
         VOSClientUtil.checkTransferFailure(ct);
 
-        uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(),
-                                       ct.getHttpTransferDetails().getContentLength());
         if (ct.getHttpTransferDetails().getDigest() != null) {
             uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(),
                                      ct.getHttpTransferDetails().getDigest().getSchemeSpecificPart());
