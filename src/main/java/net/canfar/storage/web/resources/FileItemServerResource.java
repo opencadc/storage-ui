@@ -73,7 +73,6 @@ import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.util.StringUtil;
 import net.canfar.storage.PathUtils;
 import net.canfar.storage.web.*;
@@ -93,9 +92,7 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONWriter;
 import org.opencadc.vospace.DataNode;
-import org.opencadc.vospace.Node;
 import org.opencadc.vospace.NodeNotFoundException;
-import org.opencadc.vospace.NodeProperty;
 import org.opencadc.vospace.VOS;
 import org.opencadc.vospace.VOSURI;
 import org.opencadc.vospace.View;
@@ -122,7 +119,6 @@ import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -298,17 +294,10 @@ public class FileItemServerResource extends StorageItemServerResource {
             final DataNode dataNode = new DataNode(filename);
             PathUtils.augmentParents(Paths.get(getCurrentPath().toString(), filename), dataNode);
 
-            // WebRT 19564: Add content type to the response of uploaded items.
-            final Set<NodeProperty> properties = new HashSet<>();
-
-            properties.add(new NodeProperty(VOS.PROPERTY_URI_TYPE, fileItemStream.getContentType()));
-            properties.add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH,
-                                            Long.toString(getRequest().getEntity().getSize())));
-
-            dataNode.getProperties().addAll(properties);
+            final String contentType = fileItemStream.getContentType();
 
             try (final InputStream inputStream = fileItemStream.openStream()) {
-                upload(inputStream, dataNode);
+                upload(inputStream, dataNode, contentType);
             }
 
             return PathUtils.toPath(dataNode);
@@ -324,10 +313,12 @@ public class FileItemServerResource extends StorageItemServerResource {
      *
      * @param inputStream The InputStream to pull from.
      * @param dataNode    The DataNode to upload to.
+     * @param contentType           The file content type.
      */
-    protected void upload(final InputStream inputStream, final DataNode dataNode) throws Exception {
-        final UploadOutputStreamWrapper outputStreamWrapper =
-                new UploadOutputStreamWrapperImpl(inputStream, BUFFER_SIZE);
+    protected void upload(final InputStream inputStream, final DataNode dataNode, final String contentType)
+            throws Exception {
+        final UploadOutputStreamWrapper outputStreamWrapper = new UploadOutputStreamWrapperImpl(inputStream,
+                                                                                                BUFFER_SIZE);
 
         try {
             // Due to a bug in VOSpace that returns a 400 while checking
@@ -355,7 +346,7 @@ public class FileItemServerResource extends StorageItemServerResource {
 
         try {
             executeSecurely(() -> {
-                upload(outputStreamWrapper, dataNode);
+                upload(outputStreamWrapper, dataNode, contentType);
                 return null;
             });
         } catch (Exception e) {
@@ -378,17 +369,12 @@ public class FileItemServerResource extends StorageItemServerResource {
      *
      * @param outputStreamWrapper The OutputStream wrapper.
      * @param dataNode            The node to upload.
+     * @param contentType           The file content type.
      * @throws Exception To capture transfer and upload failures.
      */
-    void upload(final UploadOutputStreamWrapper outputStreamWrapper, final DataNode dataNode) throws Exception {
-        final RegistryClient registryClient = new RegistryClient();
-        final Subject subject = AuthenticationUtil.getCurrentSubject();
-        final AuthMethod am = AuthenticationUtil.getAuthMethodFromCredentials(subject);
+    void upload(final UploadOutputStreamWrapper outputStreamWrapper, final DataNode dataNode, final String contentType)
+            throws Exception {
         final VOSURI dataNodeVOSURI = toURI(dataNode);
-
-        final URL baseURL = registryClient.getServiceURL(dataNodeVOSURI.getServiceURI(),
-                                                         Standards.VOSPACE_TRANSFERS_20, am);
-        LOGGER.debug("uploadURL: " + baseURL);
 
         final List<Protocol> protocols = Arrays.stream(FileItemServerResource.PROTOCOL_AUTH_METHODS).map(authMethod -> {
             final Protocol httpsAuth = new Protocol(VOS.PROTOCOL_HTTPS_PUT);
@@ -402,16 +388,19 @@ public class FileItemServerResource extends StorageItemServerResource {
         transfer.version = VOS.VOSPACE_21;
 
         final ClientTransfer ct = voSpaceClient.createTransfer(transfer);
+        ct.setRequestProperty("content-type", contentType);
         ct.setOutputStreamWrapper(outputStreamWrapper);
-
         ct.runTransfer();
 
         // Check uws job status
         VOSClientUtil.checkTransferFailure(ct);
 
-        final Node uploadedNode = getNode(Paths.get(dataNodeVOSURI.getPath()), VOS.Detail.properties);
-        uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(), uploadedNode);
-        uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(), uploadedNode);
+        uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(),
+                                       ct.getHttpTransferDetails().getContentLength());
+        if (ct.getHttpTransferDetails().getDigest() != null) {
+            uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(),
+                                     ct.getHttpTransferDetails().getDigest().getSchemeSpecificPart());
+        }
 
         uploadSuccess();
     }
