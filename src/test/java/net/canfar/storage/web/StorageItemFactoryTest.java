@@ -106,7 +106,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
 
         testDataNode.getReadOnlyGroup().addAll(readGroupURIs);
         testDataNode.getReadWriteGroup().addAll(writeGroupURIs);
-        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "88000"));
+        testDataNode.bytesUsed = 88000L;
         testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
         final VOSpaceServiceConfig testServiceConfig =
@@ -146,7 +146,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
 
         testDataNode.getReadOnlyGroup().addAll(readGroupURIs);
         testDataNode.getReadWriteGroup().addAll(writeGroupURIs);
-        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "88000"));
+        testDataNode.bytesUsed = 88000L;
         testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
         final VOSpaceServiceConfig testServiceConfig =
@@ -179,7 +179,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
 
         final String contextPath = "/warehouse";
 
-        testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "88000"));
+        testDataNode.bytesUsed = 88000L;
         testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
         final VOSpaceServiceConfig testServiceConfig =
