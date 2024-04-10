@@ -409,7 +409,7 @@ public class FileItemServerResource extends StorageItemServerResource {
         // Check uws job status
         VOSClientUtil.checkTransferFailure(ct);
 
-        final Node uploadedNode = getNode(Paths.get(dataNodeVOSURI.getPath()), VOS.Detail.properties);
+        final DataNode uploadedNode = getNode(Paths.get(dataNodeVOSURI.getPath()), VOS.Detail.properties);
         uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(), uploadedNode);
         uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(), uploadedNode);
 

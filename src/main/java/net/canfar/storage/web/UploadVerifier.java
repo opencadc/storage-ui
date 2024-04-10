@@ -70,6 +70,7 @@ package net.canfar.storage.web;
 
 import ca.nrc.cadc.util.HexUtil;
 import ca.nrc.cadc.util.StringUtil;
+import org.opencadc.vospace.DataNode;
 import org.opencadc.vospace.Node;
 import org.opencadc.vospace.NodeProperty;
 import org.opencadc.vospace.VOS;
@@ -87,7 +88,7 @@ public class UploadVerifier {
      * @param node      The node to verify.
      * @throws UploadVerificationFailedException Any upload error, such as bad filename.
      */
-    public void verifyByteCount(final long byteCount, final Node node)
+    public void verifyByteCount(final long byteCount, final DataNode node)
             throws UploadVerificationFailedException {
         if (byteCount < 0) {
             throw new IllegalArgumentException("The given byte count cannot be a negative value.");
@@ -95,10 +96,7 @@ public class UploadVerifier {
             throw new IllegalArgumentException("The given Node cannot be null.");
         }
 
-        final NodeProperty contentLengthProperty = node.getProperty(VOS.PROPERTY_URI_CONTENTLENGTH);
-        final long contentLength = contentLengthProperty == null
-                                   ? 0L
-                                   : Long.parseLong(contentLengthProperty.getValue());
+        final long contentLength = node.bytesUsed == null ? 0L : node.bytesUsed;
 
         if (byteCount != contentLength) {
             throw new UploadVerificationFailedException("** ERROR ** - Upload did not succeed: "
