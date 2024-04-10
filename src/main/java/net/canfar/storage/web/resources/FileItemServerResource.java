@@ -397,7 +397,10 @@ public class FileItemServerResource extends StorageItemServerResource {
 
         uploadVerifier.verifyByteCount(outputStreamWrapper.getByteCount(),
                                        ct.getHttpTransferDetails().getContentLength());
-        uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(), ct.getHttpTransferDetails().getContentMD5());
+        if (ct.getHttpTransferDetails().getDigest() != null) {
+            uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(),
+                                     ct.getHttpTransferDetails().getDigest().getSchemeSpecificPart());
+        }
 
         uploadSuccess();
     }
