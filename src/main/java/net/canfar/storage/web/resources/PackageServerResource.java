@@ -68,32 +68,37 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.auth.AuthMethod;
+import ca.nrc.cadc.auth.RunnableAction;
+import ca.nrc.cadc.net.FileContent;
+import ca.nrc.cadc.net.HttpGet;
+import ca.nrc.cadc.net.HttpPost;
 import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.util.StringUtil;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import org.opencadc.vospace.client.ClientTransfer;
 import org.opencadc.vospace.client.VOSpaceClient;
-import net.canfar.storage.web.restlet.JSONRepresentation;
 import org.opencadc.vospace.VOS;
 import org.opencadc.vospace.View;
 
+import java.io.OutputStream;
+import java.io.StringWriter;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
+import java.net.URL;
+import java.util.*;
+import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.json.JSONWriter;
 import org.opencadc.vospace.transfer.Direction;
 import org.opencadc.vospace.transfer.Protocol;
 import org.opencadc.vospace.transfer.Transfer;
-import org.restlet.data.Status;
-import org.restlet.ext.json.JsonRepresentation;
+import org.opencadc.vospace.transfer.TransferWriter;
+import org.restlet.data.Form;
+import org.restlet.data.MediaType;
+import org.restlet.representation.OutputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
+
+import javax.security.auth.Subject;
 
 
 public class PackageServerResource extends StorageItemServerResource {
@@ -111,98 +116,95 @@ public class PackageServerResource extends StorageItemServerResource {
 
     @Get("json")
     public Representation notSupported() {
-        getResponse().setStatus(Status.CLIENT_ERROR_METHOD_NOT_ALLOWED);
-        return new JSONRepresentation() {
-            @Override
-            public void write(final JSONWriter jsonWriter)
-                throws JSONException {
-                jsonWriter.object()
-                    .key("msg").value("GET not supported.")
-                    .endObject();
-            }
-        };
+        throw new UnsupportedOperationException("GET not supported.");
     }
 
-    @Post("json")
-    public Representation getPackage(final JsonRepresentation payload) throws Exception {
-        final JSONObject jsonObject = payload.getJsonObject();
-        LOGGER.debug("getPackage input: " + jsonObject);
+    @Post
+    public Representation getPackage(final Representation payload) throws Exception {
+        final Form form = new Form(payload);
+        final String responseFormat = determineContentType(form);
+        final String[] uris = form.getValuesArray("uri", true);
 
-        List<URI> targetList = new ArrayList<>();
-        final Set<String> keySet = jsonObject.keySet();
-
-        String responseFormat;
-        if (keySet.contains("responseformat")) {
-            responseFormat = jsonObject.getString("responseformat");
+        if (uris == null || uris.length == 0) {
+            throw new IllegalArgumentException("Nothing specified to download.");
         } else {
-            // default response format
-            responseFormat = "application/zip";
-        }
-
-        if (!keySet.contains("targets")) {
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return new JSONRepresentation() {
-                @Override
-                public void write(final JSONWriter jsonWriter)
-                    throws JSONException {
-                    jsonWriter.object()
-                        .key("msg").value("no targets found.")
-                        .endObject();
-                }
-            };
-        } else {
+            LOGGER.debug("Determined content type of " + responseFormat);
             // build target list to add to transfer
-            JSONArray targets = jsonObject.getJSONArray("targets");
-            for (int i = 0; i < targets.length(); i++) {
-                URI targetURI = new URI(targets.getString(i));
-                targetList.add(targetURI);
+            final List<URI> targetList = Arrays.stream(uris).map(URI::create).collect(Collectors.toList());
+
+            if (LOGGER.isDebugEnabled()) {
+                targetList.forEach(target -> LOGGER.debug("Sending target " + target));
             }
 
             // Create the Transfer.
-            Transfer transfer = new Transfer(Direction.pullFromVoSpace);
+            final Transfer transfer = new Transfer(Direction.pullFromVoSpace);
             transfer.getTargets().addAll(targetList);
-
-            final List<Protocol> protocols = new ArrayList<>();
-            protocols.add(new Protocol(VOS.PROTOCOL_HTTPS_GET));
-            transfer.getProtocols().addAll(protocols);
-
-            // Add package view to request using responseFormat provided
-            final View packageView = new View(new URI(Standards.PKG_10.toString()));
-            packageView.getParameters().add(new View.Parameter(VOS.PROPERTY_URI_FORMAT, responseFormat));
-            transfer.setView(packageView);
-
             transfer.version = VOS.VOSPACE_21;
 
-            final ClientTransfer ct = voSpaceClient.createTransfer(transfer);
-            // There should be one protocol in the transfer, with an endpoint
-            // like '/vault/pkg/{jobid}/run'.
-            final String packageEndpoint = ct.getTransfer().getProtocols().get(0).getEndpoint();
+            final Protocol protocol = new Protocol(VOS.PROTOCOL_HTTPS_GET);
+            protocol.setSecurityMethod(Standards.SECURITY_METHOD_COOKIE);
+            transfer.getProtocols().add(protocol);
 
-            if (StringUtil.hasLength(packageEndpoint)) {
-                getResponse().setStatus(Status.SUCCESS_OK);
-                return new JSONRepresentation() {
-                    @Override
-                    public void write(final JSONWriter jsonWriter)
-                        throws JSONException {
-                        jsonWriter.object()
-                            .key("endpoint").value(packageEndpoint)
-                            .key("msg").value("successfully generated package file.")
-                            .endObject();
-                    }
-                };
+            // Add package view to request using responseFormat provided
+            final View packageView = new View(Standards.PKG_10);
+            packageView.getParameters().add(new View.Parameter(VOS.PROPERTY_URI_FORMAT, responseFormat));
+
+            transfer.setView(packageView);
+
+            final TransferWriter transferWriter = new TransferWriter();
+            final StringWriter sw = new StringWriter();
+            transferWriter.write(transfer, sw);
+            LOGGER.debug("transfer XML: " + sw);
+
+            final Subject currentSubject = getCurrentSubject();
+            final URL dataURL = getRedirect(currentSubject, sw.toString().getBytes());
+
+            if (dataURL == null) {
+                throw new IllegalArgumentException("No package endpoint available.");
             } else {
-                getResponse().setStatus(Status.SUCCESS_NO_CONTENT);
-                return new JSONRepresentation() {
+                return new OutputRepresentation(new MediaType(responseFormat)) {
                     @Override
-                    public void write(final JSONWriter jsonWriter)
-                        throws JSONException {
-                        jsonWriter.object()
-                            .key("errMsg").value("package endpoint not generated.")
-                            .endObject();
+                    public void write(OutputStream outputStream) {
+                        final HttpGet httpGet = new HttpGet(dataURL, outputStream);
+                        Subject.doAs(currentSubject, new RunnableAction(httpGet));
                     }
                 };
             }
         }
     }
 
+    private URL getRedirect(final Subject currentSubject, final byte[] payload) {
+        // POST the transfer to synctrans
+        final FileContent fileContent = new FileContent(payload, "text/xml");
+        final URL synctransServiceURL = lookupEndpoint(this.currentService.getResourceID(), Standards.VOSPACE_SYNC_21,
+                                                       AuthMethod.ANON);
+        final HttpPost post = new HttpPost(synctransServiceURL, fileContent, false);
+
+        Subject.doAs(currentSubject, new RunnableAction(post));
+        return post.getRedirectURL();
+    }
+
+    private String determineContentType(final Form form) {
+        final String packageType = form.getFirst("method").getValue();
+        return PackageTypes.fromLabel(packageType).contentType;
+    }
+
+    private enum PackageTypes {
+        ZIP("ZIP Package", "application/zip"),
+        TAR("TAR Package", "application/x-tar");
+
+        final String label;
+        final String contentType;
+
+        PackageTypes(String label, String contentType) {
+            this.label = label;
+            this.contentType = contentType;
+        }
+
+        static PackageTypes fromLabel(final String label) {
+            return Arrays.stream(values()).filter(packageType -> packageType.label.equals(label))
+                         .findFirst()
+                         .orElseThrow(() -> new NoSuchElementException("No Package with label " + label));
+        }
+    }
 }

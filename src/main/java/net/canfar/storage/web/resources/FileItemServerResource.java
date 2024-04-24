@@ -197,7 +197,7 @@ public class FileItemServerResource extends StorageItemServerResource {
         };
 
         for (final URI uri : downloadEndpointStandards) {
-            final URL serviceURL = lookupDownloadEndpoint(serviceURI, uri, authMethod);
+            final URL serviceURL = lookupEndpoint(serviceURI, uri, authMethod);
             if (serviceURL != null) {
                 return serviceURL;
             }
@@ -206,11 +206,6 @@ public class FileItemServerResource extends StorageItemServerResource {
         throw new IllegalStateException("Incomplete configuration in the registry.  No endpoint for "
                                         + serviceURI + " could be found from ("
                                         + Arrays.toString(downloadEndpointStandards) + ")");
-    }
-
-    private URL lookupDownloadEndpoint(final URI serviceURI, final URI capabilityStandardURI,
-                                       final AuthMethod authMethod) {
-        return getRegistryClient().getServiceURL(serviceURI, capabilityStandardURI, authMethod);
     }
 
     String toEndpoint(final URI downloadURI) {

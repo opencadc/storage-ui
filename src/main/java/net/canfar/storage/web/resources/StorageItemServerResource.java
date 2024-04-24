@@ -68,6 +68,7 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.net.RemoteServiceException;
 import ca.nrc.cadc.util.StringUtil;
@@ -94,6 +95,7 @@ import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.*;
 import java.net.URI;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
@@ -172,6 +174,11 @@ public class StorageItemServerResource extends SecureServerResource {
                                                          ? StorageApplication.DEFAULT_CONTEXT_PATH
                                                          : servletContext.getContextPath(),
                                                          this.currentService);
+    }
+
+    URL lookupEndpoint(final URI serviceURI, final URI capabilityStandardURI,
+                               final AuthMethod authMethod) {
+        return getRegistryClient().getServiceURL(serviceURI, capabilityStandardURI, authMethod);
     }
 
     Path getCurrentPath()  {
