@@ -70,6 +70,8 @@ package net.canfar.storage.web.config;
 
 import ca.nrc.cadc.ac.client.GMSClient;
 import ca.nrc.cadc.accesscontrol.AccessControlClient;
+import ca.nrc.cadc.reg.Standards;
+import ca.nrc.cadc.reg.client.LocalAuthority;
 import ca.nrc.cadc.util.StringUtil;
 import org.apache.commons.configuration2.CombinedConfiguration;
 import org.apache.commons.configuration2.Configuration;
@@ -126,8 +128,8 @@ public class StorageConfiguration {
     }
 
     public URI getGMSServiceURI() {
-        final String gmsService = lookup(StorageConfigurationKey.GMS_SERVICE_URI);
-        return URI.create(gmsService);
+        final LocalAuthority localAuthority = new LocalAuthority();
+        return localAuthority.getServiceURI(Standards.GMS_SEARCH_10.toASCIIString());
     }
 
     public String getTokenCacheURLString() {
@@ -232,7 +234,6 @@ public class StorageConfiguration {
     enum StorageConfigurationKey {
         DEFAULT_SERVICE_NAME("org.opencadc.vosui.service.default", true),
         SERVICE_NAME("org.opencadc.vosui.service.name", true),
-        GMS_SERVICE_URI("org.opencadc.vosui.gms.service_id", true),
         THEME_NAME("org.opencadc.vosui.theme.name", false),
         TOKEN_CACHE_URL("org.opencadc.vosui.tokenCache.url", false),
         OIDC_CLIENT_ID("org.opencadc.vosui.oidc.clientID", false),
