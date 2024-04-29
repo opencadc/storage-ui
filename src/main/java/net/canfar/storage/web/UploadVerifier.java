@@ -70,45 +70,10 @@ package net.canfar.storage.web;
 
 import ca.nrc.cadc.util.HexUtil;
 import ca.nrc.cadc.util.StringUtil;
-import org.opencadc.vospace.Node;
-import org.opencadc.vospace.NodeProperty;
-import org.opencadc.vospace.VOS;
 import net.canfar.storage.UploadVerificationFailedException;
-
-import java.net.URI;
 
 
 public class UploadVerifier {
-
-    /**
-     * Verify that each byte is accounted for on the server side.
-     *
-     * @param byteCount The count of bytes.
-     * @param node      The node to verify.
-     * @throws UploadVerificationFailedException Any upload error, such as bad filename.
-     */
-    public void verifyByteCount(final long byteCount, final Node node)
-            throws UploadVerificationFailedException {
-        if (byteCount < 0) {
-            throw new IllegalArgumentException("The given byte count cannot be a negative value.");
-        } else if (node == null) {
-            throw new IllegalArgumentException("The given Node cannot be null.");
-        }
-
-        final NodeProperty contentLengthProperty = node.getProperty(VOS.PROPERTY_URI_CONTENTLENGTH);
-        final long contentLength = contentLengthProperty == null
-                                   ? 0L
-                                   : Long.parseLong(contentLengthProperty.getValue());
-
-        if (byteCount != contentLength) {
-            throw new UploadVerificationFailedException("** ERROR ** - Upload did not succeed: "
-                                                        + String.format("File length counted [%d] does not "
-                                                                        + "match what the service said it "
-                                                                        + "should be [%d]", byteCount,
-                                                                        contentLength));
-        }
-    }
-
     /**
      * Verify the given MD5.
      * <p>
@@ -116,29 +81,25 @@ public class UploadVerifier {
      * the string will be compared to what the returned Node provided.
      *
      * @param calculatedMD5 The byte array of the calculated MD5.
-     * @param node          The node to verify against.
+     * @param serverMD5          The server reported MD5.
      * @throws UploadVerificationFailedException Any upload error, such as bad filename.
      */
-    public void verifyMD5(final byte[] calculatedMD5, final Node node) throws UploadVerificationFailedException {
+    public void verifyMD5(final byte[] calculatedMD5, final String serverMD5)
+            throws UploadVerificationFailedException {
         if (calculatedMD5 == null) {
             throw new IllegalArgumentException("The calculated MD5 cannot be null.");
-        } else if (node == null) {
-            throw new IllegalArgumentException("The given Node cannot be null.");
+        } else if (serverMD5 == null) {
+            throw new IllegalArgumentException("The server MD5 cannot be null.");
         }
 
-        final NodeProperty MD5Property = node.getProperty(VOS.PROPERTY_URI_CONTENTMD5);
-        final String serverMD5String = MD5Property == null
-                                       ? null
-                                       : MD5Property.getValue();
-
-        if (!StringUtil.hasLength(serverMD5String)) {
+        if (!StringUtil.hasLength(serverMD5)) {
             throw new UploadVerificationFailedException("** ERROR YOUR UPLOAD DID NOT SUCCEED ** "
                                                         + "MD5 checksum was not produced by "
                                                         + "service!  This was not expected, please "
                                                         + "contact canfarhelp@nrc-cnrc.gc.ca for "
                                                         + "assistance.");
         } else {
-            if (!HexUtil.toHex(calculatedMD5).equals(serverMD5String)) {
+            if (!HexUtil.toHex(calculatedMD5).equals(serverMD5)) {
                 throw new UploadVerificationFailedException(
                         "** ERROR ** - Upload did not succeed: "
                         + "MD5 checksum failed.");

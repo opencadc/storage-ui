@@ -251,9 +251,10 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
              *
              * @param outputStreamWrapper The OutputStream wrapper.
              * @param dataNode            The node to upload.
+             * @param contentType         The file content type
              */
             @Override
-            void upload(UploadOutputStreamWrapper outputStreamWrapper, DataNode dataNode) {
+            void upload(UploadOutputStreamWrapper outputStreamWrapper, DataNode dataNode, String contentType) {
                 // Do nothing.
             }
 
