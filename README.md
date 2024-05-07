@@ -49,7 +49,6 @@ org.opencadc.vosui.<service_name>.service.features.paging = <true / false>
 # Note: replace <service_name> with the name of the VOSpace implementation in all cases, ie `vault` or `cavern`.
 # END: For each backend service available (used in a pulldown on the page)
 
-org.opencadc.vosui.gms.service_id = ivo://cadc.nrc.ca/gms
 org.opencadc.vosui.theme.name = canfar
 
 # For OpenID Connect support.
@@ -98,9 +97,9 @@ To specify the Service ID (often called Resource ID) of your services.  The User
  
  See the 'Configuration' section for how to set up access to a VOSpace implementation. 
 
-To specify the Service ID for Group Management, add the appropriate System property, e.g.:
+To specify the Service ID for Group Management, add the appropriate entry in the `cadc-registry.properties`:
 
-`... -Dorg.opencadc.gms.service_id=ivo://<your domain>/<gms service name> ...`
+ivo://ivoa.net/std/GMS#search-1.0 = ivo://<your authority domain>/<gms service name>
 
 Or deploy the `war` file in `build/libs` into a Java container such as Tomcat.
 
