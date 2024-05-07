@@ -71,6 +71,7 @@ package net.canfar.storage;
 import java.text.DecimalFormat;
 
 public class FileSizeRepresentation {
+    public static final String NO_SIZE = "--";
     private static final String[] SIZE_FORMAT_TYPES = {
             "B", "KB", "MB", "GB", "TB", "PB"
     };
@@ -78,24 +79,24 @@ public class FileSizeRepresentation {
     private static final long THRESHOLD = 1024L;
 
 
-    public FileSizeRepresentation() {
-
-    }
-
-
-    public final String getSizeHumanReadable(final long sizeInBytes) {
-        int c = 0;
-        double n = Long.valueOf(sizeInBytes).doubleValue();
+    /**
+     * Obtain a human-readable String of the given number of bytes.
+     * @param sizeInBytes   Long size of bytes
+     * @return  String formatted size.
+     */
+    public static String getSizeHumanReadable(final long sizeInBytes) {
+        int sizeFormatTypeIndex = 0;
+        double sizeInBytesDouble = Long.valueOf(sizeInBytes).doubleValue();
 
         while (true) {
-            if (n < 0.0D) {
-                return "--";
-            } else if (n < THRESHOLD) {
-                n = Math.round(n * 100.0D) / 100.0D;
-                return new DecimalFormat("#0.00").format(n) + " " + SIZE_FORMAT_TYPES[c];
+            if (sizeInBytesDouble < 0.0D) {
+                return FileSizeRepresentation.NO_SIZE;
+            } else if (sizeInBytesDouble < THRESHOLD) {
+                sizeInBytesDouble = Math.round(sizeInBytesDouble * 100.0D) / 100.0D;
+                return new DecimalFormat("#0.00").format(sizeInBytesDouble) + " " + SIZE_FORMAT_TYPES[sizeFormatTypeIndex];
             } else {
-                n /= THRESHOLD;
-                c += 1;
+                sizeInBytesDouble /= THRESHOLD;
+                sizeFormatTypeIndex += 1;
             }
         }
     }

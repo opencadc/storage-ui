@@ -69,27 +69,23 @@
 package net.canfar.storage;
 
 import org.junit.Test;
+
 import static org.junit.Assert.assertEquals;
 
 
-public class FileSizeRepresentationTest
-        extends AbstractUnitTest<FileSizeRepresentation>
-{
+public class FileSizeRepresentationTest extends AbstractUnitTest<FileSizeRepresentation> {
     @Test
-    public void getSizeHumanReadable() throws Exception
-    {
-        testSubject = new FileSizeRepresentation();
-
+    public void getSizeHumanReadable() {
         assertEquals("Wrong size.", "39.06 KB",
-                     testSubject.getSizeHumanReadable(40000L));
+                     FileSizeRepresentation.getSizeHumanReadable(40000L));
         assertEquals("Wrong size.", "0.00 B",
-                     testSubject.getSizeHumanReadable(0L));
+                     FileSizeRepresentation.getSizeHumanReadable(0L));
         assertEquals("Wrong size.", "60.54 TB",
-                     testSubject.getSizeHumanReadable(1024L * 1000L * 1000L
-                                                      * 1000L * 65L));
+                     FileSizeRepresentation.getSizeHumanReadable(1024L * 1000L * 1000L
+                                                                         * 1000L * 65L));
         assertEquals("Wrong display size.", "--",
-                     testSubject.getSizeHumanReadable(-986635L));
+                     FileSizeRepresentation.getSizeHumanReadable(-986635L));
         assertEquals("Wrong size.", "39.06 KB",
-                     testSubject.getSizeHumanReadable(39994L));
+                     FileSizeRepresentation.getSizeHumanReadable(39994L));
     }
 }

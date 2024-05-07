@@ -94,7 +94,7 @@ import org.opencadc.vospace.server.Utils;
 
 
 public class StorageItemFactory {
-    private static final Logger log = Logger.getLogger(StorageItemFactory.class);
+    private static final Logger LOGGER = Logger.getLogger(StorageItemFactory.class);
 
     private final String contextPath;
     private final VOSpaceServiceConfig serviceConfig;
