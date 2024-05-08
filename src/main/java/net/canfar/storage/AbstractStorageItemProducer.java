@@ -79,6 +79,7 @@ import net.canfar.storage.web.StorageItemFactory;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Paths;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collections;
@@ -156,7 +157,7 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implemen
         });
     }
 
-    private boolean writePage(final Iterator<Node> page) throws IOException {
+    private boolean writePage(final Iterator<Node> page) throws IOException, URISyntaxException {
         if (!page.hasNext()) {
             return false;
         } else {

@@ -94,6 +94,7 @@ import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.*;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
@@ -380,7 +381,7 @@ public class StorageItemServerResource extends SecureServerResource {
                         endPoint = URI.create(storageItem.getTargetPath());
                     }
                 }
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException | URISyntaxException e) {
                 // Not a VOSpace URI, so return this URI.
                 return targetURI;
             }

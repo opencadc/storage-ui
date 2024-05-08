@@ -73,6 +73,7 @@ import org.opencadc.vospace.Node;
 import org.opencadc.vospace.VOSURI;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 
 public class VOSpaceServiceConfig {
@@ -135,11 +136,11 @@ public class VOSpaceServiceConfig {
         return this.features.supportsPaging;
     }
 
-    public VOSURI toURI(final String path) {
-        return new VOSURI(URI.create(this.nodeResourceID + path));
+    public VOSURI toURI(final String path) throws URISyntaxException {
+        return new VOSURI(new URI(this.nodeResourceID + path));
     }
 
-    public VOSURI toURI(final Node node) {
+    public VOSURI toURI(final Node node) throws URISyntaxException {
         final Path path = PathUtils.toPath(node);
         return toURI(path.toString());
     }
