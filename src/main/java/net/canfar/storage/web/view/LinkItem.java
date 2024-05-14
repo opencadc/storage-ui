@@ -1,5 +1,6 @@
 package net.canfar.storage.web.view;
 
+import net.canfar.storage.FileSizeRepresentation;
 import org.opencadc.gms.GroupURI;
 import org.opencadc.vospace.VOSURI;
 
@@ -32,6 +33,6 @@ public class LinkItem extends StorageItem {
      */
     @Override
     public String getSizeHumanReadable() {
-        return NO_SIZE_DISPLAY;
+        return FileSizeRepresentation.NO_SIZE;
     }
 }

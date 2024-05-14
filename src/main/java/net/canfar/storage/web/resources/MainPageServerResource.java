@@ -73,6 +73,9 @@ import net.canfar.storage.PathUtils;
 import net.canfar.storage.web.StorageItemFactory;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
 import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import net.canfar.storage.web.view.StorageItem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.opencadc.vospace.*;
 import net.canfar.storage.StorageItemCSVWriter;
 import net.canfar.storage.StorageItemWriter;
@@ -89,12 +92,14 @@ import org.restlet.resource.ResourceException;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 
 
 public class MainPageServerResource extends StorageItemServerResource {
+    private static final Logger LOGGER = LogManager.getLogger(MainPageServerResource.class);
     /**
      * Needed to be supported by Restlet.
      */
@@ -141,7 +146,7 @@ public class MainPageServerResource extends StorageItemServerResource {
             startNextPageURI = null;
         }
 
-        final Iterator<String> initialRows = new Iterator<String>() {
+        final Iterator<String> initialRows = new Iterator<>() {
             @Override
             public boolean hasNext() {
                 return childNodeIterator.hasNext();
@@ -151,12 +156,17 @@ public class MainPageServerResource extends StorageItemServerResource {
             public String next() {
                 final Writer writer = new StringWriter();
                 final StorageItemWriter storageItemWriter = new StorageItemCSVWriter(writer);
+                final Node nextChild = childNodeIterator.next();
 
                 try {
-                    final Node nextChild = childNodeIterator.next();
-                    PathUtils.augmentParents(Paths.get(parentPath.toString(), nextChild.getName()), nextChild);
+                    // Check the translated storage item's URI first to handle an exception.
+                    final StorageItem storageItem = storageItemFactory.translate(nextChild);
 
-                    storageItemWriter.write(storageItemFactory.translate(nextChild));
+                    PathUtils.augmentParents(Paths.get(parentPath.toString(), nextChild.getName()), nextChild);
+                    storageItemWriter.write(storageItem);
+                } catch (URISyntaxException uriSyntaxException) {
+                    LOGGER.error("Cannot create a URI from node {}.  Skipping...",
+                                 nextChild.getName(), uriSyntaxException);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -196,9 +206,6 @@ public class MainPageServerResource extends StorageItemServerResource {
         // Used to populate VOSpace service dropdown
         dataModel.put("vospaceServices", getVOSpaceServiceList());
 
-        // HttpPrincipal username will be pulled from current user
-//        final String httpUsername = accessControlClient.getCurrentHttpPrincipalUsername(
-//                AuthenticationUtil.getCurrentSubject());
         final String httpUsername = getDisplayName();
 
         if (httpUsername != null) {

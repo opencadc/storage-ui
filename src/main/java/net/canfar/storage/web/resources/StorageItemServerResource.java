@@ -76,7 +76,6 @@ import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
 import org.opencadc.gms.GroupURI;
 import org.opencadc.vospace.*;
-import org.opencadc.vospace.client.ClientRecursiveSetNode;
 import org.opencadc.vospace.client.VOSpaceClient;
 import net.canfar.storage.web.StorageItemFactory;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
@@ -84,6 +83,7 @@ import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.StorageItem;
 
 import org.json.JSONObject;
+import org.opencadc.vospace.client.async.RecursiveSetNode;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.resource.Delete;
@@ -94,6 +94,7 @@ import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.*;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.*;
@@ -380,7 +381,7 @@ public class StorageItemServerResource extends SecureServerResource {
                         endPoint = URI.create(storageItem.getTargetPath());
                     }
                 }
-            } catch (IllegalArgumentException e) {
+            } catch (IllegalArgumentException | URISyntaxException e) {
                 // Not a VOSpace URI, so return this URI.
                 return targetURI;
             }
@@ -399,7 +400,7 @@ public class StorageItemServerResource extends SecureServerResource {
     private void setNodeRecursiveSecure(final Node newNode) throws Exception {
         try {
             Subject.doAs(getCurrentSubject(), (PrivilegedExceptionAction<Void>) () -> {
-                final ClientRecursiveSetNode rj = voSpaceClient.setNodeRecursive(toURI(newNode), newNode);
+                final RecursiveSetNode rj = voSpaceClient.createRecursiveSetNode(toURI(newNode), newNode);
 
                 // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
                 rj.setMonitor(false);

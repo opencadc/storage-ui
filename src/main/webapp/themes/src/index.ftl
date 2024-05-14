@@ -109,7 +109,9 @@
                       // For quick pre-load.
                       const rows = [];
                     <#list initialRows as row>
-                      rows.push([${row}])
+                      <#if row != "">
+                        rows.push([${row}])
+                      </#if>
                     </#list>
 
                       async function startApp() {

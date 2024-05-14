@@ -84,9 +84,9 @@ import net.canfar.storage.FileSizeRepresentation;
 import net.canfar.storage.web.restlet.JSONRepresentation;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.security.*;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -128,15 +128,17 @@ public class FolderItemServerResource extends StorageItemServerResource {
 
     @Get("json")
     public Representation retrieveQuota() {
-        final FileSizeRepresentation fileSizeRepresentation = new FileSizeRepresentation();
-        final Node node = getCurrentNode(Detail.properties);
-        final long folderSize = getPropertyValue(node, VOS.PROPERTY_URI_CONTENTLENGTH);
-        final long quota = getPropertyValue(node, VOS.PROPERTY_URI_QUOTA);
-        final String quotaString = new FileSizeRepresentation().getSizeHumanReadable(quota);
-        final String remainingSizeString = fileSizeRepresentation.getSizeHumanReadable(
-                ((quota - folderSize) > 0) ? (quota - folderSize) : 0);
+        final Path currentPath = getCurrentPath();
+        final ContainerNode containerNodeWithQuota = getContainerNodeWithQuota(currentPath, 0);
 
-        if (quota != 0) {
+        if (containerNodeWithQuota != null) {
+            final long quotaSize = getQuotaPropertyValue(containerNodeWithQuota);
+            LOGGER.debug(String.format("Reported quota size %d for path %s.", quotaSize, currentPath));
+            final String quotaString = FileSizeRepresentation.getSizeHumanReadable(quotaSize);
+            final long folderSize = containerNodeWithQuota.bytesUsed == null ? -1 : containerNodeWithQuota.bytesUsed;
+            final String remainingSizeString = FileSizeRepresentation.getSizeHumanReadable(
+                    ((quotaSize - folderSize) > 0) ? (quotaSize - folderSize) : 0);
+
             return new JSONRepresentation() {
                 @Override
                 public void write(final JSONWriter jsonWriter)
@@ -160,8 +162,29 @@ public class FolderItemServerResource extends StorageItemServerResource {
         }
     }
 
-    private long getPropertyValue(final Node node, final URI propertyURI) {
-        final NodeProperty property = node.getProperty(propertyURI);
+    private ContainerNode getContainerNodeWithQuota(final Path path, final int pathElementIndex) {
+        if (path == null) {
+            return null;
+        }
+
+        final int pathElementCount = path.getNameCount();
+
+        if (pathElementCount > pathElementIndex) {
+            // Add one to the end index as it's exclusive.
+            final ContainerNode rootPathContainerNode = getNode(path.subpath(0, pathElementIndex + 1),
+                                                                Detail.properties);
+            if (rootPathContainerNode.getProperties().contains(new NodeProperty(VOS.PROPERTY_URI_QUOTA))) {
+                return rootPathContainerNode;
+            } else {
+                return getContainerNodeWithQuota(path, pathElementIndex + 1);
+            }
+        } else {
+            return null;
+        }
+    }
+
+    private long getQuotaPropertyValue(final Node node) {
+        final NodeProperty property = node.getProperty(VOS.PROPERTY_URI_QUOTA);
         return (property == null) ? 0L : Long.parseLong(property.getValue());
     }
 

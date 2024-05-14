@@ -92,7 +92,7 @@ import java.util.Set;
 
 public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory> {
     @Test
-    public void translate() {
+    public void translate() throws Exception {
         final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
         final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
         PathUtils.augmentParents(Paths.get(testDataNodeURI.getPath()), testDataNode);
@@ -132,7 +132,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
     }
 
     @Test
-    public void translateTargetFallback() {
+    public void translateTargetFallback() throws Exception {
         final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
         final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
         PathUtils.augmentParents(Paths.get(testDataNodeURI.getPath()), testDataNode);
@@ -172,7 +172,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
     }
 
     @Test
-    public void translateNoGroups() {
+    public void translateNoGroups() throws Exception {
         final VOSURI testDataNodeURI = new VOSURI(URI.create("vos://cadc.nrc.ca~vault/myroot/path/file.txt"));
         final DataNode testDataNode = new DataNode(testDataNodeURI.getName());
         PathUtils.augmentParents(Paths.get(testDataNodeURI.getPath()), testDataNode);

@@ -80,11 +80,11 @@ import java.util.Arrays;
 import java.util.Date;
 
 
+/**
+ * Abstract StorageItem that acts as a base for a File, Folder, or Link.
+ */
 public abstract class StorageItem {
-    private static final FileSizeRepresentation FILE_SIZE_REPRESENTATION = new FileSizeRepresentation();
-    private static final DateFormat DATE_FORMAT =
-            DateUtil.getDateFormat("yyyy-MM-dd ' - ' HH:mm:ss", DateUtil.UTC);
-    static final String NO_SIZE_DISPLAY = "--";
+    private static final DateFormat DATE_FORMAT = DateUtil.getDateFormat("yyyy-MM-dd ' - ' HH:mm:ss", DateUtil.UTC);
 
     private final String name;
     private final long sizeInBytes;
@@ -123,7 +123,7 @@ public abstract class StorageItem {
 
 
     public String getSizeHumanReadable() {
-        return FILE_SIZE_REPRESENTATION.getSizeHumanReadable(sizeInBytes);
+        return FileSizeRepresentation.getSizeHumanReadable(sizeInBytes);
     }
 
     public long getSizeInBytes() {
