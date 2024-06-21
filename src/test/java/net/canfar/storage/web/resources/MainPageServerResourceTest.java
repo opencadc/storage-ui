@@ -139,7 +139,7 @@ public class MainPageServerResourceTest extends AbstractServerResourceTest<MainP
             }
 
             @Override
-            Subject getCurrentSubject() {
+            Subject getCallingSubject() {
                 return new Subject();
             }
 

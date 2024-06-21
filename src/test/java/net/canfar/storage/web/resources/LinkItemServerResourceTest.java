@@ -126,7 +126,7 @@ public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkI
             }
 
             @Override
-            Subject getCurrentSubject() {
+            Subject getCallingSubject() {
                 return new Subject();
             }
 
@@ -197,7 +197,7 @@ public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkI
             }
 
             @Override
-            Subject getCurrentSubject() {
+            Subject getCallingSubject() {
                 return new Subject();
             }
 

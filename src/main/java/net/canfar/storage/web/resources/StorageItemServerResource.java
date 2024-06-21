@@ -71,6 +71,7 @@ package net.canfar.storage.web.resources;
 import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.net.RemoteServiceException;
 import ca.nrc.cadc.util.StringUtil;
+import java.net.URL;
 import net.canfar.storage.PathUtils;
 import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
@@ -399,7 +400,7 @@ public class StorageItemServerResource extends SecureServerResource {
      */
     private void setNodeRecursiveSecure(final Node newNode) throws Exception {
         try {
-            Subject.doAs(getCurrentSubject(), (PrivilegedExceptionAction<Void>) () -> {
+            Subject.doAs(getCallingSubject(), (PrivilegedExceptionAction<Void>) () -> {
                 final RecursiveSetNode rj = voSpaceClient.createRecursiveSetNode(toURI(newNode), newNode);
 
                 // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
@@ -459,7 +460,7 @@ public class StorageItemServerResource extends SecureServerResource {
 
     <T> T executeSecurely(final PrivilegedExceptionAction<T> runnable) throws Exception {
         try {
-            return executeSecurely(getCurrentSubject(), runnable);
+            return executeSecurely(getCallingSubject(), runnable);
         } catch (PrivilegedActionException e) {
             throw e.getException();
         }
@@ -471,6 +472,10 @@ public class StorageItemServerResource extends SecureServerResource {
         } catch (PrivilegedActionException e) {
             throw e.getException();
         }
+    }
+
+    Subject getCallingSubject() throws Exception {
+        return super.getCurrentSubject(new URL(this.voSpaceClient.getBaseURL()));
     }
 
     @Delete

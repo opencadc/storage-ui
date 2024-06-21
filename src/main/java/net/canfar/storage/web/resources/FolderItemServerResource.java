@@ -231,7 +231,7 @@ public class FolderItemServerResource extends StorageItemServerResource {
         final Transfer transfer = getTransfer(source, destination);
 
         try {
-            Subject.doAs(getCurrentSubject(),
+            Subject.doAs(getCallingSubject(),
                          (PrivilegedExceptionAction<Void>) () -> {
                              final ClientTransfer clientTransfer = voSpaceClient.createTransfer(transfer);
                              clientTransfer.setMonitor(true);

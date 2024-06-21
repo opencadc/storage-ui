@@ -150,7 +150,7 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
             }
 
             @Override
-            Subject getCurrentSubject() {
+            Subject getCallingSubject() {
                 return testUser;
             }
 
