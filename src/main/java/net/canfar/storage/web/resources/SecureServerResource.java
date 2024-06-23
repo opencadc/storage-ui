@@ -73,7 +73,6 @@ import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.auth.AuthorizationTokenPrincipal;
-import ca.nrc.cadc.auth.IdentityManager;
 import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.reg.client.RegistryClient;
 import java.net.URL;
@@ -91,7 +90,6 @@ import org.restlet.resource.ServerResource;
 import javax.security.auth.Subject;
 import javax.servlet.ServletContext;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Collections;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -130,7 +128,7 @@ class SecureServerResource extends ServerResource {
         return new RegistryClient();
     }
 
-    Subject getCurrentSubject(final URL target) throws Exception {
+    Subject getCallingSubject(final URL target) throws Exception {
         final Cookie firstPartyCookie =
                 getRequest().getCookies().getFirst(StorageConfiguration.FIRST_PARTY_COOKIE_NAME);
         final Subject subject = AuthenticationUtil.getCurrentSubject();
@@ -180,11 +178,6 @@ class SecureServerResource extends ServerResource {
         }
 
         return subject;
-    }
-
-    protected String getDisplayName() throws Exception {
-        final IdentityManager identityManager = AuthenticationUtil.getIdentityManager();
-        return identityManager.toDisplayString(getCurrentSubject());
     }
 
     ServletContext getServletContext() {

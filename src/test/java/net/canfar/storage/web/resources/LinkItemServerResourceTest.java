@@ -126,7 +126,7 @@ public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkI
             }
 
             @Override
-            Subject getCallingSubject() {
+            Subject getVOSpaceCallingSubject() {
                 return new Subject();
             }
 
@@ -197,7 +197,7 @@ public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkI
             }
 
             @Override
-            Subject getCallingSubject() {
+            Subject getVOSpaceCallingSubject() {
                 return new Subject();
             }
 

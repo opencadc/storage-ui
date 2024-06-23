@@ -68,6 +68,8 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.auth.AuthenticationUtil;
+import ca.nrc.cadc.auth.IdentityManager;
 import ca.nrc.cadc.auth.NotAuthenticatedException;
 import ca.nrc.cadc.net.RemoteServiceException;
 import ca.nrc.cadc.util.StringUtil;
@@ -400,7 +402,7 @@ public class StorageItemServerResource extends SecureServerResource {
      */
     private void setNodeRecursiveSecure(final Node newNode) throws Exception {
         try {
-            Subject.doAs(getCallingSubject(), (PrivilegedExceptionAction<Void>) () -> {
+            Subject.doAs(getVOSpaceCallingSubject(), (PrivilegedExceptionAction<Void>) () -> {
                 final RecursiveSetNode rj = voSpaceClient.createRecursiveSetNode(toURI(newNode), newNode);
 
                 // Fire & forget is 'false'. 'true' will mean the run job does not return until it's finished.
@@ -460,7 +462,7 @@ public class StorageItemServerResource extends SecureServerResource {
 
     <T> T executeSecurely(final PrivilegedExceptionAction<T> runnable) throws Exception {
         try {
-            return executeSecurely(getCallingSubject(), runnable);
+            return executeSecurely(getVOSpaceCallingSubject(), runnable);
         } catch (PrivilegedActionException e) {
             throw e.getException();
         }
@@ -474,8 +476,13 @@ public class StorageItemServerResource extends SecureServerResource {
         }
     }
 
-    Subject getCallingSubject() throws Exception {
-        return super.getCurrentSubject(new URL(this.voSpaceClient.getBaseURL()));
+    String getDisplayName() throws Exception {
+        final IdentityManager identityManager = AuthenticationUtil.getIdentityManager();
+        return identityManager.toDisplayString(getVOSpaceCallingSubject());
+    }
+
+    Subject getVOSpaceCallingSubject() throws Exception {
+        return super.getCallingSubject(new URL(this.voSpaceClient.getBaseURL()));
     }
 
     @Delete
