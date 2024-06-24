@@ -123,6 +123,7 @@ public class GroupNameServerResource extends SecureServerResource {
                 } catch (PrivilegedActionException e) {
                     throw new JSONException(e.getException());
                 } catch (Exception e) {
+                    // This will likely come from the token store, which the user would not have control over.
                     throw new RuntimeException(e.getMessage(), e);
                 }
             }
