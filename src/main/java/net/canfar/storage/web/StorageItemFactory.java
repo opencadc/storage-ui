@@ -79,6 +79,7 @@ import net.canfar.storage.web.view.*;
 
 import javax.security.auth.Subject;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.Principal;
@@ -94,7 +95,7 @@ import org.opencadc.vospace.server.Utils;
 
 
 public class StorageItemFactory {
-    private static final Logger log = Logger.getLogger(StorageItemFactory.class);
+    private static final Logger LOGGER = Logger.getLogger(StorageItemFactory.class);
 
     private final String contextPath;
     private final VOSpaceServiceConfig serviceConfig;
@@ -146,8 +147,10 @@ public class StorageItemFactory {
      *
      * @param node The VOSpace Node instance.
      * @return StorageItem instance, never null.
+     *
+     * @throws URISyntaxException If the URI of the node cannot be translated.
      */
-    public StorageItem translate(final Node node) {
+    public StorageItem translate(final Node node) throws URISyntaxException {
         final StorageItem nextItem;
         final boolean isRoot = Utils.isRoot(Utils.getPath(node));
         final Date lastModifiedDate = isRoot ? null : parseDate(node);
@@ -207,7 +210,7 @@ public class StorageItemFactory {
         return nextItem;
     }
 
-    public FolderItem getFolderItemView(final ContainerNode containerNode) {
+    public FolderItem getFolderItemView(final ContainerNode containerNode) throws URISyntaxException {
         return (FolderItem) translate(containerNode);
     }
 }

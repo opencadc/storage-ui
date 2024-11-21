@@ -131,7 +131,7 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
             }
 
             @Override
-            Subject getCurrentSubject() {
+            Subject getVOSpaceCallingSubject() {
                 return new Subject();
             }
 
@@ -177,25 +177,20 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
     public void retrieveNormalQuota() throws Exception {
         long folderSize = 123456789L;
         long quota = 9876543210L;
-        String expectedRemainingSize = new FileSizeRepresentation()
-                .getSizeHumanReadable(quota - folderSize);
-        NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long
-                .toString(folderSize));
-        this.retrieveQuota(quota, expectedRemainingSize, prop);
+        String expectedRemainingSize = FileSizeRepresentation.getSizeHumanReadable(quota - folderSize);
+        this.retrieveQuota(quota, expectedRemainingSize, folderSize);
     }
 
     @Test
     public void retrieveNotEnoughQuota() throws Exception {
         long folderSize = 9876543210L;
         long quota = 123456789L;
-        final String expectedRemainingSize = new FileSizeRepresentation().getSizeHumanReadable(0);
-        final NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, Long.toString(folderSize));
-        this.retrieveQuota(quota, expectedRemainingSize, prop);
+        final String expectedRemainingSize = FileSizeRepresentation.getSizeHumanReadable(0);
+        this.retrieveQuota(quota, expectedRemainingSize, folderSize);
     }
 
-    private void retrieveQuota(long quota, final String expectedRemainingSize,
-                               final NodeProperty folderSizeNodeProp) throws Exception {
-        final String expectedQuota = new FileSizeRepresentation().getSizeHumanReadable(quota);
+    private void retrieveQuota(long quota, final String expectedRemainingSize, final long folderSize) throws Exception {
+        final String expectedQuota = FileSizeRepresentation.getSizeHumanReadable(quota);
         final VOSURI folderURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/my/node"));
 
         final VOSpaceServiceConfig testServiceConfig =
@@ -204,7 +199,7 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
         final NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long.toString(quota));
 
         final ContainerNode containerNode = new ContainerNode("node");
-        containerNode.getProperties().add(folderSizeNodeProp);
+        containerNode.bytesUsed = folderSize;
         containerNode.getProperties().add(prop);
 
         final Map<String, Object> requestAttributes = new HashMap<>();
@@ -250,7 +245,7 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
         final StringWriter swriter = new StringWriter();
         jsonRep.write(swriter);
         String[] kvps = swriter.getBuffer().toString().split(",");
-        assertEquals("Should only contain two properties", kvps.length, 2);
+        assertEquals("Should only contain two properties", 2, kvps.length);
         for (String kvp : kvps) {
             String[] kv = kvp.split(":");
             String key = extract(kv[0]);
@@ -338,7 +333,7 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
             }
 
             @Override
-            Subject getCurrentSubject() {
+            Subject getVOSpaceCallingSubject() {
                 return new Subject();
             }
 

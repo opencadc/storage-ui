@@ -3049,26 +3049,23 @@ function fileManager(
       }
     })
 
-    // Loading quota and folder size for root folder, e.g. /CADCTest
+    // Loading quota and folder size for current folder, e.g. /CADCTest/foo/bar
     var currPath = getCurrentPath()
     if (stringUtil.hasText(currPath)) {
       $.ajax({
         method: 'GET',
-        url:
-          contextPath +
-          vospaceServicePath +
-          config.options.folderConnector +
-          '/' +
-          currPath.split('/')[1],
+        url: `${contextPath}${vospaceServicePath}${config.options.folderConnector}${currPath}`,
         dataType: 'json',
         async: false,
         success: function(data) {
           if (typeof data.msg === 'undefined') {
-            var htmlString = stringUtil.format(
-              '<strong>{1}</strong> remaining of <strong>{2}</strong> ' +
-              '<span class="request-more-link">(<a title="E-mail support@canfar.net to request more" href="mailto:support@canfar.net">Request more from support@canfar.net</a>)</span>',
-              [data.size, data.quota]
-            )
+            const prefix = data.hasOwnProperty('size') ? `<strong>${data.size}</strong> remaining of ` : ''
+            const htmlString = `${prefix}quota <strong>${data.quota}</strong> `
+
+            // TODO: Restore once contact e-mail is configurable
+            // TODO: jenkinsd 2024.05.07
+            //
+            // '<span class="request-more-link">(<a title="E-mail support@canfar.net to request more" href="mailto:support@canfar.net">Request more from support@canfar.net</a>)</span>',
             $('div.quota').html(htmlString)
           }
         }

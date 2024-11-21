@@ -134,10 +134,12 @@ jenkinsd 2017.04.04
                           "dataTables_filter";
 
                       // For quick pre-load.
-                      var rows = [];
-                    <#list initialRows as row>
-                      rows.push([${row}]);
-                    </#list>
+                      const rows = [];
+                      <#list initialRows as row>
+                        <#if row != "">
+                          rows.push([${row}])
+                        </#if>
+                      </#list>
 
                       $.getJSON('${contextPath}scripts/languages/' +
                                 $("html").attr("lang") + '.json')

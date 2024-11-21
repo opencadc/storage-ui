@@ -3,7 +3,7 @@
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
  **************  CENTRE CANADIEN DE DONNÉES ASTRONOMIQUES  **************
  *
- *  (c) 2020.                            (c) 2020.
+ *  (c) 2024.                            (c) 2024.
  *  Government of Canada                 Gouvernement du Canada
  *  National Research Council            Conseil national de recherches
  *  Ottawa, Canada, K1A 0R6              Ottawa, Canada, K1A 0R6
@@ -164,7 +164,7 @@ public class FileItemServerResource extends StorageItemServerResource {
     }
 
     void download(final DataNode dataNode) throws Exception {
-        final Subject subject = getCurrentSubject();
+        final Subject subject = getVOSpaceCallingSubject();
         final VOSURI dataNodeVOSURI = toURI(dataNode);
         final AuthMethod authMethod = AuthenticationUtil.getAuthMethodFromCredentials(subject);
         final URL baseURL = lookupDownloadEndpoint(dataNodeVOSURI.getServiceURI(), authMethod);
