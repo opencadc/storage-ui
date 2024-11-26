@@ -1,0 +1,10 @@
+Dockerfile*
+bin
+build
+.idea
+.vscode
+.gradle
+.github
+.gitlab-ci.yml
+.gitignore
+*.md

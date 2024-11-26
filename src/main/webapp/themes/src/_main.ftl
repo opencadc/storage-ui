@@ -96,7 +96,6 @@
                   <ul class="dropdown-menu download-dropdown-menu">
                     <li><a class="download-package" data-download-type="package-zip"><span class="glyphicon glyphicon-compressed"></span>&nbsp;ZIP Package</a></li>
                     <li><a class="download-package" data-download-type="package-tar"><span class="glyphicon glyphicon-save-file"></span>&nbsp;TAR Package</a></li>
-                    <li><a class="download-download-manager"><span class="glyphicon glyphicon-download-alt"></span>&nbsp;Download Manager</a></li>
                   </ul>
                 </li>
 </#if>

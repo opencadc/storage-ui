@@ -2549,9 +2549,9 @@ function fileManager(
   $(document).on('click', '.download-dropdown-menu > li > a', function() {
     let $thisLink = $(this)
 
-    // Package download (ZIP or TAR) are handled separately.  Default to Download Manager, otherwise.
+    // Package download (ZIP or TAR) are handled separately.
     const formAction = $thisLink.attr('class').includes('download-package') 
-                        ? `${contextPath}${vospaceServicePath}${config.options.packageConnector}` 
+                        ? `${contextPath}${config.options.packageConnector}`
                         : '/downloadManager/download'
 
     const form = document.createElement('form')
@@ -2589,6 +2589,13 @@ function fileManager(
         form.appendChild(hiddenField)
       }
     )
+
+    const serviceHiddenField = document.createElement('input')
+    serviceHiddenField.setAttribute('type', 'hidden')
+    serviceHiddenField.setAttribute('name', 'service')
+    serviceHiddenField.setAttribute('value', vospaceServicePath.replaceAll('/', ''))
+
+    form.appendChild(serviceHiddenField)
 
     document.body.appendChild(form)
 

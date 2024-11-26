@@ -42,6 +42,15 @@
     </servlet>
 
     <servlet>
+        <servlet-name>PackageServlet</servlet-name>
+        <servlet-class>ca.nrc.cadc.rest.RestServlet</servlet-class>
+        <init-param>
+            <param-name>post</param-name>
+            <param-value>org.opencadc.storage.pkg.PostAction</param-value>
+        </init-param>
+    </servlet>
+
+    <servlet>
         <servlet-name>Restlet</servlet-name>
         <servlet-class>org.restlet.ext.servlet.ServerServlet</servlet-class>
 
@@ -70,6 +79,11 @@
     <servlet-mapping>
         <servlet-name>Restlet</servlet-name>
         <url-pattern>/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>PackageServlet</servlet-name>
+        <url-pattern>/pkg</url-pattern>
     </servlet-mapping>
 
     <servlet-mapping>

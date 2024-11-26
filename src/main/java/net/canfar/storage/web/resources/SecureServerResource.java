@@ -73,28 +73,22 @@ import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.auth.AuthorizationTokenPrincipal;
-import ca.nrc.cadc.auth.SSOCookieCredential;
 import ca.nrc.cadc.reg.client.RegistryClient;
+import java.io.IOException;
 import java.net.URL;
+import java.util.Collections;
+import java.util.Map;
+import java.util.NoSuchElementException;
+import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
 import net.canfar.storage.web.config.StorageConfiguration;
-import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
 import net.canfar.storage.web.restlet.StorageApplication;
-
 import org.opencadc.token.Client;
 import org.restlet.Response;
 import org.restlet.data.Cookie;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.ServerResource;
-
-import javax.security.auth.Subject;
-import javax.servlet.ServletContext;
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.Set;
-
 
 class SecureServerResource extends ServerResource {
     final StorageConfiguration storageConfiguration;
@@ -104,7 +98,7 @@ class SecureServerResource extends ServerResource {
     }
 
     /**
-     * Full constructor.  Useful for testing, or overriding default configuration.
+     * Full constructor. Useful for testing, or overriding default configuration.
      *
      * @param storageConfiguration The main configuration.
      */
@@ -137,43 +131,26 @@ class SecureServerResource extends ServerResource {
             try {
                 final String accessToken = getOIDCClient().getAccessToken(firstPartyCookie.getValue());
 
-                subject.getPrincipals().add(new AuthorizationTokenPrincipal(AuthenticationUtil.AUTHORIZATION_HEADER,
-                                                                            AuthenticationUtil.CHALLENGE_TYPE_BEARER
-                                                                            + " " + accessToken));
-                subject.getPublicCredentials().add(
-                        new AuthorizationToken(AuthenticationUtil.CHALLENGE_TYPE_BEARER, accessToken, Collections.singletonList(target.getHost())));
+                subject.getPrincipals()
+                        .add(new AuthorizationTokenPrincipal(
+                                AuthenticationUtil.AUTHORIZATION_HEADER,
+                                AuthenticationUtil.CHALLENGE_TYPE_BEARER + " " + accessToken));
+                subject.getPublicCredentials()
+                        .add(new AuthorizationToken(
+                                AuthenticationUtil.CHALLENGE_TYPE_BEARER,
+                                accessToken,
+                                Collections.singletonList(target.getHost())));
 
                 if (!subject.getPrincipals(AuthorizationTokenPrincipal.class).isEmpty()) {
                     // Ensure it's clean first.
-                    subject.getPublicCredentials(AuthMethod.class)
-                           .forEach(authMethod -> subject.getPublicCredentials().remove(authMethod));
+                    subject.getPublicCredentials(AuthMethod.class).forEach(authMethod -> subject.getPublicCredentials()
+                            .remove(authMethod));
                     subject.getPublicCredentials().add(AuthMethod.TOKEN);
 
                     return AuthenticationUtil.getIdentityManager().validate(subject);
                 }
             } catch (NoSuchElementException noSuchElementException) {
                 // No Asset found
-            }
-        } else {
-            // Ensure the valid backend Domains is added in.
-            // TODO: Is this insecure?  It seems like a bit of a bastardization, but the assumption is that if the
-            // TODO: caller has a cookie, then they must be valid, right?
-            // TODO: jenkinsd 2024.01.24
-            //
-            final Set<SSOCookieCredential> cookieCredentialSet =
-                    subject.getPublicCredentials(SSOCookieCredential.class);
-            if (!cookieCredentialSet.isEmpty()) {
-                final SSOCookieCredential firstCredential = cookieCredentialSet.stream().findFirst().get();
-                final VOSpaceServiceConfigManager voSpaceServiceConfigManager =
-                        new VOSpaceServiceConfigManager(this.storageConfiguration);
-                voSpaceServiceConfigManager.getServiceList().forEach(serviceName -> {
-                    final String domain = voSpaceServiceConfigManager.getServiceConfig(serviceName)
-                                                                     .getResourceID().getHost();
-
-                    subject.getPublicCredentials().add(new SSOCookieCredential(firstCredential.getSsoCookieValue(),
-                                                                               domain,
-                                                                               firstCredential.getExpiryDate()));
-                });
             }
         }
 
@@ -186,14 +163,14 @@ class SecureServerResource extends ServerResource {
     }
 
     /**
-     * Set a default context path when this is not running in a servlet
-     * container.
+     * Set a default context path when this is not running in a servlet container.
      *
      * @return String path.
      */
     String getContextPath() {
         return (getServletContext() == null)
-               ? StorageApplication.DEFAULT_CONTEXT_PATH : getServletContext().getContextPath();
+                ? StorageApplication.DEFAULT_CONTEXT_PATH
+                : getServletContext().getContextPath();
     }
 
     Client getOIDCClient() throws IOException {
@@ -207,7 +184,7 @@ class SecureServerResource extends ServerResource {
     /**
      * Write out the given status and representation body to the response.
      *
-     * @param status         The Status to set.
+     * @param status The Status to set.
      * @param representation The representation used for the body of the response.
      */
     void writeResponse(final Status status, final Representation representation) {
