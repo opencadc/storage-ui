@@ -69,22 +69,19 @@
 package net.canfar.storage.web.restlet;
 
 import freemarker.cache.URLTemplateLoader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
+import javax.servlet.ServletContext;
 import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.resources.*;
 import net.canfar.storage.web.view.FreeMarkerConfiguration;
-
 import org.apache.log4j.Logger;
 import org.restlet.*;
 import org.restlet.routing.Router;
 import org.restlet.routing.TemplateRoute;
 import org.restlet.routing.Variable;
-
-import javax.servlet.ServletContext;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
-
 
 public class StorageApplication extends Application {
     private static final Logger log = Logger.getLogger(StorageApplication.class);
@@ -94,26 +91,21 @@ public class StorageApplication extends Application {
     public static final String SERVLET_CONTEXT_ATTRIBUTE_KEY = "org.restlet.ext.servlet.ServletContext";
     public static final String DEFAULT_CONTEXT_PATH = "/storage";
 
-
     /**
      * Constructor.
      *
-     * @param context The context to use based on parent component context. This
-     *                context should be created using the
-     *                {@link Context#createChildContext()} method to ensure a proper
-     *                isolation with the other applications.
+     * @param context The context to use based on parent component context. This context should be created using the
+     *     {@link Context#createChildContext()} method to ensure a proper isolation with the other applications.
      */
     public StorageApplication(Context context) {
         super(context);
         setStatusService(new VOSpaceStatusService());
     }
 
-
     /**
-     * Creates an inbound root Restlet that will receive all incoming calls. In
-     * general, instances of Router, Filter or Finder classes will be used as
-     * initial application Restlet. The default implementation returns null by
-     * default. This method is intended to be overridden by subclasses.
+     * Creates an inbound root Restlet that will receive all incoming calls. In general, instances of Router, Filter or
+     * Finder classes will be used as initial application Restlet. The default implementation returns null by default.
+     * This method is intended to be overridden by subclasses.
      *
      * @return The inbound root Restlet.
      */
@@ -144,28 +136,19 @@ public class StorageApplication extends Application {
         router.attach(contextPath + "/list/", MainPageServerResource.class);
 
         router.attach(contextPath + "/page", PageServerResource.class);
-        final TemplateRoute pageRoute = router.attach(contextPath + "/page{path}",
-                                                      PageServerResource.class);
+        final TemplateRoute pageRoute = router.attach(contextPath + "/page{path}", PageServerResource.class);
 
         // Generic endpoint for files, folders, or links.
-        final TemplateRoute itemRoute = router.attach(contextPath + "/item{path}",
-                                                      StorageItemServerResource.class);
-        final TemplateRoute folderRoute = router.attach(contextPath + "/folder{path}",
-                                                        FolderItemServerResource.class);
-        final TemplateRoute fileRoute = router.attach(contextPath + "/file{path}",
-                                                      FileItemServerResource.class);
-        final TemplateRoute linkRoute = router.attach(contextPath + "/link{path}",
-                                                      LinkItemServerResource.class);
-        final TemplateRoute listRoute = router.attach(contextPath + "/list{path}",
-                                                      MainPageServerResource.class);
-        final TemplateRoute nodeRoute = router.attach(contextPath + "/access{path}",
-                                                      NodeServerResource.class);
-        final TemplateRoute rawRoute = router.attach(contextPath + "/raw{path}",
-                                                     MainPageServerResource.class);
-        final TemplateRoute oidcCallbackRoute = router.attach(contextPath + "/oidc-callback",
-                                                              OIDCCallbackServerResource.class);
-        final TemplateRoute oidcLoginRoute = router.attach(contextPath + "/oidc-login",
-                                                              OIDCLoginServerResource.class);
+        final TemplateRoute itemRoute = router.attach(contextPath + "/item{path}", StorageItemServerResource.class);
+        final TemplateRoute folderRoute = router.attach(contextPath + "/folder{path}", FolderItemServerResource.class);
+        final TemplateRoute fileRoute = router.attach(contextPath + "/file{path}", FileItemServerResource.class);
+        final TemplateRoute linkRoute = router.attach(contextPath + "/link{path}", LinkItemServerResource.class);
+        final TemplateRoute listRoute = router.attach(contextPath + "/list{path}", MainPageServerResource.class);
+        final TemplateRoute nodeRoute = router.attach(contextPath + "/access{path}", NodeServerResource.class);
+        final TemplateRoute rawRoute = router.attach(contextPath + "/raw{path}", MainPageServerResource.class);
+        final TemplateRoute oidcCallbackRoute =
+                router.attach(contextPath + "/oidc-callback", OIDCCallbackServerResource.class);
+        final TemplateRoute oidcLoginRoute = router.attach(contextPath + "/oidc-login", OIDCLoginServerResource.class);
 
         itemRoute.getTemplate().getVariables().putAll(routeVariables);
         folderRoute.getTemplate().getVariables().putAll(routeVariables);
@@ -180,33 +163,27 @@ public class StorageApplication extends Application {
 
         // Support for routes with {svc} in URL
         router.attach(contextPath + "/{svc}/page", PageServerResource.class);
-        final TemplateRoute svcPageRoute = router.attach(contextPath + "/{svc}/page{path}",
-                                                         PageServerResource.class);
+        final TemplateRoute svcPageRoute = router.attach(contextPath + "/{svc}/page{path}", PageServerResource.class);
 
         // Allow for an empty path to be the root.
-        final TemplateRoute svcListRouteNoPath = router.attach(
-                contextPath + "/{svc}/list", MainPageServerResource.class);
-        final TemplateRoute svcListRouteNoPath2 = router.attach(
-                contextPath + "/{svc}/list/", MainPageServerResource.class);
+        final TemplateRoute svcListRouteNoPath =
+                router.attach(contextPath + "/{svc}/list", MainPageServerResource.class);
+        final TemplateRoute svcListRouteNoPath2 =
+                router.attach(contextPath + "/{svc}/list/", MainPageServerResource.class);
 
         // Generic endpoint for files, folders, or links.
-        final TemplateRoute svcItemRoute = router.attach(contextPath + "/{svc}/item{path}",
-                                                         StorageItemServerResource.class);
-        final TemplateRoute svcFolderRoute = router.attach(contextPath + "/{svc}/folder{path}",
-                                                           FolderItemServerResource.class);
-        final TemplateRoute svcFileRoute = router.attach(contextPath + "/{svc}/file{path}",
-                                                         FileItemServerResource.class);
-        final TemplateRoute svcLinkRoute = router.attach(contextPath + "/{svc}/link{path}",
-                                                         LinkItemServerResource.class);
-        final TemplateRoute svcListRoute = router.attach(contextPath + "/{svc}/list{path}",
-                                                         MainPageServerResource.class);
-        final TemplateRoute svcNodeRoute = router.attach(contextPath + "/{svc}/access{path}",
-                                                         NodeServerResource.class);
-        final TemplateRoute svcRawRoute = router.attach(contextPath + "/{svc}/raw{path}",
-                                                        MainPageServerResource.class);
-        final TemplateRoute pkgRawRoute = router.attach(contextPath + "/{svc}/pkg",
-                                                        PackageServerResource.class);
-
+        final TemplateRoute svcItemRoute =
+                router.attach(contextPath + "/{svc}/item{path}", StorageItemServerResource.class);
+        final TemplateRoute svcFolderRoute =
+                router.attach(contextPath + "/{svc}/folder{path}", FolderItemServerResource.class);
+        final TemplateRoute svcFileRoute =
+                router.attach(contextPath + "/{svc}/file{path}", FileItemServerResource.class);
+        final TemplateRoute svcLinkRoute =
+                router.attach(contextPath + "/{svc}/link{path}", LinkItemServerResource.class);
+        final TemplateRoute svcListRoute =
+                router.attach(contextPath + "/{svc}/list{path}", MainPageServerResource.class);
+        final TemplateRoute svcNodeRoute = router.attach(contextPath + "/{svc}/access{path}", NodeServerResource.class);
+        final TemplateRoute svcRawRoute = router.attach(contextPath + "/{svc}/raw{path}", MainPageServerResource.class);
 
         // Set route variables to all the templates
         svcItemRoute.getTemplate().getVariables().putAll(routeVariables);
@@ -220,7 +197,6 @@ public class StorageApplication extends Application {
         svcListRouteNoPath2.getTemplate().getVariables().putAll(routeVariables);
         svcRawRoute.getTemplate().getVariables().putAll(routeVariables);
         svcNodeRoute.getTemplate().getVariables().putAll(routeVariables);
-        pkgRawRoute.getTemplate().getVariables().putAll(routeVariables);
 
         router.setContext(getContext());
         return router;
@@ -243,8 +219,9 @@ public class StorageApplication extends Application {
         if (storageConfiguration.getThemeName().equalsIgnoreCase("canfar")) {
             final Map<String, URL> uriTemplateLoader = new HashMap<>();
             try {
-                uriTemplateLoader.put("themes/canfar/canfar-application-header",
-                                      new URL("https://www.canfar.net/canfar/includes/_application_header.shtml"));
+                uriTemplateLoader.put(
+                        "themes/canfar/canfar-application-header",
+                        new URL("https://www.canfar.net/canfar/includes/_application_header.shtml"));
             } catch (MalformedURLException urlException) {
                 // Should NEVER happen.
                 throw new IllegalStateException(urlException.getMessage(), urlException);

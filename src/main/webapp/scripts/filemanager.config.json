@@ -75,18 +75,22 @@
         "vos_prefix": "vos://cadc.nrc.ca~vault",
         "connector": "batch-download",
         "methods": {
-            "download-url-list": {
+            "url-list": {
                 "id": "URL List"
             },
-            "download-shell-script": {
+            "shell-script": {
                 "id": "Shell Script"
             },
-            "download-html-list":
-            {
+            "html-list": {
                 "id": "HTML List"
             },
-            "download-download-manager":
-            {
+            "package-zip": {
+                "id": "ZIP Package"
+            },
+            "package-tar": {
+                "id": "TAR Package"
+            },
+            "download-manager": {
                 "id": "Java Webstart"
             }
         }

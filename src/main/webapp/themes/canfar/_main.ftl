@@ -94,10 +94,13 @@
                   <a disabled="disabled" class="disabled dropdown-toggle multi-select-function" id="download" role="button" name="download" type="button" aria-expanded="false" data-toggle="dropdown" title="Download selected items.">
                     <span class="glyphicon glyphicon-cloud-download"></span>&nbsp;Download&nbsp;<span class="caret"></span></a>
                   <ul class="dropdown-menu download-dropdown-menu">
-                    <li><a class="download-url-list"><span class="glyphicon glyphicon-list"></span>&nbsp;URL List</a></li>
-                    <li><a class="download-shell-script"><span class="glyphicon glyphicon-list"></span>&nbsp;Shell Script</a></li>
-                    <li><a class="download-html-list"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;HTML List</a></li>
-                    <li><a class="download-download-manager"><span class="glyphicon glyphicon-download-alt"></span>&nbsp;Download Manager</a></li>
+                    <!--
+                    <li><a class="download" data-download-type="url-list"><span class="glyphicon glyphicon-list"></span>&nbsp;URL List</a></li>
+                    <li><a class="download" data-download-type="shell-script"><span class="glyphicon glyphicon-list"></span>&nbsp;Shell Script</a></li>
+                    <li><a class="download" data-download-type="html-list"><span class="glyphicon glyphicon-list-alt"></span>&nbsp;HTML List</a></li>
+                    -->
+                    <li><a class="download-package" data-download-type="package-zip"><span class="glyphicon glyphicon-compressed"></span>&nbsp;ZIP Package</a></li>
+                    <li><a class="download-package" data-download-type="package-tar"><span class="glyphicon glyphicon-save-file"></span>&nbsp;TAR Package</a></li>
                   </ul>
                 </li>
 </#if>

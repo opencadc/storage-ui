@@ -68,6 +68,7 @@
 
 package net.canfar.storage.web.resources;
 
+import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.IdentityManager;
 import ca.nrc.cadc.auth.NotAuthenticatedException;
@@ -112,7 +113,6 @@ import org.restlet.resource.Delete;
 import org.restlet.resource.Post;
 import org.restlet.resource.ResourceException;
 
-
 public class StorageItemServerResource extends SecureServerResource {
     // Page size for the initial page display.
     private static final int DEFAULT_DISPLAY_PAGE_SIZE = 35;
@@ -121,9 +121,7 @@ public class StorageItemServerResource extends SecureServerResource {
     VOSpaceClient voSpaceClient;
     VOSpaceServiceConfig currentService;
 
-    /**
-     * Empty constructor needed for Restlet to manage it.  Needs to be public.
-     */
+    /** Empty constructor needed for Restlet to manage it. Needs to be public. */
     public StorageItemServerResource() {
         this.voSpaceServiceConfigManager = new VOSpaceServiceConfigManager(storageConfiguration);
     }
@@ -131,16 +129,18 @@ public class StorageItemServerResource extends SecureServerResource {
     /**
      * Only used for testing as no Request is coming through to initialize it as it would in Production.
      *
-     * @param storageConfiguration        The StorageConfiguration object.
+     * @param storageConfiguration The StorageConfiguration object.
      * @param voSpaceServiceConfigManager The VOSpaceServiceConfigManager object.
-     * @param storageItemFactory          The StorageItemFactory object.
-     * @param voSpaceClient               The VOSpaceClient object.
-     * @param serviceConfig               The current VOSpace Service.
+     * @param storageItemFactory The StorageItemFactory object.
+     * @param voSpaceClient The VOSpaceClient object.
+     * @param serviceConfig The current VOSpace Service.
      */
-    StorageItemServerResource(StorageConfiguration storageConfiguration,
-                              VOSpaceServiceConfigManager voSpaceServiceConfigManager,
-                              StorageItemFactory storageItemFactory,
-                              VOSpaceClient voSpaceClient, VOSpaceServiceConfig serviceConfig) {
+    StorageItemServerResource(
+            StorageConfiguration storageConfiguration,
+            VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+            StorageItemFactory storageItemFactory,
+            VOSpaceClient voSpaceClient,
+            VOSpaceServiceConfig serviceConfig) {
         super(storageConfiguration);
         this.voSpaceServiceConfigManager = voSpaceServiceConfigManager;
         this.storageItemFactory = storageItemFactory;
@@ -160,12 +160,10 @@ public class StorageItemServerResource extends SecureServerResource {
         initializeStorageItemFactory();
     }
 
-
     /**
-     * Set-up method.  This ensures there is a context first before pulling
-     * out some necessary objects for further work.
-     * <p></p>
-     * Tester
+     * Set-up method. This ensures there is a context first before pulling out some necessary objects for further work.
+     *
+     * <p>Tester
      */
     @Override
     protected void doInit() throws ResourceException {
@@ -177,10 +175,13 @@ public class StorageItemServerResource extends SecureServerResource {
 
     private void initializeStorageItemFactory() {
         final ServletContext servletContext = getServletContext();
-        this.storageItemFactory = new StorageItemFactory((servletContext == null)
-                                                             ? StorageApplication.DEFAULT_CONTEXT_PATH
-                                                             : servletContext.getContextPath(),
-                                                         this.currentService);
+        this.storageItemFactory = new StorageItemFactory(
+                (servletContext == null) ? StorageApplication.DEFAULT_CONTEXT_PATH : servletContext.getContextPath(),
+                this.currentService);
+    }
+
+    URL lookupEndpoint(final URI serviceURI, final URI capabilityStandardURI, final AuthMethod authMethod) {
+        return getRegistryClient().getServiceURL(serviceURI, capabilityStandardURI, authMethod);
     }
 
     Path getCurrentPath() {
@@ -217,7 +218,8 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     VOSURI getCurrentItemURI() {
-        return new VOSURI(URI.create(this.currentService.getNodeResourceID() + getCurrentPath().toString()));
+        return new VOSURI(URI.create(
+                this.currentService.getNodeResourceID() + getCurrentPath().toString()));
     }
 
     String getCurrentName() {
@@ -234,7 +236,7 @@ public class StorageItemServerResource extends SecureServerResource {
 
     @SuppressWarnings("unchecked")
     <T extends Node> T getNode(final Path nodePath, final VOS.Detail detail, final Integer limit)
-        throws ResourceException {
+            throws ResourceException {
         final Map<String, Object> queryPayload = new HashMap<>();
         if (limit != null) {
             queryPayload.put("limit", limit);
@@ -245,8 +247,8 @@ public class StorageItemServerResource extends SecureServerResource {
         }
 
         final String query = queryPayload.entrySet().stream()
-                                         .map(entry -> entry.getKey() + "=" + entry.getValue())
-                                         .collect(Collectors.joining("&"));
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("&"));
 
         try {
             final T currentNode = executeSecurely(() -> (T) voSpaceClient.getNode(nodePath.toString(), query));
@@ -256,8 +258,7 @@ public class StorageItemServerResource extends SecureServerResource {
             return currentNode;
         } catch (IllegalArgumentException e) {
             // Very specific hack to try again without the (possibly) unsupported limit parameter.
-            if (limit != null
-                && e.getMessage().startsWith("OptionNotSupported")) {
+            if (limit != null && e.getMessage().startsWith("OptionNotSupported")) {
                 return getNode(nodePath, detail, null);
             } else {
                 throw new ResourceException(e);
@@ -277,8 +278,8 @@ public class StorageItemServerResource extends SecureServerResource {
             // Working around a bug where the RegistryClient improperly handles an unauthenticated request.
             if (runtimeException.getCause() != null) {
                 if (runtimeException.getCause() instanceof IOException
-                    && runtimeException.getCause().getCause() != null
-                    && (runtimeException.getCause().getCause() instanceof NotAuthenticatedException)) {
+                        && runtimeException.getCause().getCause() != null
+                        && (runtimeException.getCause().getCause() instanceof NotAuthenticatedException)) {
                     throw new ResourceException(runtimeException.getCause().getCause());
                 } else if (runtimeException.getCause().getMessage().contains("PosixMapperClient.augment(Subject)")) {
                     // More hacks for the base call being unauthenticated.
@@ -345,11 +346,10 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     /**
-     * Resolve this link Node's target to its final destination.  This method
-     * will follow the target of the provided LinkNode, and continue to do so
-     * until an external URL is found, or Node that is not a Link Node.
-     * <p></p>
-     * Finally, this method will redirect to the appropriate endpoint.
+     * Resolve this link Node's target to its final destination. This method will follow the target of the provided
+     * LinkNode, and continue to do so until an external URL is found, or Node that is not a Link Node.
+     *
+     * <p>Finally, this method will redirect to the appropriate endpoint.
      *
      * @throws Exception For any parsing errors.
      */
@@ -398,9 +398,8 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     /**
-     * Perform the HTTPS command to recursively set permissions for a node.
-     * Returns when job is complete, OR a maximum of (15) seconds has elapsed.
-     * If timeout has been reached, job will continue to run until is cancelled.
+     * Perform the HTTPS command to recursively set permissions for a node. Returns when job is complete, OR a maximum
+     * of (15) seconds has elapsed. If timeout has been reached, job will continue to run until is cancelled.
      *
      * @param newNode The Node whose permissions are to be recursively set
      */
@@ -420,7 +419,6 @@ public class StorageItemServerResource extends SecureServerResource {
         }
     }
 
-
     /**
      * Perform the HTTPS command.
      *
@@ -432,7 +430,6 @@ public class StorageItemServerResource extends SecureServerResource {
             return null;
         });
     }
-
 
     void createLink(final URI target) throws Exception {
         createNode(toLinkNode(target));
@@ -486,9 +483,11 @@ public class StorageItemServerResource extends SecureServerResource {
     }
 
     /**
-     * Convenience method to obtain a Subject targeted for the current VOSpace backend.  When using Tokens, for example, the AuthenticationToken instance
-     * in the Subject's Public Credentials will contain the domain of the backend VOSpace API.
-     * @return  Subject instance.  Never null.
+     * Convenience method to obtain a Subject targeted for the current VOSpace backend. When using Tokens, for example,
+     * the AuthenticationToken instance in the Subject's Public Credentials will contain the domain of the backend
+     * VOSpace API.
+     *
+     * @return Subject instance. Never null.
      */
     Subject getVOSpaceCallingSubject() throws Exception {
         return super.getCallingSubject(new URL(this.voSpaceClient.getBaseURL()));
@@ -520,7 +519,7 @@ public class StorageItemServerResource extends SecureServerResource {
         currentNode.getReadOnlyGroup().clear();
         if (keySet.contains("readGroup") && StringUtil.hasText(jsonObject.getString("readGroup"))) {
             final GroupURI newReadGroupURI =
-                new GroupURI(storageConfiguration.getGroupURI(jsonObject.getString("readGroup")));
+                    new GroupURI(storageConfiguration.getGroupURI(jsonObject.getString("readGroup")));
             currentNode.getReadOnlyGroup().add(newReadGroupURI);
         } else {
             currentNode.clearReadOnlyGroups = true;
@@ -529,7 +528,7 @@ public class StorageItemServerResource extends SecureServerResource {
         currentNode.getReadWriteGroup().clear();
         if (keySet.contains("writeGroup") && StringUtil.hasText(jsonObject.getString("writeGroup"))) {
             final GroupURI newReadWriteGroupURI =
-                new GroupURI(storageConfiguration.getGroupURI(jsonObject.getString("writeGroup")));
+                    new GroupURI(storageConfiguration.getGroupURI(jsonObject.getString("writeGroup")));
             currentNode.getReadWriteGroup().add(newReadWriteGroupURI);
         } else {
             currentNode.clearReadWriteGroups = true;

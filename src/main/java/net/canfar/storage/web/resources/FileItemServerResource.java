@@ -74,15 +74,24 @@ import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.util.StringUtil;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.security.auth.Subject;
 import net.canfar.storage.PathUtils;
 import net.canfar.storage.web.*;
 import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
 import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
 import net.canfar.storage.web.restlet.JSONRepresentation;
-
-import javax.security.auth.Subject;
-
 import org.apache.commons.fileupload.FileItemIterator;
 import org.apache.commons.fileupload.FileItemStream;
 import org.apache.commons.fileupload.FileUploadException;
@@ -112,19 +121,6 @@ import org.restlet.resource.Post;
 import org.restlet.resource.Put;
 import org.restlet.resource.ResourceException;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-
 public class FileItemServerResource extends StorageItemServerResource {
 
     private static final Logger LOGGER = Logger.getLogger(FileItemServerResource.class);
@@ -135,18 +131,17 @@ public class FileItemServerResource extends StorageItemServerResource {
     private final UploadVerifier uploadVerifier;
     private final FileValidator fileValidator;
 
-    private final static AuthMethod[] PROTOCOL_AUTH_METHODS = new AuthMethod[] {
-            AuthMethod.ANON,
-            AuthMethod.CERT,
-            AuthMethod.COOKIE
-    };
+    private static final AuthMethod[] PROTOCOL_AUTH_METHODS =
+            new AuthMethod[] {AuthMethod.ANON, AuthMethod.CERT, AuthMethod.COOKIE};
 
-
-    FileItemServerResource(StorageConfiguration storageConfiguration,
-                           VOSpaceServiceConfigManager voSpaceServiceConfigManager,
-                           StorageItemFactory storageItemFactory, VOSpaceClient voSpaceClient,
-                           VOSpaceServiceConfig serviceConfig, UploadVerifier uploadVerifier,
-                           FileValidator fileValidator) {
+    FileItemServerResource(
+            StorageConfiguration storageConfiguration,
+            VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+            StorageItemFactory storageItemFactory,
+            VOSpaceClient voSpaceClient,
+            VOSpaceServiceConfig serviceConfig,
+            UploadVerifier uploadVerifier,
+            FileValidator fileValidator) {
         super(storageConfiguration, voSpaceServiceConfigManager, storageItemFactory, voSpaceClient, serviceConfig);
         this.uploadVerifier = uploadVerifier;
         this.fileValidator = fileValidator;
@@ -185,32 +180,25 @@ public class FileItemServerResource extends StorageItemServerResource {
 
     /**
      * Check both the new prototype and old Files service lookup endpoints.
-     * @param serviceURI    The URI that identifies the Service to use.
-     * @param authMethod    The AuthMethod interface to pick out.
-     * @return  URL, never null.
+     *
+     * @param serviceURI The URI that identifies the Service to use.
+     * @param authMethod The AuthMethod interface to pick out.
+     * @return URL, never null.
      * @throws IllegalStateException if no URL can be found.
      */
     private URL lookupDownloadEndpoint(final URI serviceURI, final AuthMethod authMethod) {
-        final URI[] downloadEndpointStandards = new URI[] {
-                Standards.VOSPACE_FILES,
-                Standards.VOSPACE_FILES_20
-        };
+        final URI[] downloadEndpointStandards = new URI[] {Standards.VOSPACE_FILES, Standards.VOSPACE_FILES_20};
 
         for (final URI uri : downloadEndpointStandards) {
-            final URL serviceURL = lookupDownloadEndpoint(serviceURI, uri, authMethod);
+            final URL serviceURL = lookupEndpoint(serviceURI, uri, authMethod);
             if (serviceURL != null) {
                 return serviceURL;
             }
         }
 
         throw new IllegalStateException("Incomplete configuration in the registry.  No endpoint for "
-                                        + serviceURI + " could be found from ("
-                                        + Arrays.toString(downloadEndpointStandards) + ")");
-    }
-
-    private URL lookupDownloadEndpoint(final URI serviceURI, final URI capabilityStandardURI,
-                                       final AuthMethod authMethod) {
-        return getRegistryClient().getServiceURL(serviceURI, capabilityStandardURI, authMethod);
+                + serviceURI + " could be found from ("
+                + Arrays.toString(downloadEndpointStandards) + ")");
     }
 
     String toEndpoint(final URI downloadURI) {
@@ -240,8 +228,7 @@ public class FileItemServerResource extends StorageItemServerResource {
 
             if (!fileItemIterator.hasNext()) {
                 // Some problem occurs, sent back a simple line of text.
-                uploadError(Status.CLIENT_ERROR_BAD_REQUEST,
-                            "Unable to upload corrupted or incompatible data.");
+                uploadError(Status.CLIENT_ERROR_BAD_REQUEST, "Unable to upload corrupted or incompatible data.");
             } else {
                 upload(fileItemIterator);
             }
@@ -302,9 +289,8 @@ public class FileItemServerResource extends StorageItemServerResource {
 
             return PathUtils.toPath(dataNode);
         } else {
-            throw new ResourceException(new IllegalArgumentException(
-                    String.format("Invalid file name: %s -- File name must match %s.", filename,
-                                  fileValidator.getRule())));
+            throw new ResourceException(new IllegalArgumentException(String.format(
+                    "Invalid file name: %s -- File name must match %s.", filename, fileValidator.getRule())));
         }
     }
 
@@ -312,13 +298,13 @@ public class FileItemServerResource extends StorageItemServerResource {
      * Do the secure upload.
      *
      * @param inputStream The InputStream to pull from.
-     * @param dataNode    The DataNode to upload to.
-     * @param contentType           The file content type.
+     * @param dataNode The DataNode to upload to.
+     * @param contentType The file content type.
      */
     protected void upload(final InputStream inputStream, final DataNode dataNode, final String contentType)
             throws Exception {
-        final UploadOutputStreamWrapper outputStreamWrapper = new UploadOutputStreamWrapperImpl(inputStream,
-                                                                                                BUFFER_SIZE);
+        final UploadOutputStreamWrapper outputStreamWrapper =
+                new UploadOutputStreamWrapperImpl(inputStream, BUFFER_SIZE);
 
         try {
             // Due to a bug in VOSpace that returns a 400 while checking
@@ -332,7 +318,7 @@ public class FileItemServerResource extends StorageItemServerResource {
             if (cause instanceof IllegalStateException) {
                 final Throwable illegalStateCause = cause.getCause();
                 if ((illegalStateCause instanceof NodeNotFoundException)
-                    || (illegalStateCause instanceof ResourceNotFoundException)) {
+                        || (illegalStateCause instanceof ResourceNotFoundException)) {
                     createNode(dataNode);
                 } else {
                     throw new ResourceException(Status.CLIENT_ERROR_BAD_REQUEST, e.getCause());
@@ -365,22 +351,24 @@ public class FileItemServerResource extends StorageItemServerResource {
     }
 
     /**
-     * Abstract away the Transfer stuff.  It's cumbersome.
+     * Abstract away the Transfer stuff. It's cumbersome.
      *
      * @param outputStreamWrapper The OutputStream wrapper.
-     * @param dataNode            The node to upload.
-     * @param contentType           The file content type.
+     * @param dataNode The node to upload.
+     * @param contentType The file content type.
      * @throws Exception To capture transfer and upload failures.
      */
     void upload(final UploadOutputStreamWrapper outputStreamWrapper, final DataNode dataNode, final String contentType)
             throws Exception {
         final VOSURI dataNodeVOSURI = toURI(dataNode);
 
-        final List<Protocol> protocols = Arrays.stream(FileItemServerResource.PROTOCOL_AUTH_METHODS).map(authMethod -> {
-            final Protocol httpsAuth = new Protocol(VOS.PROTOCOL_HTTPS_PUT);
-            httpsAuth.setSecurityMethod(Standards.getSecurityMethod(authMethod));
-            return httpsAuth;
-        }).collect(Collectors.toList());
+        final List<Protocol> protocols = Arrays.stream(FileItemServerResource.PROTOCOL_AUTH_METHODS)
+                .map(authMethod -> {
+                    final Protocol httpsAuth = new Protocol(VOS.PROTOCOL_HTTPS_PUT);
+                    httpsAuth.setSecurityMethod(Standards.getSecurityMethod(authMethod));
+                    return httpsAuth;
+                })
+                .collect(Collectors.toList());
 
         final Transfer transfer = new Transfer(dataNodeVOSURI.getURI(), Direction.pushToVoSpace);
         transfer.setView(new View(VOS.VIEW_DEFAULT));
@@ -396,8 +384,9 @@ public class FileItemServerResource extends StorageItemServerResource {
         VOSClientUtil.checkTransferFailure(ct);
 
         if (ct.getHttpTransferDetails().getDigest() != null) {
-            uploadVerifier.verifyMD5(outputStreamWrapper.getCalculatedMD5(),
-                                     ct.getHttpTransferDetails().getDigest().getSchemeSpecificPart());
+            uploadVerifier.verifyMD5(
+                    outputStreamWrapper.getCalculatedMD5(),
+                    ct.getHttpTransferDetails().getDigest().getSchemeSpecificPart());
         }
 
         uploadSuccess();
@@ -406,7 +395,7 @@ public class FileItemServerResource extends StorageItemServerResource {
     /**
      * Parse the representation into a Map for easier access to Form elements.
      *
-     * @return Map of field names to File Items, or empty Map.  Never null.
+     * @return Map of field names to File Items, or empty Map. Never null.
      */
     private ServletFileUpload parseRepresentation() {
         // 1/ Create a factory for disk-based file items
@@ -427,26 +416,21 @@ public class FileItemServerResource extends StorageItemServerResource {
         return new ServletFileUpload(factory);
     }
 
-
     private void uploadError(final Status status, final String message) {
-        writeResponse(status,
-                      new JSONRepresentation() {
-                          @Override
-                          public void write(final JSONWriter jsonWriter)
-                                  throws JSONException {
-                              jsonWriter.object().key("error").value(message).endObject();
-                          }
-                      });
+        writeResponse(status, new JSONRepresentation() {
+            @Override
+            public void write(final JSONWriter jsonWriter) throws JSONException {
+                jsonWriter.object().key("error").value(message).endObject();
+            }
+        });
     }
 
     private void uploadSuccess() {
-        writeResponse(Status.SUCCESS_CREATED,
-                      new JSONRepresentation() {
-                          @Override
-                          public void write(final JSONWriter jsonWriter)
-                                  throws JSONException {
-                              jsonWriter.object().key("code").value(0).endObject();
-                          }
-                      });
+        writeResponse(Status.SUCCESS_CREATED, new JSONRepresentation() {
+            @Override
+            public void write(final JSONWriter jsonWriter) throws JSONException {
+                jsonWriter.object().key("code").value(0).endObject();
+            }
+        });
     }
 }
