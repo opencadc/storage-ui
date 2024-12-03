@@ -73,9 +73,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.TreeMap;
-
 import org.apache.log4j.Logger;
-
 
 public class VOSpaceServiceConfigManager {
     private static final Logger LOGGER = Logger.getLogger(VOSpaceServiceConfigManager.class);
@@ -94,12 +92,13 @@ public class VOSpaceServiceConfigManager {
     public static final String SERVICE_FEATURE_EXTERNAL_LINKS_PROPERTY_KEY_FORMAT =
             "%s%s.service.features.externalLinks";
     public static final String SERVICE_FEATURE_PAGING_PROPERTY_KEY_FORMAT = "%s%s.service.features.paging";
+    public static final String SERVICE_FEATURE_DIRECT_DOWNLOAD_PROPERTY_KEY_FORMAT =
+            "%s%s.service.features.directDownload";
 
     // Used to construct service-specific property keys (ie KEY_BASE + {svc name} + {rest of key}
     public static final String KEY_BASE = "org.opencadc.vosui.";
 
     private final StorageConfiguration applicationConfiguration;
-
 
     public VOSpaceServiceConfigManager(StorageConfiguration appConfig) {
         this.applicationConfiguration = appConfig;
@@ -120,33 +119,34 @@ public class VOSpaceServiceConfigManager {
 
     private void loadServices() {
         this.serviceList.forEach(storageServiceName -> {
-            final String servicePrefixKey =
-                    String.format(VOSpaceServiceConfigManager.SERVICE_NAME_RESOURCE_ID_PROPERTY_KEY_FORMAT,
-                                  VOSpaceServiceConfigManager.KEY_BASE, storageServiceName);
+            final String servicePrefixKey = String.format(
+                    VOSpaceServiceConfigManager.SERVICE_NAME_RESOURCE_ID_PROPERTY_KEY_FORMAT,
+                    VOSpaceServiceConfigManager.KEY_BASE,
+                    storageServiceName);
 
             LOGGER.debug("adding vospace service to map: " + servicePrefixKey + ": " + storageServiceName);
 
             final String vospaceResourceIDStr = applicationConfiguration.lookup(servicePrefixKey, true);
             final URI vospaceResourceID = URI.create(vospaceResourceIDStr);
 
-            final String nodeResourcePrefixKey =
-                    String.format(VOSpaceServiceConfigManager.SERVICE_NODE_RESOURCE_ID_PROPERTY_KEY_FORMAT,
-                                  VOSpaceServiceConfigManager.KEY_BASE, storageServiceName);
+            final String nodeResourcePrefixKey = String.format(
+                    VOSpaceServiceConfigManager.SERVICE_NODE_RESOURCE_ID_PROPERTY_KEY_FORMAT,
+                    VOSpaceServiceConfigManager.KEY_BASE,
+                    storageServiceName);
             final String nodeResourceIDStr = applicationConfiguration.lookup(nodeResourcePrefixKey, true);
             final URI nodeResourceID = URI.create(nodeResourceIDStr);
 
             LOGGER.debug("node resource id base: " + nodeResourceID);
 
-            final String userHomePrefixKey =
-                    String.format(VOSpaceServiceConfigManager.SERVICE_USER_HOME_PROPERTY_KEY_FORMAT,
-                                  VOSpaceServiceConfigManager.KEY_BASE, storageServiceName);
+            final String userHomePrefixKey = String.format(
+                    VOSpaceServiceConfigManager.SERVICE_USER_HOME_PROPERTY_KEY_FORMAT,
+                    VOSpaceServiceConfigManager.KEY_BASE,
+                    storageServiceName);
             final String userHomeStr = applicationConfiguration.lookup(userHomePrefixKey, true);
 
             // At this point, the values have been validated
-            final VOSpaceServiceConfig voSpaceServiceConfig = new VOSpaceServiceConfig(storageServiceName,
-                                                                                       vospaceResourceID,
-                                                                                       nodeResourceID,
-                                                                                       getFeatures(storageServiceName));
+            final VOSpaceServiceConfig voSpaceServiceConfig = new VOSpaceServiceConfig(
+                    storageServiceName, vospaceResourceID, nodeResourceID, getFeatures(storageServiceName));
             voSpaceServiceConfig.homeDir = userHomeStr;
 
             this.serviceConfigMap.put(storageServiceName, voSpaceServiceConfig);
@@ -172,36 +172,50 @@ public class VOSpaceServiceConfigManager {
     VOSpaceServiceConfig.Features getFeatures(final String storageServiceName) {
         final VOSpaceServiceConfig.Features features = new VOSpaceServiceConfig.Features();
 
-        final String supportsBatchDownloadProperty =
-                String.format(VOSpaceServiceConfigManager.SERVICE_FEATURE_BATCH_DOWNLOAD_PROPERTY_KEY_FORMAT,
-                              VOSpaceServiceConfigManager.KEY_BASE, storageServiceName);
+        final String supportsBatchDownloadProperty = String.format(
+                VOSpaceServiceConfigManager.SERVICE_FEATURE_BATCH_DOWNLOAD_PROPERTY_KEY_FORMAT,
+                VOSpaceServiceConfigManager.KEY_BASE,
+                storageServiceName);
         final boolean supportsBatchDownload = applicationConfiguration.lookupFlag(supportsBatchDownloadProperty, true);
         if (supportsBatchDownload) {
             features.supportsBatchDownloads();
         }
 
-        final String supportsBatchUploadProperty =
-                String.format(VOSpaceServiceConfigManager.SERVICE_FEATURE_BATCH_UPLOAD_PROPERTY_KEY_FORMAT,
-                              VOSpaceServiceConfigManager.KEY_BASE, storageServiceName);
+        final String supportsBatchUploadProperty = String.format(
+                VOSpaceServiceConfigManager.SERVICE_FEATURE_BATCH_UPLOAD_PROPERTY_KEY_FORMAT,
+                VOSpaceServiceConfigManager.KEY_BASE,
+                storageServiceName);
         final boolean supportsBatchUpload = applicationConfiguration.lookupFlag(supportsBatchUploadProperty, true);
         if (supportsBatchUpload) {
             features.supportsBatchUploads();
         }
 
-        final String supportsExternalLinksProperty =
-                String.format(VOSpaceServiceConfigManager.SERVICE_FEATURE_EXTERNAL_LINKS_PROPERTY_KEY_FORMAT,
-                              VOSpaceServiceConfigManager.KEY_BASE, storageServiceName);
+        final String supportsExternalLinksProperty = String.format(
+                VOSpaceServiceConfigManager.SERVICE_FEATURE_EXTERNAL_LINKS_PROPERTY_KEY_FORMAT,
+                VOSpaceServiceConfigManager.KEY_BASE,
+                storageServiceName);
         final boolean supportsExternalLinks = applicationConfiguration.lookupFlag(supportsExternalLinksProperty, true);
         if (supportsExternalLinks) {
             features.supportsExternalLinks();
         }
 
-        final String supportsPagingProperty =
-                String.format(VOSpaceServiceConfigManager.SERVICE_FEATURE_PAGING_PROPERTY_KEY_FORMAT,
-                              VOSpaceServiceConfigManager.KEY_BASE, storageServiceName);
+        final String supportsPagingProperty = String.format(
+                VOSpaceServiceConfigManager.SERVICE_FEATURE_PAGING_PROPERTY_KEY_FORMAT,
+                VOSpaceServiceConfigManager.KEY_BASE,
+                storageServiceName);
         final boolean supportsPaging = applicationConfiguration.lookupFlag(supportsPagingProperty, true);
         if (supportsPaging) {
             features.supportsPaging();
+        }
+
+        final String supportsDirectDownloadProperty = String.format(
+                VOSpaceServiceConfigManager.SERVICE_FEATURE_DIRECT_DOWNLOAD_PROPERTY_KEY_FORMAT,
+                VOSpaceServiceConfigManager.KEY_BASE,
+                storageServiceName);
+        final boolean supportsDirectDownload =
+                applicationConfiguration.lookupFlag(supportsDirectDownloadProperty, false);
+        if (supportsDirectDownload) {
+            features.supportsDirectDownload();
         }
 
         return features;

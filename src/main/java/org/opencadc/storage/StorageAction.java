@@ -103,7 +103,7 @@ public abstract class StorageAction extends RestAction {
         return new RegistryClient().getServiceURL(serviceURI, capabilityStandardURI, authMethod);
     }
 
-    protected final VOSpaceServiceConfig getCurrentService() {
+    protected VOSpaceServiceConfig getCurrentService() {
         final String providedServiceName = this.syncInput.getParameter("service");
         final String serviceName = StringUtil.hasText(providedServiceName)
                 ? providedServiceName

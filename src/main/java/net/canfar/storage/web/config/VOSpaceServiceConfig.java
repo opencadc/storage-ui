@@ -68,13 +68,12 @@
 package net.canfar.storage.web.config;
 
 import ca.nrc.cadc.util.StringUtil;
-import net.canfar.storage.PathUtils;
-import org.opencadc.vospace.Node;
-import org.opencadc.vospace.VOSURI;
-
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import net.canfar.storage.PathUtils;
+import org.opencadc.vospace.Node;
+import org.opencadc.vospace.VOSURI;
 
 public class VOSpaceServiceConfig {
     private final String name;
@@ -120,20 +119,24 @@ public class VOSpaceServiceConfig {
         return this.nodeResourceID;
     }
 
-    public final boolean supportsBatchDownloads() {
+    public boolean supportsBatchDownloads() {
         return this.features.supportsBatchDownloads;
     }
 
-    public final boolean supportsBatchUploads() {
+    public boolean supportsBatchUploads() {
         return this.features.supportsBatchUploads;
     }
 
-    public final boolean supportsExternalLinks() {
+    public boolean supportsExternalLinks() {
         return this.features.supportsExternalLinks;
     }
 
-    public final boolean supportsPaging() {
+    public boolean supportsPaging() {
         return this.features.supportsPaging;
+    }
+
+    public boolean supportsDirectDownload() {
+        return this.features.supportsDirectDownload;
     }
 
     public VOSURI toURI(final String path) throws URISyntaxException {
@@ -145,9 +148,8 @@ public class VOSpaceServiceConfig {
         return toURI(path.toString());
     }
 
-
     /**
-     * Features that require flags to disable it, or is generally optional.  Some Cavern style VOSpace services do not
+     * Features that require flags to disable it, or is generally optional. Some Cavern style VOSpace services do not
      * support pagination (i.e. limit={number}&startURI={pageStartURI}), for example.
      */
     public static final class Features {
@@ -155,17 +157,21 @@ public class VOSpaceServiceConfig {
         private boolean supportsBatchUploads = false;
         private boolean supportsExternalLinks = false;
         private boolean supportsPaging = false;
+        private boolean supportsDirectDownload = false;
 
-        public Features() {
+        public Features() {}
 
-        }
-
-        Features(boolean supportsBatchDownloads, boolean supportsBatchUploads, boolean supportsExternalLinks,
-                 boolean supportsPaging) {
+        Features(
+                boolean supportsBatchDownloads,
+                boolean supportsBatchUploads,
+                boolean supportsExternalLinks,
+                boolean supportsPaging,
+                boolean supportsDirectDownload) {
             this.supportsBatchDownloads = supportsBatchDownloads;
             this.supportsBatchUploads = supportsBatchUploads;
             this.supportsExternalLinks = supportsExternalLinks;
             this.supportsPaging = supportsPaging;
+            this.supportsDirectDownload = supportsBatchDownloads;
         }
 
         public void supportsBatchDownloads() {
@@ -182,6 +188,10 @@ public class VOSpaceServiceConfig {
 
         public void supportsPaging() {
             this.supportsPaging = true;
+        }
+
+        public void supportsDirectDownload() {
+            this.supportsDirectDownload = true;
         }
     }
 }

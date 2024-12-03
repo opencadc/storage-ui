@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletResponse;
 import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
 import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
@@ -64,11 +65,29 @@ public class PostAction extends StorageAction {
         if (LOGGER.isDebugEnabled()) {
             targetList.forEach(target -> LOGGER.debug("Sending target " + target));
         }
-
         final Subject currentSubject = getCurrentSubject(
                 lookupEndpoint(getCurrentService().getResourceID(), Standards.VOSPACE_NODES_20, AuthMethod.TOKEN));
         final URL transferRunURL = getTransferRunURL(currentSubject, getTransferRunPayload(targetList, responseFormat));
 
+        processDownload(transferRunURL, currentSubject);
+    }
+
+    void processDownload(final URL transferRunURL, final Subject currentSubject) throws Exception {
+        if (this.getCurrentService().supportsDirectDownload()) {
+            LOGGER.debug("Direct download supported, redirecting to " + transferRunURL);
+            redirect(transferRunURL);
+        } else {
+            LOGGER.debug("Direct download not supported, proxying from " + transferRunURL);
+            proxyDownload(transferRunURL, currentSubject);
+        }
+    }
+
+    void redirect(final URL redirectURL) {
+        this.syncOutput.setCode(HttpServletResponse.SC_MOVED_TEMPORARILY);
+        this.syncOutput.addHeader("location", redirectURL.toExternalForm());
+    }
+
+    void proxyDownload(final URL transferRunURL, final Subject currentSubject) throws Exception {
         final HttpGet httpGet = new HttpGet(transferRunURL, true);
         Subject.doAs(currentSubject, (PrivilegedExceptionAction<Void>) () -> {
             httpGet.prepare();

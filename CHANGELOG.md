@@ -1,4 +1,9 @@
-# Storage User Interface
+# Storage User Interface 1.2.0
+
+## December 3, 2024 (version 1.2.0)
+* Support for TAR and ZIP downloads
+* Small optimizations and bug fixes
+  * For those deployments that support a direct auth connection (or only support public) with the backend VOSpace API, redirect the download, rather than proxying it. 
 
 ## January 30, 2024
 * Support for IAM Group querying

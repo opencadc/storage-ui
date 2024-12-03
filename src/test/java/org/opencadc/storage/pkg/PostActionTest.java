@@ -3,7 +3,10 @@ package org.opencadc.storage.pkg;
 import ca.nrc.cadc.rest.SyncInput;
 import ca.nrc.cadc.rest.SyncOutput;
 import java.net.URI;
+import java.net.URL;
 import java.util.Arrays;
+import javax.security.auth.Subject;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -73,5 +76,65 @@ public class PostActionTest {
 
         Assert.assertArrayEquals("Wrong URIs.", expectedURIs, actualURIs);
         Mockito.verify(mockSyncInput, Mockito.times(1)).getParameters("uri");
+    }
+
+    @Test
+    public void testDirectDownload() throws Exception {
+        final VOSpaceServiceConfig mockService = Mockito.mock(VOSpaceServiceConfig.class);
+
+        Mockito.when(mockService.supportsDirectDownload()).thenReturn(true);
+        final boolean[] expectedCalls = new boolean[] {false};
+
+        final PostAction postAction = new PostAction(null, null, null, null) {
+            @Override
+            protected VOSpaceServiceConfig getCurrentService() {
+                return mockService;
+            }
+
+            @Override
+            void proxyDownload(URL transferRunURL, Subject currentSubject) {
+                Assert.fail("Should not be called");
+            }
+
+            @Override
+            void redirect(URL redirectURL) {
+                expectedCalls[0] = true;
+            }
+        };
+
+        postAction.processDownload(null, null);
+        Assert.assertTrue("Should call redirect.", expectedCalls[0]);
+
+        Mockito.verify(mockService, Mockito.times(1)).supportsDirectDownload();
+    }
+
+    @Test
+    public void testProxyDownload() throws Exception {
+        final VOSpaceServiceConfig mockService = Mockito.mock(VOSpaceServiceConfig.class);
+
+        Mockito.when(mockService.supportsDirectDownload()).thenReturn(false);
+        final boolean[] expectedCalls = new boolean[] {false};
+
+        final PostAction postAction = new PostAction(null, null, null, null) {
+            @Override
+            protected VOSpaceServiceConfig getCurrentService() {
+                return mockService;
+            }
+
+            @Override
+            void proxyDownload(URL transferRunURL, Subject currentSubject) throws Exception {
+                expectedCalls[0] = true;
+            }
+
+            @Override
+            void redirect(URL redirectURL) {
+                Assert.fail("Should not be called");
+            }
+        };
+
+        postAction.processDownload(null, null);
+        Assert.assertTrue("Should call proxyDownload.", expectedCalls[0]);
+
+        Mockito.verify(mockService, Mockito.times(1)).supportsDirectDownload();
     }
 }
