@@ -69,20 +69,33 @@
 package net.canfar.storage.web.resources;
 
 import ca.nrc.cadc.util.StringUtil;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
 import net.canfar.storage.PathUtils;
-import net.canfar.storage.web.StorageItemFactory;
-import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
-import net.canfar.storage.web.view.StorageItem;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.opencadc.vospace.*;
 import net.canfar.storage.StorageItemCSVWriter;
 import net.canfar.storage.StorageItemWriter;
+import net.canfar.storage.web.StorageItemFactory;
 import net.canfar.storage.web.config.StorageConfiguration;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
 import net.canfar.storage.web.restlet.StorageApplication;
 import net.canfar.storage.web.view.FolderItem;
 import net.canfar.storage.web.view.FreeMarkerConfiguration;
+import net.canfar.storage.web.view.StorageItem;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.opencadc.vospace.ContainerNode;
+import org.opencadc.vospace.Node;
+import org.opencadc.vospace.VOS;
+import org.opencadc.vospace.VOSURI;
 import org.opencadc.vospace.client.VOSpaceClient;
 import org.restlet.data.MediaType;
 import org.restlet.ext.freemarker.TemplateRepresentation;
@@ -90,38 +103,28 @@ import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
-import java.io.StringWriter;
-import java.io.Writer;
-import java.net.URISyntaxException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
-
-
 public class MainPageServerResource extends StorageItemServerResource {
     private static final Logger LOGGER = LogManager.getLogger(MainPageServerResource.class);
-    /**
-     * Needed to be supported by Restlet.
-     */
-    public MainPageServerResource() {
-    }
+    /** Needed to be supported by Restlet. */
+    public MainPageServerResource() {}
 
-    MainPageServerResource(StorageConfiguration storageConfiguration,
-                           VOSpaceServiceConfigManager voSpaceServiceConfigManager,
-                           StorageItemFactory storageItemFactory, VOSpaceClient voSpaceClient,
-                           VOSpaceServiceConfig serviceConfig) {
+    MainPageServerResource(
+            StorageConfiguration storageConfiguration,
+            VOSpaceServiceConfigManager voSpaceServiceConfigManager,
+            StorageItemFactory storageItemFactory,
+            VOSpaceClient voSpaceClient,
+            VOSpaceServiceConfig serviceConfig) {
         super(storageConfiguration, voSpaceServiceConfigManager, storageItemFactory, voSpaceClient, serviceConfig);
     }
 
     @Get
     public Representation represent() throws Exception {
         final String pathString = getCurrentPath().toString();
-        final VOS.Detail detail = (!StringUtil.hasText(pathString) || pathString.trim().equals("/"))
-                                  ? VOS.Detail.raw : VOS.Detail.max;
+        final VOS.Detail detail =
+                (!StringUtil.hasText(pathString) || pathString.trim().equals("/")) ? VOS.Detail.raw : VOS.Detail.max;
         final ContainerNode currentNode = getCurrentNode(detail);
         return representContainerNode(currentNode);
     }
-
 
     private Representation representContainerNode(final ContainerNode containerNode) throws Exception {
         final Path parentPath = PathUtils.toPath(containerNode);
@@ -141,8 +144,8 @@ public class MainPageServerResource extends StorageItemServerResource {
             }
         } else {
             childNodeIterator = containerNode.childIterator == null
-                                ? containerNode.getNodes().iterator()
-                                : containerNode.childIterator;
+                    ? containerNode.getNodes().iterator()
+                    : containerNode.childIterator;
             startNextPageURI = null;
         }
 
@@ -165,8 +168,8 @@ public class MainPageServerResource extends StorageItemServerResource {
 
                     storageItemWriter.write(storageItem);
                 } catch (URISyntaxException uriSyntaxException) {
-                    LOGGER.error("Cannot create a URI from node {}.  Skipping...",
-                                 nextChild.getName(), uriSyntaxException);
+                    LOGGER.error(
+                            "Cannot create a URI from node {}.  Skipping...", nextChild.getName(), uriSyntaxException);
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -183,8 +186,9 @@ public class MainPageServerResource extends StorageItemServerResource {
         return getContextAttribute(StorageApplication.FREEMARKER_CONFIG_KEY);
     }
 
-    Representation representFolderItem(final FolderItem folderItem, final Iterator<String> initialRows,
-                                       final VOSURI startNextPageURI) throws Exception {
+    Representation representFolderItem(
+            final FolderItem folderItem, final Iterator<String> initialRows, final VOSURI startNextPageURI)
+            throws Exception {
         final Map<String, Object> dataModel = new HashMap<>();
         dataModel.put("initialRows", initialRows);
 
@@ -232,7 +236,10 @@ public class MainPageServerResource extends StorageItemServerResource {
 
         dataModel.put("features", featureMap);
 
-        return new TemplateRepresentation(String.format("themes/%s/index.ftl", storageConfiguration.getThemeName()),
-                                          getFreeMarkerConfiguration(), dataModel, MediaType.TEXT_HTML);
+        return new TemplateRepresentation(
+                String.format("themes/%s/index.ftl", storageConfiguration.getThemeName()),
+                getFreeMarkerConfiguration(),
+                dataModel,
+                MediaType.TEXT_HTML);
     }
 }

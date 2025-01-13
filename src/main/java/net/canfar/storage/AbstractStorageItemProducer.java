@@ -69,15 +69,6 @@
 package net.canfar.storage;
 
 import ca.nrc.cadc.net.NetUtil;
-import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import org.opencadc.vospace.ContainerNode;
-import org.opencadc.vospace.Node;
-import org.opencadc.vospace.VOS;
-import org.opencadc.vospace.VOSURI;
-import org.opencadc.vospace.client.VOSpaceClient;
-import net.canfar.storage.web.StorageItemFactory;
-
-import javax.security.auth.Subject;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Paths;
@@ -88,7 +79,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-
+import javax.security.auth.Subject;
+import net.canfar.storage.web.StorageItemFactory;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import org.opencadc.vospace.ContainerNode;
+import org.opencadc.vospace.Node;
+import org.opencadc.vospace.VOS;
+import org.opencadc.vospace.VOSURI;
+import org.opencadc.vospace.client.VOSpaceClient;
 
 abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implements StorageItemProducer {
     private VOSURI current;
@@ -100,14 +98,15 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implemen
     private final VOSpaceServiceConfig serviceConfig;
     private final VOSpaceClient voSpaceClient;
 
-
-    AbstractStorageItemProducer(Integer pageSize, VOSURI folderURI,
-                                final VOSURI startURI,
-                                final T storageItemWriter,
-                                final Subject user,
-                                final StorageItemFactory storageItemFactory,
-                                final VOSpaceServiceConfig serviceConfig,
-                                final VOSpaceClient voSpaceClient) {
+    AbstractStorageItemProducer(
+            Integer pageSize,
+            VOSURI folderURI,
+            final VOSURI startURI,
+            final T storageItemWriter,
+            final Subject user,
+            final StorageItemFactory storageItemFactory,
+            final VOSpaceServiceConfig serviceConfig,
+            final VOSpaceClient voSpaceClient) {
         this.pageSize = pageSize;
         this.folderURI = folderURI;
         this.current = startURI;
@@ -118,11 +117,9 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implemen
         this.voSpaceClient = voSpaceClient;
     }
 
-
     String getQuery() {
         final Map<String, String> queryPayload = new HashMap<>();
-        final VOS.Detail detail = folderURI.isRoot()
-                                  ? VOS.Detail.raw : VOS.Detail.max;
+        final VOS.Detail detail = folderURI.isRoot() ? VOS.Detail.raw : VOS.Detail.max;
         queryPayload.put("detail", detail.name());
 
         if (this.pageSize != null) {
@@ -133,8 +130,9 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implemen
             queryPayload.put("uri", NetUtil.encode(current.toString()));
         }
 
-        return queryPayload.entrySet().stream().map(entry -> entry.getKey() + "=" + entry.getValue())
-                           .collect(Collectors.joining("&"));
+        return queryPayload.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("&"));
     }
 
     private Iterator<Node> nextPage() throws Exception {
@@ -150,9 +148,7 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implemen
             if (childNodes.size() < 2 && this.current != null) {
                 return Collections.emptyIterator();
             } else {
-                return pageNode.childIterator == null
-                       ? pageNode.getNodes().iterator()
-                       : pageNode.childIterator;
+                return pageNode.childIterator == null ? pageNode.getNodes().iterator() : pageNode.childIterator;
             }
         });
     }
@@ -164,8 +160,12 @@ abstract class AbstractStorageItemProducer<T extends StorageItemWriter> implemen
             while (page.hasNext()) {
                 final Node n = page.next();
                 PathUtils.augmentParents(Paths.get(folderURI.getPath(), n.getName()), n);
-                this.storageItemWriter.write(storageItemFactory.translate(n));
-                this.current = this.serviceConfig.toURI(n);
+                final VOSURI nextVOSURI = this.serviceConfig.toURI(n);
+
+                if (!this.current.equals(nextVOSURI)) {
+                    this.storageItemWriter.write(storageItemFactory.translate(n));
+                    this.current = nextVOSURI;
+                }
             }
 
             return true;
