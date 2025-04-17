@@ -12,10 +12,6 @@ plugins {
 repositories {
     mavenCentral()
     mavenLocal()
-
-    maven {
-        url "https://maven.restlet.talend.com"
-    }
 }
 
 dependencies {
@@ -23,6 +19,7 @@ dependencies {
     implementation 'org.freemarker:freemarker:[2.3.31,2.4.0)'
     implementation 'org.apache.commons:commons-configuration2:[2.8.0,3.0.0)'
     implementation 'org.apache.commons:commons-lang3:[3.11,4.0)'
+    implementation 'commons-fileupload:commons-fileupload:1.5'
 
     implementation 'org.opencadc:cadc-access-control:[1.1.27,1.2.0)'
     implementation 'org.opencadc:cadc-access-control-identity:[1.1.0,)'
@@ -36,10 +33,10 @@ dependencies {
     implementation 'org.opencadc:cadc-web-token:[1.0.2,2.0.0)'
     implementation 'org.opencadc:cadc-web-util:[1.2.11,2.0.0)'
 
-    implementation 'org.restlet.jee:org.restlet:[2.4.3,2.4.99)'
-    implementation 'org.restlet.jee:org.restlet.ext.servlet:[2.4.3,2.4.99)'
-    implementation 'org.restlet.jee:org.restlet.ext.freemarker:[2.4.3,2.4.99)'
-    implementation 'org.restlet.jee:org.restlet.ext.json:[2.4.3,2.4.99)'
+    implementation 'org.restlet:org.restlet:2.5.1'
+    implementation 'org.restlet:org.restlet.ext.servlet:2.5.1'
+    implementation 'org.restlet:org.restlet.ext.freemarker:2.5.1'
+    implementation 'org.restlet:org.restlet.ext.json:2.5.1'
 
     testImplementation 'junit:junit:[4.12,5.0)'
     testImplementation 'org.xmlunit:xmlunit-core:2.10.0'
