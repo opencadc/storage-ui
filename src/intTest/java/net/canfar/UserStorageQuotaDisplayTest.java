@@ -34,10 +34,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-
 public class UserStorageQuotaDisplayTest extends UserStorageBaseTest {
-    private static final Logger log =
-        Logger.getLogger(UserStorageQuotaDisplayTest.class);
+    private static final Logger log = Logger.getLogger(UserStorageQuotaDisplayTest.class);
 
     static {
         Log4jInit.setLevel("ca.nrc.cadc", Level.INFO);
@@ -54,7 +52,7 @@ public class UserStorageQuotaDisplayTest extends UserStorageBaseTest {
         FolderPage userStoragePage = goTo("/", null, FolderPage.class);
 
         // Need to do this to have access to Home button
-        loginTest(userStoragePage);
+        login(userStoragePage);
 
         // Go to test directory
         userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
@@ -71,5 +69,4 @@ public class UserStorageQuotaDisplayTest extends UserStorageBaseTest {
 
         log.info("UserStorageQuotaDisplayTest completed");
     }
-
 }

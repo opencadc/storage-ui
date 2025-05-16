@@ -1,4 +1,8 @@
-# Storage User Interface 1.2.0
+# Storage User Interface 1.4.0
+
+## May 16, 2025 (1.4.0)
+* Support for JDK 21
+* `build.gradle` supports Gradle 8
 
 ## December 3, 2024 (version 1.2.0)
 * Support for TAR and ZIP downloads

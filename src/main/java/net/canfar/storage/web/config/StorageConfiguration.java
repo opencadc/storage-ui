@@ -73,6 +73,8 @@ import ca.nrc.cadc.accesscontrol.AccessControlClient;
 import ca.nrc.cadc.reg.Standards;
 import ca.nrc.cadc.reg.client.LocalAuthority;
 import ca.nrc.cadc.util.StringUtil;
+import java.io.IOException;
+import java.net.URI;
 import org.apache.commons.configuration2.CombinedConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -84,10 +86,6 @@ import org.apache.commons.configuration2.tree.MergeCombiner;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.opencadc.token.Client;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
 
 public class StorageConfiguration {
     private static final Logger LOGGER = LogManager.getLogger(StorageConfiguration.class);
@@ -105,9 +103,9 @@ public class StorageConfiguration {
         combinedConfiguration.addConfiguration(new SystemConfiguration());
 
         final Parameters parameters = new Parameters();
-        final FileBasedConfigurationBuilder<PropertiesConfiguration> builder =
-                new FileBasedConfigurationBuilder<>(PropertiesConfiguration.class)
-                        .configure(parameters.properties().setFileName(filePath));
+        final FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<>(
+                        PropertiesConfiguration.class)
+                .configure(parameters.properties().setFileName(filePath));
 
         try {
             combinedConfiguration.addConfiguration(builder.getConfiguration());
@@ -118,18 +116,18 @@ public class StorageConfiguration {
         this.configuration = combinedConfiguration;
     }
 
-
     public String getDefaultServiceName() {
         return lookup(StorageConfigurationKey.DEFAULT_SERVICE_NAME);
     }
 
     public String[] getServiceNames() {
-        return lookupStringArray(StorageConfigurationKey.SERVICE_NAME);
+        return lookupStringArray(
+                StorageConfigurationKey.SERVICE_NAME.propertyName, StorageConfigurationKey.SERVICE_NAME.required);
     }
 
     public URI getGMSServiceURI() {
         final LocalAuthority localAuthority = new LocalAuthority();
-        return localAuthority.getServiceURI(Standards.GMS_SEARCH_10.toASCIIString());
+        return localAuthority.getResourceID(Standards.GMS_SEARCH_10);
     }
 
     public String getTokenCacheURLString() {
@@ -137,7 +135,8 @@ public class StorageConfiguration {
     }
 
     public String getThemeName() {
-        return lookup(StorageConfigurationKey.THEME_NAME, "canfar");
+        final String propertyValue = configuration.getString(StorageConfigurationKey.THEME_NAME.propertyName);
+        return propertyValue == null ? "canfar" : propertyValue;
     }
 
     public String getOIDCClientID() {
@@ -161,15 +160,21 @@ public class StorageConfiguration {
     }
 
     public boolean isOIDCConfigured() {
-        return StringUtil.hasText(getOIDCClientID()) && StringUtil.hasText(getOIDCClientSecret())
-               && StringUtil.hasText(getOIDCCallbackURI()) && StringUtil.hasText(getOIDCScope())
-               && StringUtil.hasText(getTokenCacheURLString());
+        return StringUtil.hasText(getOIDCClientID())
+                && StringUtil.hasText(getOIDCClientSecret())
+                && StringUtil.hasText(getOIDCCallbackURI())
+                && StringUtil.hasText(getOIDCScope())
+                && StringUtil.hasText(getTokenCacheURLString());
     }
 
     public Client getOIDCClient() throws IOException {
-        return new Client(getOIDCClientID(), getOIDCClientSecret(),
-                          new URL(getOIDCCallbackURI()), new URL(getOIDCRedirectURI()),
-                          getOIDCScope().split(" "), getTokenCacheURLString());
+        return new Client(
+                getOIDCClientID(),
+                getOIDCClientSecret(),
+                URI.create(getOIDCCallbackURI()).toURL(),
+                URI.create(getOIDCRedirectURI()).toURL(),
+                getOIDCScope().split(" "),
+                getTokenCacheURLString());
     }
 
     public GMSClient getGMSClient() {
@@ -188,15 +193,10 @@ public class StorageConfiguration {
         return lookup(key.propertyName, key.required);
     }
 
-    String lookup(final StorageConfigurationKey key, final String defaultValue) {
-        return lookup(key.propertyName, defaultValue);
-    }
-
     public String lookup(final String propertyName, final boolean required) {
         final String propertyValue = configuration.getString(propertyName);
         if (propertyValue == null && required) {
-            throw new IllegalStateException(
-                    "Required value " + propertyName + " not found in application config.");
+            throw new IllegalStateException("Required value " + propertyName + " not found in application config.");
         }
 
         return propertyValue;
@@ -204,28 +204,17 @@ public class StorageConfiguration {
 
     public boolean lookupFlag(final String propertyName, final boolean required) {
         if (required && !configuration.containsKey(propertyName)) {
-            throw new IllegalStateException(
-                    "Required value " + propertyName + " not found in application config.");
+            throw new IllegalStateException("Required value " + propertyName + " not found in application config.");
         }
 
         return configuration.getBoolean(propertyName, false);
-    }
-
-    String lookup(final String propertyName, final String defaultValue) {
-        final String propertyValue = configuration.getString(propertyName);
-        return propertyValue == null ? defaultValue : propertyValue;
-    }
-
-    String[] lookupStringArray(final StorageConfigurationKey key) {
-        return lookupStringArray(key.propertyName, key.required);
     }
 
     public String[] lookupStringArray(final String key, final boolean required) {
         final String[] propertyValues = configuration.getStringArray(key);
 
         if (propertyValues == null && required) {
-            throw new IllegalStateException(
-                    "Required value " + key + " not found in application config.");
+            throw new IllegalStateException("Required value " + key + " not found in application config.");
         }
 
         return propertyValues;

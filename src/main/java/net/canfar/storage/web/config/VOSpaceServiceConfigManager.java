@@ -86,6 +86,7 @@ public class VOSpaceServiceConfigManager {
     public static final String SERVICE_NAME_RESOURCE_ID_PROPERTY_KEY_FORMAT = "%s%s.service.resourceid";
     public static final String SERVICE_NODE_RESOURCE_ID_PROPERTY_KEY_FORMAT = "%s%s.node.resourceid";
     public static final String SERVICE_USER_HOME_PROPERTY_KEY_FORMAT = "%s%s.user.home";
+    public static final String SERVICE_GROUP_MANAGEMENT_URI_KEY_FORMAT = "%s%s.service.groupManagementURI";
     public static final String SERVICE_FEATURE_BATCH_UPLOAD_PROPERTY_KEY_FORMAT = "%s%s.service.features.batchUpload";
     public static final String SERVICE_FEATURE_BATCH_DOWNLOAD_PROPERTY_KEY_FORMAT =
             "%s%s.service.features.batchDownload";
@@ -144,9 +145,21 @@ public class VOSpaceServiceConfigManager {
                     storageServiceName);
             final String userHomeStr = applicationConfiguration.lookup(userHomePrefixKey, true);
 
+            final String groupManagementURIPrefixKey = String.format(
+                    VOSpaceServiceConfigManager.SERVICE_GROUP_MANAGEMENT_URI_KEY_FORMAT,
+                    VOSpaceServiceConfigManager.KEY_BASE,
+                    storageServiceName);
+            final String groupManagementURIPrefixKeyStr =
+                    applicationConfiguration.lookup(groupManagementURIPrefixKey, true);
+
             // At this point, the values have been validated
             final VOSpaceServiceConfig voSpaceServiceConfig = new VOSpaceServiceConfig(
-                    storageServiceName, vospaceResourceID, nodeResourceID, getFeatures(storageServiceName));
+                    storageServiceName,
+                    vospaceResourceID,
+                    nodeResourceID,
+                    getFeatures(storageServiceName),
+                    URI.create(groupManagementURIPrefixKeyStr));
+
             voSpaceServiceConfig.homeDir = userHomeStr;
 
             this.serviceConfigMap.put(storageServiceName, voSpaceServiceConfig);

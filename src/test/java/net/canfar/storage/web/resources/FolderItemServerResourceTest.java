@@ -68,42 +68,35 @@
 
 package net.canfar.storage.web.resources;
 
+import static org.junit.Assert.*;
 
 import ca.nrc.cadc.reg.client.RegistryClient;
-import net.canfar.storage.FileSizeRepresentation;
 import ca.nrc.cadc.uws.ErrorSummary;
 import ca.nrc.cadc.uws.ErrorType;
 import ca.nrc.cadc.uws.ExecutionPhase;
-import net.canfar.storage.web.StorageItemFactory;
-import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import org.opencadc.vospace.*;
-
-import org.opencadc.vospace.client.ClientTransfer;
-import org.json.JSONObject;
-import org.mockito.Mockito;
-import org.opencadc.vospace.transfer.Transfer;
-import org.restlet.Context;
-import org.restlet.Response;
-
 import java.io.StringWriter;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
-
+import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
+import net.canfar.storage.FileSizeRepresentation;
+import net.canfar.storage.web.StorageItemFactory;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import org.json.JSONObject;
+import org.junit.Assert;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.opencadc.vospace.*;
+import org.opencadc.vospace.client.ClientTransfer;
+import org.opencadc.vospace.transfer.Transfer;
+import org.restlet.Context;
+import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.Representation;
-
-import javax.security.auth.Subject;
-import javax.servlet.ServletContext;
-
-import org.junit.Assert;
-import org.junit.Test;
 import org.restlet.resource.ResourceException;
-
-import static org.junit.Assert.*;
-
 
 public class FolderItemServerResourceTest extends AbstractServerResourceTest<FolderItemServerResource> {
     @Test
@@ -111,60 +104,67 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
         final VOSURI folderURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/my/node"));
         final ContainerNode containerNode = new ContainerNode("node");
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("myvospace", URI.create("ivo://example.org/myvospace"),
-                                         URI.create("vos://example.org~myvospace"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "myvospace",
+                URI.create("ivo://example.org/myvospace"),
+                URI.create("vos://example.org~myvospace"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
 
         final Map<String, Object> requestAttributes = new HashMap<>();
         requestAttributes.put("path", folderURI.getPath());
 
         Mockito.when(mockServletContext.getContextPath()).thenReturn("/teststorage");
         Mockito.when(mockVOSpaceClient.createNode(folderURI, containerNode, false))
-               .thenReturn(containerNode);
+                .thenReturn(containerNode);
 
-        testSubject = new FolderItemServerResource(null, null,
-                                                   new StorageItemFactory("/servletpath", testServiceConfig),
-                                                   mockVOSpaceClient, testServiceConfig) {
-            @Override
-            VOSURI getCurrentItemURI() {
-                return folderURI;
-            }
+        testSubject =
+                new FolderItemServerResource(
+                        null,
+                        null,
+                        new StorageItemFactory("/servletpath", testServiceConfig),
+                        mockVOSpaceClient,
+                        testServiceConfig) {
+                    @Override
+                    VOSURI getCurrentItemURI() {
+                        return folderURI;
+                    }
 
-            @Override
-            Subject getVOSpaceCallingSubject() {
-                return new Subject();
-            }
+                    @Override
+                    Subject getVOSpaceCallingSubject() {
+                        return new Subject();
+                    }
 
-            @Override
-            public Map<String, Object> getRequestAttributes() {
-                return requestAttributes;
-            }
+                    @Override
+                    public Map<String, Object> getRequestAttributes() {
+                        return requestAttributes;
+                    }
 
-            /**
-             * Returns the current context.
-             *
-             * @return The current context.
-             */
-            @Override
-            public Context getContext() {
-                return mockContext;
-            }
+                    /**
+                     * Returns the current context.
+                     *
+                     * @return The current context.
+                     */
+                    @Override
+                    public Context getContext() {
+                        return mockContext;
+                    }
 
-            /**
-             * Returns the handled response.
-             *
-             * @return The handled response.
-             */
-            @Override
-            public Response getResponse() {
-                return mockResponse;
-            }
+                    /**
+                     * Returns the handled response.
+                     *
+                     * @return The handled response.
+                     */
+                    @Override
+                    public Response getResponse() {
+                        return mockResponse;
+                    }
 
-            @Override
-            RegistryClient getRegistryClient() {
-                return mockRegistryClient;
-            }
-        };
+                    @Override
+                    RegistryClient getRegistryClient() {
+                        return mockRegistryClient;
+                    }
+                };
 
         Mockito.doNothing().when(mockResponse).setStatus(Status.SUCCESS_CREATED);
 
@@ -193,9 +193,12 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
         final String expectedQuota = FileSizeRepresentation.getSizeHumanReadable(quota);
         final VOSURI folderURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/my/node"));
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
-                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "vault",
+                URI.create("ivo://example.org/vault"),
+                URI.create("vos://example.org~vault"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
         final NodeProperty prop = new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long.toString(quota));
 
         final ContainerNode containerNode = new ContainerNode("node");
@@ -205,40 +208,44 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
         final Map<String, Object> requestAttributes = new HashMap<>();
         requestAttributes.put("path", folderURI.getPath());
 
-        testSubject = new FolderItemServerResource(null, null,
-                                                   new StorageItemFactory("/servletpath", testServiceConfig),
-                                                   mockVOSpaceClient, testServiceConfig) {
-            @Override
-            VOSURI getCurrentItemURI() {
-                return folderURI;
-            }
+        testSubject =
+                new FolderItemServerResource(
+                        null,
+                        null,
+                        new StorageItemFactory("/servletpath", testServiceConfig),
+                        mockVOSpaceClient,
+                        testServiceConfig) {
+                    @Override
+                    VOSURI getCurrentItemURI() {
+                        return folderURI;
+                    }
 
-            @Override
-            public Map<String, Object> getRequestAttributes() {
-                return requestAttributes;
-            }
+                    @Override
+                    public Map<String, Object> getRequestAttributes() {
+                        return requestAttributes;
+                    }
 
-            /**
-             * Returns the handled response.
-             *
-             * @return The handled response.
-             */
-            @Override
-            public Response getResponse() {
-                return mockResponse;
-            }
+                    /**
+                     * Returns the handled response.
+                     *
+                     * @return The handled response.
+                     */
+                    @Override
+                    public Response getResponse() {
+                        return mockResponse;
+                    }
 
-            @Override
-            ServletContext getServletContext() {
-                return mockServletContext;
-            }
+                    @Override
+                    ServletContext getServletContext() {
+                        return mockServletContext;
+                    }
 
-            @SuppressWarnings("unchecked")
-            @Override
-            <T extends Node> T getNode(final Path nodePath, final VOS.Detail detail) throws ResourceException {
-                return (T) containerNode;
-            }
-        };
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    <T extends Node> T getNode(final Path nodePath, final VOS.Detail detail) throws ResourceException {
+                        return (T) containerNode;
+                    }
+                };
 
         Representation jsonRep = testSubject.retrieveQuota();
 
@@ -262,7 +269,6 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
                     break;
             }
         }
-
     }
 
     private String extract(final String text) {
@@ -270,7 +276,6 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
         int endIndex = text.lastIndexOf('"');
         return text.substring(beginIndex + 1, endIndex);
     }
-
 
     @Test
     public void moveItemsToFolder() throws Exception {
@@ -289,9 +294,12 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
         mockClientTransfer.setMonitor(true);
         mockClientTransfer.runTransfer();
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("myvospace", URI.create("ivo://example.org/myvospace"),
-                                         URI.create("vos://example.org~myvospace"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "myvospace",
+                URI.create("ivo://example.org/myvospace"),
+                URI.create("vos://example.org~myvospace"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
 
         final Map<String, Object> requestAttributes = new HashMap<>();
         requestAttributes.put("path", destination.getPath());
@@ -308,60 +316,62 @@ public class FolderItemServerResourceTest extends AbstractServerResourceTest<Fol
         Mockito.when(mockVOSpaceClient.createTransfer(mockTransfer)).thenReturn(mockClientTransfer);
         Mockito.when(mockServletContext.getContextPath()).thenReturn("/teststorage");
 
+        testSubject =
+                new FolderItemServerResource(
+                        null,
+                        null,
+                        new StorageItemFactory("/servletpath", testServiceConfig),
+                        mockVOSpaceClient,
+                        testServiceConfig) {
+                    @Override
+                    RegistryClient getRegistryClient() {
+                        return mockRegistryClient;
+                    }
 
-        testSubject = new FolderItemServerResource(null, null,
-                                                   new StorageItemFactory("/servletpath", testServiceConfig),
-                                                   mockVOSpaceClient, testServiceConfig) {
-            @Override
-            RegistryClient getRegistryClient() {
-                return mockRegistryClient;
-            }
+                    @Override
+                    public Map<String, Object> getRequestAttributes() {
+                        return requestAttributes;
+                    }
 
-            @Override
-            public Map<String, Object> getRequestAttributes() {
-                return requestAttributes;
-            }
+                    /**
+                     * Returns the current context.
+                     *
+                     * @return The current context.
+                     */
+                    @Override
+                    public Context getContext() {
+                        return mockContext;
+                    }
 
-            /**
-             * Returns the current context.
-             *
-             * @return The current context.
-             */
-            @Override
-            public Context getContext() {
-                return mockContext;
-            }
+                    @Override
+                    Subject getVOSpaceCallingSubject() {
+                        return new Subject();
+                    }
 
-            @Override
-            Subject getVOSpaceCallingSubject() {
-                return new Subject();
-            }
+                    @Override
+                    public Response getResponse() {
+                        return mockResponse;
+                    }
 
-            @Override
-            public Response getResponse() {
-                return mockResponse;
-            }
+                    @Override
+                    VOSURI getCurrentItemURI() {
+                        return destination;
+                    }
 
-            @Override
-            VOSURI getCurrentItemURI() {
-                return destination;
-            }
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    <T extends Node> T getNode(Path nodePath, VOS.Detail detail) throws ResourceException {
+                        return (T) mockDestinationNode;
+                    }
 
-            @SuppressWarnings("unchecked")
-            @Override
-            <T extends Node> T getNode(Path nodePath, VOS.Detail detail) throws ResourceException {
-                return (T) mockDestinationNode;
-            }
+                    @Override
+                    Transfer getTransfer(VOSURI source, VOSURI destination) {
+                        return mockTransfer;
+                    }
+                };
 
-            @Override
-            Transfer getTransfer(VOSURI source, VOSURI destination) {
-                return mockTransfer;
-            }
-        };
-
-
-        final JSONObject sourceJSON = new JSONObject("{\"destNode\":\"" + destNodeName + "\","
-                                                     + "\"srcNodes\":\"" + srcNodeName + "\"}");
+        final JSONObject sourceJSON =
+                new JSONObject("{\"destNode\":\"" + destNodeName + "\"," + "\"srcNodes\":\"" + srcNodeName + "\"}");
 
         final JsonRepresentation payload = new JsonRepresentation(sourceJSON);
 

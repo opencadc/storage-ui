@@ -1,4 +1,3 @@
-
 /*
  ************************************************************************
  *******************  CANADIAN ASTRONOMY DATA CENTRE  *******************
@@ -69,26 +68,22 @@
 
 package net.canfar.storage.web;
 
-import net.canfar.storage.PathUtils;
-import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import org.opencadc.gms.GroupURI;
-import org.opencadc.vospace.NodeProperty;
-import net.canfar.storage.AbstractUnitTest;
-import net.canfar.storage.web.view.StorageItem;
-import org.opencadc.vospace.DataNode;
-import org.opencadc.vospace.VOS;
-import org.opencadc.vospace.VOSURI;
-
-import org.junit.Test;
-import org.junit.Assert;
-
 import java.net.URI;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-
+import net.canfar.storage.AbstractUnitTest;
+import net.canfar.storage.PathUtils;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.view.StorageItem;
+import org.junit.Assert;
+import org.junit.Test;
+import org.opencadc.gms.GroupURI;
+import org.opencadc.vospace.DataNode;
+import org.opencadc.vospace.NodeProperty;
+import org.opencadc.vospace.VOS;
+import org.opencadc.vospace.VOSURI;
 
 public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory> {
     @Test
@@ -109,16 +104,18 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         testDataNode.bytesUsed = 88000L;
         testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
-                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "vault",
+                URI.create("ivo://example.org/vault"),
+                URI.create("vos://example.org~vault"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
 
         testSubject = new StorageItemFactory(contextPath, testServiceConfig);
 
         final StorageItem storageItemResult = testSubject.translate(testDataNode);
-        Assert.assertEquals("Wrong target URL.",
-                            "/warehouse/vault/file/myroot/path/file.txt",
-                            storageItemResult.getTargetPath());
+        Assert.assertEquals(
+                "Wrong target URL.", "/warehouse/vault/file/myroot/path/file.txt", storageItemResult.getTargetPath());
 
         final String readGroupNames = "GROUP2 GROUP3";
         Assert.assertEquals("Wrong Read groups.", readGroupNames, storageItemResult.getReadGroupNames());
@@ -127,8 +124,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         Assert.assertEquals("Wrong Write groups.", writeGroupNames, storageItemResult.getWriteGroupNames());
 
         Assert.assertEquals("Wrong size in bytes.", 88000L, storageItemResult.getSizeInBytes());
-        Assert.assertEquals("Wrong size in human readable.", "85.94 KB",
-                            storageItemResult.getSizeHumanReadable());
+        Assert.assertEquals("Wrong size in human readable.", "85.94 KB", storageItemResult.getSizeHumanReadable());
     }
 
     @Test
@@ -149,16 +145,18 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         testDataNode.bytesUsed = 88000L;
         testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
-                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "vault",
+                URI.create("ivo://example.org/vault"),
+                URI.create("vos://example.org~vault"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
 
         testSubject = new StorageItemFactory(contextPath, testServiceConfig);
 
         final StorageItem storageItemResult = testSubject.translate(testDataNode);
-        Assert.assertEquals("Wrong target URL.",
-                            "/warehouse/vault/file/myroot/path/file.txt",
-                            storageItemResult.getTargetPath());
+        Assert.assertEquals(
+                "Wrong target URL.", "/warehouse/vault/file/myroot/path/file.txt", storageItemResult.getTargetPath());
 
         final String readGroupNames = "GROUP2 GROUP3";
         Assert.assertEquals("Wrong Read groups.", readGroupNames, storageItemResult.getReadGroupNames());
@@ -167,8 +165,7 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         Assert.assertEquals("Wrong Write groups.", writeGroupNames, storageItemResult.getWriteGroupNames());
 
         Assert.assertEquals("Wrong size in bytes.", 88000L, storageItemResult.getSizeInBytes());
-        Assert.assertEquals("Wrong size in human readable.", "85.94 KB",
-                            storageItemResult.getSizeHumanReadable());
+        Assert.assertEquals("Wrong size in human readable.", "85.94 KB", storageItemResult.getSizeHumanReadable());
     }
 
     @Test
@@ -182,22 +179,23 @@ public class StorageItemFactoryTest extends AbstractUnitTest<StorageItemFactory>
         testDataNode.bytesUsed = 88000L;
         testDataNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_READABLE, Boolean.TRUE.toString()));
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
-                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "vault",
+                URI.create("ivo://example.org/vault"),
+                URI.create("vos://example.org~vault"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
 
         testSubject = new StorageItemFactory(contextPath, testServiceConfig);
 
         final StorageItem storageItemResult = testSubject.translate(testDataNode);
-        Assert.assertEquals("Wrong target URL.",
-                            "/warehouse/vault/file/myroot/path/file.txt",
-                            storageItemResult.getTargetPath());
+        Assert.assertEquals(
+                "Wrong target URL.", "/warehouse/vault/file/myroot/path/file.txt", storageItemResult.getTargetPath());
 
         Assert.assertEquals("Wrong Read groups.", "", storageItemResult.getReadGroupNames());
         Assert.assertEquals("Wrong Write groups.", "", storageItemResult.getWriteGroupNames());
 
         Assert.assertEquals("Wrong size in bytes.", 88000L, storageItemResult.getSizeInBytes());
-        Assert.assertEquals("Wrong size in human readable.", "85.94 KB",
-                            storageItemResult.getSizeHumanReadable());
+        Assert.assertEquals("Wrong size in human readable.", "85.94 KB", storageItemResult.getSizeHumanReadable());
     }
 }

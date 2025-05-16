@@ -35,7 +35,6 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-
 public class UserStorageVOSpaceServiceTest extends UserStorageBaseTest {
     private static final Logger log = Logger.getLogger(UserStorageVOSpaceServiceTest.class);
 
@@ -52,7 +51,7 @@ public class UserStorageVOSpaceServiceTest extends UserStorageBaseTest {
         FolderPage userStoragePage = goTo("/", null, FolderPage.class);
 
         // Need to do this to have access to Home button
-        userStoragePage = loginTest(userStoragePage);
+        userStoragePage = login(userStoragePage);
 
         // Nav to home - should be using vault home dir by default
         userStoragePage.navToHome();
