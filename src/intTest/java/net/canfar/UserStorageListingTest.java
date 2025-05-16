@@ -37,23 +37,20 @@ import org.apache.log4j.Logger;
 import org.junit.Test;
 import org.opencadc.storage.util.StorageUtil;
 
-public class UserStorageNavTest extends UserStorageBaseTest {
-    private static final Logger log = Logger.getLogger(UserStorageNavTest.class);
+public class UserStorageListingTest extends UserStorageBaseTest {
+    private static final Logger log = Logger.getLogger(UserStorageListingTest.class);
 
     static {
         Log4jInit.setLevel("ca.nrc.cadc", Level.DEBUG);
     }
 
-    public UserStorageNavTest() {
+    public UserStorageListingTest() {
         super();
     }
 
     @Test
     public void navUserStorage() throws Exception {
         log.info("Visiting: " + webURL + testDirectoryPath);
-
-        final String workingDirectoryName =
-                UserStorageNavTest.class.getSimpleName() + "_" + StorageUtil.generateAlphaNumeric();
 
         FolderPage userStoragePage = goTo("/", null, FolderPage.class);
 
@@ -68,8 +65,6 @@ public class UserStorageNavTest extends UserStorageBaseTest {
 
         userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
 
-        String[] testDirPath = StorageUtil.parseTestDirPath(testDirectoryPath);
-
         if (userStoragePage.isMainPage()) {
             userStoragePage.waitForStorageLoad();
         }
@@ -79,15 +74,6 @@ public class UserStorageNavTest extends UserStorageBaseTest {
 
         // Test adding a directory & deleting it
         userStoragePage.getTableRowCount();
-
-        // Create a temp test folder
-        userStoragePage = userStoragePage.createNewFolder(workingDirectoryName);
-
-        // Should have at least 1 directory (some may be left from older failing tests)
-        // so short the list to the newly created dir to make sure it's there
-        userStoragePage.enterSearch(workingDirectoryName);
-        // possibly need to wait for search to finish.
-        waitFor(3);
 
         // Should be 1 more entry in the table - could be cruft left from failed prior tests
         // table header has one row. This and the new directory is a total of 2
@@ -103,21 +89,15 @@ public class UserStorageNavTest extends UserStorageBaseTest {
         userStoragePage.clickCheckboxForRow(startRow);
         verifyFalse(userStoragePage.isFileSelectedMode(startRow));
 
-        // Go into the working directory
-        userStoragePage = userStoragePage.clickFolder(workingDirectoryName);
-
         // Nav up one level
         userStoragePage = userStoragePage.navUpLevel();
         log.debug("gone up one level");
 
-        // Nav back into working dir
-        userStoragePage.enterSearch(workingDirectoryName);
-        userStoragePage = userStoragePage.clickFolder(workingDirectoryName);
-
         userStoragePage = userStoragePage.navToRoot();
 
+        final String[] testDirPath = StorageUtil.parseTestDirPath(testDirectoryPath);
         // Should be able to click through the path back to the test dir
-        for (String s : testDirPath) {
+        for (final String s : testDirPath) {
             if (StringUtil.hasLength(s)) {
                 log.debug("nav to this folder: " + s);
                 userStoragePage.enterSearch(s);
@@ -125,11 +105,6 @@ public class UserStorageNavTest extends UserStorageBaseTest {
                 userStoragePage = userStoragePage.clickFolder(s);
             }
         }
-
-        userStoragePage.enterSearch(workingDirectoryName);
-        // Nav back into working dir
-        userStoragePage.clickFolder(workingDirectoryName);
-        log.debug("gone back into working directory");
 
         // Go back to home directory where test was started.
 
@@ -142,6 +117,6 @@ public class UserStorageNavTest extends UserStorageBaseTest {
             log.warn("Found error on page: " + storagePage.getErrorMessage());
         }
 
-        log.debug("UserStorageNavTest completed");
+        log.debug("UserStorageListingTest completed");
     }
 }

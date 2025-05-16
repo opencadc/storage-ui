@@ -82,10 +82,18 @@ public class VOSpaceServiceConfig {
 
     private final Features features;
 
+    // The link to the group management service.  Set as a URI in case it will be looked up as a Registry entry instead.
+    private final URI groupManagementLinkURI;
+
     // Default provided, can be overridden
     public String homeDir;
 
-    public VOSpaceServiceConfig(String name, URI resourceID, URI nodeResourceID, final Features features) {
+    public VOSpaceServiceConfig(
+            String name,
+            URI resourceID,
+            URI nodeResourceID,
+            final Features features,
+            final URI groupManagementLinkURI) {
 
         // Validation for required properties
         if (!StringUtil.hasLength(name)) {
@@ -105,6 +113,8 @@ public class VOSpaceServiceConfig {
 
         // Set default for optional properties
         this.homeDir = "/";
+
+        this.groupManagementLinkURI = groupManagementLinkURI;
     }
 
     public String getName() {
@@ -117,6 +127,10 @@ public class VOSpaceServiceConfig {
 
     public URI getNodeResourceID() {
         return this.nodeResourceID;
+    }
+
+    public URI getGroupManagementLinkURI() {
+        return this.groupManagementLinkURI;
     }
 
     public boolean supportsBatchDownloads() {

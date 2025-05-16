@@ -120,7 +120,7 @@
                                   // Initial row count is 100 by default to just show a moving barber pole progress.
                                   fileManager(rows, $("#beacon"), "<#if startURI??>${startURI}</#if>", "${folder.path}",
                                               ${folderWritable?c}, 100 , json, "${contextPath}", true,
-                                              "${vospaceSvcPath}", "${vospaceNodePrefixURI}");
+                                              "${vospaceSvcPath}", "${vospaceNodePrefixURI}", "${groupManagerLinkURI}");
                                 })
                           .fail(function (request, textStatus, errorThrown)
                                 {

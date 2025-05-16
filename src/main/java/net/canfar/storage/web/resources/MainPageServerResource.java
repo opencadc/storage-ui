@@ -210,6 +210,9 @@ public class MainPageServerResource extends StorageItemServerResource {
         // Used to populate VOSpace service dropdown
         dataModel.put("vospaceServices", getVOSpaceServiceList());
 
+        // Group Manager link
+        dataModel.put("groupManagerLinkURI", this.currentService.getGroupManagementLinkURI());
+
         final String httpUsername = getDisplayName();
 
         if (httpUsername != null) {

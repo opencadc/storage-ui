@@ -39,11 +39,10 @@ import ca.nrc.cadc.util.StringUtil;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.Test;
-
+import org.opencadc.storage.util.StorageUtil;
 
 public class UserStorageMoveFolderTest extends UserStorageBaseTest {
-    private static final Logger log =
-        Logger.getLogger(UserStorageMoveFolderTest.class);
+    private static final Logger log = Logger.getLogger(UserStorageMoveFolderTest.class);
 
     static {
         Log4jInit.setLevel("ca.nrc.cadc", Level.DEBUG);
@@ -57,15 +56,16 @@ public class UserStorageMoveFolderTest extends UserStorageBaseTest {
     public void moveFolderTest() throws Exception {
         log.info("Visiting: " + webURL + testDirectoryPath);
 
-        final String workingDirectoryName = UserStorageMoveFolderTest.class.getSimpleName() + "_" + generateAlphaNumeric();
+        final String workingDirectoryName =
+                UserStorageMoveFolderTest.class.getSimpleName() + "_" + StorageUtil.generateAlphaNumeric();
 
         FolderPage userStoragePage = goTo("/", null, FolderPage.class);
 
         // Need to do this to have access to Home button
-        loginTest(userStoragePage);
+        login(userStoragePage);
 
         userStoragePage = goTo(testDirectoryPath, null, FolderPage.class);
-        final String[] testPath = UserStorageBaseTest.parseTestDirPath(testDirectoryPath);
+        final String[] testPath = StorageUtil.parseTestDirPath(testDirectoryPath);
 
         // Create a temp test folder, and run tests in there
         // This will be deleted at the end of this test suite
@@ -99,7 +99,7 @@ public class UserStorageMoveFolderTest extends UserStorageBaseTest {
         userStoragePage = userStoragePage.startMove();
 
         // Navigate through to the target node
-        for (String pathEl: testPath) {
+        for (String pathEl : testPath) {
             if (StringUtil.hasLength(pathEl)) {
                 log.debug("navigating to path element: " + pathEl);
                 userStoragePage.selectFolderFromTree(pathEl);
@@ -132,5 +132,4 @@ public class UserStorageMoveFolderTest extends UserStorageBaseTest {
 
         System.out.println("MoveFolderTest completed");
     }
-
 }

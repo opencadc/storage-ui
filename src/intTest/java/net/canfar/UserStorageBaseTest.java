@@ -32,36 +32,20 @@
 
 package net.canfar;
 
-import ca.nrc.cadc.auth.AuthMethod;
-import ca.nrc.cadc.auth.SSOCookieCredential;
-import ca.nrc.cadc.date.DateUtil;
-import ca.nrc.cadc.net.HttpPost;
-import ca.nrc.cadc.net.NetUtil;
 import ca.nrc.cadc.net.ResourceAlreadyExistsException;
-import ca.nrc.cadc.reg.Standards;
-import ca.nrc.cadc.reg.client.RegistryClient;
 import ca.nrc.cadc.web.selenium.AbstractWebApplicationIntegrationTest;
-import org.apache.commons.lang3.RandomStringUtils;
+import java.net.URI;
+import java.security.PrivilegedActionException;
+import java.security.PrivilegedExceptionAction;
+import java.util.Properties;
+import javax.security.auth.Subject;
 import org.apache.log4j.Logger;
+import org.opencadc.storage.util.StorageUtil;
 import org.opencadc.vospace.ContainerNode;
 import org.opencadc.vospace.NodeProperty;
 import org.opencadc.vospace.VOS;
 import org.opencadc.vospace.VOSURI;
 import org.opencadc.vospace.client.VOSpaceClient;
-
-import javax.security.auth.Subject;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URI;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.security.PrivilegedActionException;
-import java.security.PrivilegedExceptionAction;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
-
 
 public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
     private static final Logger LOGGER = Logger.getLogger(UserStorageBaseTest.class);
@@ -99,36 +83,44 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
         final Properties systemProperties = System.getProperties();
         final String resourceIDString = systemProperties.getProperty("resource.id");
         final URI resourceID = URI.create(resourceIDString);
-        nodeResourceURI = URI.create("vos://" + resourceID.getHost() + "~" + resourceID.getPath().split("/")[1]);
+        final String homeRoot = systemProperties.getProperty("home.root", "");
+
+        nodeResourceURI = URI.create(
+                "vos://" + resourceID.getHost() + "~" + resourceID.getPath().split("/")[1]);
         LOGGER.info("Using Node URI Prefix: " + nodeResourceURI);
 
         defaultVOSpaceSvc = systemProperties.getProperty("test.default_vospace");
         altVOSpaceSvc = systemProperties.getProperty("test.alt_vospace");
         altHomeDir = systemProperties.contains("test.alt_home_directory")
-                     ? systemProperties.getProperty("test.alt_home_directory")
-                     : String.format("/home/%s", AbstractWebApplicationIntegrationTest.username);
+                ? systemProperties.getProperty("test.alt_home_directory")
+                : String.format(homeRoot + "/%s", AbstractWebApplicationIntegrationTest.username);
 
         final VOSpaceClient voSpaceClient = new VOSpaceClient(resourceID, false);
-        final ContainerNode containerNode = new ContainerNode(UserStorageBaseTest.getTestDirectoryName());
-        testDirectoryPath = "/" + AbstractWebApplicationIntegrationTest.username + "/" + containerNode.getName();
+        final ContainerNode containerNode = new ContainerNode(StorageUtil.getTestDirectoryName());
+        containerNode.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_ISPUBLIC, Boolean.toString(true)));
+        containerNode.isPublic = true;
+
+        testDirectoryPath =
+                homeRoot + "/" + AbstractWebApplicationIntegrationTest.username + "/" + containerNode.getName();
         LOGGER.info("Attempting to create " + containerNode.getName());
         try {
-            final Subject subject = UserStorageBaseTest.getCookieSubject(resourceID);
+            final Subject subject = StorageUtil.getCurrentUser(resourceID, nodeResourceURI);
             try {
                 Subject.doAs(subject, (PrivilegedExceptionAction<Void>) () -> {
                     final ContainerNode userSpace = new ContainerNode(AbstractWebApplicationIntegrationTest.username);
-                    userSpace.getProperties().add(new NodeProperty(VOS.PROPERTY_URI_QUOTA,
-                                                                   Long.toString(1024 * 1024 * 1024)));
+                    userSpace
+                            .getProperties()
+                            .add(new NodeProperty(VOS.PROPERTY_URI_QUOTA, Long.toString(1024 * 1024 * 1024)));
                     voSpaceClient.createNode(
-                            new VOSURI(UserStorageBaseTest.createTestDirectoryURI(
-                                    nodeResourceURI, "/" + AbstractWebApplicationIntegrationTest.username)),
+                            new VOSURI(StorageUtil.createTestDirectoryURI(
+                                    nodeResourceURI, homeRoot + "/" + AbstractWebApplicationIntegrationTest.username)),
                             userSpace);
                     return null;
                 });
             } catch (PrivilegedActionException privilegedActionException) {
                 if (privilegedActionException.getException() instanceof ResourceAlreadyExistsException) {
-                    LOGGER.info("Test folder " + "/" + AbstractWebApplicationIntegrationTest.username
-                                + " already exists.");
+                    LOGGER.info("Test folder " + homeRoot + "/" + AbstractWebApplicationIntegrationTest.username
+                            + " already exists.");
                 } else {
                     throw privilegedActionException;
                 }
@@ -136,99 +128,26 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
 
             Subject.doAs(subject, (PrivilegedExceptionAction<Void>) () -> {
                 voSpaceClient.createNode(
-                        new VOSURI(UserStorageBaseTest.createTestDirectoryURI(nodeResourceURI, testDirectoryPath)),
+                        new VOSURI(StorageUtil.createTestDirectoryURI(nodeResourceURI, testDirectoryPath)),
                         containerNode);
                 return null;
             });
         } catch (PrivilegedActionException privilegedActionException) {
             final Exception cause = privilegedActionException.getException();
             throw new RuntimeException(cause.getMessage(), cause);
+        } catch (Exception exception) {
+            throw new RuntimeException(exception.getMessage(), exception);
         }
-    }
-
-    private static String getTestDirectoryName() {
-        final Properties systemProperties = System.getProperties();
-        if (systemProperties.containsKey("test.directory.name")) {
-            return systemProperties.getProperty("test.directory.name");
-        } else {
-            return UserStorageBaseTest.generateAlphaNumeric();
-        }
-    }
-
-    private static URI createTestDirectoryURI(final URI nodeResourceID, final String containerNodePath) {
-        return URI.create(nodeResourceID + containerNodePath);
-    }
-
-    private static Subject getCookieSubject(final URI resourceID) {
-        final RegistryClient registryClient = new RegistryClient();
-        LOGGER.info("Looking up VOSpace URL with " + resourceID);
-        final URL vospaceURL = registryClient.getServiceURL(resourceID, Standards.VOSPACE_NODES_20, AuthMethod.CERT);
-        LOGGER.info("Looking up VOSpace URL with " + resourceID + ": Done -> (" + vospaceURL + ")");
-        final URL oldLoginServiceURL = registryClient.getServiceURL(URI.create("ivo://cadc.nrc.ca/gms"),
-                                                                    Standards.UMS_LOGIN_01, AuthMethod.ANON);
-        final URL newLoginServiceURL = registryClient.getServiceURL(URI.create("ivo://cadc.nrc.ca/gms"),
-                                                                    Standards.UMS_LOGIN_10, AuthMethod.ANON);
-        final URL loginServiceURL = newLoginServiceURL == null ? oldLoginServiceURL : newLoginServiceURL;
-
-        final String cookieValue = UserStorageBaseTest.getCookieValue(loginServiceURL);
-        final Calendar expiryCalendar = Calendar.getInstance(DateUtil.UTC);
-        expiryCalendar.add(Calendar.MINUTE, 10);
-
-        try {
-            final SSOCookieCredential cookieCredential =
-                    new SSOCookieCredential(cookieValue, NetUtil.getDomainName(vospaceURL), expiryCalendar.getTime());
-            final Subject subject = new Subject();
-            subject.getPublicCredentials().add(cookieCredential);
-            subject.getPublicCredentials().add(AuthMethod.COOKIE);
-
-            return subject;
-        } catch (IOException ioException) {
-            throw new RuntimeException(ioException.getMessage(), ioException);
-        }
-    }
-
-    private static String getCookieValue(URL loginServiceURL) {
-        final Map<String, Object> payload = new HashMap<>();
-        payload.put("username", AbstractWebApplicationIntegrationTest.username);
-        payload.put("password", AbstractWebApplicationIntegrationTest.password);
-
-        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        final HttpPost httpPost = new HttpPost(loginServiceURL, payload, byteArrayOutputStream);
-        httpPost.run();
-
-        return new String(byteArrayOutputStream.toByteArray(), StandardCharsets.ISO_8859_1);
-    }
-
-    /**
-     * Generate an ASCII string, replacing the '\' and '+' characters with
-     * underscores to keep them URL friendly.
-     *
-     * @return An ASCII string of 16.
-     */
-    protected static String generateAlphaNumeric() {
-        return generateAlphaNumeric(16);
-    }
-
-    /**
-     * Generate an ASCII string, replacing the '\' and '+' characters with
-     * underscores to keep them URL friendly.
-     *
-     * @param length The desired length of the generated string.
-     * @return An ASCII string of the given length.
-     */
-    protected static String generateAlphaNumeric(final int length) {
-        return RandomStringUtils.random(length, 0, SEED_CHARS.length, false,
-                                        false, SEED_CHARS);
     }
 
     /**
      * Log in and return new page instance.
      *
-     * @param userPage  The current page.
+     * @param userPage The current page.
      * @return UserStorageBrowserPage instance with user logged in
      * @throws Exception if login fails
      */
-    protected FolderPage loginTest(final FolderPage userPage) throws Exception {
+    protected FolderPage login(final FolderPage userPage) throws Exception {
         // Assumption: username and password have been sanely populated during test initialization
         final FolderPage authPage = userPage.doLogin(username, password);
 
@@ -238,14 +157,5 @@ public class UserStorageBaseTest extends AbstractWebApplicationIntegrationTest {
         System.out.println("logged in");
 
         return authPage;
-    }
-
-    protected static String[] parseTestDirPath(String testDir) {
-        String[] parsedPath = testDir.split("/");
-
-        for (String s : parsedPath) {
-            LOGGER.debug("path:" + s);
-        }
-        return parsedPath;
     }
 }

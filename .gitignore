@@ -1,6 +1,7 @@
 *.iml
 .gradle
 docker
+docker-compose*
 build
 README.md
 cadcKeystore

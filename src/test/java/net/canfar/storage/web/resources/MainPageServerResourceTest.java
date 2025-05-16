@@ -68,34 +68,29 @@
 
 package net.canfar.storage.web.resources;
 
-
-import net.canfar.storage.web.StorageItemFactory;
-import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
-import org.opencadc.vospace.*;
-import net.canfar.storage.web.config.StorageConfiguration;
-import net.canfar.storage.web.view.FolderItem;
-import net.canfar.storage.web.view.FreeMarkerConfiguration;
-import org.mockito.Mockito;
-import org.opencadc.token.Client;
-import org.restlet.Context;
-import org.restlet.ext.freemarker.TemplateRepresentation;
-import org.restlet.representation.Representation;
-
-import javax.security.auth.Subject;
-import javax.servlet.ServletContext;
+import static org.junit.Assert.*;
 
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
+import javax.security.auth.Subject;
+import javax.servlet.ServletContext;
+import net.canfar.storage.web.StorageItemFactory;
+import net.canfar.storage.web.config.StorageConfiguration;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
+import net.canfar.storage.web.view.FolderItem;
+import net.canfar.storage.web.view.FreeMarkerConfiguration;
 import org.junit.Test;
+import org.mockito.Mockito;
+import org.opencadc.token.Client;
+import org.opencadc.vospace.*;
+import org.restlet.Context;
+import org.restlet.ext.freemarker.TemplateRepresentation;
+import org.restlet.representation.Representation;
 import org.restlet.resource.ResourceException;
-
-import static org.junit.Assert.*;
-
 
 public class MainPageServerResourceTest extends AbstractServerResourceTest<MainPageServerResource> {
     @Test
@@ -105,12 +100,14 @@ public class MainPageServerResourceTest extends AbstractServerResourceTest<MainP
         final List<String> initialRowData = new ArrayList<>();
         final ContainerNode containerNode = new ContainerNode("node");
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vos", URI.create("ivo://example.org/vos"),
-                                         URI.create("vos://example.org~vos"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "vos",
+                URI.create("ivo://example.org/vos"),
+                URI.create("vos://example.org~vos"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
 
-        final StorageItemFactory testStorageItemFactory = new StorageItemFactory("/mystore",
-                                                                                 testServiceConfig);
+        final StorageItemFactory testStorageItemFactory = new StorageItemFactory("/mystore", testServiceConfig);
 
         initialRowData.add("child1");
         initialRowData.add("child2");
@@ -129,55 +126,61 @@ public class MainPageServerResourceTest extends AbstractServerResourceTest<MainP
         Mockito.when(mockVOSpaceServiceConfigManager.getServiceList()).thenReturn(vospaceServiceList);
 
         Mockito.when(mockStorageConfiguration.getThemeName()).thenReturn("vos");
-        Mockito.when(mockFreeMarkerConfiguration.getTemplate("themes/vos/index.ftl")).thenReturn(null);
+        Mockito.when(mockFreeMarkerConfiguration.getTemplate("themes/vos/index.ftl"))
+                .thenReturn(null);
 
-        testSubject = new MainPageServerResource(mockStorageConfiguration, mockVOSpaceServiceConfigManager,
-                                                 testStorageItemFactory, mockVOSpaceClient, testServiceConfig) {
-            @Override
-            FreeMarkerConfiguration getFreeMarkerConfiguration() {
-                return mockFreeMarkerConfiguration;
-            }
+        testSubject =
+                new MainPageServerResource(
+                        mockStorageConfiguration,
+                        mockVOSpaceServiceConfigManager,
+                        testStorageItemFactory,
+                        mockVOSpaceClient,
+                        testServiceConfig) {
+                    @Override
+                    FreeMarkerConfiguration getFreeMarkerConfiguration() {
+                        return mockFreeMarkerConfiguration;
+                    }
 
-            @Override
-            Subject getVOSpaceCallingSubject() {
-                return new Subject();
-            }
+                    @Override
+                    Subject getVOSpaceCallingSubject() {
+                        return new Subject();
+                    }
 
-            @Override
-            protected Client getOIDCClient() {
-                return mockOIDCConfiguration;
-            }
+                    @Override
+                    protected Client getOIDCClient() {
+                        return mockOIDCConfiguration;
+                    }
 
-            @Override
-            protected String getDisplayName() {
-                return "testuser";
-            }
+                    @Override
+                    protected String getDisplayName() {
+                        return "testuser";
+                    }
 
-            @Override
-            ServletContext getServletContext() {
-                return mockServletContext;
-            }
+                    @Override
+                    ServletContext getServletContext() {
+                        return mockServletContext;
+                    }
 
-            @Override
-            public Context getContext() {
-                return mockContext;
-            }
+                    @Override
+                    public Context getContext() {
+                        return mockContext;
+                    }
 
-            @Override
-            public String getCurrentVOSpaceService() {
-                return "vos";
-            }
+                    @Override
+                    public String getCurrentVOSpaceService() {
+                        return "vos";
+                    }
 
-            @SuppressWarnings("unchecked")
-            @Override
-            <T extends Node> T getNode(final Path nodePath, final VOS.Detail detail) throws ResourceException {
-                return (T) containerNode;
-            }
-        };
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    <T extends Node> T getNode(final Path nodePath, final VOS.Detail detail) throws ResourceException {
+                        return (T) containerNode;
+                    }
+                };
 
         Mockito.when(mockFolderItem.isWritable()).thenReturn(true);
-        final Representation representation = testSubject.representFolderItem(mockFolderItem,
-                                                                              initialRowData.iterator(), null);
+        final Representation representation =
+                testSubject.representFolderItem(mockFolderItem, initialRowData.iterator(), null);
         final TemplateRepresentation templateRepresentation = (TemplateRepresentation) representation;
         final Map<String, Object> dataModel = (Map<String, Object>) templateRepresentation.getDataModel();
 
@@ -187,7 +190,6 @@ public class MainPageServerResourceTest extends AbstractServerResourceTest<MainP
 
         Mockito.verify(mockVOSpaceServiceConfigManager, Mockito.times(1)).getServiceList();
         Mockito.verify(mockStorageConfiguration, Mockito.times(1)).getThemeName();
-        Mockito.verify(mockFreeMarkerConfiguration, Mockito.times(1))
-               .getTemplate("themes/vos/index.ftl");
+        Mockito.verify(mockFreeMarkerConfiguration, Mockito.times(1)).getTemplate("themes/vos/index.ftl");
     }
 }

@@ -69,27 +69,25 @@
 package net.canfar.storage.web.resources;
 
 import ca.nrc.cadc.reg.client.RegistryClient;
-import net.canfar.storage.web.StorageItemFactory;
-import net.canfar.storage.web.config.VOSpaceServiceConfig;
-import org.opencadc.vospace.ContainerNode;
-import org.opencadc.vospace.LinkNode;
-import org.opencadc.vospace.VOSURI;
-import org.json.JSONObject;
-import org.junit.Test;
-import org.mockito.Mockito;
-import org.restlet.Context;
-import org.restlet.Request;
-import org.restlet.Response;
-import org.restlet.data.Status;
-import org.restlet.ext.json.JsonRepresentation;
-
-import javax.security.auth.Subject;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
+import javax.security.auth.Subject;
+import net.canfar.storage.web.StorageItemFactory;
+import net.canfar.storage.web.config.VOSpaceServiceConfig;
+import org.json.JSONObject;
+import org.junit.Test;
+import org.mockito.Mockito;
+import org.opencadc.vospace.ContainerNode;
+import org.opencadc.vospace.LinkNode;
+import org.opencadc.vospace.VOSURI;
+import org.restlet.Context;
+import org.restlet.Request;
+import org.restlet.Response;
+import org.restlet.data.Status;
+import org.restlet.ext.json.JsonRepresentation;
 
 public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkItemServerResource> {
     @Test
@@ -98,15 +96,18 @@ public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkI
         final VOSURI expectedURI = new VOSURI(URI.create(VOSPACE_NODE_URI_PREFIX + "/curr/dir/MY_LINK"));
         final LinkNode linkNode = new LinkNode("MY_LINK", target);
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vault", URI.create("ivo://ca.nrc.cadc/vault"),
-                                         URI.create(VOSPACE_NODE_URI_PREFIX), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "vault",
+                URI.create("ivo://ca.nrc.cadc/vault"),
+                URI.create(VOSPACE_NODE_URI_PREFIX),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
 
         Mockito.when(mockServletContext.getContextPath()).thenReturn("/to");
         Mockito.when(mockVOSpaceClient.createNode(expectedURI, linkNode, false)).thenReturn(linkNode);
 
-        final JSONObject sourceJSON = new JSONObject("{\"link_name\":\"MY_LINK\","
-                                                     + "\"link_url\":\"http://gohere.com/to/see\"}");
+        final JSONObject sourceJSON =
+                new JSONObject("{\"link_name\":\"MY_LINK\"," + "\"link_url\":\"http://gohere.com/to/see\"}");
 
         final JsonRepresentation payload = new JsonRepresentation(sourceJSON);
 
@@ -117,50 +118,54 @@ public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkI
         Mockito.doNothing().when(mockResponse).setStatus(Status.SUCCESS_CREATED);
         Mockito.when(mockContext.getAttributes()).thenReturn(new ConcurrentHashMap<>());
 
-        testSubject = new LinkItemServerResource(null, null,
-                                                 new StorageItemFactory("/servletpath", testServiceConfig),
-                                                 mockVOSpaceClient, testServiceConfig) {
-            @Override
-            RegistryClient getRegistryClient() {
-                return mockRegistryClient;
-            }
+        testSubject =
+                new LinkItemServerResource(
+                        null,
+                        null,
+                        new StorageItemFactory("/servletpath", testServiceConfig),
+                        mockVOSpaceClient,
+                        testServiceConfig) {
+                    @Override
+                    RegistryClient getRegistryClient() {
+                        return mockRegistryClient;
+                    }
 
-            @Override
-            Subject getVOSpaceCallingSubject() {
-                return new Subject();
-            }
+                    @Override
+                    Subject getVOSpaceCallingSubject() {
+                        return new Subject();
+                    }
 
-            /**
-             * Returns the current context.
-             *
-             * @return The current context.
-             */
-            @Override
-            public Context getContext() {
-                return mockContext;
-            }
+                    /**
+                     * Returns the current context.
+                     *
+                     * @return The current context.
+                     */
+                    @Override
+                    public Context getContext() {
+                        return mockContext;
+                    }
 
-            /**
-             * Returns the request attributes.
-             *
-             * @return The request attributes.
-             * @see Request#getAttributes()
-             */
-            @Override
-            public Map<String, Object> getRequestAttributes() {
-                return attributes;
-            }
+                    /**
+                     * Returns the request attributes.
+                     *
+                     * @return The request attributes.
+                     * @see Request#getAttributes()
+                     */
+                    @Override
+                    public Map<String, Object> getRequestAttributes() {
+                        return attributes;
+                    }
 
-            /**
-             * Returns the handled response.
-             *
-             * @return The handled response.
-             */
-            @Override
-            public Response getResponse() {
-                return mockResponse;
-            }
-        };
+                    /**
+                     * Returns the handled response.
+                     *
+                     * @return The handled response.
+                     */
+                    @Override
+                    public Response getResponse() {
+                        return mockResponse;
+                    }
+                };
 
         testSubject.create(payload);
 
@@ -174,9 +179,12 @@ public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkI
         final URI target = URI.create("vos://cadc.nrc.ca!linktest/other/dir/my/dir");
         final LinkNode linkNode = new LinkNode("MY_LINK", target);
         final ContainerNode targetContainerNode = new ContainerNode("dir");
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("linktest", URI.create("ivo://example.org/linktest"),
-                                         URI.create("vos://example.org~linktest"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "linktest",
+                URI.create("ivo://example.org/linktest"),
+                URI.create("vos://example.org~linktest"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.org/groups/"));
 
         final Map<String, Object> attributes = new HashMap<>();
         attributes.put("path", "/curr/dir/MY_LINK");
@@ -185,59 +193,62 @@ public class LinkItemServerResourceTest extends AbstractServerResourceTest<LinkI
         Mockito.when(mockContext.getAttributes()).thenReturn(mockAttributeMap);
 
         Mockito.when(mockVOSpaceClient.getNode("/other/dir/my/dir", getNodeRequestQuery))
-               .thenReturn(targetContainerNode);
-        Mockito.when(mockVOSpaceClient.getNode("/curr/dir/MY_LINK", getNodeRequestQuery)).thenReturn(linkNode);
+                .thenReturn(targetContainerNode);
+        Mockito.when(mockVOSpaceClient.getNode("/curr/dir/MY_LINK", getNodeRequestQuery))
+                .thenReturn(linkNode);
 
-        testSubject = new LinkItemServerResource(null, null,
-                                                 new StorageItemFactory("/servletpath", testServiceConfig),
-                                                 mockVOSpaceClient, testServiceConfig) {
-            @Override
-            RegistryClient getRegistryClient() {
-                return mockRegistryClient;
-            }
+        testSubject =
+                new LinkItemServerResource(
+                        null,
+                        null,
+                        new StorageItemFactory("/servletpath", testServiceConfig),
+                        mockVOSpaceClient,
+                        testServiceConfig) {
+                    @Override
+                    RegistryClient getRegistryClient() {
+                        return mockRegistryClient;
+                    }
 
-            @Override
-            Subject getVOSpaceCallingSubject() {
-                return new Subject();
-            }
+                    @Override
+                    Subject getVOSpaceCallingSubject() {
+                        return new Subject();
+                    }
 
-            /**
-             * Returns the current context.
-             *
-             * @return The current context.
-             */
-            @Override
-            public Context getContext() {
-                return mockContext;
-            }
+                    /**
+                     * Returns the current context.
+                     *
+                     * @return The current context.
+                     */
+                    @Override
+                    public Context getContext() {
+                        return mockContext;
+                    }
 
-            /**
-             * Returns the request attributes.
-             *
-             * @return The request attributes.
-             * @see Request#getAttributes()
-             */
-            @Override
-            public Map<String, Object> getRequestAttributes() {
-                return attributes;
-            }
+                    /**
+                     * Returns the request attributes.
+                     *
+                     * @return The request attributes.
+                     * @see Request#getAttributes()
+                     */
+                    @Override
+                    public Map<String, Object> getRequestAttributes() {
+                        return attributes;
+                    }
 
-            /**
-             * Returns the handled response.
-             *
-             * @return The handled response.
-             */
-            @Override
-            public Response getResponse() {
-                return mockResponse;
-            }
-        };
+                    /**
+                     * Returns the handled response.
+                     *
+                     * @return The handled response.
+                     */
+                    @Override
+                    public Response getResponse() {
+                        return mockResponse;
+                    }
+                };
 
         testSubject.resolve();
 
-        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).getNode("/curr/dir/MY_LINK",
-                                                                    getNodeRequestQuery);
-        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).getNode("/other/dir/my/dir",
-                                                                    getNodeRequestQuery);
+        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).getNode("/curr/dir/MY_LINK", getNodeRequestQuery);
+        Mockito.verify(mockVOSpaceClient, Mockito.times(1)).getNode("/other/dir/my/dir", getNodeRequestQuery);
     }
 }
