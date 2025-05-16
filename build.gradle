@@ -1,7 +1,7 @@
 plugins {
     id 'war'
     id "com.github.node-gradle.node" version "3.0.1"
-    id 'com.diffplug.spotless' version '7.0.3'
+    id 'com.diffplug.spotless' version '6.25.0'
 
     // IntelliJ IDEA plugin here to allow integration tests to appear properly in IDEs.
     id 'idea'
@@ -61,13 +61,13 @@ spotless {
         // Remove unused imports
         removeUnusedImports()
         // Google Java Format, Android Open Source Project style which uses 4 spaces for indentation
-        palantirJavaFormat().formatJavadoc(true)
+        palantirJavaFormat('2.50.0').formatJavadoc(true)
         // Format annotations on a single line        formatAnnotations()
     }
     format 'misc', {
         target '*.gradle'
         trimTrailingWhitespace()
-        leadingTabsToSpaces(4)
+        indentWithSpaces(4)
         endWithNewline()
     }
 }
@@ -136,7 +136,7 @@ configurations {
 idea {
     module {
         // add integration test dir
-        testSources.from(file('src/intTest/java'))
+        testSourceDirs += file('src/intTest/java')
     }
 }
 
