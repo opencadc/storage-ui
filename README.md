@@ -36,6 +36,10 @@ org.opencadc.vosui.<service_name>.node.resourceid = <URI that is the base of nod
 # Base home directory for authenticated users
 org.opencadc.vosui.<service_name>.user.home = <relative path, starting with '/'>
 
+# URI to put into the link labelled "Manage Groups"
+# Exampole: https://www.example.org/groups
+org.opencadc.vosui.<service_name>.service.groupManagementURI = <URL to the group management service>
+
 # Features for this service.
 # batchDownload: true/false - Whether the batch downloadManager service is available for batch downloads.
 # batchUpload: true/false - Whether the batch downloadManager service is available for batch downloads.
