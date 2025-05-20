@@ -14,6 +14,8 @@ repositories {
     mavenLocal()
 }
 
+sourceCompatibility = '11'
+
 dependencies {
     implementation 'com.opencsv:opencsv:[5.9,6.0)'
     implementation 'org.freemarker:freemarker:[2.3.31,2.4.0)'
@@ -46,8 +48,6 @@ dependencies {
     testImplementation 'org.seleniumhq.selenium:selenium-java:[3.14,4.0)'
 }
 
-sourceCompatibility = 11
-
 spotless {
     // optional: only format files which have changed since origin/main
     ratchetFrom 'origin/main'
@@ -77,20 +77,20 @@ check.dependsOn spotlessCheck
 // Create Java Code Coverage Reports
 jacocoTestReport {
     reports {
-        xml.enabled true
-        html.enabled true
+        xml.required = true
+        html.required = true
     }
 }
 check.dependsOn jacocoTestReport
 
 // Create JavaDoc
 javadoc {
-    destinationDir = file("${buildDir}/docs/javadoc")
+    destinationDir = file("${layout.buildDirectory}/docs/javadoc")
 }
 
 // Create Java Documentation using Dokka for Github Markdown and HTML
 tasks.dokkaGfm.configure {
-    outputDirectory.set(file("${buildDir}/docs/dokka/gfm"))
+    outputDirectory.set(file("${layout.buildDirectory}/docs/dokka/gfm"))
     dokkaSourceSets {
         register("main") {
             sourceRoots.from(file("src/main/java"))
@@ -99,7 +99,7 @@ tasks.dokkaGfm.configure {
 }
 
 tasks.dokkaHtml.configure {
-    outputDirectory.set(file("${buildDir}/docs/dokka/html"))
+    outputDirectory.set(file("${layout.buildDirectory}/docs/dokka/html"))
     dokkaSourceSets {
         register("main") {
             sourceRoots.from(file("src/main/java"))
@@ -116,7 +116,7 @@ tasks.dokkaHtml.configure {
 
 
 war {
-    archiveName 'storage.war'
+    archiveFileName = 'storage.war'
 }
 
 ext {
@@ -136,17 +136,17 @@ configurations {
 
 idea {
     module {
-        //and some extra test source dirs
+        // add integration test dir
         testSourceDirs += file('src/intTest/java')
     }
 }
 
 ['firefox', 'chrome'].each { driver ->
-    task "intTest${driver.capitalize()}"(type: Test) { driverTest ->
+    tasks.register("intTest${driver.capitalize()}", Test) { driverTest ->
         testClassesDirs = sourceSets.intTest.output.classesDirs
         classpath = sourceSets.intTest.runtimeClasspath
         reports {
-            html.destination = reporting.file("$name/html")
+            html.outputLocation = reporting.file("$name/html")
         }
         dependencies {
             intTestImplementation 'junit:junit:[4.12,5.0)'
@@ -180,6 +180,12 @@ idea {
             System.err.println("Please set the intTest_user_name property (-PintTest_user_name=cadcuser).")
         } else {
             systemProperty 'user.name', project.intTest_user_name
+        }
+
+        if (!project.hasProperty('intTest_home_root')) {
+            System.err.println("Using default home.root (-PintTest_home_root=/ for vault, or -PintTest_home_root=/home for cavern).  Default is / (vault).")
+        } else {
+            systemProperty 'home.root', project.intTest_home_root
         }
 
         if (!project.hasProperty('intTest_user_password')) {

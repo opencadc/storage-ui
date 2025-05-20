@@ -67,10 +67,8 @@
  */
 package net.canfar.storage.web.config;
 
-import net.canfar.storage.AbstractUnitTest;
-
 import java.net.URI;
-
+import net.canfar.storage.AbstractUnitTest;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -83,8 +81,12 @@ public class VOSpaceServiceConfigTest extends AbstractUnitTest<VOSpaceServiceCon
     @Test
     public void testBadVOspaceServiceConfig() throws Exception {
         try {
-            new VOSpaceServiceConfig("", testVOSpaceServiceURI, testVOSpaceNodeURI,
-                                     new VOSpaceServiceConfig.Features());
+            new VOSpaceServiceConfig(
+                    "",
+                    testVOSpaceServiceURI,
+                    testVOSpaceNodeURI,
+                    new VOSpaceServiceConfig.Features(),
+                    URI.create("https://example.com/groups"));
 
             // Values will be stored as passed in, no need to test quality
             Assert.fail("ctor should have reported error for service name");
@@ -92,10 +94,13 @@ public class VOSpaceServiceConfigTest extends AbstractUnitTest<VOSpaceServiceCon
             // pass
         }
 
-
         try {
-            new VOSpaceServiceConfig(serviceName, null, testVOSpaceNodeURI,
-                                     new VOSpaceServiceConfig.Features());
+            new VOSpaceServiceConfig(
+                    serviceName,
+                    null,
+                    testVOSpaceNodeURI,
+                    new VOSpaceServiceConfig.Features(),
+                    URI.create("https://example.com/groups"));
 
             // Values will be stored as passed in, no need to test quality
             Assert.fail("ctor should have reported error for service resourceID");
@@ -104,8 +109,12 @@ public class VOSpaceServiceConfigTest extends AbstractUnitTest<VOSpaceServiceCon
         }
 
         try {
-            new VOSpaceServiceConfig(serviceName, testVOSpaceServiceURI, null,
-                                     new VOSpaceServiceConfig.Features());
+            new VOSpaceServiceConfig(
+                    serviceName,
+                    testVOSpaceServiceURI,
+                    null,
+                    new VOSpaceServiceConfig.Features(),
+                    URI.create("https://example.com/groups"));
 
             // Values will be stored as passed in, no need to test quality
             Assert.fail("ctor should have reported error for node resourceID");
@@ -113,5 +122,4 @@ public class VOSpaceServiceConfigTest extends AbstractUnitTest<VOSpaceServiceCon
             // pass
         }
     }
-
 }
