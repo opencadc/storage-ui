@@ -1,8 +1,8 @@
-'use strict'
+ 'use strict'
 /**
- *  Filemanager JS core
+ *  File Manager JS core
  *
- *  filemanager.jsl
+ *  filemanager.js
  *
  *  @license  MIT License
  *  @author    Jason Huck - Core Five Labs
@@ -22,7 +22,7 @@ function fileManager(
   useDefaultLogin,
   vospaceServicePath,
   vosNodePrefixURI,
-  features
+  groupManagerLinkURI
 ) {
   // function to retrieve GET params
   $.urlParam = function(name) {
@@ -1526,7 +1526,7 @@ function fileManager(
 
   $(document).on('click', '.glyphicon-pencil', function(event) {
     // Pull attributes from edit icon
-    var $iconAnchor = $(event.currentTarget).find('a')
+    const $iconAnchor = $(event.currentTarget).find('a')
 
     // Flag this icon as the currently active one
     // will be referenced for seeing if form values have changed
@@ -1556,79 +1556,61 @@ function fileManager(
     }
   })
 
-  var loadEditPermPrompt = function(promptData) {
-    var checkboxState = ''
-    if (promptData.data('readable') === true) {
-      checkboxState = 'checked'
-    }
-    var msg =
-      '<div class="form-group fm-prompt">' +
-      '<label for="publicPermission" class="control-label col-sm-4">' +
-      lg.public_question +
-      '</label>' +
-      '<div class="col-sm-7">' +
-      '<input style="margin: 9px 0 0;" class="action-hook" type="checkbox" id="publicPermission" name="publicPermission" ' +
-      checkboxState +
-      '>' +
-      '</div>' +
-      '</div>' +
-      '<div class="form-group ui-front fm-prompt" id="readGroupDiv"> ' +
-      '<label for="readGroup" id="readGroupLabel" class="control-label col-sm-4">' +
-      lg.READ_GROUP +
-      '</label>' +
-      '<div id="readGroupInputDiv" class="col-sm-7"> ' +
-      '<input type="text" class="form-control  ui-autocomplete-input action-hook" id="readGroup" name="readGroup" placeholder="' +
-      lg.group_name_program_id +
-      '">' +
-      '</div>' +
-      '</div>' +
-      '<div class="form-group ui-front fm-prompt" id="writeGroupDiv">' +
-      '<label for="writeGroup" id="writeGroupLabel" class="control-label col-sm-4">' +
-      lg.WRITE_GROUP +
-      '</label>' +
-      '<div class="col-sm-7">' +
-      '<input type="text" class="form-control action-hook" id="writeGroup" name="writeGroup" placeholder="' +
-      lg.group_name_program_id +
-      '">' +
-      '</div>' +
-      '</div>' +
-      '<div class="form-group fm-prompt">' +
-      '<label for="recursive" class="control-label col-sm-4"">' +
-      lg.recursive +
-      '</label>' +
-      '<div class="col-sm-7">' +
-      '<input style="margin: 9px 0 0;" class="action-hook" type="checkbox" id="recursive" name="recursive">' +
-      '</div>' +
-      '</div>' +
-      '<div class="form-group fm-prompt">' +
-      '<div class="col-sm-4" >' +
-      '</div>' +
-      '<div class="col-sm-7 prompt-link">' +
-      '<a href="https://www.cadc-ccda.hia-iha.nrc-cnrc.gc.ca/en/groups/" target="_blank">Manage Groups</a>' +
-      '<input type="text" class="hidden" name="itemPath" id="itemPath" value="' +
-      promptData.data('path') +
-      '">' +
-      '</div>' +
-      '</div>'
+  var loadEditPermPrompt = (promptData) => {
+    const checkboxState = promptData.data('readable') === true ? 'checked' : ''
 
-    var btns = []
-    btns.push({
-      name: 'b1',
-      title: lg.save,
-      value: true,
-      classes: 'btn btn-primary listener-hook'
-    })
-    btns.push({
-      name: 'b2',
-      title: lg.cancel,
-      value: false,
-      classes: 'btn btn-default'
-    })
+    const msg =
+      `<div class="form-group fm-prompt">
+       <label for="publicPermission" class="control-label col-sm-4">${lg.public_question}</label>
+       <div class="col-sm-7">
+       <input style="margin: 9px 0 0;" class="action-hook" type="checkbox" id="publicPermission" name="publicPermission" ${checkboxState}>
+       </div>
+       </div>
+       <div class="form-group ui-front fm-prompt" id="readGroupDiv">
+       <label for="readGroup" id="readGroupLabel" class="control-label col-sm-4">${lg.READ_GROUP}</label>
+       <div id="readGroupInputDiv" class="col-sm-7">
+       <input type="text" class="form-control  ui-autocomplete-input action-hook" id="readGroup" name="readGroup" placeholder="${lg.group_name_program_id}">
+       </div>
+       </div>
+       <div class="form-group ui-front fm-prompt" id="writeGroupDiv">
+       <label for="writeGroup" id="writeGroupLabel" class="control-label col-sm-4">${lg.WRITE_GROUP}</label>
+       <div class="col-sm-7">
+       <input type="text" class="form-control action-hook" id="writeGroup" name="writeGroup" placeholder="${lg.group_name_program_id}">
+       </div>
+       </div>
+       <div class="form-group fm-prompt">
+       <label for="recursive" class="control-label col-sm-4"">${lg.recursive}</label>
+       <div class="col-sm-7">
+       <input style="margin: 9px 0 0;" class="action-hook" type="checkbox" id="recursive" name="recursive">
+       </div>
+       </div>
+       <div class="form-group fm-prompt">
+       <div class="col-sm-4"></div>
+       <div class="col-sm-7 prompt-link">
+       <a href="${groupManagerLinkURI}" target="_blank">Manage Groups</a>
+       <input type="text" class="hidden" name="itemPath" id="itemPath" value="${promptData.data('path')}">
+       </div>
+       </div>`
+
+    const btns = [
+      {
+        name: 'b1',
+        title: lg.save,
+        value: true,
+        classes: 'btn btn-primary listener-hook'
+      },
+      {
+        name: 'b2',
+        title: lg.cancel,
+        value: false,
+        classes: 'btn btn-default'
+      }
+    ]
 
     // 'classes' entry below is to enable bootstrap to
     // handle styling, including form-horizontal
 
-    var states = {
+    const states = {
       state0: {
         title: '<h3 class="prompt-h3">' + promptData.data('itemname') + '</h3>',
         html: msg,
@@ -1666,10 +1648,10 @@ function fileManager(
         // Set initial form state
         $('#readGroup').val(promptData.data('readgroup'))
         $('#writeGroup').val(promptData.data('writegroup'))
-        var listenerHook = $('.listener-hook')
+        const listenerHook = $('.listener-hook')
         listenerHook.addClass('disabled')
 
-        $('.action-hook').on('click', function(event) {
+        $('.action-hook').on('click', () => {
           listenerHook.removeClass('disabled')
         })
       }

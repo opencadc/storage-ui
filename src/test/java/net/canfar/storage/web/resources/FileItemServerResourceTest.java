@@ -68,51 +68,43 @@
 
 package net.canfar.storage.web.resources;
 
+import static org.junit.Assert.*;
 
 import ca.nrc.cadc.auth.AuthMethod;
 import ca.nrc.cadc.auth.AuthenticationUtil;
 import ca.nrc.cadc.auth.AuthorizationToken;
 import ca.nrc.cadc.net.ResourceNotFoundException;
 import ca.nrc.cadc.reg.Standards;
+import ca.nrc.cadc.reg.client.RegistryClient;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.net.URI;
+import java.net.URL;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.PrivilegedExceptionAction;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import javax.security.auth.Subject;
 import net.canfar.storage.web.RegexFileValidator;
 import net.canfar.storage.web.StorageItemFactory;
 import net.canfar.storage.web.UploadOutputStreamWrapper;
 import net.canfar.storage.web.UploadVerifier;
 import net.canfar.storage.web.config.VOSpaceServiceConfig;
 import net.canfar.storage.web.config.VOSpaceServiceConfigManager;
-import ca.nrc.cadc.reg.client.RegistryClient;
-import org.opencadc.vospace.*;
-
-import java.net.URL;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.concurrent.ConcurrentMap;
-
 import org.apache.commons.fileupload.FileItemStream;
+import org.junit.Test;
 import org.mockito.Mockito;
+import org.opencadc.vospace.*;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.net.URI;
-
-import java.security.MessageDigest;
-import java.security.PrivilegedExceptionAction;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
-import javax.security.auth.Subject;
-
-import org.junit.Test;
 import org.restlet.representation.EmptyRepresentation;
-
-import static org.junit.Assert.*;
-
 
 public class FileItemServerResourceTest extends AbstractServerResourceTest<FileItemServerResource> {
 
@@ -122,52 +114,63 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
         final StringBuilder redirectEndpoint = new StringBuilder();
         final Subject testUser = new Subject();
         testUser.getPublicCredentials().add(AuthMethod.TOKEN);
-        testUser.getPublicCredentials().add(
-                new AuthorizationToken(AuthenticationUtil.CHALLENGE_TYPE_BEARER, "MYACCESSTOKEN",
-                                       Collections.singletonList("site.org")));
+        testUser.getPublicCredentials()
+                .add(new AuthorizationToken(
+                        AuthenticationUtil.CHALLENGE_TYPE_BEARER,
+                        "MYACCESSTOKEN",
+                        Collections.singletonList("site.org")));
         final URI vaultURI = URI.create("ivo://example.org/vault");
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vault", vaultURI, URI.create("vos://example.org~vault"),
-                                         new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "vault",
+                vaultURI,
+                URI.create("vos://example.org~vault"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.com/groups"));
         final URL downloadURL = new URL("https://myopencadc.site.org/vault/fileendpoint");
 
         Mockito.when(mockRegistryClient.getServiceURL(vaultURI, Standards.VOSPACE_FILES, AuthMethod.TOKEN))
-               .thenReturn(downloadURL);
+                .thenReturn(downloadURL);
 
-        testSubject = new FileItemServerResource(null, null,
-                                                 new StorageItemFactory("/teststorage", testServiceConfig),
-                                                 null, testServiceConfig, new UploadVerifier(),
-                                                 new RegexFileValidator()) {
-            @Override
-            String toEndpoint(URI downloadURI) {
-                return downloadURL.toExternalForm() + "/preauth:MYACCESSTOKEN/parent/sub/MYDOWNLOADFILE.txt";
-            }
+        testSubject =
+                new FileItemServerResource(
+                        null,
+                        null,
+                        new StorageItemFactory("/teststorage", testServiceConfig),
+                        null,
+                        testServiceConfig,
+                        new UploadVerifier(),
+                        new RegexFileValidator()) {
+                    @Override
+                    String toEndpoint(URI downloadURI) {
+                        return downloadURL.toExternalForm() + "/preauth:MYACCESSTOKEN/parent/sub/MYDOWNLOADFILE.txt";
+                    }
 
-            @Override
-            RegistryClient getRegistryClient() {
-                return mockRegistryClient;
-            }
+                    @Override
+                    RegistryClient getRegistryClient() {
+                        return mockRegistryClient;
+                    }
 
-            @Override
-            Subject getVOSpaceCallingSubject() {
-                return testUser;
-            }
+                    @Override
+                    Subject getVOSpaceCallingSubject() {
+                        return testUser;
+                    }
 
-            @Override
-            public void redirectSeeOther(String targetUri) {
-                redirectEndpoint.append(targetUri);
-            }
-        };
+                    @Override
+                    public void redirectSeeOther(String targetUri) {
+                        redirectEndpoint.append(targetUri);
+                    }
+                };
 
         testSubject.download(testDataNode);
 
-        assertEquals("Wrong download endpoint",
-                     downloadURL.toExternalForm() + "/preauth:MYACCESSTOKEN/parent/sub/MYDOWNLOADFILE.txt",
-                     redirectEndpoint.toString());
+        assertEquals(
+                "Wrong download endpoint",
+                downloadURL.toExternalForm() + "/preauth:MYACCESSTOKEN/parent/sub/MYDOWNLOADFILE.txt",
+                redirectEndpoint.toString());
 
-        Mockito.verify(mockRegistryClient, Mockito.times(1)).getServiceURL(vaultURI,
-                                                                           Standards.VOSPACE_FILES, AuthMethod.TOKEN);
+        Mockito.verify(mockRegistryClient, Mockito.times(1))
+                .getServiceURL(vaultURI, Standards.VOSPACE_FILES, AuthMethod.TOKEN);
     }
 
     @Test
@@ -181,12 +184,16 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
         final List<NodeProperty> propertyList = new ArrayList<>();
 
         propertyList.add(new NodeProperty(VOS.PROPERTY_URI_CONTENTLENGTH, "" + dataBytes.length));
-        propertyList.add(new NodeProperty(VOS.PROPERTY_URI_CONTENTMD5,
-                                          new String(MessageDigest.getInstance("MD5").digest(dataBytes))));
+        propertyList.add(new NodeProperty(
+                VOS.PROPERTY_URI_CONTENTMD5,
+                new String(MessageDigest.getInstance("MD5").digest(dataBytes))));
 
-        final VOSpaceServiceConfig testServiceConfig =
-                new VOSpaceServiceConfig("vault", URI.create("ivo://example.org/vault"),
-                                         URI.create("vos://example.org~vault"), new VOSpaceServiceConfig.Features());
+        final VOSpaceServiceConfig testServiceConfig = new VOSpaceServiceConfig(
+                "vault",
+                URI.create("ivo://example.org/vault"),
+                URI.create("vos://example.org~vault"),
+                new VOSpaceServiceConfig.Features(),
+                URI.create("https://example.com/groups"));
         expectedDataNode.getProperties().addAll(propertyList);
 
         final Map<String, Object> requestAttributes = new HashMap<>();
@@ -194,82 +201,90 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
 
         final ConcurrentMap<String, Object> mockContextAttributes = new ConcurrentHashMap<>();
         mockContextAttributes.put("org.opencadc.vosui.service.name", "vault");
-        mockContextAttributes.put(String.format(VOSpaceServiceConfigManager.SERVICE_NODE_RESOURCE_ID_PROPERTY_KEY_FORMAT,
-                                                VOSpaceServiceConfigManager.KEY_BASE, "vault"), "vault");
+        mockContextAttributes.put(
+                String.format(
+                        VOSpaceServiceConfigManager.SERVICE_NODE_RESOURCE_ID_PROPERTY_KEY_FORMAT,
+                        VOSpaceServiceConfigManager.KEY_BASE,
+                        "vault"),
+                "vault");
 
         Mockito.when(mockContext.getAttributes()).thenReturn(mockContextAttributes);
         Mockito.when(mockRequest.getEntity()).thenReturn(new EmptyRepresentation());
 
-        testSubject = new FileItemServerResource(null, null,
-                                                 new StorageItemFactory("/teststorage", testServiceConfig),
-                                                 mockVOSpaceClient, testServiceConfig, new UploadVerifier(),
-                                                 new RegexFileValidator()) {
-            @Override
-            public Response getResponse() {
-                return mockResponse;
-            }
+        testSubject =
+                new FileItemServerResource(
+                        null,
+                        null,
+                        new StorageItemFactory("/teststorage", testServiceConfig),
+                        mockVOSpaceClient,
+                        testServiceConfig,
+                        new UploadVerifier(),
+                        new RegexFileValidator()) {
+                    @Override
+                    public Response getResponse() {
+                        return mockResponse;
+                    }
 
-            /**
-             * Returns the current context.
-             *
-             * @return The current context.
-             */
-            @Override
-            public Context getContext() {
-                return mockContext;
-            }
+                    /**
+                     * Returns the current context.
+                     *
+                     * @return The current context.
+                     */
+                    @Override
+                    public Context getContext() {
+                        return mockContext;
+                    }
 
-            @Override
-            RegistryClient getRegistryClient() {
-                return mockRegistryClient;
-            }
+                    @Override
+                    RegistryClient getRegistryClient() {
+                        return mockRegistryClient;
+                    }
 
-            @Override
-            public Request getRequest() {
-                return mockRequest;
-            }
+                    @Override
+                    public Request getRequest() {
+                        return mockRequest;
+                    }
 
-            /**
-             * Returns the request attributes.
-             *
-             * @return The request attributes.
-             * @see Request#getAttributes()
-             */
-            @Override
-            public Map<String, Object> getRequestAttributes() {
-                return requestAttributes;
-            }
+                    /**
+                     * Returns the request attributes.
+                     *
+                     * @return The request attributes.
+                     * @see Request#getAttributes()
+                     */
+                    @Override
+                    public Map<String, Object> getRequestAttributes() {
+                        return requestAttributes;
+                    }
 
-            @Override
-            VOSURI getCurrentItemURI() {
-                return parentURI;
-            }
+                    @Override
+                    VOSURI getCurrentItemURI() {
+                        return parentURI;
+                    }
 
+                    /**
+                     * Abstract away the Transfer stuff. It's cumbersome.
+                     *
+                     * @param outputStreamWrapper The OutputStream wrapper.
+                     * @param dataNode The node to upload.
+                     * @param contentType The file content type
+                     */
+                    @Override
+                    void upload(UploadOutputStreamWrapper outputStreamWrapper, DataNode dataNode, String contentType) {
+                        // Do nothing.
+                    }
 
-            /**
-             * Abstract away the Transfer stuff.  It's cumbersome.
-             *
-             * @param outputStreamWrapper The OutputStream wrapper.
-             * @param dataNode            The node to upload.
-             * @param contentType         The file content type
-             */
-            @Override
-            void upload(UploadOutputStreamWrapper outputStreamWrapper, DataNode dataNode, String contentType) {
-                // Do nothing.
-            }
-
-            @Override
-            <T> T executeSecurely(PrivilegedExceptionAction<T> runnable) throws Exception {
-                return runnable.run();
-            }
-        };
+                    @Override
+                    <T> T executeSecurely(PrivilegedExceptionAction<T> runnable) throws Exception {
+                        return runnable.run();
+                    }
+                };
 
         final FileItemStream mockFileItemStream = Mockito.mock(FileItemStream.class);
 
         Mockito.when(mockVOSpaceClient.getNode("/parent/sub/MYUPLOADFILE.txt", "limit=0"))
-               .thenThrow(new ResourceNotFoundException("No such node."));
-        Mockito.when(mockVOSpaceClient.createNode(expectedURI, expectedDataNode, false)).thenReturn(
-                expectedDataNode);
+                .thenThrow(new ResourceNotFoundException("No such node."));
+        Mockito.when(mockVOSpaceClient.createNode(expectedURI, expectedDataNode, false))
+                .thenReturn(expectedDataNode);
         Mockito.when(mockFileItemStream.getName()).thenReturn("MYUPLOADFILE.txt");
         Mockito.when(mockFileItemStream.openStream()).thenReturn(inputStream);
         Mockito.when(mockFileItemStream.getContentType()).thenReturn("text/plain");
@@ -278,8 +293,7 @@ public class FileItemServerResourceTest extends AbstractServerResourceTest<FileI
 
         Mockito.verify(mockRequest, Mockito.atMostOnce()).getEntity();
 
-        Mockito.verify(mockVOSpaceClient, Mockito.atMostOnce()).getNode("/parent/sub/MYUPLOADFILE.txt",
-                                                                        "limit=0");
+        Mockito.verify(mockVOSpaceClient, Mockito.atMostOnce()).getNode("/parent/sub/MYUPLOADFILE.txt", "limit=0");
         Mockito.verify(mockVOSpaceClient, Mockito.atMostOnce()).createNode(expectedURI, expectedDataNode, false);
         Mockito.verify(mockFileItemStream, Mockito.atMostOnce()).getName();
         Mockito.verify(mockFileItemStream, Mockito.atMostOnce()).openStream();

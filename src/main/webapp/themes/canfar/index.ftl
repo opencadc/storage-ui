@@ -149,7 +149,7 @@ jenkinsd 2017.04.04
                                   // a moving barber pole progress.
                                   fileManager(rows, $("#beacon"), "<#if startURI??>${startURI}</#if>", "${folder.path}",
                                               ${folderWritable?c}, 100 , json, "${contextPath}", false,
-                                              "${vospaceSvcPath}", "${vospaceNodePrefixURI}");
+                                              "${vospaceSvcPath}", "${vospaceNodePrefixURI}", "${groupManagerLinkURI}");
                                 })
                           .fail(function (request, textStatus, errorThrown)
                                 {
