@@ -220,8 +220,7 @@ public class StorageApplication extends Application {
             final Map<String, URL> uriTemplateLoader = new HashMap<>();
             try {
                 uriTemplateLoader.put(
-                        "themes/canfar/canfar-application-header",
-                        new URL("https://www.canfar.net/canfar/includes/_application_header.shtml"));
+                        "themes/canfar/canfar-application-header", new URL("https://www.canfar.net/header"));
             } catch (MalformedURLException urlException) {
                 // Should NEVER happen.
                 throw new IllegalStateException(urlException.getMessage(), urlException);
