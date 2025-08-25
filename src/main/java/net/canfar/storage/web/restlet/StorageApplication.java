@@ -73,6 +73,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import javax.servlet.ServletContext;
 import net.canfar.storage.web.config.StorageConfiguration;
 import net.canfar.storage.web.resources.*;
@@ -219,8 +220,9 @@ public class StorageApplication extends Application {
         if (storageConfiguration.getThemeName().equalsIgnoreCase("canfar")) {
             final Map<String, URL> uriTemplateLoader = new HashMap<>();
             try {
-                uriTemplateLoader.put(
-                        "themes/canfar/canfar-application-header", new URL("https://www.canfar.net/header"));
+                final String appHeaderURL = Objects.requireNonNullElse(
+                        System.getenv("CANFAR_APP_HEADER_URL"), "https://www.canfar.net/app/header");
+                uriTemplateLoader.put("themes/canfar/canfar-application-header", new URL(appHeaderURL));
             } catch (MalformedURLException urlException) {
                 // Should NEVER happen.
                 throw new IllegalStateException(urlException.getMessage(), urlException);
