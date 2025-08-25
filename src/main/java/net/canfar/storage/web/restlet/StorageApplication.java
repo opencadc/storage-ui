@@ -221,7 +221,8 @@ public class StorageApplication extends Application {
             final Map<String, URL> uriTemplateLoader = new HashMap<>();
             try {
                 final String appHeaderURL = Objects.requireNonNullElse(
-                        System.getenv("CANFAR_APP_HEADER_URL"), "https://www.canfar.net/app/header");
+                        System.getenv("CANFAR_APP_HEADER_URL"),
+                        "https://www.canfar.net/canfar/includes/_application_header.shtml");
                 uriTemplateLoader.put("themes/canfar/canfar-application-header", new URL(appHeaderURL));
             } catch (MalformedURLException urlException) {
                 // Should NEVER happen.
