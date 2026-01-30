@@ -164,7 +164,7 @@ public class VOSpaceServiceConfig {
 
     /**
      * Features that require flags to disable it, or is generally optional. Some Cavern style VOSpace services do not
-     * support pagination (i.e. limit={number}&startURI={pageStartURI}), for example.
+     * support pagination.
      */
     public static final class Features {
         private boolean supportsBatchDownloads = false;

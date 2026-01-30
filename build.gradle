@@ -6,7 +6,7 @@ plugins {
     // IntelliJ IDEA plugin here to allow integration tests to appear properly in IDEs.
     id 'idea'
     id 'jacoco'
-    id 'org.jetbrains.dokka' version '1.6.0'
+    id 'org.jetbrains.dokka' version '2.1.0'
 }
 
 repositories {
@@ -14,19 +14,25 @@ repositories {
     mavenLocal()
 }
 
-sourceCompatibility = '11'
+java {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
+    withSourcesJar()
+    withJavadocJar()
+}
 
 dependencies {
     compileOnly 'javax.servlet:javax.servlet-api:4.0.1'
 
     implementation 'com.opencsv:opencsv:[5.9,6.0)'
-    implementation 'org.freemarker:freemarker:[2.3.31,2.4.0)'
+    implementation 'org.freemarker:freemarker:[2.3.34,2.4.0)'
     implementation 'org.apache.commons:commons-configuration2:[2.8.0,3.0.0)'
     implementation 'org.apache.commons:commons-lang3:[3.11,4.0)'
-    implementation 'commons-fileupload:commons-fileupload:1.5'
+    implementation 'commons-fileupload:commons-fileupload:1.6.0'
 
-    implementation 'org.opencadc:cadc-access-control:[1.1.27,1.2.0)'
-    implementation 'org.opencadc:cadc-access-control-identity:[1.1.0,)'
+    implementation 'org.opencadc:cadc-access-control:[1.1.31,1.2.0)'
+    implementation 'org.opencadc:cadc-access-control-identity:[1.2.7,)'
     implementation 'org.opencadc:cadc-log:[1.1.7,2.0)'
     implementation 'org.opencadc:cadc-rest:[1.4.8,2.0.0)'
     implementation 'org.opencadc:cadc-registry:[1.7.6,2.0)'
@@ -41,7 +47,7 @@ dependencies {
     //
     implementation 'net.minidev:json-smart:[2.5.2,2.6.0)'
 
-    implementation 'org.opencadc:cadc-web-token:[1.0.2,2.0.0)'
+    implementation 'org.opencadc:cadc-web-token:1.2.0'
     implementation 'org.opencadc:cadc-web-util:[1.2.11,2.0.0)'
 
     implementation 'org.restlet:org.restlet:2.5.1'
@@ -52,7 +58,7 @@ dependencies {
     testImplementation 'javax.servlet:javax.servlet-api:4.0.1'
     testImplementation 'junit:junit:[4.12,5.0)'
     testImplementation 'org.xmlunit:xmlunit-core:2.10.0'
-    testImplementation 'org.xmlunit:xmlunit-assertj:2.10.0'
+    testImplementation 'org.xmlunit:xmlunit-assertj:2.11.0'
     testImplementation 'org.opencadc:cadc-web-test:[2.1.0,3.0.0)'
     testImplementation 'org.mockito:mockito-core:[3.9.0,4.0.0)'
     testImplementation 'org.seleniumhq.selenium:selenium-java:[3.14,4.0)'
@@ -93,23 +99,30 @@ jacocoTestReport {
 }
 check.dependsOn jacocoTestReport
 
-// Create JavaDoc
-javadoc {
-    destinationDir = file("${layout.buildDirectory}/docs/javadoc")
+// Example in a Gradle build script
+afterEvaluate {
+    def spotless = getProject().getExtensions().findByName("com.diffplug.spotless")
+    if (spotless != null) {
+        File gitFolder = file('.git') // Relative or absolute path
+        if (gitFolder.exists()) {
+            spotless.ratchetFrom('origin/main')
+        } else {
+            spotless.ratchetFrom(null) // No ratchet if .git folder does not exist
+        }
+    }
 }
 
 // Create Java Documentation using Dokka for Github Markdown and HTML
 tasks.dokkaGfm.configure {
-    outputDirectory.set(file("${layout.buildDirectory}/docs/dokka/gfm"))
+    outputDirectory.set(layout.buildDirectory.dir("docs/dokka/gfm"))
     dokkaSourceSets {
         register("main") {
             sourceRoots.from(file("src/main/java"))
         }
     }
 }
-
 tasks.dokkaHtml.configure {
-    outputDirectory.set(file("${layout.buildDirectory}/docs/dokka/html"))
+    outputDirectory.set(layout.buildDirectory.dir("docs/dokka/html"))
     dokkaSourceSets {
         register("main") {
             sourceRoots.from(file("src/main/java"))
@@ -142,13 +155,6 @@ sourceSets {
 configurations {
     intTestImplementation
     intTestImplementation.extendsFrom(testImplementation)
-}
-
-idea {
-    module {
-        // add integration test dir
-        testSourceDirs += file('src/intTest/java')
-    }
 }
 
 ['firefox', 'chrome'].each { driver ->
