@@ -3048,8 +3048,17 @@ function fileManager(
         async: false,
         success: function(data) {
           if (typeof data.msg === 'undefined') {
-            const prefix = data.hasOwnProperty('size') ? `<strong>${data.size}</strong> remaining of ` : ''
-            const htmlString = `${prefix}quota <strong>${data.quota}</strong> `
+            const isVault = vospaceServicePath.includes('vault')                                                                                                                                              
+            let htmlString                                                                                                                                                                                    
+
+            if (isVault) {                                                                                                                                                                                    
+              // Vault: show only total quota (used space not reliably computed)                                                                                                                              
+              htmlString = `Total quota <strong>${data.quota}</strong>`                                                                                                                                       
+            } else {                                                                                                                                                                                          
+              // Cavern: show remaining space and total quota
+              const prefix = data.hasOwnProperty('size') ? `<strong>${data.size}</strong> remaining of ` : ''
+              htmlString = `${prefix}quota <strong>${data.quota}</strong>`
+            }
 
             // TODO: Restore once contact e-mail is configurable
             // TODO: jenkinsd 2024.05.07
