@@ -193,7 +193,7 @@ public class StorageItemServerResourceTest extends AbstractServerResourceTest<St
 
         verify(mockVOSpaceClient, never()).deleteNode(anyString());
         verify(mockVOSpaceClient, times(1)).createRecursiveDelete(nodeURI);
-        verify(mockRecursiveDelete, times(1)).setMonitor(true);
+        verify(mockRecursiveDelete, times(1)).setMonitor(false);
         verify(mockRecursiveDelete, times(1)).run();
     }
 }

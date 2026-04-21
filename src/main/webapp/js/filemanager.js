@@ -2264,6 +2264,7 @@ function fileManager(
 
   $(document).on('click', '#delete', function() {
     var paths = []
+    var hasFolders = false
 
     $.each(
       $dt
@@ -2273,10 +2274,13 @@ function fileManager(
         .data(),
       function(key, itemData) {
         paths.push(itemData[9])
+        if (itemData[8].includes('glyphicon-folder')) {
+          hasFolders = true
+        }
       }
     )
 
-    deleteItems(paths)
+    deleteItems(paths, hasFolders)
   })
 
   /**
@@ -2286,7 +2290,7 @@ function fileManager(
    * @param paths     Array of paths to delete.
    * @returns {boolean}
    */
-  var deleteItems = function(paths) {
+  var deleteItems = function(paths, hasFolders) {
     var isDeleted = false
     var msg = lg.confirmation_delete
     var deleteCount = paths.length
@@ -2378,7 +2382,12 @@ function fileManager(
           html: lg.deleting_message.replace('%d', deleteCount)
         },
         successful: {
-          html: lg.successful_delete,
+          html: function() {
+            if (hasFolders) {
+              return 'Delete has been <span class="text-success">scheduled</span>. Deleting folder contents may take some time and is happening in the background.'
+            }
+            return lg.successful_delete
+          },
           buttons: [
             {
               title: lg.close,
@@ -3048,10 +3057,13 @@ function fileManager(
         async: false,
         success: function(data) {
           if (typeof data.msg === 'undefined') {
-            const isVault = vospaceServicePath.includes('vault')                                                                                                                                              
-            let htmlString                                                                                                                                                                                    
+            // TODO: Make quota remaining display configurable via service properties
+            //       (e.g. org.opencadc.vosui.<svc>.service.features.quotaRemainingVisible)
+            //       rather than relying on the service name in the path.
+            const isVault = vospaceServicePath.includes('vault')
+            let htmlString
 
-            if (isVault) {                                                                                                                                                                                    
+            if (isVault) {
               // Vault: show only total quota (used space not reliably computed)                                                                                                                              
               htmlString = `Total quota <strong>${data.quota}</strong>`                                                                                                                                       
             } else {                                                                                                                                                                                          

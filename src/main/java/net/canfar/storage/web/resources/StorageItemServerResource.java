@@ -496,7 +496,7 @@ public class StorageItemServerResource extends SecureServerResource {
 
     @Delete
     public void deleteNode() throws Exception {
-        final Node node = getNode(getCurrentPath(), null, 1);
+        final Node node = getNode(getCurrentPath(), VOS.Detail.min, 1);
         if (node instanceof ContainerNode && !((ContainerNode) node).getNodes().isEmpty()) {
             deleteNodeRecursive();
         } else {
@@ -511,7 +511,7 @@ public class StorageItemServerResource extends SecureServerResource {
         try {
             Subject.doAs(getVOSpaceCallingSubject(), (PrivilegedExceptionAction<Void>) () -> {
                 final RecursiveDeleteNode deleteJob = voSpaceClient.createRecursiveDelete(getCurrentItemURI());
-                deleteJob.setMonitor(true);
+                deleteJob.setMonitor(false);
                 deleteJob.run();
                 return null;
             });
