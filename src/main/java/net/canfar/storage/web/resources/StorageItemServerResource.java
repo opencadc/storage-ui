@@ -106,6 +106,7 @@ import org.opencadc.vospace.NodeProperty;
 import org.opencadc.vospace.VOS;
 import org.opencadc.vospace.VOSURI;
 import org.opencadc.vospace.client.VOSpaceClient;
+import org.opencadc.vospace.client.async.RecursiveDeleteNode;
 import org.opencadc.vospace.client.async.RecursiveSetNode;
 import org.restlet.data.Status;
 import org.restlet.ext.json.JsonRepresentation;
@@ -495,10 +496,28 @@ public class StorageItemServerResource extends SecureServerResource {
 
     @Delete
     public void deleteNode() throws Exception {
-        executeSecurely((PrivilegedExceptionAction<Void>) () -> {
-            voSpaceClient.deleteNode(getCurrentPath().toString());
-            return null;
-        });
+        final Node node = getNode(getCurrentPath(), VOS.Detail.min, 1);
+        if (node instanceof ContainerNode && !((ContainerNode) node).getNodes().isEmpty()) {
+            deleteNodeRecursive();
+        } else {
+            executeSecurely((PrivilegedExceptionAction<Void>) () -> {
+                voSpaceClient.deleteNode(getCurrentPath().toString());
+                return null;
+            });
+        }
+    }
+
+    private void deleteNodeRecursive() throws Exception {
+        try {
+            Subject.doAs(getVOSpaceCallingSubject(), (PrivilegedExceptionAction<Void>) () -> {
+                final RecursiveDeleteNode deleteJob = voSpaceClient.createRecursiveDelete(getCurrentItemURI());
+                deleteJob.setMonitor(false);
+                deleteJob.run();
+                return null;
+            });
+        } catch (PrivilegedActionException pae) {
+            throw pae.getException();
+        }
     }
 
     @Post("json")
