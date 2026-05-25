@@ -194,7 +194,7 @@ jobs:
           mkdir -p dist
           helm package --dependency-update ./helm --destination dist
           shopt -s nullglob
-          pkgs=(dist/storage-*.tgz)
+          pkgs=(dist/storageui-*.tgz)
           if [ "${#pkgs[@]}" -ne 1 ]; then
             printf 'Expected exactly one packaged chart under dist/, found: [%s]\n' "${pkgs[*]-}"
             exit 1
