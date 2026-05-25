@@ -192,7 +192,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p dist
-          helm package ./helm --destination dist
+          helm package --dependency-update ./helm --destination dist
           shopt -s nullglob
           pkgs=(dist/storage-*.tgz)
           if [ "${#pkgs[@]}" -ne 1 ]; then
