@@ -4,3 +4,4 @@ docker
 build
 README.md
 cadcKeystore
+helm/charts/

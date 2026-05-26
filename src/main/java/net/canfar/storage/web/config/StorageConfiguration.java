@@ -75,6 +75,10 @@ import ca.nrc.cadc.reg.client.LocalAuthority;
 import ca.nrc.cadc.util.StringUtil;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.apache.commons.configuration2.CombinedConfiguration;
 import org.apache.commons.configuration2.Configuration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
@@ -144,7 +148,23 @@ public class StorageConfiguration {
     }
 
     public String getOIDCClientSecret() {
-        return lookup(StorageConfigurationKey.OIDC_CLIENT_SECRET);
+        final String fromProperties = configuration.getString(StorageConfigurationKey.OIDC_CLIENT_SECRET.propertyName);
+        if (StringUtil.hasText(fromProperties)) {
+            return fromProperties;
+        }
+        // Kubernetes / GitOps: Secret mounted under config/oidc-secret when Helm uses existingSecret/existingSecretName.
+        final Path secretFile =
+                Paths.get(DEFAULT_CONFIG_FILE_PATH).getParent().resolve("oidc-secret").resolve("clientSecret");
+        if (!Files.isReadable(secretFile)) {
+            return lookup(StorageConfigurationKey.OIDC_CLIENT_SECRET);
+        }
+
+        try {
+            return Files.readString(secretFile, StandardCharsets.UTF_8).strip();
+        } catch (final IOException ioException) {
+            LOGGER.warn(String.format("Could not read OIDC client secret from %s", secretFile), ioException);
+            return lookup(StorageConfigurationKey.OIDC_CLIENT_SECRET);
+        }
     }
 
     public String getOIDCCallbackURI() {

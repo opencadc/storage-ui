@@ -1,3 +1,5 @@
+{{- $oidcExistingSecretName := include "storageui.oidc.clientSecret.secretName" . }}
+{{- $oidcExistingSecretKey := include "storageui.oidc.clientSecret.secretKey" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -52,6 +54,11 @@ spec:
         volumeMounts:
         - mountPath: "/config"
           name: config-volume
+        {{- if $oidcExistingSecretName }}
+        - mountPath: "/config/oidc-secret"
+          name: oidc-client-secret
+          readOnly: true
+        {{- end }}
         {{- with .Values.deployment.storageUI.extraVolumeMounts }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -83,6 +90,15 @@ spec:
       - name: config-volume
         configMap:
           name: storage-ui-config
+      {{- if $oidcExistingSecretName }}
+      - name: oidc-client-secret
+        secret:
+          secretName: {{ $oidcExistingSecretName }}
+          defaultMode: 288
+          items:
+          - key: {{ $oidcExistingSecretKey }}
+            path: clientSecret
+      {{- end }}
       {{- with .Values.deployment.storageUI.extraVolumes }}
       {{- toYaml . | nindent 6 }}
       {{- end }}
