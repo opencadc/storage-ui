@@ -1,5 +1,3 @@
-{{- $oidcExistingSecretName := include "storageui.oidc.clientSecret.secretName" . }}
-{{- $oidcExistingSecretKey := include "storageui.oidc.clientSecret.secretKey" . }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -21,6 +19,7 @@ spec:
       {{- $contSC := .Values.securityContext | default dict }}
       {{- $legacyPodFallback := and (empty $podSC) (not (empty $contSC)) }}
       {{- $effectivePodSC := ternary $contSC $podSC $legacyPodFallback }}
+      {{- $oidcSecretName := get (.Values.deployment.storageUI.oidc | default dict) "existingSecretName" }}
       {{- with .Values.deployment.storageUI.nodeAffinity }}
       affinity:
         nodeAffinity:
@@ -30,9 +29,31 @@ spec:
       securityContext:
         {{- toYaml $effectivePodSC | nindent 8 }}
       {{- end }}
-      {{- with .Values.deployment.storageUI.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        - name: regcred
+      {{- if $oidcSecretName }}
+      initContainers:
+      - image: {{ .Values.deployment.storageUI.image }}
+        imagePullPolicy: {{ .Values.deployment.storageUI.imagePullPolicy }}
+        name: storage-ui-config
+        command:
+        - /bin/sh
+        - -c
+        - |
+          set -eu
+          cp -R /config-template/. /config
+          printf '\norg.opencadc.vosui.oidc.clientSecret = %s\n' "$OIDC_CLIENT_SECRET" >> /config/org.opencadc.vosui.properties
+        env:
+        - name: OIDC_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: {{ $oidcSecretName }}
+              key: clientSecret
+        volumeMounts:
+        - mountPath: "/config-template"
+          name: config-template-volume
+        - mountPath: "/config"
+          name: config-volume
       {{- end }}
       containers:
       - image: {{ .Values.deployment.storageUI.image }}
@@ -54,11 +75,6 @@ spec:
         volumeMounts:
         - mountPath: "/config"
           name: config-volume
-        {{- if $oidcExistingSecretName }}
-        - mountPath: "/config/oidc-secret"
-          name: oidc-client-secret
-          readOnly: true
-        {{- end }}
         {{- with .Values.deployment.storageUI.extraVolumeMounts }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -88,16 +104,16 @@ spec:
       {{- end }}
       volumes:
       - name: config-volume
+        {{- if $oidcSecretName }}
+        emptyDir: {}
+        {{- else }}
         configMap:
           name: storage-ui-config
-      {{- if $oidcExistingSecretName }}
-      - name: oidc-client-secret
-        secret:
-          secretName: {{ $oidcExistingSecretName }}
-          defaultMode: 288
-          items:
-          - key: {{ $oidcExistingSecretKey }}
-            path: clientSecret
+        {{- end }}
+      {{- if $oidcSecretName }}
+      - name: config-template-volume
+        configMap:
+          name: storage-ui-config
       {{- end }}
       {{- with .Values.deployment.storageUI.extraVolumes }}
       {{- toYaml . | nindent 6 }}
