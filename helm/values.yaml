@@ -30,7 +30,7 @@ securityContext: {}
 deployment:
   hostname: example.host.com    # Change this!
   storageUI:
-    image: images.opencadc.org/client/storage-ui:1.4.3
+    image: images.opencadc.org/client/storageui:1.4.4
     imagePullPolicy: IfNotPresent
 
     # Optionally set the DEBUG port.
