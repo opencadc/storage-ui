@@ -21,6 +21,13 @@ spec:
       {{- $effectivePodSC := ternary $contSC $podSC $legacyPodFallback }}
       {{- $oidcSecretName := (include "storageui.oidc.clientSecret.secretName" . | trim) }}
       {{- $oidcSecretKey := (include "storageui.oidc.clientSecret.secretKey" . | trim) }}
+      {{- $cookieKey := .Values.deployment.storageUI.cookieSignaturePublicKey | default dict }}
+      {{- $cookieKeySecret := $cookieKey.existingSecret | default dict }}
+      {{- $cookieKeySecretName := trim (($cookieKeySecret.name | default "") | toString) }}
+      {{- $cookieKeyPath := trim (($cookieKeySecret.path | default "RsaSignaturePub.key") | toString) }}
+      {{- if empty $cookieKeyPath }}
+      {{- $cookieKeyPath = "RsaSignaturePub.key" }}
+      {{- end }}
       {{- with .Values.deployment.storageUI.nodeAffinity }}
       affinity:
         nodeAffinity:
@@ -107,14 +114,36 @@ spec:
       - name: config-volume
         {{- if $oidcSecretName }}
         emptyDir: {}
+        {{- else if $cookieKeySecretName }}
+        projected:
+          sources:
+          - configMap:
+              name: storage-ui-config
+          - secret:
+              name: {{ $cookieKeySecretName }}
+              items:
+              - key: RsaSignaturePub.key
+                path: {{ $cookieKeyPath | quote }}
         {{- else }}
         configMap:
           name: storage-ui-config
         {{- end }}
       {{- if $oidcSecretName }}
       - name: config-template-volume
+        {{- if $cookieKeySecretName }}
+        projected:
+          sources:
+          - configMap:
+              name: storage-ui-config
+          - secret:
+              name: {{ $cookieKeySecretName }}
+              items:
+              - key: RsaSignaturePub.key
+                path: {{ $cookieKeyPath | quote }}
+        {{- else }}
         configMap:
           name: storage-ui-config
+        {{- end }}
       {{- end }}
       {{- with .Values.deployment.storageUI.extraVolumes }}
       {{- toYaml . | nindent 6 }}
