@@ -4,7 +4,7 @@ Resolve the Kubernetes Secret name containing the OIDC client secret.
 Preferred configuration (current):
 
   deployment.storageUI.oidc.clientSecret:
-    secretName: my-oidc-client
+    existingSecret: my-oidc-client
     secretKey: clientSecret   # optional, defaults to "clientSecret"
 
 Backward compatible configuration (deprecated):
@@ -13,11 +13,11 @@ Backward compatible configuration (deprecated):
 
 In the deprecated form the key is assumed to be "clientSecret".
 */}}
-{{- define "storageui.oidc.clientSecret.secretName" -}}
+{{- define "storageui.oidc.clientSecret.existingSecret" -}}
 {{- $oidc := .Values.deployment.storageUI.oidc | default dict }}
 {{- $cs := $oidc.clientSecret | default dict }}
-{{- if and $cs $cs.secretName }}
-{{- $cs.secretName }}
+{{- if and $cs $cs.existingSecret }}
+{{- $cs.existingSecret }}
 {{- else if $oidc.existingSecretName }}
 {{- $oidc.existingSecretName }}
 {{- end }}
@@ -32,7 +32,7 @@ When using the deprecated existingSecretName, the key is always "clientSecret".
 {{- define "storageui.oidc.clientSecret.secretKey" -}}
 {{- $oidc := .Values.deployment.storageUI.oidc | default dict }}
 {{- $cs := $oidc.clientSecret | default dict }}
-{{- if and $cs $cs.secretName }}
+{{- if and $cs $cs.existingSecret }}
 {{- $cs.secretKey | default "clientSecret" }}
 {{- else if $oidc.existingSecretName }}
 {{- "clientSecret" -}}

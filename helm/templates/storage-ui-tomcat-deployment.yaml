@@ -15,11 +15,7 @@ spec:
       labels:
         run: storage-ui-tomcat
     spec:
-      {{- $podSC := .Values.podSecurityContext | default dict }}
-      {{- $contSC := .Values.securityContext | default dict }}
-      {{- $legacyPodFallback := and (empty $podSC) (not (empty $contSC)) }}
-      {{- $effectivePodSC := ternary $contSC $podSC $legacyPodFallback }}
-      {{- $oidcSecretName := (include "storageui.oidc.clientSecret.secretName" . | trim) }}
+      {{- $oidcSecretName := (include "storageui.oidc.clientSecret.existingSecret" . | trim) }}
       {{- $oidcSecretKey := (include "storageui.oidc.clientSecret.secretKey" . | trim) }}
       {{- $cookieKey := .Values.deployment.storageUI.cookieSignaturePublicKey | default dict }}
       {{- $cookieKeySecret := $cookieKey.existingSecret | default dict }}
@@ -33,9 +29,9 @@ spec:
         nodeAffinity:
           {{- toYaml . | nindent 10 }}
       {{- end }}
-      {{- if not (empty $effectivePodSC) }}
+      {{- with .Values.podSecurityContext }}
       securityContext:
-        {{- toYaml $effectivePodSC | nindent 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       imagePullSecrets:
         - name: regcred
@@ -44,6 +40,10 @@ spec:
       - image: {{ .Values.deployment.storageUI.image }}
         imagePullPolicy: {{ .Values.deployment.storageUI.imagePullPolicy }}
         name: storage-ui-config
+        {{- with .Values.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         command:
         - /bin/sh
         - -c
@@ -86,11 +86,9 @@ spec:
         {{- with .Values.deployment.storageUI.extraVolumeMounts }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-        {{- if not $legacyPodFallback }}
         {{- with .Values.securityContext }}
         securityContext:
           {{- toYaml . | nindent 10 }}
-        {{- end }}
         {{- end }}
         {{- if .Values.deployment.storageUI.extraEnv }}
         env:
