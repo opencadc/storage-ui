@@ -31,7 +31,11 @@ deployment:
   hostname: example.host.com    # Change this!
   storageUI:
     image: images.opencadc.org/client/storageui:1.4.4
-    imagePullPolicy: IfNotPresent
+    imagePullPolicy: Always
+    # @param deployment.storageUI.imagePullSecrets - Optional list of image pull secrets for the Pod.
+    # Set to [] to omit imagePullSecrets from the Pod spec.
+    imagePullSecrets:
+      - name: regcred
 
     # Optionally set the DEBUG port.
     # extraEnv:

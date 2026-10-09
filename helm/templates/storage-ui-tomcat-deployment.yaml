@@ -33,9 +33,11 @@ spec:
       securityContext:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      {{- with .Values.deployment.storageUI.imagePullSecrets }}
       imagePullSecrets:
-        - name: regcred
-       {{- if $oidcSecretName }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if $oidcSecretName }}
       initContainers:
       - image: {{ .Values.deployment.storageUI.image }}
         imagePullPolicy: {{ .Values.deployment.storageUI.imagePullPolicy }}
